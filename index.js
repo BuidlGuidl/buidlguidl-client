@@ -112,21 +112,84 @@ function createJwtSecret(jwtDir) {
   }
 }
 
-function installMacLinuxExecutionClient(executionClient) {
-  try {
-    execSync(`command -v ${executionClient}`, { stdio: "ignore" });
-    const version = execSync(`${executionClient} --version`).toString().trim();
-    color(
-      "36",
-      `${executionClient} is already installed. Version:\n${version}`
-    );
-  } catch {
-    console.log(`Installing ${executionClient}.`);
-    if (executionClient === "geth") {
-      execSync("brew tap ethereum/ethereum", { stdio: "inherit" });
-      execSync("brew install ethereum", { stdio: "inherit" });
-    } else if (executionClient === "reth") {
-      execSync("brew install paradigmxyz/brew/reth", { stdio: "inherit" });
+// function installMacLinuxExecutionClient(executionClient) {
+//   try {
+//     execSync(`command -v ${executionClient}`, { stdio: "ignore" });
+//     const version = execSync(`${executionClient} --version`).toString().trim();
+//     color(
+//       "36",
+//       `${executionClient} is already installed. Version:\n${version}`
+//     );
+//   } catch {
+//     console.log(`Installing ${executionClient}.`);
+//     if (executionClient === "geth") {
+//       execSync("brew tap ethereum/ethereum", { stdio: "inherit" });
+//       execSync("brew install ethereum", { stdio: "inherit" });
+//     } else if (executionClient === "reth") {
+//       execSync("brew install paradigmxyz/brew/reth", { stdio: "inherit" });
+//     }
+//   }
+// }
+
+function installMacLinuxExecutionClient(executionClient, platform) {
+  // TODO: Make sure to select correct linux version (32 vs 64 vs arm...)
+  const gethFileName = "geth-darwin-amd64-1.14.3-ab48ba42";
+  const rethFileName = "reth-v0.1.0-alpha.23-x86_64-apple-darwin";
+
+  if (executionClient === "geth") {
+    const gethDir = path.join(os.homedir(), "bgnode", "geth");
+    const gethScript = path.join(gethDir, "geth");
+    if (!fs.existsSync(gethScript)) {
+      color("1", "\nInstalling Geth.");
+      if (!fs.existsSync(gethDir)) {
+        console.log(`Creating '${gethDir}'`);
+        fs.mkdirSync(gethDir, { recursive: true });
+      }
+      console.log("Downloading Geth.");
+      execSync(
+        `cd ${gethDir} && curl -L -O -# https://gethstore.blob.core.windows.net/builds/${gethFileName}.tar.gz`,
+        { stdio: "inherit" }
+      );
+      console.log("Uncompressing Geth.");
+      execSync(`cd ${gethDir} && tar -xzvf ${gethDir}/${gethFileName}.tar.gz`, {
+        stdio: "inherit",
+      });
+      execSync(`cd ${gethDir}/${gethFileName} && mv geth .. `, {
+        stdio: "inherit",
+      });
+      console.log("Cleaning up Geth directory.");
+      execSync(
+        `cd ${gethDir} && rm -r ${gethFileName} && rm ${gethFileName}.tar.gz`,
+        { stdio: "inherit" }
+      );
+    } else {
+      color("36", "Geth is already installed.");
+    }
+  } else if (executionClient === "reth") {
+    const rethDir = path.join(os.homedir(), "bgnode", "reth");
+    const rethScript = path.join(rethDir, "reth");
+    if (!fs.existsSync(rethScript)) {
+      color("1", "\nInstalling Reth.");
+      if (!fs.existsSync(rethDir)) {
+        console.log(`Creating '${rethDir}'`);
+        fs.mkdirSync(rethDir, { recursive: true });
+      }
+      console.log("Downloading Reth.");
+      execSync(
+        `cd ${rethDir} && curl -L -O -# https://github.com/paradigmxyz/reth/releases/download/v0.1.0-alpha.23/${rethFileName}.tar.gz`,
+        { stdio: "inherit" }
+      );
+      console.log("Uncompressing Reth.");
+      execSync(`cd ${rethDir} && tar -xzvf ${rethDir}/${rethFileName}.tar.gz`, {
+        stdio: "inherit",
+      });
+      console.log("Cleaning up Reth directory.");
+      execSync(`cd ${rethDir} && rm ${rethFileName}.tar.gz`, {
+        stdio: "inherit",
+      });
+      process.exit(0);
+    } else {
+      color("36", "Reth is already installed.");
     }
   }
 }
@@ -136,7 +199,7 @@ function installWindowsExecutionClient(executionClient) {
     const gethDir = path.join(os.homedir(), "bgnode", "geth");
     const gethScript = path.join(gethDir, "geth.exe");
     if (!fs.existsSync(gethScript)) {
-      console.log("Installing Geth.");
+      color("1", "\nInstalling Geth.");
       if (!fs.existsSync(gethDir)) {
         console.log(`Creating '${gethDir}'`);
         fs.mkdirSync(gethDir, { recursive: true });
@@ -163,7 +226,7 @@ function installWindowsExecutionClient(executionClient) {
     const rethDir = path.join(os.homedir(), "bgnode", "reth");
     const rethScript = path.join(rethDir, "reth.exe");
     if (!fs.existsSync(rethScript)) {
-      console.log("Installing Reth.");
+      color("1", "\nInstalling Reth.");
       if (!fs.existsSync(rethDir)) {
         console.log(`Creating '${rethDir}'`);
         fs.mkdirSync(rethDir, { recursive: true });
@@ -465,6 +528,7 @@ const platform = os.platform();
 if (["darwin", "linux"].includes(platform)) {
   checkMacLinuxPrereqs(platform);
   installMacLinuxExecutionClient(executionClient);
+  process.exit(0);
   installMacLinuxConsensusClient(consensusClient);
 } else if (platform === "win32") {
   checkWindowsPrereqs();
