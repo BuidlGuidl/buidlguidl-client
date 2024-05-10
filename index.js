@@ -101,35 +101,17 @@ function checkWindowsPrereqs() {
 
 function createJwtSecret(jwtDir) {
   if (!fs.existsSync(jwtDir)) {
-    console.log(`Creating '${jwtDir}'`);
+    color("1", `\nCreating '${jwtDir}'`);
     fs.mkdirSync(jwtDir, { recursive: true });
   }
 
   if (!fs.existsSync(`${jwtDir}/jwt.hex`)) {
+    color("1", "Generating JWT.hex file.");
     execSync(`cd ${jwtDir} && openssl rand -hex 32 > jwt.hex`, {
       stdio: "inherit",
     });
   }
 }
-
-// function installMacLinuxExecutionClient(executionClient) {
-//   try {
-//     execSync(`command -v ${executionClient}`, { stdio: "ignore" });
-//     const version = execSync(`${executionClient} --version`).toString().trim();
-//     color(
-//       "36",
-//       `${executionClient} is already installed. Version:\n${version}`
-//     );
-//   } catch {
-//     console.log(`Installing ${executionClient}.`);
-//     if (executionClient === "geth") {
-//       execSync("brew tap ethereum/ethereum", { stdio: "inherit" });
-//       execSync("brew install ethereum", { stdio: "inherit" });
-//     } else if (executionClient === "reth") {
-//       execSync("brew install paradigmxyz/brew/reth", { stdio: "inherit" });
-//     }
-//   }
-// }
 
 function installMacLinuxExecutionClient(executionClient, platform) {
   // TODO: Make sure to select correct linux version (32 vs 64 vs arm...)
@@ -143,7 +125,7 @@ function installMacLinuxExecutionClient(executionClient, platform) {
       color("1", "\nInstalling Geth.");
       if (!fs.existsSync(gethDir)) {
         console.log(`Creating '${gethDir}'`);
-        fs.mkdirSync(gethDir, { recursive: true });
+        fs.mkdirSync(`${gethDir}/database`, { recursive: true });
       }
       console.log("Downloading Geth.");
       execSync(
@@ -172,7 +154,7 @@ function installMacLinuxExecutionClient(executionClient, platform) {
       color("1", "\nInstalling Reth.");
       if (!fs.existsSync(rethDir)) {
         console.log(`Creating '${rethDir}'`);
-        fs.mkdirSync(rethDir, { recursive: true });
+        fs.mkdirSync(`${rethDir}/database`, { recursive: true });
       }
       console.log("Downloading Reth.");
       execSync(
@@ -187,9 +169,61 @@ function installMacLinuxExecutionClient(executionClient, platform) {
       execSync(`cd ${rethDir} && rm ${rethFileName}.tar.gz`, {
         stdio: "inherit",
       });
-      process.exit(0);
     } else {
       color("36", "Reth is already installed.");
+    }
+  }
+}
+
+function installMacLinuxConsensusClient(consensusClient, platform) {
+  // TODO: Make sure to select correct linux version (32 vs 64 vs arm...)
+  const prysmFileName = "prysm";
+  const lighthouseFileName = "lighthouse-v5.1.3-x86_64-apple-darwin";
+
+  if (consensusClient === "prysm") {
+    const prysmDir = path.join(os.homedir(), "bgnode", "prysm");
+    const prysmScript = path.join(prysmDir, "prysm.sh");
+    if (!fs.existsSync(prysmScript)) {
+      color("1", "\nInstalling Prysm.");
+      if (!fs.existsSync(prysmDir)) {
+        console.log(`Creating '${prysmDir}'`);
+        fs.mkdirSync(`${prysmDir}/database`, { recursive: true });
+      }
+      console.log("Downloading Prysm.");
+      execSync(
+        `cd ${prysmDir} && curl -L -O -# https://raw.githubusercontent.com/prysmaticlabs/prysm/master/${prysmFileName}.sh && chmod +x prysm.sh`,
+        { stdio: "inherit" }
+      );
+    } else {
+      color("36", "Prysm is already installed.");
+    }
+  } else if (consensusClient === "lighthouse") {
+    const lighthouseDir = path.join(os.homedir(), "bgnode", "lighthouse");
+    const lighthouseScript = path.join(lighthouseDir, "lighthouse");
+    if (!fs.existsSync(lighthouseScript)) {
+      color("1", "\nInstalling Lighthouse.");
+      if (!fs.existsSync(lighthouseDir)) {
+        console.log(`Creating '${lighthouseDir}'`);
+        fs.mkdirSync(`${lighthouseDir}/database`, { recursive: true });
+      }
+      console.log("Downloading Lighthouse.");
+      execSync(
+        `cd ${lighthouseDir} && curl -L -O -# https://github.com/sigp/lighthouse/releases/download/v5.1.3/${lighthouseFileName}.tar.gz`,
+        { stdio: "inherit" }
+      );
+      console.log("Uncompressing Lighthouse.");
+      execSync(
+        `cd ${lighthouseDir} && tar -xzvf ${lighthouseDir}/${lighthouseFileName}.tar.gz`,
+        {
+          stdio: "inherit",
+        }
+      );
+      console.log("Cleaning up Lighthouse directory.");
+      execSync(`cd ${lighthouseDir} && rm ${lighthouseFileName}.tar.gz`, {
+        stdio: "inherit",
+      });
+    } else {
+      color("36", "Lighthouse is already installed.");
     }
   }
 }
@@ -202,7 +236,7 @@ function installWindowsExecutionClient(executionClient) {
       color("1", "\nInstalling Geth.");
       if (!fs.existsSync(gethDir)) {
         console.log(`Creating '${gethDir}'`);
-        fs.mkdirSync(gethDir, { recursive: true });
+        fs.mkdirSync(`${gethDir}/database`, { recursive: true });
       }
       execSync(
         `cd ${gethDir} && curl https://gethstore.blob.core.windows.net/builds/geth-windows-amd64-1.14.0-87246f3c.zip --output geth.zip`,
@@ -229,7 +263,7 @@ function installWindowsExecutionClient(executionClient) {
       color("1", "\nInstalling Reth.");
       if (!fs.existsSync(rethDir)) {
         console.log(`Creating '${rethDir}'`);
-        fs.mkdirSync(rethDir, { recursive: true });
+        fs.mkdirSync(`${rethDir}/database`, { recursive: true });
       }
       execSync(
         `cd ${rethDir} && curl -LO https://github.com/paradigmxyz/reth/releases/download/v0.2.0-beta.6/reth-v0.2.0-beta.6-x86_64-pc-windows-gnu.tar.gz`,
@@ -251,35 +285,6 @@ function installWindowsExecutionClient(executionClient) {
   }
 }
 
-function installMacLinuxConsensusClient(consensusClient) {
-  if (consensusClient === "prysm") {
-    const prysmDir = path.join(os.homedir(), "bgnode", "prysm");
-    const prysmScript = path.join(prysmDir, "prysm.sh");
-    if (!fs.existsSync(prysmScript)) {
-      console.log("Installing Prysm.");
-      if (!fs.existsSync(prysmDir)) {
-        console.log(`Creating '${prysmDir}'`);
-        fs.mkdirSync(prysmDir, { recursive: true });
-      }
-      execSync(
-        `curl https://raw.githubusercontent.com/prysmaticlabs/prysm/master/prysm.sh --output ${prysmScript}`
-      );
-      execSync(`chmod +x ${prysmScript}`);
-    } else {
-      color("36", "Prysm is already installed.");
-    }
-  } else if (consensusClient === "lighthouse") {
-    try {
-      execSync("command -v lighthouse", { stdio: "ignore" });
-      const version = execSync("lighthouse --version").toString().trim();
-      color("36", `Lighthouse is already installed. Version:\n${version}`);
-    } catch {
-      console.log("Installing Lighthouse.");
-      execSync("brew install lighthouse", { stdio: "inherit" });
-    }
-  }
-}
-
 function installWindowsConsensusClient(consensusClient) {
   if (consensusClient === "prysm") {
     const prysmDir = path.join(os.homedir(), "bgnode", "prysm");
@@ -288,7 +293,7 @@ function installWindowsConsensusClient(consensusClient) {
       console.log("Installing Prysm.");
       if (!fs.existsSync(prysmDir)) {
         console.log(`Creating '${prysmDir}'`);
-        fs.mkdirSync(prysmDir, { recursive: true });
+        fs.mkdirSync(`${prysmDir}/database`, { recursive: true });
       }
       execSync(
         `cd ${prysmDir} && curl https://raw.githubusercontent.com/prysmaticlabs/prysm/master/prysm.bat --output prysm.bat`,
@@ -308,7 +313,7 @@ function installWindowsConsensusClient(consensusClient) {
       console.log("Installing Lighthouse.");
       if (!fs.existsSync(lighthouseDir)) {
         console.log(`Creating '${lighthouseDir}'`);
-        fs.mkdirSync(lighthouseDir, { recursive: true });
+        fs.mkdirSync(`${lighthouseDir}/database`, { recursive: true });
       }
       execSync(
         `cd ${lighthouseDir} && curl -LO https://github.com/sigp/lighthouse/releases/download/v5.1.3/lighthouse-v5.1.3-x86_64-windows.tar.gz`,
@@ -521,19 +526,18 @@ console.log(`Execution client selected: ${executionClient}`);
 console.log(`Consensus client selected: ${consensusClient}\n`);
 
 const jwtDir = path.join(os.homedir(), "bgnode", "jwt");
-createJwtSecret(jwtDir);
-
 const platform = os.platform();
 
 if (["darwin", "linux"].includes(platform)) {
   checkMacLinuxPrereqs(platform);
-  installMacLinuxExecutionClient(executionClient);
-  process.exit(0);
-  installMacLinuxConsensusClient(consensusClient);
+  installMacLinuxExecutionClient(executionClient, platform);
+  installMacLinuxConsensusClient(consensusClient, platform);
 } else if (platform === "win32") {
   checkWindowsPrereqs();
   installWindowsExecutionClient(executionClient);
   installWindowsConsensusClient(consensusClient);
 }
 
+createJwtSecret(jwtDir);
+process.exit(0);
 startChain(executionClient, consensusClient, jwtDir, platform);
