@@ -178,7 +178,7 @@ function installMacLinuxExecutionClient(executionClient, platform) {
 function installMacLinuxConsensusClient(consensusClient, platform) {
   // TODO: Make sure to select correct linux version (32 vs 64 vs arm...)
   const prysmFileName = "prysm";
-  const lighthouseFileName = "lighthouse-v5.1.3-x86_64-apple-darwin";
+  const lighthouseFileName = "lighthouse-v5.1.3-x86_64-apple-darwin-portable";
 
   if (consensusClient === "prysm") {
     const prysmDir = path.join(os.homedir(), "bgnode", "prysm");
@@ -367,7 +367,7 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
   if (executionClient === "geth") {
     let gethCommand;
     if (["darwin", "linux"].includes(platform)) {
-      gethCommand = "geth";
+      gethCommand = path.join(os.homedir(), "bgnode", "geth", "geth");
     } else if (platform === "win32") {
       gethCommand = path.join(os.homedir(), "bgnode", "geth", "geth.exe");
     }
@@ -390,7 +390,7 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
   } else if (executionClient === "reth") {
     let rethCommand;
     if (["darwin", "linux"].includes(platform)) {
-      rethCommand = "reth";
+      rethCommand = path.join(os.homedir(), "bgnode", "reth", "reth");
     } else if (platform === "win32") {
       rethCommand = path.join(os.homedir(), "bgnode", "reth", "reth.exe");
     }
@@ -442,7 +442,12 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
   } else if (consensusClient === "lighthouse") {
     let lighthouseCommand;
     if (["darwin", "linux"].includes(platform)) {
-      lighthouseCommand = "lighthouse";
+      lighthouseCommand = path.join(
+        os.homedir(),
+        "bgnode",
+        "lighthouse",
+        "lighthouse"
+      );
     } else if (platform === "win32") {
       lighthouseCommand = path.join(
         os.homedir(),
@@ -539,5 +544,4 @@ if (["darwin", "linux"].includes(platform)) {
 }
 
 createJwtSecret(jwtDir);
-process.exit(0);
 startChain(executionClient, consensusClient, jwtDir, platform);
