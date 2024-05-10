@@ -61,8 +61,6 @@ args.forEach((val, index) => {
 
 function checkMacLinuxPrereqs(platform) {
   // All these are required to be installed for linux: node, npm, yarn
-  // TODO: Figure out best way to: npm install -g blessed blessed-contrib
-
   if (platform === "linux") {
     try {
       execSync(`command -v curl`, { stdio: "ignore" });
@@ -74,43 +72,6 @@ function checkMacLinuxPrereqs(platform) {
       process.exit(0);
     }
   }
-
-  // Git will have to already be installed by now
-  // try {
-  //   execSync(`command -v git`, { stdio: "ignore" });
-  //   const version = execSync(`git --version`).toString().trim();
-  //   color("36", `git is already installed. Version:\n${version}`);
-  // } catch {
-  //   console.log(`Please install git by running this command:`);
-  //   if (platform === "linux") {
-  //     color("4", `sudo apt-get install git`);
-  //   } else {
-  //     color("4", `sudo apt-get install git`);
-  //   }
-  //   process.exit(0);
-  // }
-
-  try {
-    execSync(`command -v brew`, { stdio: "ignore" });
-    const version = execSync(`brew -v`).toString().trim();
-    color("36", `\nHomebrew is already installed. Version:\n${version}`);
-  } catch {
-    color(
-      "1",
-      `\nPlease install Homebrew (https://brew.sh/). Make sure to follow "next steps" instructions shown after install!`
-    );
-    process.exit(0);
-  }
-
-  try {
-    execSync(`command -v openssl`, { stdio: "ignore" });
-    const version = execSync(`openssl -v`).toString().trim();
-    color("36", `\nopenssl is already installed. Version:\n${version}`);
-  } catch {
-    console.log(`\nInstalling openssl.`);
-    execSync("brew install openssl", { stdio: "inherit" });
-  }
-  // execSync(`npm install -g blessed blessed-contrib`, { stdio: "inherit" });
 }
 
 function checkWindowsPrereqs() {
@@ -136,14 +97,6 @@ function checkWindowsPrereqs() {
     );
     process.exit(0);
   }
-
-  // try {
-  //   const output = execSync("git --version", { encoding: "utf-8" }); // ensures the output is a string
-  //   console.log("Git is installed:", output);
-  // } catch (error) {
-  //   console.error("Please install Git (https://git-scm.com/downloads).");
-  //   process.exit(0);
-  // }
 }
 
 function createJwtSecret(jwtDir) {
@@ -282,9 +235,6 @@ function installWindowsConsensusClient(consensusClient) {
         "reg add HKCU\\Console /v VirtualTerminalLevel /t REG_DWORD /d 1",
         { stdio: "inherit" }
       );
-      // console.log("Creating JWT secret.");
-      // execSync(`cd ${prysmDir} && prysm.bat beacon-chain generate-auth-secret`, { stdio: "inherit" });
-      // fs.renameSync(path.join(prysmDir, "jwt.hex"), path.join(jwtDir, "jwt.hex"));
     } else {
       color("36", "Prysm is already installed.");
     }
