@@ -11,7 +11,6 @@ const contrib = require("blessed-contrib");
 let executionClient = "geth";
 let consensusClient = "prysm";
 
-// Function to display usage information
 function showHelp() {
   console.log("Usage: node script.js [options]");
   console.log("");
@@ -24,7 +23,6 @@ function showHelp() {
   console.log("");
 }
 
-// Function to add color to console output
 function color(code, text) {
   // Usage: color "31;5" "string"
   // Some valid values for color:
@@ -114,9 +112,32 @@ function createJwtSecret(jwtDir) {
 }
 
 function installMacLinuxExecutionClient(executionClient, platform) {
-  // TODO: Make sure to select correct linux version (32 vs 64 vs arm...)
-  const gethFileName = "geth-darwin-amd64-1.14.3-ab48ba42";
-  const rethFileName = "reth-v0.1.0-alpha.23-x86_64-apple-darwin";
+  const arch = os.arch();
+
+  const configs = {
+    darwin: {
+      x64: {
+        gethFileName: "geth-darwin-amd64-1.14.3-ab48ba42",
+        rethFileName: "reth-v0.2.0-beta.6-x86_64-apple-darwin",
+      },
+      arm64: {
+        gethFileName: "geth-darwin-arm64-1.14.3-ab48ba42",
+        rethFileName: "reth-v0.2.0-beta.6-aarch64-apple-darwin",
+      },
+    },
+    linux: {
+      x64: {
+        gethFileName: "geth-linux-amd64-1.14.3-ab48ba42",
+        rethFileName: "reth-v0.2.0-beta.6-x86_64-unknown-linux-gnu",
+      },
+      arm64: {
+        gethFileName: "geth-linux-arm64-1.14.3-ab48ba42",
+        rethFileName: "reth-v0.2.0-beta.6-aarch64-unknown-linux-gnu",
+      },
+    },
+  };
+
+  const { gethFileName, rethFileName } = configs[platform][arch];
 
   if (executionClient === "geth") {
     const gethDir = path.join(os.homedir(), "bgnode", "geth");
@@ -176,9 +197,29 @@ function installMacLinuxExecutionClient(executionClient, platform) {
 }
 
 function installMacLinuxConsensusClient(consensusClient, platform) {
-  // TODO: Make sure to select correct linux version (32 vs 64 vs arm...)
+  const arch = os.arch();
+
+  const configs = {
+    darwin: {
+      x64: {
+        lighthouseFileName: "lighthouse-v5.1.3-x86_64-apple-darwin",
+      },
+      arm64: {
+        lighthouseFileName: "lighthouse-v5.1.3-x86_64-apple-darwin-portable",
+      },
+    },
+    linux: {
+      x64: {
+        lighthouseFileName: "lighthouse-v5.1.3-x86_64-unknown-linux-gnu",
+      },
+      arm64: {
+        lighthouseFileName: "lighthouse-v5.1.3-aarch64-unknown-linux-gnu",
+      },
+    },
+  };
+
   const prysmFileName = "prysm";
-  const lighthouseFileName = "lighthouse-v5.1.3-x86_64-apple-darwin-portable";
+  const { lighthouseFileName } = configs[platform][arch];
 
   if (consensusClient === "prysm") {
     const prysmDir = path.join(os.homedir(), "bgnode", "prysm");
@@ -239,18 +280,18 @@ function installWindowsExecutionClient(executionClient) {
         fs.mkdirSync(`${gethDir}/database`, { recursive: true });
       }
       execSync(
-        `cd ${gethDir} && curl https://gethstore.blob.core.windows.net/builds/geth-windows-amd64-1.14.0-87246f3c.zip --output geth.zip`,
+        `cd ${gethDir} && curl https://gethstore.blob.core.windows.net/builds/geth-windows-amd64-1.14.3-ab48ba42.zip --output geth.zip`,
         { stdio: "inherit" }
       );
       execSync(`cd ${gethDir} && tar -xf ${gethDir}/geth.zip`, {
         stdio: "inherit",
       });
       execSync(
-        `cd ${gethDir}/geth-windows-amd64-1.14.0-87246f3c && move geth.exe .. `,
+        `cd ${gethDir}/geth-windows-amd64-1.14.3-ab48ba42 && move geth.exe .. `,
         { stdio: "inherit" }
       );
       execSync(
-        `cd ${gethDir} && del geth.zip && rd /S /Q geth-windows-amd64-1.14.0-87246f3c`,
+        `cd ${gethDir} && del geth.zip && rd /S /Q geth-windows-amd64-1.14.3-ab48ba42`,
         { stdio: "inherit" }
       );
     } else {
@@ -336,6 +377,10 @@ function installWindowsConsensusClient(consensusClient) {
 }
 
 function startChain(executionClient, consensusClient, jwtDir, platform) {
+  // TODO: Use non-standard ports
+  // TODO: Make the blessed-contrib view cooler - show CPU, memory, storage, and network graphs and a BG logo
+  // TODO: Write logs somewhere obvious
+
   jwtPath = path.join(jwtDir, "jwt.hex");
   // Create a screen object
   const screen = blessed.screen();
@@ -344,7 +389,7 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
   const executionLog = contrib.log({
     fg: "green",
     selectedFg: "green",
-    label: "Geth Logs",
+    label: "Execution Logs",
     top: "0%",
     height: "50%",
     width: "100%",
@@ -353,7 +398,7 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
   const consensusLog = contrib.log({
     fg: "yellow",
     selectedFg: "yellow",
-    label: "Prysm Logs",
+    label: "Consensus Logs",
     top: "50%",
     height: "50%",
     width: "100%",
@@ -375,13 +420,15 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
       `${gethCommand}`,
       [
         "--mainnet",
+        "--syncmode",
+        "snap",
         "--http",
         "--http.api",
         "eth,net,engine,admin",
         "--http.addr",
         "0.0.0.0",
-        "--syncmode",
-        "full",
+        "--datadir",
+        path.join(os.homedir(), "bgnode", "geth", "database"),
         "--authrpc.jwtsecret",
         `${jwtPath}`,
       ],
@@ -404,6 +451,8 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
         "127.0.0.1",
         "--authrpc.port",
         "8551",
+        "--datadir",
+        path.join(os.homedir(), "bgnode", "reth", "database"),
         "--authrpc.jwtsecret",
         `${jwtPath}`,
       ],
@@ -431,11 +480,24 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
       `${prysmCommand}`,
       [
         "beacon-chain",
+        "--mainnet",
         "--execution-endpoint",
         "http://localhost:8551",
-        "--mainnet",
+        "--grpc-gateway-host=0.0.0.0",
+        "--grpc-gateway-port=3500",
+        "--checkpoint-sync-url=https://mainnet-checkpoint-sync.attestant.io/",
+        "--genesis-beacon-api-url=https://mainnet-checkpoint-sync.attestant.io/",
+        `--datadir=${path.join(os.homedir(), "bgnode", "prysm", "database")}`,
+        // `--log-file=${path.join(
+        //   os.homedir(),
+        //   "bgnode",
+        //   "prysm",
+        //   "logs",
+        //   "prysmLog.txt"
+        // )}`,
         "--jwt-secret",
         `${jwtPath}`,
+        "--accept-terms-of-use=true",
       ],
       { shell: true }
     );
@@ -464,11 +526,13 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
         "mainnet",
         "--execution-endpoint",
         "http://localhost:8551",
-        "--execution-jwt",
-        `${jwtPath}`,
         "--checkpoint-sync-url",
         "https://mainnet.checkpoint.sigp.io",
         "--disable-deposit-contract-sync",
+        "--datadir",
+        path.join(os.homedir(), "bgnode", "lighthouse", "database"),
+        "--execution-jwt",
+        `${jwtPath}`,
       ],
       { shell: true }
     );
