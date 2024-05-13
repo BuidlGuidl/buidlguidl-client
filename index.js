@@ -57,6 +57,19 @@ args.forEach((val, index) => {
   }
 });
 
+function getFormattedDateTime() {
+  const now = new Date();
+
+  const year = now.getFullYear();
+  const month = (now.getMonth() + 1).toString().padStart(2, "0");
+  const day = now.getDate().toString().padStart(2, "0");
+  const hour = now.getHours().toString().padStart(2, "0");
+  const minute = now.getMinutes().toString().padStart(2, "0");
+  const second = now.getSeconds().toString().padStart(2, "0");
+
+  return `${year}_${month}_${day}_${hour}_${minute}_${second}`;
+}
+
 function checkMacLinuxPrereqs(platform) {
   // All these are required to be installed for linux: node, npm, yarn
   if (platform === "linux") {
@@ -147,6 +160,7 @@ function installMacLinuxExecutionClient(executionClient, platform) {
       if (!fs.existsSync(gethDir)) {
         console.log(`Creating '${gethDir}'`);
         fs.mkdirSync(`${gethDir}/database`, { recursive: true });
+        fs.mkdirSync(`${gethDir}/logs`, { recursive: true });
       }
       console.log("Downloading Geth.");
       execSync(
@@ -176,10 +190,11 @@ function installMacLinuxExecutionClient(executionClient, platform) {
       if (!fs.existsSync(rethDir)) {
         console.log(`Creating '${rethDir}'`);
         fs.mkdirSync(`${rethDir}/database`, { recursive: true });
+        fs.mkdirSync(`${rethDir}/logs`, { recursive: true });
       }
       console.log("Downloading Reth.");
       execSync(
-        `cd ${rethDir} && curl -L -O -# https://github.com/paradigmxyz/reth/releases/download/v0.1.0-alpha.23/${rethFileName}.tar.gz`,
+        `cd ${rethDir} && curl -L -O -# https://github.com/paradigmxyz/reth/releases/download/v0.2.0-beta.6/${rethFileName}.tar.gz`,
         { stdio: "inherit" }
       );
       console.log("Uncompressing Reth.");
@@ -229,6 +244,7 @@ function installMacLinuxConsensusClient(consensusClient, platform) {
       if (!fs.existsSync(prysmDir)) {
         console.log(`Creating '${prysmDir}'`);
         fs.mkdirSync(`${prysmDir}/database`, { recursive: true });
+        fs.mkdirSync(`${prysmDir}/logs`, { recursive: true });
       }
       console.log("Downloading Prysm.");
       execSync(
@@ -246,6 +262,7 @@ function installMacLinuxConsensusClient(consensusClient, platform) {
       if (!fs.existsSync(lighthouseDir)) {
         console.log(`Creating '${lighthouseDir}'`);
         fs.mkdirSync(`${lighthouseDir}/database`, { recursive: true });
+        fs.mkdirSync(`${lighthouseDir}/logs`, { recursive: true });
       }
       console.log("Downloading Lighthouse.");
       execSync(
@@ -278,6 +295,7 @@ function installWindowsExecutionClient(executionClient) {
       if (!fs.existsSync(gethDir)) {
         console.log(`Creating '${gethDir}'`);
         fs.mkdirSync(`${gethDir}/database`, { recursive: true });
+        fs.mkdirSync(`${gethDir}/logs`, { recursive: true });
       }
       execSync(
         `cd ${gethDir} && curl https://gethstore.blob.core.windows.net/builds/geth-windows-amd64-1.14.3-ab48ba42.zip --output geth.zip`,
@@ -305,6 +323,7 @@ function installWindowsExecutionClient(executionClient) {
       if (!fs.existsSync(rethDir)) {
         console.log(`Creating '${rethDir}'`);
         fs.mkdirSync(`${rethDir}/database`, { recursive: true });
+        fs.mkdirSync(`${rethDir}/logs`, { recursive: true });
       }
       execSync(
         `cd ${rethDir} && curl -LO https://github.com/paradigmxyz/reth/releases/download/v0.2.0-beta.6/reth-v0.2.0-beta.6-x86_64-pc-windows-gnu.tar.gz`,
@@ -335,6 +354,7 @@ function installWindowsConsensusClient(consensusClient) {
       if (!fs.existsSync(prysmDir)) {
         console.log(`Creating '${prysmDir}'`);
         fs.mkdirSync(`${prysmDir}/database`, { recursive: true });
+        fs.mkdirSync(`${prysmDir}/logs`, { recursive: true });
       }
       execSync(
         `cd ${prysmDir} && curl https://raw.githubusercontent.com/prysmaticlabs/prysm/master/prysm.bat --output prysm.bat`,
@@ -355,6 +375,7 @@ function installWindowsConsensusClient(consensusClient) {
       if (!fs.existsSync(lighthouseDir)) {
         console.log(`Creating '${lighthouseDir}'`);
         fs.mkdirSync(`${lighthouseDir}/database`, { recursive: true });
+        fs.mkdirSync(`${lighthouseDir}/logs`, { recursive: true });
       }
       execSync(
         `cd ${lighthouseDir} && curl -LO https://github.com/sigp/lighthouse/releases/download/v5.1.3/lighthouse-v5.1.3-x86_64-windows.tar.gz`,
@@ -379,9 +400,9 @@ function installWindowsConsensusClient(consensusClient) {
 function startChain(executionClient, consensusClient, jwtDir, platform) {
   // TODO: Use non-standard ports
   // TODO: Make the blessed-contrib view cooler - show CPU, memory, storage, and network graphs and a BG logo
-  // TODO: Write logs somewhere obvious
 
   jwtPath = path.join(jwtDir, "jwt.hex");
+  const now = new Date();
   // Create a screen object
   const screen = blessed.screen();
 
@@ -416,6 +437,15 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
     } else if (platform === "win32") {
       gethCommand = path.join(os.homedir(), "bgnode", "geth", "geth.exe");
     }
+
+    const logFilePath = path.join(
+      os.homedir(),
+      "bgnode",
+      "geth",
+      "logs",
+      `gethLog_${getFormattedDateTime()}.txt`
+    );
+
     execution = spawn(
       `${gethCommand}`,
       [
@@ -429,6 +459,8 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
         "0.0.0.0",
         "--datadir",
         path.join(os.homedir(), "bgnode", "geth", "database"),
+        "--log.file",
+        logFilePath,
         "--authrpc.jwtsecret",
         `${jwtPath}`,
       ],
@@ -441,6 +473,15 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
     } else if (platform === "win32") {
       rethCommand = path.join(os.homedir(), "bgnode", "reth", "reth.exe");
     }
+
+    const logFilePath = path.join(
+      os.homedir(),
+      "bgnode",
+      "reth",
+      "logs",
+      `rethLog_${getFormattedDateTime()}.txt`
+    );
+
     execution = spawn(
       `${rethCommand}`,
       [
@@ -453,6 +494,8 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
         "8551",
         "--datadir",
         path.join(os.homedir(), "bgnode", "reth", "database"),
+        "--log.file.directory",
+        logFilePath,
         "--authrpc.jwtsecret",
         `${jwtPath}`,
       ],
@@ -476,6 +519,15 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
     } else if (platform === "win32") {
       prysmCommand = path.join(os.homedir(), "bgnode", "prysm", "prysm.bat");
     }
+
+    const logFilePath = path.join(
+      os.homedir(),
+      "bgnode",
+      "prysm",
+      "logs",
+      `prysmLog_${getFormattedDateTime()}.txt`
+    );
+
     consensus = spawn(
       `${prysmCommand}`,
       [
@@ -488,16 +540,10 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
         "--checkpoint-sync-url=https://mainnet-checkpoint-sync.attestant.io/",
         "--genesis-beacon-api-url=https://mainnet-checkpoint-sync.attestant.io/",
         `--datadir=${path.join(os.homedir(), "bgnode", "prysm", "database")}`,
-        // `--log-file=${path.join(
-        //   os.homedir(),
-        //   "bgnode",
-        //   "prysm",
-        //   "logs",
-        //   "prysmLog.txt"
-        // )}`,
+        `--log-file=${logFilePath}`,
+        "--accept-terms-of-use=true",
         "--jwt-secret",
         `${jwtPath}`,
-        "--accept-terms-of-use=true",
       ],
       { shell: true }
     );
@@ -518,6 +564,15 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
         "lighthouse.exe"
       );
     }
+
+    const logFilePath = path.join(
+      os.homedir(),
+      "bgnode",
+      "lighthouse",
+      "logs",
+      `lighthouseLog_${getFormattedDateTime()}.txt`
+    );
+
     consensus = spawn(
       `${lighthouseCommand}`,
       [
@@ -531,6 +586,8 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
         "--disable-deposit-contract-sync",
         "--datadir",
         path.join(os.homedir(), "bgnode", "lighthouse", "database"),
+        "--logfile",
+        logFilePath,
         "--execution-jwt",
         `${jwtPath}`,
       ],
