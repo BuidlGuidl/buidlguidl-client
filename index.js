@@ -57,6 +57,22 @@ args.forEach((val, index) => {
   }
 });
 
+function debugToFile(data, callback) {
+  const filePath = "/Users/spencerfaber/Desktop/debug/debug.log"; // You can specify your path
+  const now = new Date();
+  const timestamp = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+  const content = `${timestamp} - ${JSON.stringify(data, null, 2)}\n`;
+
+  // Append data to the file for continuous logging
+  fs.writeFile(filePath, content, { flag: "a" }, (err) => {
+    if (err) {
+      console.error("Failed to write to file:", err);
+    } else {
+      if (callback) callback();
+    }
+  });
+}
+
 function getFormattedDateTime() {
   const now = new Date();
 
@@ -397,14 +413,109 @@ function installWindowsConsensusClient(consensusClient) {
   }
 }
 
+let lastStats = {
+  totalSent: 0,
+  totalReceived: 0,
+  timestamp: Date.now(),
+};
+
+function getNetworkStats() {
+  return new Promise((resolve, reject) => {
+    si.networkStats()
+      .then((interfaces) => {
+        let currentTotalSent = 0;
+        let currentTotalReceived = 0;
+
+        interfaces.forEach((iface) => {
+          currentTotalSent += iface.tx_bytes;
+          currentTotalReceived += iface.rx_bytes;
+        });
+
+        // Calculate time difference in seconds
+        const currentTime = Date.now();
+        const timeDiff = (currentTime - lastStats.timestamp) / 1000;
+
+        // Calculate bytes per second
+        const sentPerSecond =
+          (currentTotalSent - lastStats.totalSent) / timeDiff;
+        const receivedPerSecond =
+          (currentTotalReceived - lastStats.totalReceived) / timeDiff;
+
+        // Update last stats for next calculation
+        lastStats = {
+          totalSent: currentTotalSent,
+          totalReceived: currentTotalReceived,
+          timestamp: currentTime,
+        };
+
+        // debugToFile(receivedPerSecond, () => {});
+
+        resolve({
+          sentPerSecond: sentPerSecond / 1000000, // Convert to megabytes if needed
+          receivedPerSecond: receivedPerSecond / 1000000,
+        });
+      })
+      .catch((error) => {
+        console.error("Error fetching network stats:", error);
+        reject(error);
+      });
+  });
+}
+
+let screen;
+let line;
+let dataX = [];
+let dataSentY = [];
+let dataReceivedY = [];
+
+async function updatePlot() {
+  try {
+    const stats = await getNetworkStats(); // Wait for network stats
+    debugToFile(stats, () => {});
+    const now = new Date();
+    dataX.push(
+      now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds()
+    );
+    dataSentY.push(stats.sentPerSecond);
+    dataReceivedY.push(stats.receivedPerSecond);
+
+    var series1 = {
+      title: "Sent",
+      x: dataX,
+      y: dataSentY,
+      style: { line: "red" },
+    };
+    var series2 = {
+      title: "Received",
+      x: dataX,
+      y: dataReceivedY,
+      style: { line: "blue" },
+    };
+
+    line.setData([series1, series2]);
+    screen.render();
+
+    // Keep the data arrays from growing indefinitely
+    if (dataX.length > 60) {
+      dataX.shift();
+      dataSentY.shift();
+      dataReceivedY.shift();
+    }
+  } catch (error) {
+    console.error("Failed to update plot:", error);
+  }
+}
+
 function startChain(executionClient, consensusClient, jwtDir, platform) {
   // TODO: Use non-standard ports
-  // TODO: Make the blessed-contrib view cooler - show CPU, memory, storage, and network graphs and a BG logo
+  // TODO: Fix blessed-contrib layout
+  // TODO: Make the blessed-contrib view cooler - show CPU, memory, storage, and a BG logo
+  // TODO: Test blessed-contrib on windows and linux
 
   jwtPath = path.join(jwtDir, "jwt.hex");
   const now = new Date();
-  // Create a screen object
-  const screen = blessed.screen();
+
+  screen = blessed.screen();
 
   // Create two log boxes
   const executionLog = contrib.log({
@@ -412,7 +523,7 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
     selectedFg: "green",
     label: "Execution Logs",
     top: "0%",
-    height: "50%",
+    height: "40%",
     width: "100%",
   });
 
@@ -420,13 +531,28 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
     fg: "yellow",
     selectedFg: "yellow",
     label: "Consensus Logs",
-    top: "50%",
-    height: "50%",
+    top: "40%",
+    height: "40%",
+    width: "100%",
+  });
+
+  line = contrib.line({
+    style: { line: "yellow", text: "green", baseline: "green" },
+    xLabelPadding: 3,
+    xPadding: 5,
+    showLegend: true,
+    wholeNumbersOnly: false, //true=do not show fraction in y axis
+    label: "Network Traffic (MB)",
+    top: "80%",
+    height: "20%",
     width: "100%",
   });
 
   screen.append(executionLog);
   screen.append(consensusLog);
+  screen.append(line);
+
+  setInterval(updatePlot, 1000);
   screen.render();
 
   let execution;
@@ -650,6 +776,8 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
 
 console.log(`Execution client selected: ${executionClient}`);
 console.log(`Consensus client selected: ${consensusClient}\n`);
+
+getNetworkStats();
 
 const jwtDir = path.join(os.homedir(), "bgnode", "jwt");
 const platform = os.platform();
