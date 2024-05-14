@@ -58,7 +58,7 @@ args.forEach((val, index) => {
 });
 
 function debugToFile(data, callback) {
-  const filePath = "/Users/spencerfaber/Desktop/debug/debug.log"; // You can specify your path
+  const filePath = path.join(os.homedir(), "bgnode", "debug.log"); // You can specify your path
   const now = new Date();
   const timestamp = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
   const content = `${timestamp} - ${JSON.stringify(data, null, 2)}\n`;
@@ -448,30 +448,30 @@ function getNetworkStats() {
           timestamp: currentTime,
         };
 
-        // debugToFile(receivedPerSecond, () => {});
-
         resolve({
           sentPerSecond: sentPerSecond / 1000000, // Convert to megabytes if needed
           receivedPerSecond: receivedPerSecond / 1000000,
         });
       })
       .catch((error) => {
-        console.error("Error fetching network stats:", error);
+        debugToFile(
+          `getNetworkStats() Error fetching network stats: ${error}`,
+          () => {}
+        );
         reject(error);
       });
   });
 }
 
 let screen;
-let line;
+let networkLine;
 let dataX = [];
 let dataSentY = [];
 let dataReceivedY = [];
 
-async function updatePlot() {
+async function updateNetworkPlot() {
   try {
     const stats = await getNetworkStats(); // Wait for network stats
-    debugToFile(stats, () => {});
     const now = new Date();
     dataX.push(
       now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds()
@@ -479,20 +479,20 @@ async function updatePlot() {
     dataSentY.push(stats.sentPerSecond);
     dataReceivedY.push(stats.receivedPerSecond);
 
-    var series1 = {
+    var seriesNetworkSent = {
       title: "Sent",
       x: dataX,
       y: dataSentY,
       style: { line: "red" },
     };
-    var series2 = {
+    var seriesNetworkReceived = {
       title: "Received",
       x: dataX,
       y: dataReceivedY,
       style: { line: "blue" },
     };
 
-    line.setData([series1, series2]);
+    networkLine.setData([seriesNetworkSent, seriesNetworkReceived]);
     screen.render();
 
     // Keep the data arrays from growing indefinitely
@@ -502,7 +502,10 @@ async function updatePlot() {
       dataReceivedY.shift();
     }
   } catch (error) {
-    console.error("Failed to update plot:", error);
+    debugToFile(
+      `updateNetworkPlot() Failed to update plot: ${error}`,
+      () => {}
+    );
   }
 }
 
@@ -536,13 +539,13 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
     width: "100%",
   });
 
-  line = contrib.line({
+  networkLine = contrib.line({
     style: { line: "yellow", text: "green", baseline: "green" },
     xLabelPadding: 3,
     xPadding: 5,
     showLegend: true,
     wholeNumbersOnly: false, //true=do not show fraction in y axis
-    label: "Network Traffic (MB)",
+    label: "Network Traffic (MB / sec)",
     top: "80%",
     height: "20%",
     width: "100%",
@@ -550,9 +553,9 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
 
   screen.append(executionLog);
   screen.append(consensusLog);
-  screen.append(line);
+  screen.append(networkLine);
 
-  setInterval(updatePlot, 1000);
+  setInterval(updateNetworkPlot, 1000);
   screen.render();
 
   let execution;
