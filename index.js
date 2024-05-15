@@ -58,12 +58,15 @@ args.forEach((val, index) => {
 });
 
 function debugToFile(data, callback) {
-  const filePath = path.join(os.homedir(), "bgnode", "debug.log"); // You can specify your path
+  const filePath = path.join(os.homedir(), "bgnode", "debug.log");
   const now = new Date();
   const timestamp = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
-  const content = `${timestamp} - ${JSON.stringify(data, null, 2)}\n`;
+  // Check if data is an object and stringify if so, otherwise directly use the data
+  const content =
+    typeof data === "object"
+      ? `${timestamp} - ${JSON.stringify(data, null, 2)}\n`
+      : `${timestamp} - ${data}\n`;
 
-  // Append data to the file for continuous logging
   fs.writeFile(filePath, content, { flag: "a" }, (err) => {
     if (err) {
       console.error("Failed to write to file:", err);
@@ -418,6 +421,15 @@ let lastStats = {
   totalReceived: 0,
   timestamp: Date.now(),
 };
+let screen;
+let networkLine;
+let dataCpuUsage;
+let cpuLine;
+let networkDataX = [];
+let cpuDataX = [];
+let storageDonut;
+let dataSentY = [];
+let dataReceivedY = [];
 
 function getNetworkStats() {
   return new Promise((resolve, reject) => {
@@ -463,17 +475,11 @@ function getNetworkStats() {
   });
 }
 
-let screen;
-let networkLine;
-let dataX = [];
-let dataSentY = [];
-let dataReceivedY = [];
-
-async function updateNetworkPlot() {
+async function updateNetworkLinePlot() {
   try {
     const stats = await getNetworkStats(); // Wait for network stats
     const now = new Date();
-    dataX.push(
+    networkDataX.push(
       now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds()
     );
     dataSentY.push(stats.sentPerSecond);
@@ -481,13 +487,13 @@ async function updateNetworkPlot() {
 
     var seriesNetworkSent = {
       title: "Sent",
-      x: dataX,
+      x: networkDataX,
       y: dataSentY,
       style: { line: "red" },
     };
     var seriesNetworkReceived = {
       title: "Received",
-      x: dataX,
+      x: networkDataX,
       y: dataReceivedY,
       style: { line: "blue" },
     };
@@ -496,8 +502,8 @@ async function updateNetworkPlot() {
     screen.render();
 
     // Keep the data arrays from growing indefinitely
-    if (dataX.length > 60) {
-      dataX.shift();
+    if (networkDataX.length > 60) {
+      networkDataX.shift();
       dataSentY.shift();
       dataReceivedY.shift();
     }
@@ -509,10 +515,147 @@ async function updateNetworkPlot() {
   }
 }
 
+function getDiskUsage() {
+  // Fix this function. The drive info makes no sense
+  return new Promise((resolve, reject) => {
+    si.fsSize()
+      .then((drives) => {
+        let diskUsagePercent = 0;
+
+        // Find the drive where the OS is installed. This is often the drive mounted at "/".
+        const osDrive = drives.find((drive) => {
+          // On UNIX-like systems, OS is typically installed on the drive mounted at "/"
+          // On Windows, it is typically installed on the drive with the mount point "C:/"
+          return drive.mount === "/" || drive.mount === "C:/";
+        });
+
+        // debugToFile(`osDrive Size: ${osDrive.size}`, () => {});
+        // debugToFile(`osDrive Used: ${osDrive.used}`, () => {});
+        // debugToFile(`osDrive Available: ${osDrive.available}`, () => {});
+        // debugToFile(
+        //   `osDrive Used Fract: ${osDrive.used / osDrive.size}`,
+        //   () => {}
+        // );
+
+        if (osDrive) {
+          diskUsagePercent = osDrive.use;
+        } else {
+          console.warn("OS drive not found");
+        }
+
+        resolve(diskUsagePercent);
+      })
+      .catch((error) => {
+        debugToFile(
+          `getDiskUsage() Error fetching disk usage stats: ${error}`,
+          () => {}
+        );
+        reject(error);
+      });
+  });
+}
+
+async function updateDiskDonut() {
+  try {
+    const diskUsagePercent = await getDiskUsage(); // Wait for disk usage stats
+
+    storageDonut.setData([
+      // { label: "Used", percent: diskUsagePercent, color: "red" },
+      { label: "Free", percent: 100 - diskUsagePercent, color: "green" },
+    ]);
+
+    screen.render();
+  } catch (error) {
+    debugToFile(
+      `updateDiskDonut() Failed to update disk usage donut: ${error}`,
+      () => {}
+    );
+  }
+}
+
+function getCpuUsage() {
+  return new Promise((resolve, reject) => {
+    si.currentLoad()
+      .then((load) => {
+        const cpuLoads = load.cpus.map((cpu) => cpu.load);
+        debugToFile(
+          `CPU loads: ${JSON.stringify(cpuLoads, null, 2)}`,
+          () => {}
+        );
+        resolve(cpuLoads); // Resolving with the array of load percentages for each CPU
+      })
+      .catch((error) => {
+        debugToFile(
+          `getCpuUsage() Error fetching CPU usage stats: ${error}`,
+          () => {}
+        );
+        reject(error);
+      });
+  });
+}
+
+async function updateCpuLinePlot() {
+  try {
+    const cpuUsagePercentages = await getCpuUsage(); // Ensure this returns an array
+
+    // Check if cpuUsagePercentages is valid
+    if (
+      !Array.isArray(cpuUsagePercentages) ||
+      cpuUsagePercentages.length === 0
+    ) {
+      throw new Error("Failed to fetch CPU usage data or data is empty");
+    }
+
+    const now = new Date();
+    const timeLabel = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+
+    // Initialize dataCpuUsage as an array of arrays if not already done
+    if (!Array.isArray(dataCpuUsage)) {
+      dataCpuUsage = cpuUsagePercentages.map(() => []);
+    }
+
+    // Ensure each core has a corresponding sub-array
+    cpuUsagePercentages.forEach((load, index) => {
+      if (!Array.isArray(dataCpuUsage[index])) {
+        dataCpuUsage[index] = [];
+      }
+      dataCpuUsage[index].push(load);
+    });
+
+    // Push the current time label into cpuDataX
+    cpuDataX.push(timeLabel);
+
+    // Prepare series data for each CPU core
+    const series = cpuUsagePercentages.map((_, i) => ({
+      title: `${i + 1}`,
+      x: cpuDataX,
+      y: dataCpuUsage[i],
+      style: { line: "green" }, // Consider varying colors for each core
+    }));
+
+    cpuLine.setData(series);
+    screen.render();
+
+    // Limit data history to the last 60 points
+    if (cpuDataX.length > 60) {
+      cpuDataX.shift();
+      dataCpuUsage.forEach((cpuData) => cpuData.shift());
+    }
+  } catch (error) {
+    console.error(`Failed to update CPU usage line chart: ${error}`);
+    debugToFile(
+      `updateCpuLineChart() Failed to update CPU usage line chart: ${error}`,
+      () => {}
+    );
+  }
+}
+
 function startChain(executionClient, consensusClient, jwtDir, platform) {
   // TODO: Use non-standard ports
   // TODO: Fix blessed-contrib layout
-  // TODO: Make the blessed-contrib view cooler - show CPU, memory, storage, and a BG logo
+  // TODO: Fix disk usage source (IDK what drive its using)
+  // TODO: Give CPU cores different colors
+  // TODO: Make the blessed-contrib view cooler - memory, storage, and a BG logo
   // TODO: Test blessed-contrib on windows and linux
 
   jwtPath = path.join(jwtDir, "jwt.hex");
@@ -539,24 +682,54 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
     width: "100%",
   });
 
+  cpuLine = contrib.line({
+    style: { line: "blue", text: "green", baseline: "green" },
+    xLabelPadding: 3,
+    xPadding: 5,
+    showLegend: true,
+    wholeNumbersOnly: false,
+    label: "CPU",
+    top: "80%",
+    height: "10%",
+    width: "50%",
+  });
+
   networkLine = contrib.line({
     style: { line: "yellow", text: "green", baseline: "green" },
     xLabelPadding: 3,
     xPadding: 5,
     showLegend: true,
-    wholeNumbersOnly: false, //true=do not show fraction in y axis
+    wholeNumbersOnly: false,
     label: "Network Traffic (MB / sec)",
-    top: "80%",
-    height: "20%",
-    width: "100%",
+    top: "90%",
+    height: "10%",
+    width: "90%",
+  });
+
+  storageDonut = contrib.donut({
+    label: "Storage",
+    radius: 8,
+    arcWidth: 3,
+    remainColor: "black",
+    yPadding: 2,
+    // data: [{ percent: 80, label: "web1", color: "green" }],
+    top: "90%",
+    left: "90%",
+    height: "10%",
+    width: "10%",
   });
 
   screen.append(executionLog);
   screen.append(consensusLog);
+  screen.append(cpuLine);
   screen.append(networkLine);
+  screen.append(storageDonut);
 
-  setInterval(updateNetworkPlot, 1000);
   screen.render();
+
+  setInterval(updateCpuLinePlot, 1000);
+  setInterval(updateNetworkLinePlot, 1000);
+  setInterval(updateDiskDonut, 1000);
 
   let execution;
   if (executionClient === "geth") {
