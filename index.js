@@ -423,13 +423,15 @@ let lastStats = {
 };
 let screen;
 let networkLine;
-let dataCpuUsage;
-let cpuLine;
 let networkDataX = [];
-let cpuDataX = [];
-let storageDonut;
 let dataSentY = [];
 let dataReceivedY = [];
+let cpuLine;
+let cpuDataX = [];
+let dataCpuUsage;
+let memDonut;
+let memDataX = [];
+let storageDonut;
 
 function getNetworkStats() {
   return new Promise((resolve, reject) => {
@@ -529,8 +531,11 @@ function getDiskUsage() {
           return drive.mount === "/" || drive.mount === "C:/";
         });
 
-        // debugToFile(`osDrive Size: ${osDrive.size}`, () => {});
-        // debugToFile(`osDrive Used: ${osDrive.used}`, () => {});
+        debugToFile(`osDrive: ${JSON.stringify(osDrive, null, 2)}`, () => {});
+        debugToFile(
+          `osDrive: ${((osDrive.used / osDrive.size) * 100).toFixed(2)}`,
+          () => {}
+        );
         // debugToFile(`osDrive Available: ${osDrive.available}`, () => {});
         // debugToFile(
         //   `osDrive Used Fract: ${osDrive.used / osDrive.size}`,
@@ -561,7 +566,7 @@ async function updateDiskDonut() {
 
     storageDonut.setData([
       // { label: "Used", percent: diskUsagePercent, color: "red" },
-      { label: "Free", percent: 100 - diskUsagePercent, color: "green" },
+      { label: " ", percent: 100 - diskUsagePercent, color: "green" },
     ]);
 
     screen.render();
@@ -650,12 +655,48 @@ async function updateCpuLinePlot() {
   }
 }
 
+function getMemoryUsage() {
+  return new Promise((resolve, reject) => {
+    si.mem()
+      .then((memory) => {
+        const totalMemory = memory.total;
+        const usedMemory = memory.active; // 'active' is usually what's actually used
+        const memoryUsagePercent = (usedMemory / totalMemory) * 100;
+
+        resolve(memoryUsagePercent.toFixed(2)); // Return memory usage as a percentage
+      })
+      .catch((error) => {
+        debugToFile(
+          `getMemoryUsage() Error fetching memory stats: ${error}`,
+          () => {}
+        );
+        reject(error);
+      });
+  });
+}
+
+async function updateMemoryGauge() {
+  try {
+    const memoryUsagePercent = await getMemoryUsage(); // Wait for memory usage stats
+    memDonut.setData([
+      { label: " ", percent: memoryUsagePercent, color: "red" },
+    ]);
+    screen.render();
+  } catch (error) {
+    debugToFile(
+      `updateMemoryGauge() Failed to update memory gauge: ${error}`,
+      () => {}
+    );
+  }
+}
+
 function startChain(executionClient, consensusClient, jwtDir, platform) {
   // TODO: Use non-standard ports
   // TODO: Fix blessed-contrib layout
+  // TODO: Figure out what mem usage is actually displaying
   // TODO: Fix disk usage source (IDK what drive its using)
   // TODO: Give CPU cores different colors
-  // TODO: Make the blessed-contrib view cooler - memory, storage, and a BG logo
+  // TODO: Make the blessed-contrib view cooler - and a BG logo
   // TODO: Test blessed-contrib on windows and linux
 
   jwtPath = path.join(jwtDir, "jwt.hex");
@@ -691,7 +732,19 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
     label: "CPU",
     top: "80%",
     height: "10%",
-    width: "50%",
+    width: "90%",
+  });
+
+  memDonut = contrib.donut({
+    label: "Memory",
+    radius: 8,
+    arcWidth: 3,
+    remainColor: "white",
+    yPadding: 2,
+    top: "80%",
+    height: "10%",
+    left: "90%",
+    width: "10%",
   });
 
   networkLine = contrib.line({
@@ -710,9 +763,8 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
     label: "Storage",
     radius: 8,
     arcWidth: 3,
-    remainColor: "black",
+    remainColor: "white",
     yPadding: 2,
-    // data: [{ percent: 80, label: "web1", color: "green" }],
     top: "90%",
     left: "90%",
     height: "10%",
@@ -722,6 +774,7 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
   screen.append(executionLog);
   screen.append(consensusLog);
   screen.append(cpuLine);
+  screen.append(memDonut);
   screen.append(networkLine);
   screen.append(storageDonut);
 
@@ -729,6 +782,7 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
 
   setInterval(updateCpuLinePlot, 1000);
   setInterval(updateNetworkLinePlot, 1000);
+  setInterval(updateMemoryGauge, 1000);
   setInterval(updateDiskDonut, 1000);
 
   let execution;
