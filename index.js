@@ -3,7 +3,6 @@ const os = require("os");
 const fs = require("fs");
 const path = require("path");
 const si = require("systeminformation");
-
 const blessed = require("blessed");
 const contrib = require("blessed-contrib");
 
@@ -564,16 +563,31 @@ async function updateDiskDonut() {
   }
 }
 
+// function getCpuUsage() {
+//   return new Promise((resolve, reject) => {
+//     si.currentLoad()
+//       .then((load) => {
+//         const cpuLoads = load.cpus.map((cpu) => cpu.load);
+//         debugToFile(`load: ${JSON.stringify(load, null, 2)}`, () => {});
+//         resolve(cpuLoads);
+//       })
+//       .catch((error) => {
+//         debugToFile(
+//           `getCpuUsage() Error fetching CPU usage stats: ${error}`,
+//           () => {}
+//         );
+//         reject(error);
+//       });
+//   });
+// }
+
 function getCpuUsage() {
   return new Promise((resolve, reject) => {
     si.currentLoad()
       .then((load) => {
-        const cpuLoads = load.cpus.map((cpu) => cpu.load);
-        // debugToFile(
-        //   `CPU loads: ${JSON.stringify(cpuLoads, null, 2)}`,
-        //   () => {}
-        // );
-        resolve(cpuLoads);
+        const currentLoad = load.currentLoad;
+        debugToFile(`load: ${JSON.stringify(load, null, 2)}`, () => {});
+        resolve(currentLoad);
       })
       .catch((error) => {
         debugToFile(
@@ -585,51 +599,99 @@ function getCpuUsage() {
   });
 }
 
-const colors = [
-  240, 255, 32, 48, 64, 208, 80, 192, 176, 96, 160, 112, 144, 128,
-];
+// const colors = [
+//   240, 255, 32, 48, 64, 208, 80, 192, 176, 96, 160, 112, 144, 128,
+// ];
 
-function getColor(i) {
-  return colors[i % colors.length];
-}
+// function getColor(i) {
+//   return colors[i % colors.length];
+// }
+//
+// async function updateCpuLinePlot() {
+//   try {
+//     const cpuUsagePercentages = await getCpuUsage(); // Ensure this returns an array
+
+//     // Check if cpuUsagePercentages is valid
+//     if (
+//       !Array.isArray(cpuUsagePercentages) ||
+//       cpuUsagePercentages.length === 0
+//     ) {
+//       throw new Error("Failed to fetch CPU usage data or data is empty");
+//     }
+
+//     const now = new Date();
+//     const timeLabel = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+
+//     // Initialize dataCpuUsage as an array of arrays if not already done
+//     if (!Array.isArray(dataCpuUsage)) {
+//       dataCpuUsage = cpuUsagePercentages.map(() => []);
+//     }
+
+//     // Ensure each core has a corresponding sub-array
+//     cpuUsagePercentages.forEach((load, index) => {
+//       if (!Array.isArray(dataCpuUsage[index])) {
+//         dataCpuUsage[index] = [];
+//       }
+//       dataCpuUsage[index].push(load);
+//     });
+
+//     cpuDataX.push(timeLabel);
+
+//     // Prepare series data for each CPU core
+//     const series = cpuUsagePercentages.map((_, i) => ({
+//       // title: `${i + 1}`,
+//       title: "",
+//       x: cpuDataX,
+//       y: dataCpuUsage[i],
+//       style: { line: getColor(i) }, // Consider varying colors for each core
+//     }));
+
+//     cpuLine.setData(series);
+//     screen.render();
+
+//     // Limit data history to the last 60 points
+//     if (cpuDataX.length > 60) {
+//       cpuDataX.shift();
+//       dataCpuUsage.forEach((cpuData) => cpuData.shift());
+//     }
+//   } catch (error) {
+//     debugToFile(
+//       `updateCpuLineChart() Failed to update CPU usage line chart: ${error}`,
+//       () => {}
+//     );
+//   }
+// }
 
 async function updateCpuLinePlot() {
   try {
-    const cpuUsagePercentages = await getCpuUsage(); // Ensure this returns an array
+    const currentLoad = await getCpuUsage(); // Get the overall CPU load
 
-    // Check if cpuUsagePercentages is valid
-    if (
-      !Array.isArray(cpuUsagePercentages) ||
-      cpuUsagePercentages.length === 0
-    ) {
+    if (currentLoad === undefined || currentLoad === null) {
       throw new Error("Failed to fetch CPU usage data or data is empty");
     }
 
     const now = new Date();
     const timeLabel = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
 
-    // Initialize dataCpuUsage as an array of arrays if not already done
+    if (!Array.isArray(cpuDataX)) {
+      cpuDataX = [];
+    }
     if (!Array.isArray(dataCpuUsage)) {
-      dataCpuUsage = cpuUsagePercentages.map(() => []);
+      dataCpuUsage = [];
     }
 
-    // Ensure each core has a corresponding sub-array
-    cpuUsagePercentages.forEach((load, index) => {
-      if (!Array.isArray(dataCpuUsage[index])) {
-        dataCpuUsage[index] = [];
-      }
-      dataCpuUsage[index].push(load);
-    });
-
     cpuDataX.push(timeLabel);
+    dataCpuUsage.push(currentLoad);
 
-    // Prepare series data for each CPU core
-    const series = cpuUsagePercentages.map((_, i) => ({
-      title: `${i + 1}`,
-      x: cpuDataX,
-      y: dataCpuUsage[i],
-      style: { line: getColor(i) }, // Consider varying colors for each core
-    }));
+    // Prepare series data for the overall CPU load
+    const series = [
+      {
+        title: "", // Use an empty string for the title
+        x: cpuDataX,
+        y: dataCpuUsage,
+        style: { line: "cyan" }, // Use the first color
+      },
+    ];
 
     cpuLine.setData(series);
     screen.render();
@@ -637,7 +699,7 @@ async function updateCpuLinePlot() {
     // Limit data history to the last 60 points
     if (cpuDataX.length > 60) {
       cpuDataX.shift();
-      dataCpuUsage.forEach((cpuData) => cpuData.shift());
+      dataCpuUsage.shift();
     }
   } catch (error) {
     debugToFile(
@@ -654,6 +716,8 @@ function getMemoryUsage() {
         const totalMemory = memory.total;
         const usedMemory = memory.active; // 'active' is usually what's actually used
         const memoryUsagePercent = (usedMemory / totalMemory) * 100;
+
+        debugToFile(`memory: ${JSON.stringify(memory, null, 2)}`, () => {});
 
         resolve(memoryUsagePercent.toFixed(2)); // Return memory usage as a percentage
       })
@@ -686,7 +750,6 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
   // TODO: Use non-standard ports
   // TODO: Fix blessed-contrib layout
   // TODO: Figure out what mem usage is actually displaying
-  // TODO: Give CPU cores different colors
   // TODO: Make the blessed-contrib view cooler - and a BG logo
   // TODO: Test blessed-contrib on windows and linux
 
@@ -723,7 +786,7 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
     xPadding: 5,
     showLegend: true,
     wholeNumbersOnly: false,
-    label: "CPU",
+    label: "CPU Load (%)",
     // top: "80%",
     // height: "10%",
     top: "40%",
@@ -733,10 +796,10 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
 
   memDonut = contrib.donut({
     label: "Memory",
-    radius: 8,
-    arcWidth: 3,
+    radius: 10,
+    arcWidth: 4,
     remainColor: "white",
-    yPadding: 2,
+    yPadding: 0,
     // top: "80%",
     // height: "10%",
     top: "70%",
@@ -751,7 +814,7 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
     xPadding: 5,
     showLegend: true,
     wholeNumbersOnly: false,
-    label: "Network Traffic (MB / sec)",
+    label: "Network Traffic (MB/sec)",
     // top: "90%",
     // height: "10%",
     top: "70%",
@@ -761,10 +824,10 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
 
   storageDonut = contrib.donut({
     label: "Storage",
-    radius: 8,
-    arcWidth: 3,
+    radius: 10,
+    arcWidth: 4,
     remainColor: "white",
-    yPadding: 2,
+    yPadding: 0,
     // top: "90%",
     // height: "10%",
     top: "85%",
@@ -782,10 +845,10 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
 
   screen.render();
 
-  updateDiskDonut();
   setInterval(updateCpuLinePlot, 1000);
   setInterval(updateNetworkLinePlot, 1000);
   setInterval(updateMemoryGauge, 1000);
+  updateDiskDonut();
   setInterval(updateDiskDonut, 10000);
 
   let execution;
