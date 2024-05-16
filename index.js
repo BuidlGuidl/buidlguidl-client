@@ -430,7 +430,6 @@ let cpuLine;
 let cpuDataX = [];
 let dataCpuUsage;
 let memDonut;
-let memDataX = [];
 let storageDonut;
 
 function getNetworkStats() {
@@ -526,29 +525,18 @@ function getDiskUsage() {
 
         // Find the drive where the OS is installed. This is often the drive mounted at "/".
         const osDrive = drives.find((drive) => {
-          // On UNIX-like systems, OS is typically installed on the drive mounted at "/"
-          // On Windows, it is typically installed on the drive with the mount point "C:/"
           return drive.mount === "/" || drive.mount === "C:/";
         });
 
         debugToFile(`osDrive: ${JSON.stringify(osDrive, null, 2)}`, () => {});
-        debugToFile(
-          `osDrive: ${((osDrive.used / osDrive.size) * 100).toFixed(2)}`,
-          () => {}
-        );
-        // debugToFile(`osDrive Available: ${osDrive.available}`, () => {});
-        // debugToFile(
-        //   `osDrive Used Fract: ${osDrive.used / osDrive.size}`,
-        //   () => {}
-        // );
 
         if (osDrive) {
-          diskUsagePercent = osDrive.use;
+          diskFreePercent = 100 - (osDrive.available / osDrive.size) * 100;
         } else {
-          console.warn("OS drive not found");
+          debugToFile(`OS Drive not found.`, () => {});
         }
 
-        resolve(diskUsagePercent);
+        resolve(diskFreePercent);
       })
       .catch((error) => {
         debugToFile(
@@ -566,7 +554,7 @@ async function updateDiskDonut() {
 
     storageDonut.setData([
       // { label: "Used", percent: diskUsagePercent, color: "red" },
-      { label: " ", percent: 100 - diskUsagePercent, color: "green" },
+      { label: "% Free", percent: diskUsagePercent, color: "green" },
     ]);
 
     screen.render();
@@ -710,7 +698,8 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
     selectedFg: "green",
     label: "Execution Logs",
     top: "0%",
-    height: "40%",
+    // height: "40%",
+    height: "20%",
     width: "100%",
   });
 
@@ -718,8 +707,10 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
     fg: "yellow",
     selectedFg: "yellow",
     label: "Consensus Logs",
-    top: "40%",
-    height: "40%",
+    // top: "40%",
+    // height: "40%",
+    top: "20%",
+    height: "20%",
     width: "100%",
   });
 
@@ -730,9 +721,11 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
     showLegend: true,
     wholeNumbersOnly: false,
     label: "CPU",
-    top: "80%",
-    height: "10%",
-    width: "90%",
+    // top: "80%",
+    // height: "10%",
+    top: "40%",
+    height: "30%",
+    width: "100%",
   });
 
   memDonut = contrib.donut({
@@ -741,8 +734,10 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
     arcWidth: 3,
     remainColor: "white",
     yPadding: 2,
-    top: "80%",
-    height: "10%",
+    // top: "80%",
+    // height: "10%",
+    top: "70%",
+    height: "15%",
     left: "90%",
     width: "10%",
   });
@@ -754,8 +749,10 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
     showLegend: true,
     wholeNumbersOnly: false,
     label: "Network Traffic (MB / sec)",
-    top: "90%",
-    height: "10%",
+    // top: "90%",
+    // height: "10%",
+    top: "70%",
+    height: "30%",
     width: "90%",
   });
 
@@ -765,9 +762,11 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
     arcWidth: 3,
     remainColor: "white",
     yPadding: 2,
-    top: "90%",
+    // top: "90%",
+    // height: "10%",
+    top: "85%",
+    height: "15%",
     left: "90%",
-    height: "10%",
     width: "10%",
   });
 
@@ -780,10 +779,11 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
 
   screen.render();
 
+  updateDiskDonut();
   setInterval(updateCpuLinePlot, 1000);
   setInterval(updateNetworkLinePlot, 1000);
   setInterval(updateMemoryGauge, 1000);
-  setInterval(updateDiskDonut, 1000);
+  setInterval(updateDiskDonut, 10000);
 
   let execution;
   if (executionClient === "geth") {
@@ -799,7 +799,7 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
       "bgnode",
       "geth",
       "logs",
-      `gethLog_${getFormattedDateTime()}.txt`
+      `geth_${getFormattedDateTime()}.log`
     );
 
     execution = spawn(
@@ -835,7 +835,7 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
       "bgnode",
       "reth",
       "logs",
-      `rethLog_${getFormattedDateTime()}.txt`
+      `reth_${getFormattedDateTime()}.log`
     );
 
     execution = spawn(
@@ -881,7 +881,7 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
       "bgnode",
       "prysm",
       "logs",
-      `prysmLog_${getFormattedDateTime()}.txt`
+      `prysm_${getFormattedDateTime()}.log`
     );
 
     consensus = spawn(
@@ -926,7 +926,7 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
       "bgnode",
       "lighthouse",
       "logs",
-      `lighthouseLog_${getFormattedDateTime()}.txt`
+      `lighthouse_${getFormattedDateTime()}.log`
     );
 
     consensus = spawn(
