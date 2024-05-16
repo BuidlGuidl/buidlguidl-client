@@ -517,7 +517,6 @@ async function updateNetworkLinePlot() {
 }
 
 function getDiskUsage() {
-  // Fix this function. The drive info makes no sense
   return new Promise((resolve, reject) => {
     si.fsSize()
       .then((drives) => {
@@ -528,7 +527,7 @@ function getDiskUsage() {
           return drive.mount === "/" || drive.mount === "C:/";
         });
 
-        debugToFile(`osDrive: ${JSON.stringify(osDrive, null, 2)}`, () => {});
+        // debugToFile(`osDrive: ${JSON.stringify(osDrive, null, 2)}`, () => {});
 
         if (osDrive) {
           diskFreePercent = 100 - (osDrive.available / osDrive.size) * 100;
@@ -553,7 +552,6 @@ async function updateDiskDonut() {
     const diskUsagePercent = await getDiskUsage(); // Wait for disk usage stats
 
     storageDonut.setData([
-      // { label: "Used", percent: diskUsagePercent, color: "red" },
       { label: "% Free", percent: diskUsagePercent, color: "green" },
     ]);
 
@@ -571,11 +569,11 @@ function getCpuUsage() {
     si.currentLoad()
       .then((load) => {
         const cpuLoads = load.cpus.map((cpu) => cpu.load);
-        debugToFile(
-          `CPU loads: ${JSON.stringify(cpuLoads, null, 2)}`,
-          () => {}
-        );
-        resolve(cpuLoads); // Resolving with the array of load percentages for each CPU
+        // debugToFile(
+        //   `CPU loads: ${JSON.stringify(cpuLoads, null, 2)}`,
+        //   () => {}
+        // );
+        resolve(cpuLoads);
       })
       .catch((error) => {
         debugToFile(
@@ -585,6 +583,14 @@ function getCpuUsage() {
         reject(error);
       });
   });
+}
+
+const colors = [
+  240, 255, 32, 48, 64, 208, 80, 192, 176, 96, 160, 112, 144, 128,
+];
+
+function getColor(i) {
+  return colors[i % colors.length];
 }
 
 async function updateCpuLinePlot() {
@@ -615,7 +621,6 @@ async function updateCpuLinePlot() {
       dataCpuUsage[index].push(load);
     });
 
-    // Push the current time label into cpuDataX
     cpuDataX.push(timeLabel);
 
     // Prepare series data for each CPU core
@@ -623,7 +628,7 @@ async function updateCpuLinePlot() {
       title: `${i + 1}`,
       x: cpuDataX,
       y: dataCpuUsage[i],
-      style: { line: "green" }, // Consider varying colors for each core
+      style: { line: getColor(i) }, // Consider varying colors for each core
     }));
 
     cpuLine.setData(series);
@@ -635,7 +640,6 @@ async function updateCpuLinePlot() {
       dataCpuUsage.forEach((cpuData) => cpuData.shift());
     }
   } catch (error) {
-    console.error(`Failed to update CPU usage line chart: ${error}`);
     debugToFile(
       `updateCpuLineChart() Failed to update CPU usage line chart: ${error}`,
       () => {}
@@ -682,7 +686,6 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
   // TODO: Use non-standard ports
   // TODO: Fix blessed-contrib layout
   // TODO: Figure out what mem usage is actually displaying
-  // TODO: Fix disk usage source (IDK what drive its using)
   // TODO: Give CPU cores different colors
   // TODO: Make the blessed-contrib view cooler - and a BG logo
   // TODO: Test blessed-contrib on windows and linux
