@@ -551,7 +551,7 @@ async function updateDiskDonut() {
     const diskUsagePercent = await getDiskUsage(); // Wait for disk usage stats
 
     storageDonut.setData([
-      { label: "% Free", percent: diskUsagePercent, color: "green" },
+      { label: "% Used", percent: diskUsagePercent, color: "green" },
     ]);
 
     screen.render();
@@ -586,7 +586,7 @@ function getCpuUsage() {
     si.currentLoad()
       .then((load) => {
         const currentLoad = load.currentLoad;
-        debugToFile(`load: ${JSON.stringify(load, null, 2)}`, () => {});
+        // debugToFile(`load: ${JSON.stringify(load, null, 2)}`, () => {});
         resolve(currentLoad);
       })
       .catch((error) => {
@@ -717,7 +717,7 @@ function getMemoryUsage() {
         const usedMemory = memory.active; // 'active' is usually what's actually used
         const memoryUsagePercent = (usedMemory / totalMemory) * 100;
 
-        debugToFile(`memory: ${JSON.stringify(memory, null, 2)}`, () => {});
+        // debugToFile(`memory: ${JSON.stringify(memory, null, 2)}`, () => {});
 
         resolve(memoryUsagePercent.toFixed(2)); // Return memory usage as a percentage
       })
