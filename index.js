@@ -88,20 +88,20 @@ function getFormattedDateTime() {
   return `${year}_${month}_${day}_${hour}_${minute}_${second}`;
 }
 
-function checkMacLinuxPrereqs(platform) {
-  // All these are required to be installed for linux: node, npm, yarn
-  if (platform === "linux") {
-    try {
-      execSync(`command -v curl`, { stdio: "ignore" });
-      const version = execSync(`curl --version`).toString().trim();
-      color("36", `\nCurl is already installed. Version:\n${version}`);
-    } catch {
-      color("1", `\nPlease install Curl by running this command:`);
-      color("1", `sudo apt-get install curl`);
-      process.exit(0);
-    }
-  }
-}
+// function checkMacLinuxPrereqs(platform) {
+//   // All these are required to be installed for linux: node, npm, yarn
+//   if (platform === "linux") {
+//     try {
+//       execSync(`command -v curl`, { stdio: "ignore" });
+//       const version = execSync(`curl --version`).toString().trim();
+//       color("36", `\nCurl is already installed. Version:\n${version}`);
+//     } catch {
+//       color("1", `\nPlease install Curl by running this command:`);
+//       color("1", `sudo apt-get install curl`);
+//       process.exit(0);
+//     }
+//   }
+// }
 
 function checkWindowsPrereqs() {
   try {
@@ -1013,6 +1013,8 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
         "http://localhost:8551",
         "--checkpoint-sync-url",
         "https://mainnet.checkpoint.sigp.io",
+        "--checkpoint-sync-url-timeout",
+        "600",
         "--disable-deposit-contract-sync",
         "--datadir",
         path.join(os.homedir(), "bgnode", "lighthouse", "database"),
@@ -1087,7 +1089,6 @@ const jwtDir = path.join(os.homedir(), "bgnode", "jwt");
 const platform = os.platform();
 
 if (["darwin", "linux"].includes(platform)) {
-  checkMacLinuxPrereqs(platform);
   installMacLinuxExecutionClient(executionClient, platform);
   installMacLinuxConsensusClient(consensusClient, platform);
 } else if (platform === "win32") {
