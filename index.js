@@ -7,8 +7,8 @@ const blessed = require("blessed");
 const contrib = require("blessed-contrib");
 
 // Set default values
-let executionClient = "geth";
-let consensusClient = "prysm";
+let executionClient = "reth";
+let consensusClient = "lighthouse";
 
 function showHelp() {
   console.log("Usage: node script.js [options]");
@@ -747,10 +747,13 @@ async function updateMemoryGauge() {
 }
 
 function startChain(executionClient, consensusClient, jwtDir, platform) {
+  // TODO: CONFIGURE reth and lighthouse ports
+  // TODO: Make reth and lighthouse default
+  // TODO: Don't let uses switch clients?
+  // TODO: Add PM2 or something to handle restarts
   // TODO: Use non-standard ports
-  // TODO: Fix blessed-contrib layout
   // TODO: Figure out what mem usage is actually displaying
-  // TODO: Make the blessed-contrib view cooler - and a BG logo
+  // TODO: Make the blessed-contrib view cooler - a BG logo and ...
   // TODO: Test blessed-contrib on windows and linux
 
   jwtPath = path.join(jwtDir, "jwt.hex");
@@ -910,6 +913,11 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
         "node",
         "--full",
         "--http",
+        "--http.api",
+        "trace,web3,eth,debug",
+        "--ws",
+        "--ws.api",
+        "trace,web3,eth,debug",
         "--authrpc.addr",
         "127.0.0.1",
         "--authrpc.port",
