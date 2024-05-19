@@ -143,7 +143,7 @@ function createJwtSecret(jwtDir) {
 }
 
 function installMacLinuxExecutionClient(executionClient, platform) {
-  // TODO: Make reth snapshot dl
+  // TODO: Make reth snapshot dl. Figure out how to make it get the latest snapshot. Remember it downloads as db/file
   const arch = os.arch();
 
   const configs = {
@@ -208,7 +208,7 @@ function installMacLinuxExecutionClient(executionClient, platform) {
       color("1", "\nInstalling Reth.");
       if (!fs.existsSync(rethDir)) {
         console.log(`Creating '${rethDir}'`);
-        fs.mkdirSync(`${rethDir}/database/db`, { recursive: true });
+        fs.mkdirSync(`${rethDir}/database`, { recursive: true });
         fs.mkdirSync(`${rethDir}/logs`, { recursive: true });
       }
       console.log("Downloading Reth.");
