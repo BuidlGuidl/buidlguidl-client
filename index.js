@@ -88,45 +88,30 @@ function getFormattedDateTime() {
   return `${year}_${month}_${day}_${hour}_${minute}_${second}`;
 }
 
-// function checkMacLinuxPrereqs(platform) {
-//   // All these are required to be installed for linux: node, npm, yarn
-//   if (platform === "linux") {
-//     try {
-//       execSync(`command -v curl`, { stdio: "ignore" });
-//       const version = execSync(`curl --version`).toString().trim();
-//       color("36", `\nCurl is already installed. Version:\n${version}`);
-//     } catch {
-//       color("1", `\nPlease install Curl by running this command:`);
-//       color("1", `sudo apt-get install curl`);
-//       process.exit(0);
-//     }
+// function checkWindowsPrereqs() {
+//   try {
+//     const version = execSync(`choco -v`).toString().trim();
+//     color("36", `\nChocolatey is already installed. Version:\n${version}`);
+//   } catch {
+//     color(
+//       "1",
+//       `\nPlease install Chocolatey (https://community.chocolatey.org/).`
+//     );
+//     process.exit(0);
+//   }
+
+//   try {
+//     const version = execSync(`openssl -v`).toString().trim();
+//     color("36", `\nOpenssl is already installed. Version:\n${version}`);
+//   } catch {
+//     color("1", `\nPlease install openssl`);
+//     color(
+//       "1",
+//       `Open Command Prompt as Administrator and run 'choco install openssl'`
+//     );
+//     process.exit(0);
 //   }
 // }
-
-function checkWindowsPrereqs() {
-  try {
-    const version = execSync(`choco -v`).toString().trim();
-    color("36", `\nChocolatey is already installed. Version:\n${version}`);
-  } catch {
-    color(
-      "1",
-      `\nPlease install Chocolatey (https://community.chocolatey.org/).`
-    );
-    process.exit(0);
-  }
-
-  try {
-    const version = execSync(`openssl -v`).toString().trim();
-    color("36", `\nOpenssl is already installed. Version:\n${version}`);
-  } catch {
-    color("1", `\nPlease install openssl`);
-    color(
-      "1",
-      `Open Command Prompt as Administrator and run 'choco install openssl'`
-    );
-    process.exit(0);
-  }
-}
 
 function createJwtSecret(jwtDir) {
   if (!fs.existsSync(jwtDir)) {
@@ -144,6 +129,7 @@ function createJwtSecret(jwtDir) {
 
 function installMacLinuxExecutionClient(executionClient, platform) {
   // TODO: Make reth snapshot dl. Figure out how to make it get the latest snapshot. Remember it downloads as db/file
+  // valid dates found so far: 2024-05-14, 2024-04-30, 2024-04-17
   const arch = os.arch();
 
   const configs = {
@@ -224,6 +210,17 @@ function installMacLinuxExecutionClient(executionClient, platform) {
       execSync(`cd ${rethDir} && rm ${rethFileName}.tar.gz`, {
         stdio: "inherit",
       });
+      // TODO: Make sure snapshot dl works on linux (and windows). This line works on mac
+      // TODO: Figure out where to put the snapshot dl
+      // TODO: Figure out how to get most recent snapshot
+      // console.log("\nDownloading reth snapshot.");
+      // execSync(
+      //   `cd ${rethDir}/database && wget -O - https://downloads.merkle.io/reth-2024-05-14.tar.lz4 | lz4 -dc | tar -xvf -
+      //   `,
+      //   {
+      //     stdio: "inherit",
+      //   }
+      // );
     } else {
       color("36", "Reth is already installed.");
     }
@@ -564,24 +561,6 @@ async function updateDiskDonut() {
   }
 }
 
-// function getCpuUsage() {
-//   return new Promise((resolve, reject) => {
-//     si.currentLoad()
-//       .then((load) => {
-//         const cpuLoads = load.cpus.map((cpu) => cpu.load);
-//         debugToFile(`load: ${JSON.stringify(load, null, 2)}`, () => {});
-//         resolve(cpuLoads);
-//       })
-//       .catch((error) => {
-//         debugToFile(
-//           `getCpuUsage() Error fetching CPU usage stats: ${error}`,
-//           () => {}
-//         );
-//         reject(error);
-//       });
-//   });
-// }
-
 function getCpuUsage() {
   return new Promise((resolve, reject) => {
     si.currentLoad()
@@ -599,69 +578,6 @@ function getCpuUsage() {
       });
   });
 }
-
-// const colors = [
-//   240, 255, 32, 48, 64, 208, 80, 192, 176, 96, 160, 112, 144, 128,
-// ];
-
-// function getColor(i) {
-//   return colors[i % colors.length];
-// }
-//
-// async function updateCpuLinePlot() {
-//   try {
-//     const cpuUsagePercentages = await getCpuUsage(); // Ensure this returns an array
-
-//     // Check if cpuUsagePercentages is valid
-//     if (
-//       !Array.isArray(cpuUsagePercentages) ||
-//       cpuUsagePercentages.length === 0
-//     ) {
-//       throw new Error("Failed to fetch CPU usage data or data is empty");
-//     }
-
-//     const now = new Date();
-//     const timeLabel = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
-
-//     // Initialize dataCpuUsage as an array of arrays if not already done
-//     if (!Array.isArray(dataCpuUsage)) {
-//       dataCpuUsage = cpuUsagePercentages.map(() => []);
-//     }
-
-//     // Ensure each core has a corresponding sub-array
-//     cpuUsagePercentages.forEach((load, index) => {
-//       if (!Array.isArray(dataCpuUsage[index])) {
-//         dataCpuUsage[index] = [];
-//       }
-//       dataCpuUsage[index].push(load);
-//     });
-
-//     cpuDataX.push(timeLabel);
-
-//     // Prepare series data for each CPU core
-//     const series = cpuUsagePercentages.map((_, i) => ({
-//       // title: `${i + 1}`,
-//       title: "",
-//       x: cpuDataX,
-//       y: dataCpuUsage[i],
-//       style: { line: getColor(i) }, // Consider varying colors for each core
-//     }));
-
-//     cpuLine.setData(series);
-//     screen.render();
-
-//     // Limit data history to the last 60 points
-//     if (cpuDataX.length > 60) {
-//       cpuDataX.shift();
-//       dataCpuUsage.forEach((cpuData) => cpuData.shift());
-//     }
-//   } catch (error) {
-//     debugToFile(
-//       `updateCpuLineChart() Failed to update CPU usage line chart: ${error}`,
-//       () => {}
-//     );
-//   }
-// }
 
 async function updateCpuLinePlot() {
   try {
@@ -748,13 +664,12 @@ async function updateMemoryGauge() {
 }
 
 function startChain(executionClient, consensusClient, jwtDir, platform) {
-  // TODO: CONFIGURE reth and lighthouse ports
-  // TODO: Make reth and lighthouse default
   // TODO: Don't let uses switch clients?
   // TODO: Add PM2 or something to handle restarts
+  // Another way: Use this to start: screen -S myScript && node.js This to return to blessed-config: screen -r myScript This to detach view: control-A-D
   // TODO: Use non-standard ports
   // TODO: Figure out what mem usage is actually displaying
-  // TODO: Make the blessed-contrib view cooler - a BG logo and ...
+  // TODO: Make the blessed-contrib view cooler - a BG logo and make line charts same width
   // TODO: Test blessed-contrib on windows and linux
 
   jwtPath = path.join(jwtDir, "jwt.hex");
@@ -1093,7 +1008,6 @@ if (["darwin", "linux"].includes(platform)) {
   installMacLinuxExecutionClient(executionClient, platform);
   installMacLinuxConsensusClient(consensusClient, platform);
 } else if (platform === "win32") {
-  checkWindowsPrereqs();
   installWindowsExecutionClient(executionClient);
   installWindowsConsensusClient(consensusClient);
 }
