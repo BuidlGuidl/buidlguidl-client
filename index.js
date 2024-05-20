@@ -464,7 +464,7 @@ function getNetworkStats() {
         };
 
         resolve({
-          sentPerSecond: sentPerSecond / 1000000, // Convert to megabytes if needed
+          sentPerSecond: sentPerSecond / 1000000,
           receivedPerSecond: receivedPerSecond / 1000000,
         });
       })
@@ -480,7 +480,7 @@ function getNetworkStats() {
 
 async function updateNetworkLinePlot() {
   try {
-    const stats = await getNetworkStats(); // Wait for network stats
+    const stats = await getNetworkStats();
     const now = new Date();
     networkDataX.push(
       now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds()
@@ -668,8 +668,34 @@ async function updateMemoryGauge() {
   }
 }
 
-function handlePM2Logs(processName, logBox) {
-  const tail = spawn("pm2", ["logs", processName, "--raw"]);
+function startClient(clientName) {
+  try {
+    const pm2Out = execSync(`pm2 describe ${clientName} | grep "status"`, {
+      encoding: "utf8",
+    });
+
+    if (pm2Out.includes("stopped")) {
+      execSync(`pm2 start ${clientName}`, {
+        stdio: ["ignore", "ignore", "ignore"],
+      });
+    }
+  } catch (error) {
+    if (error.message.includes("doesn't exist")) {
+      execSync(
+        `cd ${path.join(
+          os.homedir(),
+          "nodes-script"
+        )} && pm2 start ${clientName}.js`,
+        {
+          stdio: ["ignore", "ignore", "ignore"],
+        }
+      );
+    }
+  }
+}
+
+function handlePM2Logs(clientName, logBox) {
+  const tail = spawn("pm2", ["logs", clientName, "--raw"]);
 
   tail.stdout.on("data", (data) => {
     logBox.log(data.toString());
@@ -680,18 +706,17 @@ function handlePM2Logs(processName, logBox) {
   });
 
   tail.on("close", (code) => {
-    logBox.log(`${processName} logs stream closed with code ${code}`);
+    logBox.log(`${clientName} logs stream closed with code ${code}`);
   });
 }
 
-function startChain(executionClient, consensusClient, jwtDir, platform) {
+function startBlessedContrib(executionClient, consensusClient) {
   // TODO: Don't let uses switch clients?
-  // TODO: Add PM2 or something to handle restarts
-  // Another way: Use this to start: screen -S myScript && node.js This to return to blessed-config: screen -r myScript This to detach view: control-A-D
+  // TODO: Make PM2 restart clients on reboot?
   // TODO: Use non-standard ports
   // TODO: Figure out what mem usage is actually displaying
   // TODO: Make the blessed-contrib view cooler - a BG logo and make line charts same width
-  // TODO: Test blessed-contrib on windows and linux
+  // TODO: Test blessed-contrib on windows
 
   const now = new Date();
 
@@ -788,53 +813,35 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
   updateDiskDonut();
   setInterval(updateDiskDonut, 10000);
 
-  if (executionClient === "reth") {
-    execSync(
-      `cd ${path.join(os.homedir(), "nodes-script")} && pm2 start reth.js
-        `,
-      {
-        stdio: ["ignore", "ignore", "ignore"],
-      }
-    );
-    handlePM2Logs("reth", executionLog);
-  } else if (executionClient === "geth") {
-    execSync(
-      `cd ${path.join(os.homedir(), "nodes-script")} && pm2 start geth.js
-        `,
-      {
-        stdio: ["ignore", "ignore", "ignore"],
-      }
-    );
-    handlePM2Logs("geth", executionLog);
-  }
+  startClient(executionClient);
+  startClient(consensusClient);
 
-  if (consensusClient === "lighthouse") {
-    execSync(
-      `cd ${path.join(os.homedir(), "nodes-script")} && pm2 start lighthouse.js
-        `,
-      {
-        stdio: ["ignore", "ignore", "ignore"],
-      }
-    );
-    handlePM2Logs("lighthouse", consensusLog);
-  } else if (consensusClient === "prysm") {
-    execSync(
-      `cd ${path.join(os.homedir(), "nodes-script")} && pm2 start prysm.js
-        `,
-      {
-        stdio: ["ignore", "ignore", "ignore"],
-      }
-    );
-    handlePM2Logs("prysm", consensusLog);
-  }
+  handlePM2Logs(executionClient, executionLog);
+  handlePM2Logs(consensusClient, consensusLog);
 
-  execSync(
-    `pm2 startup && pm2 save
-      `,
-    {
-      stdio: ["ignore", "ignore", "ignore"],
-    }
-  );
+  // execSync(
+  //   `pm2 startup
+  //     `,
+  //   {
+  //     stdio: "inherit",
+  //   }
+  // );
+
+  // execSync(
+  //   `sudo env PATH=$PATH:/Users/spencerfaber/.nvm/versions/node/v18.17.1/bin /Users/spencerfaber/.nvm/versions/node/v18.17.1/lib/node_modules/pm2/bin/pm2 startup launchd -u spencerfaber --hp /Users/spencerfaber
+  //     `,
+  //   {
+  //     stdio: "inherit",
+  //   }
+  // );
+
+  // execSync(
+  //   `pm2 save
+  //     `,
+  //   {
+  //     stdio: "inherit",
+  //   }
+  // );
 
   // Quit on Escape, q, or Control-C.
   screen.key(["escape", "q", "C-c"], function (ch, key) {
@@ -861,4 +868,4 @@ if (["darwin", "linux"].includes(platform)) {
 }
 
 createJwtSecret(jwtDir);
-startChain(executionClient, consensusClient, jwtDir, platform);
+startBlessedContrib(executionClient, consensusClient);
