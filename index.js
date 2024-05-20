@@ -828,6 +828,14 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
     handlePM2Logs("prysm", consensusLog);
   }
 
+  execSync(
+    `pm2 startup && pm2 save
+      `,
+    {
+      stdio: ["ignore", "ignore", "ignore"],
+    }
+  );
+
   // Quit on Escape, q, or Control-C.
   screen.key(["escape", "q", "C-c"], function (ch, key) {
     return process.exit(0);
