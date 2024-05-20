@@ -88,6 +88,11 @@ function getFormattedDateTime() {
   return `${year}_${month}_${day}_${hour}_${minute}_${second}`;
 }
 
+// function getFormattedDateTime() {
+//   const now = new Date();
+//   return now.toISOString().replace(/T/, '_').replace(/\..+/, '');
+// }
+
 // function checkWindowsPrereqs() {
 //   try {
 //     const version = execSync(`choco -v`).toString().trim();
@@ -663,6 +668,22 @@ async function updateMemoryGauge() {
   }
 }
 
+function handlePM2Logs(processName, logBox) {
+  const tail = spawn("pm2", ["logs", processName, "--raw"]);
+
+  tail.stdout.on("data", (data) => {
+    logBox.log(data.toString());
+  });
+
+  tail.stderr.on("data", (data) => {
+    logBox.log(data.toString());
+  });
+
+  tail.on("close", (code) => {
+    logBox.log(`${processName} logs stream closed with code ${code}`);
+  });
+}
+
 function startChain(executionClient, consensusClient, jwtDir, platform) {
   // TODO: Don't let uses switch clients?
   // TODO: Add PM2 or something to handle restarts
@@ -672,7 +693,6 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
   // TODO: Make the blessed-contrib view cooler - a BG logo and make line charts same width
   // TODO: Test blessed-contrib on windows and linux
 
-  jwtPath = path.join(jwtDir, "jwt.hex");
   const now = new Date();
 
   screen = blessed.screen();
@@ -762,234 +782,54 @@ function startChain(executionClient, consensusClient, jwtDir, platform) {
   screen.append(networkLine);
   screen.append(storageDonut);
 
-  screen.render();
-
   setInterval(updateCpuLinePlot, 1000);
   setInterval(updateNetworkLinePlot, 1000);
   setInterval(updateMemoryGauge, 1000);
   updateDiskDonut();
   setInterval(updateDiskDonut, 10000);
 
-  let execution;
-  if (executionClient === "geth") {
-    let gethCommand;
-    if (["darwin", "linux"].includes(platform)) {
-      gethCommand = path.join(os.homedir(), "bgnode", "geth", "geth");
-    } else if (platform === "win32") {
-      gethCommand = path.join(os.homedir(), "bgnode", "geth", "geth.exe");
-    }
-
-    const logFilePath = path.join(
-      os.homedir(),
-      "bgnode",
-      "geth",
-      "logs",
-      `geth_${getFormattedDateTime()}.log`
+  if (executionClient === "reth") {
+    execSync(
+      `cd ${path.join(os.homedir(), "nodes-script")} && pm2 start reth.js
+        `,
+      {
+        stdio: ["ignore", "ignore", "ignore"],
+      }
     );
-
-    execution = spawn(
-      `${gethCommand}`,
-      [
-        "--mainnet",
-        "--syncmode",
-        "snap",
-        "--http",
-        "--http.api",
-        "eth,net,engine,admin",
-        "--http.addr",
-        "0.0.0.0",
-        "--datadir",
-        path.join(os.homedir(), "bgnode", "geth", "database"),
-        "--log.file",
-        logFilePath,
-        "--authrpc.jwtsecret",
-        `${jwtPath}`,
-      ],
-      { shell: true }
+    handlePM2Logs("reth", executionLog);
+  } else if (executionClient === "geth") {
+    execSync(
+      `cd ${path.join(os.homedir(), "nodes-script")} && pm2 start geth.js
+        `,
+      {
+        stdio: ["ignore", "ignore", "ignore"],
+      }
     );
-  } else if (executionClient === "reth") {
-    let rethCommand;
-    if (["darwin", "linux"].includes(platform)) {
-      rethCommand = path.join(os.homedir(), "bgnode", "reth", "reth");
-    } else if (platform === "win32") {
-      rethCommand = path.join(os.homedir(), "bgnode", "reth", "reth.exe");
-    }
-
-    const logFilePath = path.join(
-      os.homedir(),
-      "bgnode",
-      "reth",
-      "logs",
-      `reth_${getFormattedDateTime()}.log`
-    );
-
-    execution = spawn(
-      `${rethCommand}`,
-      [
-        "node",
-        "--full",
-        "--http",
-        "--http.api",
-        "trace,web3,eth,debug",
-        "--ws",
-        "--ws.api",
-        "trace,web3,eth,debug",
-        "--authrpc.addr",
-        "127.0.0.1",
-        "--authrpc.port",
-        "8551",
-        "--datadir",
-        path.join(os.homedir(), "bgnode", "reth", "database"),
-        "--log.file.directory",
-        logFilePath,
-        "--authrpc.jwtsecret",
-        `${jwtPath}`,
-      ],
-      { shell: true }
-    );
+    handlePM2Logs("geth", executionLog);
   }
 
-  execution.stdout.on("data", (data) => {
-    executionLog.log(data.toString());
-  });
-
-  execution.stderr.on("data", (data) => {
-    executionLog.log(data.toString());
-  });
-
-  let consensus;
-  if (consensusClient === "prysm") {
-    let prysmCommand;
-    if (["darwin", "linux"].includes(platform)) {
-      prysmCommand = path.join(os.homedir(), "bgnode", "prysm", "prysm.sh");
-    } else if (platform === "win32") {
-      prysmCommand = path.join(os.homedir(), "bgnode", "prysm", "prysm.bat");
-    }
-
-    const logFilePath = path.join(
-      os.homedir(),
-      "bgnode",
-      "prysm",
-      "logs",
-      `prysm_${getFormattedDateTime()}.log`
+  if (consensusClient === "lighthouse") {
+    execSync(
+      `cd ${path.join(os.homedir(), "nodes-script")} && pm2 start lighthouse.js
+        `,
+      {
+        stdio: ["ignore", "ignore", "ignore"],
+      }
     );
-
-    consensus = spawn(
-      `${prysmCommand}`,
-      [
-        "beacon-chain",
-        "--mainnet",
-        "--execution-endpoint",
-        "http://localhost:8551",
-        "--grpc-gateway-host=0.0.0.0",
-        "--grpc-gateway-port=3500",
-        "--checkpoint-sync-url=https://mainnet-checkpoint-sync.attestant.io/",
-        "--genesis-beacon-api-url=https://mainnet-checkpoint-sync.attestant.io/",
-        `--datadir=${path.join(os.homedir(), "bgnode", "prysm", "database")}`,
-        `--log-file=${logFilePath}`,
-        "--accept-terms-of-use=true",
-        "--jwt-secret",
-        `${jwtPath}`,
-      ],
-      { shell: true }
+    handlePM2Logs("lighthouse", consensusLog);
+  } else if (consensusClient === "prysm") {
+    execSync(
+      `cd ${path.join(os.homedir(), "nodes-script")} && pm2 start prysm.js
+        `,
+      {
+        stdio: ["ignore", "ignore", "ignore"],
+      }
     );
-  } else if (consensusClient === "lighthouse") {
-    let lighthouseCommand;
-    if (["darwin", "linux"].includes(platform)) {
-      lighthouseCommand = path.join(
-        os.homedir(),
-        "bgnode",
-        "lighthouse",
-        "lighthouse"
-      );
-    } else if (platform === "win32") {
-      lighthouseCommand = path.join(
-        os.homedir(),
-        "bgnode",
-        "lighthouse",
-        "lighthouse.exe"
-      );
-    }
-
-    const logFilePath = path.join(
-      os.homedir(),
-      "bgnode",
-      "lighthouse",
-      "logs",
-      `lighthouse_${getFormattedDateTime()}.log`
-    );
-
-    consensus = spawn(
-      `${lighthouseCommand}`,
-      [
-        "bn",
-        "--network",
-        "mainnet",
-        "--execution-endpoint",
-        "http://localhost:8551",
-        "--checkpoint-sync-url",
-        "https://mainnet.checkpoint.sigp.io",
-        "--checkpoint-sync-url-timeout",
-        "600",
-        "--disable-deposit-contract-sync",
-        "--datadir",
-        path.join(os.homedir(), "bgnode", "lighthouse", "database"),
-        "--logfile",
-        logFilePath,
-        "--execution-jwt",
-        `${jwtPath}`,
-      ],
-      { shell: true }
-    );
+    handlePM2Logs("prysm", consensusLog);
   }
-
-  consensus.stdout.on("data", (data) => {
-    consensusLog.log(data.toString());
-  });
-
-  consensus.stderr.on("data", (data) => {
-    consensusLog.log(data.toString());
-  });
-
-  // Handle close
-  execution.on("close", (code) => {
-    executionLog.log(`Geth process exited with code ${code}`);
-  });
-
-  consensus.on("close", (code) => {
-    consensusLog.log(`Prysm process exited with code ${code}`);
-  });
 
   // Quit on Escape, q, or Control-C.
   screen.key(["escape", "q", "C-c"], function (ch, key) {
-    if (["darwin", "linux"].includes(platform)) {
-      if (executionClient === "geth") {
-        execSync("pkill -SIGINT geth", { stdio: "ignore" });
-      } else if (executionClient === "reth") {
-        execSync("pkill -SIGINT reth", { stdio: "ignore" });
-      }
-
-      if (consensusClient === "lighthouse") {
-        execSync("pkill -SIGINT lighthouse", { stdio: "ignore" });
-      }
-    } else if (platform === "win32") {
-      if (executionClient === "geth") {
-        execSync(`powershell -Command "Get-Process geth | Stop-Process"`);
-      } else if (executionClient === "reth") {
-        execSync(`powershell -Command "Get-Process reth | Stop-Process"`);
-      }
-
-      if (consensusClient === "prysm") {
-        execSync(
-          `powershell -Command "Get-Process beacon-chain* | Stop-Process"`
-        );
-      } else if (consensusClient === "lighthouse") {
-        execSync(
-          `powershell -Command "Get-Process beacon-chain* | Stop-Process"`
-        );
-      }
-    }
-
     return process.exit(0);
   });
 
