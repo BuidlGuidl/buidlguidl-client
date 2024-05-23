@@ -132,9 +132,44 @@ function createJwtSecret(jwtDir) {
   }
 }
 
-function installMacLinuxExecutionClient(executionClient, platform) {
+function downloadRethSnapshot(rethDir, platform) {
   // TODO: Make reth snapshot dl. Figure out how to make it get the latest snapshot. Remember it downloads as db/file
   // valid dates found so far: 2024-05-14, 2024-04-30, 2024-04-17
+  // TODO: Make sure snapshot dl works on linux (and windows). This line works on mac
+  // TODO: Figure out where to put the snapshot dl
+  // TODO: Figure out how to get most recent snapshot
+  // TODO: Figure out if lighthouse can start syncing while reth snapshot downloads (might be a pain)
+
+  const snapshotDate = "2024-05-14";
+
+  if (
+    !fs.existsSync(
+      path.join(os.homedir(), "bgnode", "reth", "database", "db", "mdbx.dat")
+    ) ||
+    !fs.existsSync(
+      path.join(os.homedir(), "bgnode", "reth", "database", "blobstore")
+    )
+  ) {
+    color("1", "\nDownloading Reth snapshot.");
+    if (platform === "darwin") {
+      execSync(
+        `cd ${rethDir}/database && wget -O - https://downloads.merkle.io/reth-${snapshotDate}.tar.lz4 | lz4 -dc | tar -xvf -`,
+        { stdio: "inherit" }
+      );
+    } else if (platform === "linux") {
+      execSync(
+        `cd ${rethDir}/database && wget -O - https://downloads.merkle.io/reth-${snapshotDate}.tar.lz4 | tar -I lz4 -xvf -`,
+        { stdio: "inherit" }
+      );
+    } else if (platform === "win32") {
+      // TODO: Add code for downloading snapshot on windows
+    }
+  } else {
+    console.log("\nReth snapshot already downloaded.");
+  }
+}
+
+function installMacLinuxExecutionClient(executionClient, platform) {
   const arch = os.arch();
 
   const configs = {
@@ -215,17 +250,8 @@ function installMacLinuxExecutionClient(executionClient, platform) {
       execSync(`cd ${rethDir} && rm ${rethFileName}.tar.gz`, {
         stdio: "inherit",
       });
-      // TODO: Make sure snapshot dl works on linux (and windows). This line works on mac
-      // TODO: Figure out where to put the snapshot dl
-      // TODO: Figure out how to get most recent snapshot
-      // console.log("\nDownloading reth snapshot.");
-      // execSync(
-      //   `cd ${rethDir}/database && wget -O - https://downloads.merkle.io/reth-2024-05-14.tar.lz4 | lz4 -dc | tar -xvf -
-      //   `,
-      //   {
-      //     stdio: "inherit",
-      //   }
-      // );
+
+      // downloadRethSnapshot(rethDir, platform);
     } else {
       color("36", "Reth is already installed.");
     }
@@ -681,15 +707,9 @@ function startClient(clientName) {
     }
   } catch (error) {
     if (error.message.includes("doesn't exist")) {
-      execSync(
-        `cd ${path.join(
-          os.homedir(),
-          "nodes-script"
-        )} && pm2 start ${clientName}.js`,
-        {
-          stdio: ["ignore", "ignore", "ignore"],
-        }
-      );
+      execSync(`pm2 start ${clientName}.js`, {
+        stdio: ["ignore", "ignore", "ignore"],
+      });
     }
   }
 }
@@ -802,9 +822,6 @@ function startBlessedContrib(executionClient, consensusClient) {
   updateDiskDonut();
   setInterval(updateDiskDonut, 10000);
 
-  startClient(executionClient);
-  startClient(consensusClient);
-
   handlePM2Logs(executionClient, executionLog);
   handlePM2Logs(consensusClient, consensusLog);
 
@@ -858,3 +875,5 @@ if (["darwin", "linux"].includes(platform)) {
 
 createJwtSecret(jwtDir);
 startBlessedContrib(executionClient, consensusClient);
+startClient(executionClient);
+startClient(consensusClient);
