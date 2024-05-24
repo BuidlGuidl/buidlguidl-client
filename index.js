@@ -251,7 +251,7 @@ function installMacLinuxExecutionClient(executionClient, platform) {
         stdio: "inherit",
       });
 
-      // downloadRethSnapshot(rethDir, platform);
+      downloadRethSnapshot(rethDir, platform);
     } else {
       color("36", "Reth is already installed.");
     }
