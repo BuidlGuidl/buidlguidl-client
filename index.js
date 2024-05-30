@@ -7,8 +7,8 @@ const blessed = require("blessed");
 const contrib = require("blessed-contrib");
 
 // Set default values
-let executionClient = "reth";
-let consensusClient = "lighthouse";
+let executionClient = "geth";
+let consensusClient = "prysm";
 
 function showHelp() {
   console.log("Usage: node script.js [options]");
@@ -37,15 +37,23 @@ args.forEach((val, index) => {
   switch (val) {
     case "-e":
       executionClient = args[index + 1];
-      if (!["geth", "reth"].includes(executionClient)) {
-        color("31", "Invalid option for -e. Use 'geth' or 'reth'.");
+      // if (!["geth", "reth"].includes(executionClient)) {
+      //   color("31", "Invalid option for -e. Use 'geth' or 'reth'.");
+      //   process.exit(1);
+      // }
+      if (executionClient != "geth") {
+        color("31", "Invalid option for -e. Use 'geth'.");
         process.exit(1);
       }
       break;
     case "-c":
       consensusClient = args[index + 1];
-      if (!["prysm", "lighthouse"].includes(consensusClient)) {
-        color("31", "Invalid option for -c. Use 'prysm' or 'lighthouse'.");
+      // if (!["prysm", "lighthouse"].includes(consensusClient)) {
+      //   color("31", "Invalid option for -c. Use 'prysm' or 'lighthouse'.");
+      //   process.exit(1);
+      // }
+      if (consensusClient != "prysm") {
+        color("31", "Invalid option for -c. Use 'prysm'.");
         process.exit(1);
       }
       break;
