@@ -1,4 +1,5 @@
 const { spawn } = require("child_process");
+const fs = require("fs");
 const path = require("path");
 const os = require("os");
 
@@ -20,6 +21,8 @@ const logFilePath = path.join(
   `prysm_${getFormattedDateTime()}.log`
 );
 
+const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
+
 consensus = spawn(
   `${prysmCommand}`,
   [
@@ -32,13 +35,21 @@ consensus = spawn(
     "--checkpoint-sync-url=https://mainnet-checkpoint-sync.attestant.io/",
     "--genesis-beacon-api-url=https://mainnet-checkpoint-sync.attestant.io/",
     `--datadir=${path.join(os.homedir(), "bgnode", "prysm", "database")}`,
-    `--log-file=${logFilePath}`,
+    // `--log-file=${logFilePath}`,
     "--accept-terms-of-use=true",
     "--jwt-secret",
     `${jwtPath}`,
   ],
   { shell: true }
 );
+
+// Pipe stdout and stderr to the log file
+consensus.stdout.pipe(logStream);
+consensus.stderr.pipe(logStream);
+
+// Also print stdout and stderr to the terminal
+consensus.stdout.pipe(process.stdout);
+consensus.stderr.pipe(process.stderr);
 
 consensus.stdout.on("data", (data) => {
   console.log(data.toString());
@@ -50,6 +61,7 @@ consensus.stderr.on("data", (data) => {
 
 consensus.on("close", (code) => {
   console.log(`prysm process exited with code ${code}`);
+  logStream.end();
 });
 
 function getFormattedDateTime() {

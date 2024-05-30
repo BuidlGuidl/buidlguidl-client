@@ -20,6 +20,7 @@ const logFilePath = path.join(
   `reth_${getFormattedDateTime()}.log`
 );
 
+// TODO: Make log outputs match terminal view (like geth or prysm)
 const execution = spawn(
   `${rethCommand}`,
   [
