@@ -22,15 +22,6 @@ function showHelp() {
   console.log("");
 }
 
-function color(code, text) {
-  // Usage: color "31;5" "string"
-  // Some valid values for color:
-  // - 5 blink, 1 strong, 4 underlined
-  // - fg: 31 red,  32 green, 33 yellow, 34 blue, 35 purple, 36 cyan, 37 white
-  // - bg: 40 black, 41 red, 44 blue, 45 purple
-  console.log(`\x1b[${code}m${text}\x1b[0m`);
-}
-
 // Process command-line arguments
 const args = process.argv.slice(2);
 args.forEach((val, index) => {
@@ -38,22 +29,22 @@ args.forEach((val, index) => {
     case "-e":
       executionClient = args[index + 1];
       // if (!["geth", "reth"].includes(executionClient)) {
-      //   color("31", "Invalid option for -e. Use 'geth' or 'reth'.");
+      // console.log("Invalid option for -e. Use 'geth' or 'reth'.");
       //   process.exit(1);
       // }
       if (executionClient != "geth") {
-        color("31", "Invalid option for -e. Use 'geth'.");
+        console.log("Invalid option for -e. Use 'geth'.");
         process.exit(1);
       }
       break;
     case "-c":
       consensusClient = args[index + 1];
       // if (!["prysm", "lighthouse"].includes(consensusClient)) {
-      //   color("31", "Invalid option for -c. Use 'prysm' or 'lighthouse'.");
+      // console.log("Invalid option for -c. Use 'prysm' or 'lighthouse'.");
       //   process.exit(1);
       // }
       if (consensusClient != "prysm") {
-        color("31", "Invalid option for -c. Use 'prysm'.");
+        console.log("Invalid option for -c. Use 'prysm'.");
         process.exit(1);
       }
       break;
@@ -104,36 +95,30 @@ function getFormattedDateTime() {
 // function checkWindowsPrereqs() {
 //   try {
 //     const version = execSync(`choco -v`).toString().trim();
-//     color("36", `\nChocolatey is already installed. Version:\n${version}`);
+// console.log(`\nChocolatey is already installed. Version:\n${version}`);
 //   } catch {
-//     color(
-//       "1",
-//       `\nPlease install Chocolatey (https://community.chocolatey.org/).`
-//     );
+// console.log(`\nPlease install Chocolatey (https://community.chocolatey.org/).`);
 //     process.exit(0);
 //   }
 
 //   try {
 //     const version = execSync(`openssl -v`).toString().trim();
-//     color("36", `\nOpenssl is already installed. Version:\n${version}`);
+// console.log(`\nOpenssl is already installed. Version:\n${version}`);
 //   } catch {
-//     color("1", `\nPlease install openssl`);
-//     color(
-//       "1",
-//       `Open Command Prompt as Administrator and run 'choco install openssl'`
-//     );
+// console.log(`\nPlease install openssl`);
+// console.log(`Open Command Prompt as Administrator and run 'choco install openssl'`);
 //     process.exit(0);
 //   }
 // }
 
 function createJwtSecret(jwtDir) {
   if (!fs.existsSync(jwtDir)) {
-    color("1", `\nCreating '${jwtDir}'`);
+    console.log(`\nCreating '${jwtDir}'`);
     fs.mkdirSync(jwtDir, { recursive: true });
   }
 
   if (!fs.existsSync(`${jwtDir}/jwt.hex`)) {
-    color("1", "Generating JWT.hex file.");
+    console.log("Generating JWT.hex file.");
     execSync(`cd ${jwtDir} && openssl rand -hex 32 > jwt.hex`, {
       stdio: "inherit",
     });
@@ -158,7 +143,7 @@ function downloadRethSnapshot(rethDir, platform) {
       path.join(os.homedir(), "bgnode", "reth", "database", "blobstore")
     )
   ) {
-    color("1", "\nDownloading Reth snapshot.");
+    console.log("\nDownloading Reth snapshot.");
     if (platform === "darwin") {
       execSync(
         `cd ${rethDir}/database && wget -O - https://downloads.merkle.io/reth-${snapshotDate}.tar.lz4 | lz4 -dc | tar -xvf -`,
@@ -209,7 +194,7 @@ function installMacLinuxExecutionClient(executionClient, platform) {
     const gethDir = path.join(os.homedir(), "bgnode", "geth");
     const gethScript = path.join(gethDir, "geth");
     if (!fs.existsSync(gethScript)) {
-      color("1", "\nInstalling Geth.");
+      console.log("\nInstalling Geth.");
       if (!fs.existsSync(gethDir)) {
         console.log(`Creating '${gethDir}'`);
         fs.mkdirSync(`${gethDir}/database`, { recursive: true });
@@ -233,13 +218,13 @@ function installMacLinuxExecutionClient(executionClient, platform) {
         { stdio: "inherit" }
       );
     } else {
-      color("36", "Geth is already installed.");
+      console.log("Geth is already installed.");
     }
   } else if (executionClient === "reth") {
     const rethDir = path.join(os.homedir(), "bgnode", "reth");
     const rethScript = path.join(rethDir, "reth");
     if (!fs.existsSync(rethScript)) {
-      color("1", "\nInstalling Reth.");
+      console.log("\nInstalling Reth.");
       if (!fs.existsSync(rethDir)) {
         console.log(`Creating '${rethDir}'`);
         fs.mkdirSync(`${rethDir}/database`, { recursive: true });
@@ -261,7 +246,7 @@ function installMacLinuxExecutionClient(executionClient, platform) {
 
       downloadRethSnapshot(rethDir, platform);
     } else {
-      color("36", "Reth is already installed.");
+      console.log("Reth is already installed.");
     }
   }
 }
@@ -295,7 +280,7 @@ function installMacLinuxConsensusClient(consensusClient, platform) {
     const prysmDir = path.join(os.homedir(), "bgnode", "prysm");
     const prysmScript = path.join(prysmDir, "prysm.sh");
     if (!fs.existsSync(prysmScript)) {
-      color("1", "\nInstalling Prysm.");
+      console.log("\nInstalling Prysm.");
       if (!fs.existsSync(prysmDir)) {
         console.log(`Creating '${prysmDir}'`);
         fs.mkdirSync(`${prysmDir}/database`, { recursive: true });
@@ -307,13 +292,13 @@ function installMacLinuxConsensusClient(consensusClient, platform) {
         { stdio: "inherit" }
       );
     } else {
-      color("36", "Prysm is already installed.");
+      console.log("Prysm is already installed.");
     }
   } else if (consensusClient === "lighthouse") {
     const lighthouseDir = path.join(os.homedir(), "bgnode", "lighthouse");
     const lighthouseScript = path.join(lighthouseDir, "lighthouse");
     if (!fs.existsSync(lighthouseScript)) {
-      color("1", "\nInstalling Lighthouse.");
+      console.log("\nInstalling Lighthouse.");
       if (!fs.existsSync(lighthouseDir)) {
         console.log(`Creating '${lighthouseDir}'`);
         fs.mkdirSync(`${lighthouseDir}/database`, { recursive: true });
@@ -336,7 +321,7 @@ function installMacLinuxConsensusClient(consensusClient, platform) {
         stdio: "inherit",
       });
     } else {
-      color("36", "Lighthouse is already installed.");
+      console.log("Lighthouse is already installed.");
     }
   }
 }
@@ -346,7 +331,7 @@ function installWindowsExecutionClient(executionClient) {
     const gethDir = path.join(os.homedir(), "bgnode", "geth");
     const gethScript = path.join(gethDir, "geth.exe");
     if (!fs.existsSync(gethScript)) {
-      color("1", "\nInstalling Geth.");
+      console.log("\nInstalling Geth.");
       if (!fs.existsSync(gethDir)) {
         console.log(`Creating '${gethDir}'`);
         fs.mkdirSync(`${gethDir}/database`, { recursive: true });
@@ -368,13 +353,13 @@ function installWindowsExecutionClient(executionClient) {
         { stdio: "inherit" }
       );
     } else {
-      color("36", "Geth is already installed.");
+      console.log("Geth is already installed.");
     }
   } else if (executionClient === "reth") {
     const rethDir = path.join(os.homedir(), "bgnode", "reth");
     const rethScript = path.join(rethDir, "reth.exe");
     if (!fs.existsSync(rethScript)) {
-      color("1", "\nInstalling Reth.");
+      console.log("\nInstalling Reth.");
       if (!fs.existsSync(rethDir)) {
         console.log(`Creating '${rethDir}'`);
         fs.mkdirSync(`${rethDir}/database`, { recursive: true });
@@ -395,7 +380,7 @@ function installWindowsExecutionClient(executionClient) {
         { stdio: "inherit" }
       );
     } else {
-      color("36", "Reth is already installed.");
+      console.log("Reth is already installed.");
     }
   }
 }
@@ -420,7 +405,7 @@ function installWindowsConsensusClient(consensusClient) {
         { stdio: "inherit" }
       );
     } else {
-      color("36", "Prysm is already installed.");
+      console.log("Prysm is already installed.");
     }
   } else if (consensusClient === "lighthouse") {
     const lighthouseDir = path.join(os.homedir(), "bgnode", "lighthouse");
@@ -447,7 +432,7 @@ function installWindowsConsensusClient(consensusClient) {
         { stdio: "inherit" }
       );
     } else {
-      color("36", "Lighthouse is already installed.");
+      console.log("Lighthouse is already installed.");
     }
   }
 }
@@ -739,6 +724,7 @@ function handlePM2Logs(clientName, logBox) {
 }
 
 function startBlessedContrib(executionClient, consensusClient) {
+  // TODO: Let logs scroll or at least suppress scroll wheel
   // TODO: Don't let uses switch clients?
   // TODO: Make PM2 restart clients on reboot?
   // TODO: Use non-standard ports
