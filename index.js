@@ -756,7 +756,7 @@ function startBlessedContrib(executionClient, consensusClient) {
     selectedFg: "green",
     label: "Execution Logs",
     top: "0%",
-    height: "20%",
+    height: "25%",
     width: "100%",
   });
 
@@ -764,8 +764,8 @@ function startBlessedContrib(executionClient, consensusClient) {
     fg: "yellow",
     selectedFg: "yellow",
     label: "Consensus Logs",
-    top: "20%",
-    height: "20%",
+    top: "25%",
+    height: "25%",
     width: "100%",
   });
 
@@ -776,8 +776,8 @@ function startBlessedContrib(executionClient, consensusClient) {
     showLegend: true,
     wholeNumbersOnly: false,
     label: "CPU Load (%)",
-    top: "40%",
-    height: "30%",
+    top: "50%",
+    height: "25%",
     width: "90%",
   });
 
@@ -800,8 +800,8 @@ function startBlessedContrib(executionClient, consensusClient) {
     showLegend: true,
     wholeNumbersOnly: false,
     label: "Network Traffic (MB/sec)",
-    top: "70%",
-    height: "30%",
+    top: "75%",
+    height: "25%",
     width: "90%",
   });
 
