@@ -3,18 +3,20 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 
-const jwtPath = path.join(os.homedir(), "bgnode", "jwt", "jwt.hex");
+const installDir = process.env.INSTALL_DIR || os.homedir();
+
+const jwtPath = path.join(installDir, "bgnode", "jwt", "jwt.hex");
 
 let gethCommand;
 const platform = os.platform();
 if (["darwin", "linux"].includes(platform)) {
-  gethCommand = path.join(os.homedir(), "bgnode", "geth", "geth");
+  gethCommand = path.join(installDir, "bgnode", "geth", "geth");
 } else if (platform === "win32") {
-  gethCommand = path.join(os.homedir(), "bgnode", "geth", "geth.exe");
+  gethCommand = path.join(installDir, "bgnode", "geth", "geth.exe");
 }
 
 const logFilePath = path.join(
-  os.homedir(),
+  installDir,
   "bgnode",
   "geth",
   "logs",
@@ -23,8 +25,8 @@ const logFilePath = path.join(
 
 const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
 
-execution = spawn(
-  `${gethCommand}`,
+const execution = spawn(
+  `"${gethCommand}"`,
   [
     "--mainnet",
     "--syncmode",
@@ -35,11 +37,9 @@ execution = spawn(
     "--http.addr",
     "0.0.0.0",
     "--datadir",
-    path.join(os.homedir(), "bgnode", "geth", "database"),
-    // "--log.file",
-    // logFilePath,
+    `"${path.join(installDir, "bgnode", "geth", "database")}"`,
     "--authrpc.jwtsecret",
-    `${jwtPath}`,
+    `"${jwtPath}"`,
   ],
   { shell: true }
 );
@@ -49,8 +49,8 @@ execution.stdout.pipe(logStream);
 execution.stderr.pipe(logStream);
 
 // Also print stdout and stderr to the terminal
-execution.stdout.pipe(process.stdout);
-execution.stderr.pipe(process.stderr);
+// execution.stdout.pipe(process.stdout);
+// execution.stderr.pipe(process.stderr);
 
 execution.stdout.on("data", (data) => {
   console.log(data.toString());

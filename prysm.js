@@ -3,18 +3,20 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 
-const jwtPath = path.join(os.homedir(), "bgnode", "jwt", "jwt.hex");
+const installDir = process.env.INSTALL_DIR || os.homedir();
+
+const jwtPath = path.join(installDir, "bgnode", "jwt", "jwt.hex");
 
 let prysmCommand;
 const platform = os.platform();
 if (["darwin", "linux"].includes(platform)) {
-  prysmCommand = path.join(os.homedir(), "bgnode", "prysm", "prysm.sh");
+  prysmCommand = path.join(installDir, "bgnode", "prysm", "prysm.sh");
 } else if (platform === "win32") {
-  prysmCommand = path.join(os.homedir(), "bgnode", "prysm", "prysm.exe");
+  prysmCommand = path.join(installDir, "bgnode", "prysm", "prysm.exe");
 }
 
 const logFilePath = path.join(
-  os.homedir(),
+  installDir,
   "bgnode",
   "prysm",
   "logs",
@@ -23,8 +25,8 @@ const logFilePath = path.join(
 
 const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
 
-consensus = spawn(
-  `${prysmCommand}`,
+const consensus = spawn(
+  `"${prysmCommand}"`,
   [
     "beacon-chain",
     "--mainnet",
@@ -34,11 +36,11 @@ consensus = spawn(
     "--grpc-gateway-port=3500",
     "--checkpoint-sync-url=https://mainnet-checkpoint-sync.attestant.io/",
     "--genesis-beacon-api-url=https://mainnet-checkpoint-sync.attestant.io/",
-    `--datadir=${path.join(os.homedir(), "bgnode", "prysm", "database")}`,
-    // `--log-file=${logFilePath}`,
+    `--datadir="${path.join(installDir, "bgnode", "prysm", "database")}"`,
+    // `--log-file="${logFilePath}"`,
     "--accept-terms-of-use=true",
     "--jwt-secret",
-    `${jwtPath}`,
+    `"${jwtPath}"`,
   ],
   { shell: true }
 );
@@ -48,8 +50,8 @@ consensus.stdout.pipe(logStream);
 consensus.stderr.pipe(logStream);
 
 // Also print stdout and stderr to the terminal
-consensus.stdout.pipe(process.stdout);
-consensus.stderr.pipe(process.stderr);
+// consensus.stdout.pipe(process.stdout);
+// consensus.stderr.pipe(process.stderr);
 
 consensus.stdout.on("data", (data) => {
   console.log(data.toString());

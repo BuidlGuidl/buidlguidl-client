@@ -5,61 +5,79 @@ const path = require("path");
 const si = require("systeminformation");
 const blessed = require("blessed");
 const contrib = require("blessed-contrib");
+const minimist = require("minimist");
+
+// TODO: Make reth snapshot dl. Figure out how to make it get the latest snapshot. Remember it downloads as db/file
+// valid dates found so far: 2024-05-14, 2024-04-30, 2024-04-17
+// TODO: Make sure snapshot dl works on linux (and windows). This line works on mac
+// TODO: Figure out where to put the snapshot dl
+// TODO: Figure out how to get most recent snapshot
+// TODO: Figure out if lighthouse can start syncing while reth snapshot downloads (might be a pain)
 
 // Set default values
 let executionClient = "geth";
 let consensusClient = "prysm";
+let installDir = os.homedir();
 
 function showHelp() {
   console.log("Usage: node script.js [options]");
   console.log("");
   console.log("Options:");
-  console.log("  -e <client>  Specify the execution client ('geth' or 'reth')");
-  console.log(
-    "  -c <client>  Specify the consensus client ('prysm' or 'lighthouse')"
-  );
+  // console.log("  -e <client>  Specify the execution client ('geth' or 'reth')");
+  console.log("  -e <client>  Specify the execution client ('geth')");
+  // console.log(
+  //   "  -c <client>  Specify the consensus client ('prysm' or 'lighthouse')"
+  // );
+  console.log("  -c <client>  Specify the consensus client ('prysm')");
+  console.log("  -d <path>  Specify the install directory (defaults to ~)");
   console.log("  -h           Display this help message and exit");
   console.log("");
 }
 
-// Process command-line arguments
-const args = process.argv.slice(2);
-args.forEach((val, index) => {
-  switch (val) {
-    case "-e":
-      executionClient = args[index + 1];
-      // if (!["geth", "reth"].includes(executionClient)) {
-      // console.log("Invalid option for -e. Use 'geth' or 'reth'.");
-      //   process.exit(1);
-      // }
-      if (executionClient != "geth") {
-        console.log("Invalid option for -e. Use 'geth'.");
-        process.exit(1);
-      }
-      break;
-    case "-c":
-      consensusClient = args[index + 1];
-      // if (!["prysm", "lighthouse"].includes(consensusClient)) {
-      // console.log("Invalid option for -c. Use 'prysm' or 'lighthouse'.");
-      //   process.exit(1);
-      // }
-      if (consensusClient != "prysm") {
-        console.log("Invalid option for -c. Use 'prysm'.");
-        process.exit(1);
-      }
-      break;
-    case "-h":
-      showHelp();
-      process.exit(0);
-      break;
+function isValidPath(p) {
+  try {
+    return fs.existsSync(p) && fs.statSync(p).isDirectory();
+  } catch (err) {
+    return false;
   }
-});
+}
+
+// Process command-line arguments
+const argv = minimist(process.argv.slice(2));
+
+if (argv.e) {
+  executionClient = argv.e;
+  if (executionClient !== "geth") {
+    console.log("Invalid option for -e. Use 'geth'.");
+    process.exit(1);
+  }
+}
+
+if (argv.c) {
+  consensusClient = argv.c;
+  if (consensusClient !== "prysm") {
+    console.log("Invalid option for -c. Use 'prysm'.");
+    process.exit(1);
+  }
+}
+
+if (argv.d) {
+  installDir = argv.d;
+  if (!isValidPath(installDir)) {
+    console.log(`Invalid option for -d. '${installDir}' is not a valid path.`);
+    process.exit(1);
+  }
+}
+
+if (argv.h) {
+  showHelp();
+  process.exit(0);
+}
 
 function debugToFile(data, callback) {
-  const filePath = path.join(os.homedir(), "bgnode", "debug.log");
+  const filePath = path.join(installDir, "bgnode", "debug.log");
   const now = new Date();
   const timestamp = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
-  // Check if data is an object and stringify if so, otherwise directly use the data
   const content =
     typeof data === "object"
       ? `${timestamp} - ${JSON.stringify(data, null, 2)}\n`
@@ -87,30 +105,6 @@ function getFormattedDateTime() {
   return `${year}_${month}_${day}_${hour}_${minute}_${second}`;
 }
 
-// function getFormattedDateTime() {
-//   const now = new Date();
-//   return now.toISOString().replace(/T/, '_').replace(/\..+/, '');
-// }
-
-// function checkWindowsPrereqs() {
-//   try {
-//     const version = execSync(`choco -v`).toString().trim();
-// console.log(`\nChocolatey is already installed. Version:\n${version}`);
-//   } catch {
-// console.log(`\nPlease install Chocolatey (https://community.chocolatey.org/).`);
-//     process.exit(0);
-//   }
-
-//   try {
-//     const version = execSync(`openssl -v`).toString().trim();
-// console.log(`\nOpenssl is already installed. Version:\n${version}`);
-//   } catch {
-// console.log(`\nPlease install openssl`);
-// console.log(`Open Command Prompt as Administrator and run 'choco install openssl'`);
-//     process.exit(0);
-//   }
-// }
-
 function createJwtSecret(jwtDir) {
   if (!fs.existsSync(jwtDir)) {
     console.log(`\nCreating '${jwtDir}'`);
@@ -119,39 +113,32 @@ function createJwtSecret(jwtDir) {
 
   if (!fs.existsSync(`${jwtDir}/jwt.hex`)) {
     console.log("Generating JWT.hex file.");
-    execSync(`cd ${jwtDir} && openssl rand -hex 32 > jwt.hex`, {
+    execSync(`cd "${jwtDir}" && openssl rand -hex 32 > jwt.hex`, {
       stdio: "inherit",
     });
   }
 }
 
 function downloadRethSnapshot(rethDir, platform) {
-  // TODO: Make reth snapshot dl. Figure out how to make it get the latest snapshot. Remember it downloads as db/file
-  // valid dates found so far: 2024-05-14, 2024-04-30, 2024-04-17
-  // TODO: Make sure snapshot dl works on linux (and windows). This line works on mac
-  // TODO: Figure out where to put the snapshot dl
-  // TODO: Figure out how to get most recent snapshot
-  // TODO: Figure out if lighthouse can start syncing while reth snapshot downloads (might be a pain)
-
   const snapshotDate = "2024-05-14";
 
   if (
     !fs.existsSync(
-      path.join(os.homedir(), "bgnode", "reth", "database", "db", "mdbx.dat")
+      path.join(installDir, "bgnode", "reth", "database", "db", "mdbx.dat")
     ) ||
     !fs.existsSync(
-      path.join(os.homedir(), "bgnode", "reth", "database", "blobstore")
+      path.join(installDir, "bgnode", "reth", "database", "blobstore")
     )
   ) {
     console.log("\nDownloading Reth snapshot.");
     if (platform === "darwin") {
       execSync(
-        `cd ${rethDir}/database && wget -O - https://downloads.merkle.io/reth-${snapshotDate}.tar.lz4 | lz4 -dc | tar -xvf -`,
+        `cd "${rethDir}/database" && wget -O - https://downloads.merkle.io/reth-${snapshotDate}.tar.lz4 | lz4 -dc | tar -xvf -`,
         { stdio: "inherit" }
       );
     } else if (platform === "linux") {
       execSync(
-        `cd ${rethDir}/database && wget -O - https://downloads.merkle.io/reth-${snapshotDate}.tar.lz4 | tar -I lz4 -xvf -`,
+        `cd "${rethDir}/database" && wget -O - https://downloads.merkle.io/reth-${snapshotDate}.tar.lz4 | tar -I lz4 -xvf -`,
         { stdio: "inherit" }
       );
     } else if (platform === "win32") {
@@ -191,7 +178,7 @@ function installMacLinuxExecutionClient(executionClient, platform) {
   const { gethFileName, rethFileName } = configs[platform][arch];
 
   if (executionClient === "geth") {
-    const gethDir = path.join(os.homedir(), "bgnode", "geth");
+    const gethDir = path.join(installDir, "bgnode", "geth");
     const gethScript = path.join(gethDir, "geth");
     if (!fs.existsSync(gethScript)) {
       console.log("\nInstalling Geth.");
@@ -202,26 +189,26 @@ function installMacLinuxExecutionClient(executionClient, platform) {
       }
       console.log("Downloading Geth.");
       execSync(
-        `cd ${gethDir} && curl -L -O -# https://gethstore.blob.core.windows.net/builds/${gethFileName}.tar.gz`,
+        `cd "${gethDir}" && curl -L -O -# https://gethstore.blob.core.windows.net/builds/${gethFileName}.tar.gz`,
         { stdio: "inherit" }
       );
       console.log("Uncompressing Geth.");
-      execSync(`cd ${gethDir} && tar -xzvf ${gethDir}/${gethFileName}.tar.gz`, {
+      execSync(`cd "${gethDir}" && tar -xzvf "${gethFileName}.tar.gz"`, {
         stdio: "inherit",
       });
-      execSync(`cd ${gethDir}/${gethFileName} && mv geth .. `, {
+      execSync(`cd "${gethDir}/${gethFileName}" && mv geth ..`, {
         stdio: "inherit",
       });
       console.log("Cleaning up Geth directory.");
       execSync(
-        `cd ${gethDir} && rm -r ${gethFileName} && rm ${gethFileName}.tar.gz`,
+        `cd "${gethDir}" && rm -r "${gethFileName}" && rm "${gethFileName}.tar.gz"`,
         { stdio: "inherit" }
       );
     } else {
       console.log("Geth is already installed.");
     }
   } else if (executionClient === "reth") {
-    const rethDir = path.join(os.homedir(), "bgnode", "reth");
+    const rethDir = path.join(installDir, "bgnode", "reth");
     const rethScript = path.join(rethDir, "reth");
     if (!fs.existsSync(rethScript)) {
       console.log("\nInstalling Reth.");
@@ -232,15 +219,15 @@ function installMacLinuxExecutionClient(executionClient, platform) {
       }
       console.log("Downloading Reth.");
       execSync(
-        `cd ${rethDir} && curl -L -O -# https://github.com/paradigmxyz/reth/releases/download/v0.2.0-beta.6/${rethFileName}.tar.gz`,
+        `cd "${rethDir}" && curl -L -O -# https://github.com/paradigmxyz/reth/releases/download/v0.2.0-beta.6/${rethFileName}.tar.gz`,
         { stdio: "inherit" }
       );
       console.log("Uncompressing Reth.");
-      execSync(`cd ${rethDir} && tar -xzvf ${rethDir}/${rethFileName}.tar.gz`, {
+      execSync(`cd "${rethDir}" && tar -xzvf "${rethFileName}.tar.gz"`, {
         stdio: "inherit",
       });
       console.log("Cleaning up Reth directory.");
-      execSync(`cd ${rethDir} && rm ${rethFileName}.tar.gz`, {
+      execSync(`cd "${rethDir}" && rm "${rethFileName}.tar.gz"`, {
         stdio: "inherit",
       });
 
@@ -277,7 +264,7 @@ function installMacLinuxConsensusClient(consensusClient, platform) {
   const { lighthouseFileName } = configs[platform][arch];
 
   if (consensusClient === "prysm") {
-    const prysmDir = path.join(os.homedir(), "bgnode", "prysm");
+    const prysmDir = path.join(installDir, "bgnode", "prysm");
     const prysmScript = path.join(prysmDir, "prysm.sh");
     if (!fs.existsSync(prysmScript)) {
       console.log("\nInstalling Prysm.");
@@ -288,14 +275,14 @@ function installMacLinuxConsensusClient(consensusClient, platform) {
       }
       console.log("Downloading Prysm.");
       execSync(
-        `cd ${prysmDir} && curl -L -O -# https://raw.githubusercontent.com/prysmaticlabs/prysm/master/${prysmFileName}.sh && chmod +x prysm.sh`,
+        `cd "${prysmDir}" && curl -L -O -# https://raw.githubusercontent.com/prysmaticlabs/prysm/master/${prysmFileName}.sh && chmod +x prysm.sh`,
         { stdio: "inherit" }
       );
     } else {
       console.log("Prysm is already installed.");
     }
   } else if (consensusClient === "lighthouse") {
-    const lighthouseDir = path.join(os.homedir(), "bgnode", "lighthouse");
+    const lighthouseDir = path.join(installDir, "bgnode", "lighthouse");
     const lighthouseScript = path.join(lighthouseDir, "lighthouse");
     if (!fs.existsSync(lighthouseScript)) {
       console.log("\nInstalling Lighthouse.");
@@ -306,18 +293,18 @@ function installMacLinuxConsensusClient(consensusClient, platform) {
       }
       console.log("Downloading Lighthouse.");
       execSync(
-        `cd ${lighthouseDir} && curl -L -O -# https://github.com/sigp/lighthouse/releases/download/v5.1.3/${lighthouseFileName}.tar.gz`,
+        `cd "${lighthouseDir}" && curl -L -O -# https://github.com/sigp/lighthouse/releases/download/v5.1.3/${lighthouseFileName}.tar.gz`,
         { stdio: "inherit" }
       );
       console.log("Uncompressing Lighthouse.");
       execSync(
-        `cd ${lighthouseDir} && tar -xzvf ${lighthouseDir}/${lighthouseFileName}.tar.gz`,
+        `cd "${lighthouseDir}" && tar -xzvf ${lighthouseFileName}.tar.gz`,
         {
           stdio: "inherit",
         }
       );
       console.log("Cleaning up Lighthouse directory.");
-      execSync(`cd ${lighthouseDir} && rm ${lighthouseFileName}.tar.gz`, {
+      execSync(`cd "${lighthouseDir}" && rm ${lighthouseFileName}.tar.gz`, {
         stdio: "inherit",
       });
     } else {
@@ -328,7 +315,7 @@ function installMacLinuxConsensusClient(consensusClient, platform) {
 
 function installWindowsExecutionClient(executionClient) {
   if (executionClient === "geth") {
-    const gethDir = path.join(os.homedir(), "bgnode", "geth");
+    const gethDir = path.join(installDir, "bgnode", "geth");
     const gethScript = path.join(gethDir, "geth.exe");
     if (!fs.existsSync(gethScript)) {
       console.log("\nInstalling Geth.");
@@ -338,25 +325,27 @@ function installWindowsExecutionClient(executionClient) {
         fs.mkdirSync(`${gethDir}/logs`, { recursive: true });
       }
       execSync(
-        `cd ${gethDir} && curl https://gethstore.blob.core.windows.net/builds/geth-windows-amd64-1.14.3-ab48ba42.zip --output geth.zip`,
+        `cd "${gethDir}" && curl https://gethstore.blob.core.windows.net/builds/geth-windows-amd64-1.14.3-ab48ba42.zip --output geth.zip`,
         { stdio: "inherit" }
       );
-      execSync(`cd ${gethDir} && tar -xf ${gethDir}/geth.zip`, {
+      execSync(`cd "${gethDir}" && tar -xf geth.zip`, {
         stdio: "inherit",
       });
       execSync(
-        `cd ${gethDir}/geth-windows-amd64-1.14.3-ab48ba42 && move geth.exe .. `,
-        { stdio: "inherit" }
+        `cd "${gethDir}/geth-windows-amd64-1.14.3-ab48ba42" && move geth.exe ..`,
+        {
+          stdio: "inherit",
+        }
       );
       execSync(
-        `cd ${gethDir} && del geth.zip && rd /S /Q geth-windows-amd64-1.14.3-ab48ba42`,
+        `cd "${gethDir}" && del geth.zip && rd /S /Q geth-windows-amd64-1.14.3-ab48ba42`,
         { stdio: "inherit" }
       );
     } else {
       console.log("Geth is already installed.");
     }
   } else if (executionClient === "reth") {
-    const rethDir = path.join(os.homedir(), "bgnode", "reth");
+    const rethDir = path.join(installDir, "bgnode", "reth");
     const rethScript = path.join(rethDir, "reth.exe");
     if (!fs.existsSync(rethScript)) {
       console.log("\nInstalling Reth.");
@@ -366,18 +355,20 @@ function installWindowsExecutionClient(executionClient) {
         fs.mkdirSync(`${rethDir}/logs`, { recursive: true });
       }
       execSync(
-        `cd ${rethDir} && curl -LO https://github.com/paradigmxyz/reth/releases/download/v0.2.0-beta.6/reth-v0.2.0-beta.6-x86_64-pc-windows-gnu.tar.gz`,
+        `cd "${rethDir}" && curl -LO https://github.com/paradigmxyz/reth/releases/download/v0.2.0-beta.6/reth-v0.2.0-beta.6-x86_64-pc-windows-gnu.tar.gz`,
         { stdio: "inherit" }
       );
       execSync(
-        `cd ${rethDir} && tar -xzf ${rethDir}/reth-v0.2.0-beta.6-x86_64-pc-windows-gnu.tar.gz`,
+        `cd "${rethDir}" && tar -xzf reth-v0.2.0-beta.6-x86_64-pc-windows-gnu.tar.gz`,
         {
           stdio: "inherit",
         }
       );
       execSync(
-        `cd ${rethDir} && del reth-v0.2.0-beta.6-x86_64-pc-windows-gnu.tar.gz`,
-        { stdio: "inherit" }
+        `cd "${rethDir}" && del reth-v0.2.0-beta.6-x86_64-pc-windows-gnu.tar.gz`,
+        {
+          stdio: "inherit",
+        }
       );
     } else {
       console.log("Reth is already installed.");
@@ -387,7 +378,7 @@ function installWindowsExecutionClient(executionClient) {
 
 function installWindowsConsensusClient(consensusClient) {
   if (consensusClient === "prysm") {
-    const prysmDir = path.join(os.homedir(), "bgnode", "prysm");
+    const prysmDir = path.join(installDir, "bgnode", "prysm");
     const prysmScript = path.join(prysmDir, "prysm.bat");
     if (!fs.existsSync(prysmScript)) {
       console.log("Installing Prysm.");
@@ -397,7 +388,7 @@ function installWindowsConsensusClient(consensusClient) {
         fs.mkdirSync(`${prysmDir}/logs`, { recursive: true });
       }
       execSync(
-        `cd ${prysmDir} && curl https://raw.githubusercontent.com/prysmaticlabs/prysm/master/prysm.bat --output prysm.bat`,
+        `cd "${prysmDir}" && curl https://raw.githubusercontent.com/prysmaticlabs/prysm/master/prysm.bat --output prysm.bat`,
         { stdio: "inherit" }
       );
       execSync(
@@ -408,7 +399,7 @@ function installWindowsConsensusClient(consensusClient) {
       console.log("Prysm is already installed.");
     }
   } else if (consensusClient === "lighthouse") {
-    const lighthouseDir = path.join(os.homedir(), "bgnode", "lighthouse");
+    const lighthouseDir = path.join(installDir, "bgnode", "lighthouse");
     const lighthouseScript = path.join(lighthouseDir, "lighthouse.exe");
     if (!fs.existsSync(lighthouseScript)) {
       console.log("Installing Lighthouse.");
@@ -418,18 +409,20 @@ function installWindowsConsensusClient(consensusClient) {
         fs.mkdirSync(`${lighthouseDir}/logs`, { recursive: true });
       }
       execSync(
-        `cd ${lighthouseDir} && curl -LO https://github.com/sigp/lighthouse/releases/download/v5.1.3/lighthouse-v5.1.3-x86_64-windows.tar.gz`,
+        `cd "${lighthouseDir}" && curl -LO https://github.com/sigp/lighthouse/releases/download/v5.1.3/lighthouse-v5.1.3-x86_64-windows.tar.gz`,
         { stdio: "inherit" }
       );
       execSync(
-        `cd ${lighthouseDir} && tar -xzf ${lighthouseDir}/lighthouse-v5.1.3-x86_64-windows.tar.gz`,
+        `cd "${lighthouseDir}" && tar -xzf lighthouse-v5.1.3-x86_64-windows.tar.gz`,
         {
           stdio: "inherit",
         }
       );
       execSync(
-        `cd ${lighthouseDir} && del lighthouse-v5.1.3-x86_64-windows.tar.gz`,
-        { stdio: "inherit" }
+        `cd "${lighthouseDir}" && del lighthouse-v5.1.3-x86_64-windows.tar.gz`,
+        {
+          stdio: "inherit",
+        }
       );
     } else {
       console.log("Lighthouse is already installed.");
@@ -548,8 +541,6 @@ function getDiskUsage() {
           return drive.mount === "/" || drive.mount === "C:/";
         });
 
-        // debugToFile(`osDrive: ${JSON.stringify(osDrive, null, 2)}`, () => {});
-
         if (osDrive) {
           diskFreePercent = 100 - (osDrive.available / osDrive.size) * 100;
         } else {
@@ -590,7 +581,6 @@ function getCpuUsage() {
     si.currentLoad()
       .then((load) => {
         const currentLoad = load.currentLoad;
-        // debugToFile(`load: ${JSON.stringify(load, null, 2)}`, () => {});
         resolve(currentLoad);
       })
       .catch((error) => {
@@ -658,8 +648,6 @@ function getMemoryUsage() {
         const usedMemory = memory.active; // 'active' is usually what's actually used
         const memoryUsagePercent = (usedMemory / totalMemory) * 100;
 
-        // debugToFile(`memory: ${JSON.stringify(memory, null, 2)}`, () => {});
-
         resolve(memoryUsagePercent.toFixed(2)); // Return memory usage as a percentage
       })
       .catch((error) => {
@@ -687,7 +675,7 @@ async function updateMemoryGauge() {
   }
 }
 
-function startClient(clientName) {
+function startClient(clientName, installDir) {
   try {
     const pm2Out = execSync(`pm2 describe ${clientName} | grep "status"`, {
       encoding: "utf8",
@@ -695,17 +683,21 @@ function startClient(clientName) {
 
     if (pm2Out.includes("stopped")) {
       execSync(`pm2 start ${clientName}`, {
+        env: { ...process.env, INSTALL_DIR: installDir },
         stdio: ["ignore", "ignore", "ignore"],
       });
     }
   } catch (error) {
     if (error.message.includes("doesn't exist")) {
       execSync(`pm2 start ${clientName}.js`, {
+        env: { ...process.env, INSTALL_DIR: installDir },
         stdio: ["ignore", "ignore", "ignore"],
       });
     }
   }
 }
+
+module.exports = { startClient };
 
 function handlePM2Logs(clientName, logBox) {
   const tail = spawn("pm2", ["logs", clientName, "--raw"]);
@@ -724,22 +716,12 @@ function handlePM2Logs(clientName, logBox) {
 }
 
 function startBlessedContrib(executionClient, consensusClient) {
-  // TODO: Let logs scroll or at least suppress scroll wheel
-  // TODO: Don't let uses switch clients?
-  // TODO: Make PM2 restart clients on reboot?
-  // TODO: Use non-standard ports
-  // TODO: Figure out what mem usage is actually displaying
-  // TODO: Make the blessed-contrib view cooler - a BG logo and make line charts same width
-  // TODO: Test blessed-contrib on windows
-
   const now = new Date();
 
   screen = blessed.screen();
 
   // Create two log boxes
   const executionLog = contrib.log({
-    fg: "green",
-    selectedFg: "green",
     label: "Execution Logs",
     top: "0%",
     height: "25%",
@@ -747,8 +729,6 @@ function startBlessedContrib(executionClient, consensusClient) {
   });
 
   const consensusLog = contrib.log({
-    fg: "yellow",
-    selectedFg: "yellow",
     label: "Consensus Logs",
     top: "25%",
     height: "25%",
@@ -819,30 +799,6 @@ function startBlessedContrib(executionClient, consensusClient) {
   handlePM2Logs(executionClient, executionLog);
   handlePM2Logs(consensusClient, consensusLog);
 
-  // execSync(
-  //   `pm2 startup
-  //     `,
-  //   {
-  //     stdio: "inherit",
-  //   }
-  // );
-
-  // execSync(
-  //   `sudo env PATH=$PATH:/Users/spencerfaber/.nvm/versions/node/v18.17.1/bin /Users/spencerfaber/.nvm/versions/node/v18.17.1/lib/node_modules/pm2/bin/pm2 startup launchd -u spencerfaber --hp /Users/spencerfaber
-  //     `,
-  //   {
-  //     stdio: "inherit",
-  //   }
-  // );
-
-  // execSync(
-  //   `pm2 save
-  //     `,
-  //   {
-  //     stdio: "inherit",
-  //   }
-  // );
-
   // Quit on Escape, q, or Control-C.
   screen.key(["escape", "q", "C-c"], function (ch, key) {
     return process.exit(0);
@@ -856,7 +812,7 @@ console.log(`Consensus client selected: ${consensusClient}\n`);
 
 getNetworkStats();
 
-const jwtDir = path.join(os.homedir(), "bgnode", "jwt");
+const jwtDir = path.join(installDir, "bgnode", "jwt");
 const platform = os.platform();
 
 if (["darwin", "linux"].includes(platform)) {
@@ -869,5 +825,5 @@ if (["darwin", "linux"].includes(platform)) {
 
 createJwtSecret(jwtDir);
 startBlessedContrib(executionClient, consensusClient);
-startClient(executionClient);
-startClient(consensusClient);
+startClient(executionClient, installDir);
+startClient(consensusClient, installDir);
