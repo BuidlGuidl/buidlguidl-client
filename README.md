@@ -2,18 +2,19 @@
 This project will download clients and start an ethereum node. Currently it uses a Geth + Prysm client pair (with other options available soon). The script runs Geth in snap sync mode and will require ~1.2 TB.
 
 ## Requirements
-node (https://nodejs.org/en)
-yarn (https://yarnpkg.com/migration/overview)
-pm2 (https://pm2.keymetrics.io/)
+- node (https://nodejs.org/en)
+- yarn (https://yarnpkg.com/migration/overview)
+- pm2 (https://pm2.keymetrics.io/)
 
 ## Quickstart
-To get a node started do:
+To get a node started:
   ```bash
   git clone https://github.com/BuidlGuidl/nodes-script.git
   cd nodes-script
   yarn install
   node index.js
   ```
+
 By default, index.js will create ~/bgnode which will contain the client executables, databases, and client logs. The script then displays a terminal view with scrolling client logs and some plots showing some machine stats. Full client logs are located in bgnode/geth/logs and bgnode/prysm/logs. You can exit that terminal view and clients will continue to run in the background (see Client Management below).
 
 If you want to specify the location of the bgnode directory, pass a -d option to index.js:
@@ -51,9 +52,9 @@ To remove client processes from pm2:
   ```bash
   brew reinstall gnupg
   ```
-If the error persists you might also need to install perl-Digest-SHA like:
-  ```bash
-  brew install perl
-  brew install cpanminus
-  cpanm Digest::SHA
-  ```
+  If the error persists you might also need to install perl-Digest-SHA like:
+    ```bash
+    brew install perl
+    brew install cpanminus
+    cpanm Digest::SHA
+    ```
