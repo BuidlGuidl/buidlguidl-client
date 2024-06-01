@@ -724,17 +724,25 @@ function startBlessedContrib(executionClient, consensusClient) {
 
   // Create two log boxes
   const executionLog = contrib.log({
-    label: "Execution Logs",
+    label: `${executionClient} Logs`,
     top: "0%",
     height: "25%",
     width: "100%",
+    border: {
+      type: "line",
+      fg: "cyan",
+    },
   });
 
   const consensusLog = contrib.log({
-    label: "Consensus Logs",
+    label: `${consensusClient} Logs`,
     top: "25%",
     height: "25%",
     width: "100%",
+    border: {
+      type: "line",
+      fg: "cyan",
+    },
   });
 
   cpuLine = contrib.line({
@@ -747,6 +755,10 @@ function startBlessedContrib(executionClient, consensusClient) {
     top: "50%",
     height: "25%",
     width: "90%",
+    border: {
+      type: "line",
+      fg: "cyan",
+    },
   });
 
   memDonut = contrib.donut({
@@ -759,6 +771,10 @@ function startBlessedContrib(executionClient, consensusClient) {
     height: "15%",
     left: "90%",
     width: "10%",
+    border: {
+      type: "line",
+      fg: "cyan",
+    },
   });
 
   networkLine = contrib.line({
@@ -771,6 +787,10 @@ function startBlessedContrib(executionClient, consensusClient) {
     top: "75%",
     height: "25%",
     width: "90%",
+    border: {
+      type: "line",
+      fg: "cyan",
+    },
   });
 
   storageDonut = contrib.donut({
@@ -783,6 +803,10 @@ function startBlessedContrib(executionClient, consensusClient) {
     height: "15%",
     left: "90%",
     width: "10%",
+    border: {
+      type: "line",
+      fg: "cyan",
+    },
   });
 
   screen.append(executionLog);

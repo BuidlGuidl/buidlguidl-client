@@ -6,8 +6,6 @@ This project will download clients and start an ethereum node. Currently it uses
 - yarn (https://yarnpkg.com/migration/overview)
 - pm2 (https://pm2.keymetrics.io/)
 
-
-
 ## Quickstart
 To get a node started:
   ```bash
@@ -23,8 +21,6 @@ If you want to specify the location of the bgnode directory, pass a -d option to
   ```bash
   node index.js -d path/for/bgnode
   ```
-
-
 
 ## Client Management
 The script uses the pm2 process manager to handle the client processes.
@@ -49,8 +45,6 @@ To remove client processes from pm2:
   ```bash
   pm2 delete CLIENTNAME
   ```
-
-
 
 ## Known Issues
 - The disk usage gauge in the terminal view will display your space for the OS drive even if you specify a install path on a separate drive.
