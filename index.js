@@ -13,6 +13,8 @@ const minimist = require("minimist");
 // TODO: Figure out where to put the snapshot dl
 // TODO: Figure out how to get most recent snapshot
 // TODO: Figure out if lighthouse can start syncing while reth snapshot downloads (might be a pain)
+// TODO: Fix reth and lighthouse logging (match geth or prsym)
+// TODO: Fix reth and lighthouse custom -d directory path (match geth or prysm)
 
 // Set default values
 let executionClient = "geth";
@@ -530,7 +532,7 @@ async function updateNetworkLinePlot() {
   }
 }
 
-function getDiskUsage() {
+function getDiskUsage(installDir) {
   return new Promise((resolve, reject) => {
     si.fsSize()
       .then((drives) => {
@@ -559,9 +561,9 @@ function getDiskUsage() {
   });
 }
 
-async function updateDiskDonut() {
+async function updateDiskDonut(installDir) {
   try {
-    const diskUsagePercent = await getDiskUsage(); // Wait for disk usage stats
+    const diskUsagePercent = await getDiskUsage(installDir); // Wait for disk usage stats
 
     storageDonut.setData([
       { label: "% Used", percent: diskUsagePercent, color: "green" },
@@ -793,7 +795,7 @@ function startBlessedContrib(executionClient, consensusClient) {
   setInterval(updateCpuLinePlot, 1000);
   setInterval(updateNetworkLinePlot, 1000);
   setInterval(updateMemoryGauge, 1000);
-  updateDiskDonut();
+  updateDiskDonut(installDir);
   setInterval(updateDiskDonut, 10000);
 
   handlePM2Logs(executionClient, executionLog);
