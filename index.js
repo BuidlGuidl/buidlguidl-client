@@ -447,8 +447,8 @@ let dataReceivedY = [];
 let cpuLine;
 let cpuDataX = [];
 let dataCpuUsage;
-let memDonut;
-let storageDonut;
+let memGauge;
+let storageGauge;
 
 function getNetworkStats() {
   return new Promise((resolve, reject) => {
@@ -551,7 +551,7 @@ function getDiskUsage(installDir) {
           debugToFile(`OS Drive not found.`, () => {});
         }
 
-        resolve(diskFreePercent);
+        resolve(diskFreePercent.toFixed(1));
       })
       .catch((error) => {
         debugToFile(
@@ -563,18 +563,16 @@ function getDiskUsage(installDir) {
   });
 }
 
-async function updateDiskDonut(installDir) {
+async function updateDiskGauge(installDir) {
   try {
     const diskUsagePercent = await getDiskUsage(installDir); // Wait for disk usage stats
 
-    storageDonut.setData([
-      { label: "% Used", percent: diskUsagePercent, color: "green" },
-    ]);
+    storageGauge.setData([{ label: "% Used", percent: diskUsagePercent }]);
 
     screen.render();
   } catch (error) {
     debugToFile(
-      `updateDiskDonut() Failed to update disk usage donut: ${error}`,
+      `updateDiskGauge() Failed to update disk usage donut: ${error}`,
       () => {}
     );
   }
@@ -652,7 +650,7 @@ function getMemoryUsage() {
         const usedMemory = memory.active; // 'active' is usually what's actually used
         const memoryUsagePercent = (usedMemory / totalMemory) * 100;
 
-        resolve(memoryUsagePercent.toFixed(2)); // Return memory usage as a percentage
+        resolve(memoryUsagePercent.toFixed(1)); // Return memory usage as a percentage
       })
       .catch((error) => {
         debugToFile(
@@ -667,9 +665,7 @@ function getMemoryUsage() {
 async function updateMemoryGauge() {
   try {
     const memoryUsagePercent = await getMemoryUsage(); // Wait for memory usage stats
-    memDonut.setData([
-      { label: " ", percent: memoryUsagePercent, color: "red" },
-    ]);
+    memGauge.setData([{ label: " ", percent: memoryUsagePercent }]);
     screen.render();
   } catch (error) {
     debugToFile(
@@ -721,6 +717,15 @@ function startBlessedContrib(executionClient, consensusClient) {
 
   screen = blessed.screen();
 
+  // const bgLogo = contrib.picture({
+  //   file: "bgLogo.png",
+  //   top: 0,
+  //   left: "80%",
+  //   width: "20%",
+  //   height: "25%",
+  //   type: "ansi",
+  // });
+
   // Create two log boxes
   const executionLog = contrib.log({
     label: `${executionClient} Logs`,
@@ -764,22 +769,6 @@ function startBlessedContrib(executionClient, consensusClient) {
     },
   });
 
-  memDonut = contrib.donut({
-    label: "Memory",
-    radius: 10,
-    arcWidth: 4,
-    remainColor: "white",
-    yPadding: 0,
-    top: "70%",
-    height: "15%",
-    left: "90%",
-    width: "10%",
-    border: {
-      type: "line",
-      fg: "cyan",
-    },
-  });
-
   networkLine = contrib.line({
     style: { line: "yellow", text: "green", baseline: "green" },
     xLabelPadding: 3,
@@ -796,14 +785,12 @@ function startBlessedContrib(executionClient, consensusClient) {
     },
   });
 
-  storageDonut = contrib.donut({
-    label: "Storage",
-    radius: 10,
-    arcWidth: 4,
-    remainColor: "white",
-    yPadding: 0,
-    top: "85%",
-    height: "15%",
+  memGauge = contrib.gauge({
+    label: "Memory",
+    stroke: "green",
+    fill: "white",
+    top: "76%",
+    height: "12%",
     left: "90%",
     width: "10%",
     border: {
@@ -812,18 +799,33 @@ function startBlessedContrib(executionClient, consensusClient) {
     },
   });
 
+  storageGauge = contrib.gauge({
+    label: "Storage",
+    stroke: "blue",
+    fill: "white",
+    top: "88%",
+    height: "12%",
+    left: "90%",
+    width: "10%",
+    border: {
+      type: "line",
+      fg: "cyan",
+    },
+  });
+
+  // screen.append(bgLogo);
   screen.append(executionLog);
   screen.append(consensusLog);
   screen.append(cpuLine);
-  screen.append(memDonut);
+  screen.append(memGauge);
   screen.append(networkLine);
-  screen.append(storageDonut);
+  screen.append(storageGauge);
 
   setInterval(updateCpuLinePlot, 1000);
   setInterval(updateNetworkLinePlot, 1000);
   setInterval(updateMemoryGauge, 1000);
-  updateDiskDonut(installDir);
-  setInterval(updateDiskDonut, 10000);
+  updateDiskGauge(installDir);
+  setInterval(updateDiskGauge, 10000);
 
   // Quit on Escape, q, or Control-C.
   screen.key(["escape", "q", "C-c"], function (ch, key) {
