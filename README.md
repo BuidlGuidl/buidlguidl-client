@@ -1,4 +1,4 @@
-# nodes-script
+# 📡 buidlguidl client
 This project will download clients and start an ethereum node. Currently it uses a Geth + Prysm client pair (with other options available soon). The script runs Geth in snap sync mode and will require ~1.2 TB.
 
 ## Requirements
