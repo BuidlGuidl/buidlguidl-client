@@ -13,6 +13,7 @@
     "blessed-contrib": "^4.11.0",
     "minimist": "^1.2.8",
     "node-pty": "^1.0.0",
-    "systeminformation": "^5.22.8"
+    "systeminformation": "^5.22.8",
+    "viem": "^2.13.3"
   }
 }

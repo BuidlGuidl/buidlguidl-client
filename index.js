@@ -7,6 +7,8 @@ const blessed = require("blessed");
 const contrib = require("blessed-contrib");
 const minimist = require("minimist");
 const pty = require("node-pty");
+const { createPublicClient, http } = require("viem");
+const { mainnet } = require("viem/chains");
 
 // TODO: Make reth snapshot dl. Figure out how to make it get the latest snapshot. Remember it downloads as db/file
 // valid dates found so far: 2024-05-14, 2024-04-30, 2024-04-17
@@ -450,6 +452,70 @@ let dataCpuUsage;
 let memGauge;
 let storageGauge;
 
+function getCpuUsage() {
+  return new Promise((resolve, reject) => {
+    si.currentLoad()
+      .then((load) => {
+        const currentLoad = load.currentLoad;
+        resolve(currentLoad);
+      })
+      .catch((error) => {
+        debugToFile(
+          `getCpuUsage() Error fetching CPU usage stats: ${error}`,
+          () => {}
+        );
+        reject(error);
+      });
+  });
+}
+
+async function updateCpuLinePlot() {
+  try {
+    const currentLoad = await getCpuUsage(); // Get the overall CPU load
+
+    if (currentLoad === undefined || currentLoad === null) {
+      throw new Error("Failed to fetch CPU usage data or data is empty");
+    }
+
+    const now = new Date();
+    const timeLabel = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+
+    if (!Array.isArray(cpuDataX)) {
+      cpuDataX = [];
+    }
+    if (!Array.isArray(dataCpuUsage)) {
+      dataCpuUsage = [];
+    }
+
+    cpuDataX.push(timeLabel);
+    dataCpuUsage.push(currentLoad);
+
+    // Prepare series data for the overall CPU load
+    const series = [
+      {
+        title: "", // Use an empty string for the title
+        x: cpuDataX,
+        y: dataCpuUsage,
+        style: { line: "cyan" }, // Use the first color
+      },
+    ];
+
+    cpuLine.setData(series);
+    screen.render();
+
+    // Limit data history to the last 60 points
+    if (cpuDataX.length > 60) {
+      cpuDataX.shift();
+      dataCpuUsage.shift();
+    }
+  } catch (error) {
+    debugToFile(
+      `updateCpuLineChart() Failed to update CPU usage line chart: ${error}`,
+      () => {}
+    );
+  }
+}
+
 function getNetworkStats() {
   return new Promise((resolve, reject) => {
     si.networkStats()
@@ -534,6 +600,50 @@ async function updateNetworkLinePlot() {
   }
 }
 
+const localClient = createPublicClient({
+  name: "localClient",
+  chain: mainnet,
+  transport: http("http://localhost:8545"),
+});
+
+async function isSyncing(client) {
+  try {
+    const syncingStatus = await client.request({
+      method: "eth_syncing",
+      params: [],
+    });
+
+    return syncingStatus;
+  } catch (error) {
+    throw new Error(`Failed to fetch syncing status: ${error.message}`);
+  }
+}
+
+async function updateSyncProgressGauge(client, gauge) {
+  try {
+    const syncingStatus = await isSyncing(client);
+
+    if (syncingStatus) {
+      const currentBlock = parseInt(syncingStatus.currentBlock, 16);
+      const highestBlock = parseInt(syncingStatus.highestBlock, 16);
+      if (highestBlock > 0) {
+        const progress = ((currentBlock / highestBlock) * 100).toFixed(1); // Calculate sync progress
+        gauge.setPercent(progress);
+      }
+    } else {
+      gauge.setPercent(100); // If not syncing, assume fully synced
+    }
+
+    screen.render();
+  } catch (error) {
+    console.error();
+    debugToFile(
+      `updateSyncProgressGauge() Failed to update sync progress gauge: ${error}`,
+      () => {}
+    );
+  }
+}
+
 function getDiskUsage(installDir) {
   return new Promise((resolve, reject) => {
     si.fsSize()
@@ -567,76 +677,13 @@ async function updateDiskGauge(installDir) {
   try {
     const diskUsagePercent = await getDiskUsage(installDir); // Wait for disk usage stats
 
-    storageGauge.setData([{ label: "% Used", percent: diskUsagePercent }]);
+    // storageGauge.setData([{ label: "% Used", percent: diskUsagePercent }]);
+    storageGauge.setPercent(diskUsagePercent);
 
     screen.render();
   } catch (error) {
     debugToFile(
       `updateDiskGauge() Failed to update disk usage donut: ${error}`,
-      () => {}
-    );
-  }
-}
-
-function getCpuUsage() {
-  return new Promise((resolve, reject) => {
-    si.currentLoad()
-      .then((load) => {
-        const currentLoad = load.currentLoad;
-        resolve(currentLoad);
-      })
-      .catch((error) => {
-        debugToFile(
-          `getCpuUsage() Error fetching CPU usage stats: ${error}`,
-          () => {}
-        );
-        reject(error);
-      });
-  });
-}
-
-async function updateCpuLinePlot() {
-  try {
-    const currentLoad = await getCpuUsage(); // Get the overall CPU load
-
-    if (currentLoad === undefined || currentLoad === null) {
-      throw new Error("Failed to fetch CPU usage data or data is empty");
-    }
-
-    const now = new Date();
-    const timeLabel = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
-
-    if (!Array.isArray(cpuDataX)) {
-      cpuDataX = [];
-    }
-    if (!Array.isArray(dataCpuUsage)) {
-      dataCpuUsage = [];
-    }
-
-    cpuDataX.push(timeLabel);
-    dataCpuUsage.push(currentLoad);
-
-    // Prepare series data for the overall CPU load
-    const series = [
-      {
-        title: "", // Use an empty string for the title
-        x: cpuDataX,
-        y: dataCpuUsage,
-        style: { line: "cyan" }, // Use the first color
-      },
-    ];
-
-    cpuLine.setData(series);
-    screen.render();
-
-    // Limit data history to the last 60 points
-    if (cpuDataX.length > 60) {
-      cpuDataX.shift();
-      dataCpuUsage.shift();
-    }
-  } catch (error) {
-    debugToFile(
-      `updateCpuLineChart() Failed to update CPU usage line chart: ${error}`,
       () => {}
     );
   }
@@ -665,7 +712,8 @@ function getMemoryUsage() {
 async function updateMemoryGauge() {
   try {
     const memoryUsagePercent = await getMemoryUsage(); // Wait for memory usage stats
-    memGauge.setData([{ label: " ", percent: memoryUsagePercent }]);
+    // memGauge.setData([{ label: " ", percent: memoryUsagePercent }]);
+    memGauge.setPercent(memoryUsagePercent);
     screen.render();
   } catch (error) {
     debugToFile(
@@ -785,6 +833,20 @@ function startBlessedContrib(executionClient, consensusClient) {
     },
   });
 
+  syncProgressGauge = contrib.gauge({
+    label: "Sync Progress",
+    stroke: "cyan",
+    fill: "white",
+    top: "64%",
+    height: "12%",
+    left: "90%",
+    width: "10%",
+    border: {
+      type: "line",
+      fg: "cyan",
+    },
+  });
+
   memGauge = contrib.gauge({
     label: "Memory",
     stroke: "green",
@@ -817,8 +879,9 @@ function startBlessedContrib(executionClient, consensusClient) {
   screen.append(executionLog);
   screen.append(consensusLog);
   screen.append(cpuLine);
-  screen.append(memGauge);
   screen.append(networkLine);
+  screen.append(syncProgressGauge);
+  screen.append(memGauge);
   screen.append(storageGauge);
 
   setInterval(updateCpuLinePlot, 1000);
@@ -826,6 +889,10 @@ function startBlessedContrib(executionClient, consensusClient) {
   setInterval(updateMemoryGauge, 1000);
   updateDiskGauge(installDir);
   setInterval(updateDiskGauge, 10000);
+  setInterval(
+    () => updateSyncProgressGauge(localClient, syncProgressGauge),
+    10000
+  );
 
   // Quit on Escape, q, or Control-C.
   screen.key(["escape", "q", "C-c"], function (ch, key) {
