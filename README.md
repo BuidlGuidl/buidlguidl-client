@@ -4,7 +4,6 @@ This project will download clients and start an ethereum node. Currently it uses
 ## Requirements
 - node (https://nodejs.org/en)
 - yarn (https://yarnpkg.com/migration/overview)
-- pm2 (https://pm2.keymetrics.io/)
 
 ## Quickstart
 To get a node started:
@@ -15,35 +14,11 @@ To get a node started:
   node index.js
   ```
 
-By default, index.js will create ~/bgnode which will contain the client executables, databases, and client logs. The script then displays a terminal view with scrolling client logs and some plots showing some machine stats. Full client logs are located in bgnode/geth/logs and bgnode/prysm/logs. You can exit that terminal view and clients will continue to run in the background (see Client Management below).
+By default, index.js will create ~/bgnode which will contain the client executables, databases, and client logs. The script then displays a terminal view with scrolling client logs and some plots showing some machine stats. Full client logs are located in bgnode/geth/logs and bgnode/prysm/logs. Exiting the terminal view (control-c or q) will also close your clients (will take 15 seconds or so).
 
 If you want to specify the location of the bgnode directory, pass a -d option to index.js:
   ```bash
   node index.js -d path/for/bgnode
-  ```
-
-## Client Management
-The script uses the pm2 process manager to handle the client processes.
-
-To see status of clients:
-  ```bash
-  pm2 ls
-  ```
-
-To stop clients:
-  ```bash
-  pm2 stop CLIENTNAME
-  ```
-
-To restart clients:
-  ```bash
-  pm2 start CLIENTNAME
-  ```
-(Or just re-run index.js and it'll restart the clients if they're already installed)
-
-To remove client processes from pm2:
-  ```bash
-  pm2 delete CLIENTNAME
   ```
 
 ## Known Issues

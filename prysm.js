@@ -45,24 +45,22 @@ const consensus = spawn(
   { shell: true }
 );
 
-// Pipe stdout and stderr to the log file
+// Pipe stdout and stderr to the log file and to the parent process
 consensus.stdout.pipe(logStream);
 consensus.stderr.pipe(logStream);
-
-// Also print stdout and stderr to the terminal
-// consensus.stdout.pipe(process.stdout);
-// consensus.stderr.pipe(process.stderr);
+consensus.stdout.pipe(process.stdout);
+consensus.stderr.pipe(process.stderr);
 
 consensus.stdout.on("data", (data) => {
-  console.log(data.toString());
+  process.send({ log: data.toString() }); // Send logs to parent process
 });
 
 consensus.stderr.on("data", (data) => {
-  console.error(data.toString());
+  process.send({ log: data.toString() }); // Send logs to parent process
 });
 
 consensus.on("close", (code) => {
-  console.log(`prysm process exited with code ${code}`);
+  console.log(`geth process exited with code ${code}`);
   logStream.end();
 });
 

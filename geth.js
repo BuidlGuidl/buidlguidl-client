@@ -44,20 +44,18 @@ const execution = spawn(
   { shell: true }
 );
 
-// Pipe stdout and stderr to the log file
+// Pipe stdout and stderr to the log file and to the parent process
 execution.stdout.pipe(logStream);
 execution.stderr.pipe(logStream);
-
-// Also print stdout and stderr to the terminal
-// execution.stdout.pipe(process.stdout);
-// execution.stderr.pipe(process.stderr);
+execution.stdout.pipe(process.stdout);
+execution.stderr.pipe(process.stderr);
 
 execution.stdout.on("data", (data) => {
-  console.log(data.toString());
+  process.send({ log: data.toString() }); // Send logs to parent process
 });
 
 execution.stderr.on("data", (data) => {
-  console.error(data.toString());
+  process.send({ log: data.toString() }); // Send logs to parent process
 });
 
 execution.on("close", (code) => {

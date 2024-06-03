@@ -15,6 +15,7 @@ const minimist = require("minimist");
 // TODO: Figure out if lighthouse can start syncing while reth snapshot downloads (might be a pain)
 // TODO: Fix reth and lighthouse logging (match geth or prsym)
 // TODO: Fix reth and lighthouse custom -d directory path (match geth or prysm)
+// TODO: Display sync status. geth attach http://localhost:8545 && eth.syncing will give currentBlock
 
 // Set default values
 let executionClient = "geth";
@@ -677,45 +678,42 @@ async function updateMemoryGauge() {
   }
 }
 
-function startClient(clientName, installDir) {
+function startClient(clientName, installDir, logBox) {
+  let child;
   try {
-    const pm2Out = execSync(`pm2 describe ${clientName} | grep "status"`, {
-      encoding: "utf8",
+    child = spawn("node", [`${clientName}.js`], {
+      env: { ...process.env, INSTALL_DIR: installDir },
+      // stdio: "inherit",
+      stdio: ["pipe", "pipe", "pipe", "ipc"], // Use IPC to communicate with child process
+      shell: true,
     });
 
-    if (pm2Out.includes("stopped")) {
-      execSync(`pm2 start ${clientName}`, {
-        env: { ...process.env, INSTALL_DIR: installDir },
-        stdio: ["ignore", "ignore", "ignore"],
-      });
-    }
+    child.stdout.on("data", (data) => {
+      logBox.log(data.toString());
+    });
+
+    child.stderr.on("data", (data) => {
+      logBox.log(data.toString());
+    });
+
+    child.on("message", (message) => {
+      if (message.log) {
+        logBox.log(message.log);
+      }
+    });
   } catch (error) {
-    if (error.message.includes("doesn't exist")) {
-      execSync(`pm2 start ${clientName}.js`, {
-        env: { ...process.env, INSTALL_DIR: installDir },
-        stdio: ["ignore", "ignore", "ignore"],
-      });
-    }
+    debugToFile(
+      `startClient() Failed to start client script: ${error}`,
+      () => {}
+    );
   }
+
+  child.on("close", (code) => {
+    console.log(`${clientName} process exited with code ${code}`);
+  });
 }
 
 module.exports = { startClient };
-
-function handlePM2Logs(clientName, logBox) {
-  const tail = spawn("pm2", ["logs", clientName, "--raw"]);
-
-  tail.stdout.on("data", (data) => {
-    logBox.log(data.toString());
-  });
-
-  tail.stderr.on("data", (data) => {
-    logBox.log(data.toString());
-  });
-
-  tail.on("close", (code) => {
-    logBox.log(`${clientName} logs stream closed with code ${code}`);
-  });
-}
 
 function startBlessedContrib(executionClient, consensusClient) {
   const now = new Date();
@@ -822,15 +820,14 @@ function startBlessedContrib(executionClient, consensusClient) {
   updateDiskDonut(installDir);
   setInterval(updateDiskDonut, 10000);
 
-  handlePM2Logs(executionClient, executionLog);
-  handlePM2Logs(consensusClient, consensusLog);
-
   // Quit on Escape, q, or Control-C.
   screen.key(["escape", "q", "C-c"], function (ch, key) {
     return process.exit(0);
   });
 
   screen.render();
+
+  return { executionLog, consensusLog };
 }
 
 console.log(`Execution client selected: ${executionClient}`);
@@ -850,6 +847,9 @@ if (["darwin", "linux"].includes(platform)) {
 }
 
 createJwtSecret(jwtDir);
-startBlessedContrib(executionClient, consensusClient);
-startClient(executionClient, installDir);
-startClient(consensusClient, installDir);
+const { executionLog, consensusLog } = startBlessedContrib(
+  executionClient,
+  consensusClient
+);
+startClient(executionClient, installDir, executionLog);
+startClient(consensusClient, installDir, consensusLog);
