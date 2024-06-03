@@ -8,8 +8,8 @@ This project will download clients and start an ethereum node. Currently it uses
 ## Quickstart
 To get a node started:
   ```bash
-  git clone https://github.com/BuidlGuidl/nodes-script.git
-  cd nodes-script
+  git clone https://github.com/BuidlGuidl/buidlguidl-client.git
+  cd buidlguidl-client
   yarn install
   node index.js
   ```
