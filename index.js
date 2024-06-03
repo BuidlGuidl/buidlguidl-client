@@ -6,6 +6,7 @@ const si = require("systeminformation");
 const blessed = require("blessed");
 const contrib = require("blessed-contrib");
 const minimist = require("minimist");
+const pty = require("node-pty");
 
 // TODO: Make reth snapshot dl. Figure out how to make it get the latest snapshot. Remember it downloads as db/file
 // valid dates found so far: 2024-05-14, 2024-04-30, 2024-04-17
@@ -679,37 +680,37 @@ async function updateMemoryGauge() {
 }
 
 function startClient(clientName, installDir, logBox) {
-  let child;
-  try {
-    child = spawn("node", [`${clientName}.js`], {
-      env: { ...process.env, INSTALL_DIR: installDir },
-      // stdio: "inherit",
-      stdio: ["pipe", "pipe", "pipe", "ipc"], // Use IPC to communicate with child process
-      shell: true,
-    });
+  let clientCommand, clientArgs;
 
-    child.stdout.on("data", (data) => {
-      logBox.log(data.toString());
-    });
-
-    child.stderr.on("data", (data) => {
-      logBox.log(data.toString());
-    });
-
-    child.on("message", (message) => {
-      if (message.log) {
-        logBox.log(message.log);
-      }
-    });
-  } catch (error) {
-    debugToFile(
-      `startClient() Failed to start client script: ${error}`,
-      () => {}
-    );
+  if (clientName === "geth") {
+    clientCommand = path.join(__dirname, "geth.js");
+    clientArgs = [];
+  } else if (clientName === "prysm") {
+    clientCommand = path.join(__dirname, "prysm.js");
+    clientArgs = [];
+  } else {
+    clientCommand = path.join(installDir, "bgnode", clientName, clientName);
+    clientArgs = [];
   }
 
-  child.on("close", (code) => {
-    console.log(`${clientName} process exited with code ${code}`);
+  const child = pty.spawn("node", [clientCommand, ...clientArgs], {
+    name: "xterm-color",
+    cols: 80,
+    rows: 30,
+    cwd: process.env.HOME,
+    env: { ...process.env, INSTALL_DIR: installDir },
+  });
+
+  child.on("data", (data) => {
+    logBox.log(data); // No need for .toString(), pty preserves colors
+  });
+
+  child.on("exit", (code) => {
+    logBox.log(`${clientName} process exited with code ${code}`);
+  });
+
+  child.on("error", (err) => {
+    logBox.log(`Error: ${err.message}`);
   });
 }
 
@@ -730,6 +731,8 @@ function startBlessedContrib(executionClient, consensusClient) {
       type: "line",
       fg: "cyan",
     },
+    // scrollable: true,
+    // scrollbar: { ch: " ", inverse: true },
   });
 
   const consensusLog = contrib.log({
@@ -741,6 +744,8 @@ function startBlessedContrib(executionClient, consensusClient) {
       type: "line",
       fg: "cyan",
     },
+    // scrollable: true,
+    // scrollbar: { ch: " ", inverse: true },
   });
 
   cpuLine = contrib.line({

@@ -1,4 +1,4 @@
-const { spawn } = require("child_process");
+const pty = require("node-pty");
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
@@ -25,8 +25,15 @@ const logFilePath = path.join(
 
 const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
 
-const consensus = spawn(
-  `"${prysmCommand}"`,
+function stripAnsiCodes(input) {
+  return input.replace(
+    /[\u001b\u009b][[()#;?]*(?:(?:[a-zA-Z\d]*(?:;[a-zA-Z\d]*)*)?\u0007|(?:\d{1,4}(?:;\d{0,4})*)?[0-9A-ORZcf-nq-uy=><~])/g,
+    ""
+  );
+}
+
+const consensus = pty.spawn(
+  prysmCommand,
   [
     "beacon-chain",
     "--mainnet",
@@ -36,32 +43,47 @@ const consensus = spawn(
     "--grpc-gateway-port=3500",
     "--checkpoint-sync-url=https://mainnet-checkpoint-sync.attestant.io/",
     "--genesis-beacon-api-url=https://mainnet-checkpoint-sync.attestant.io/",
-    `--datadir="${path.join(installDir, "bgnode", "prysm", "database")}"`,
-    // `--log-file="${logFilePath}"`,
+    "--datadir",
+    path.join(installDir, "bgnode", "prysm", "database"),
     "--accept-terms-of-use=true",
     "--jwt-secret",
-    `"${jwtPath}"`,
+    jwtPath,
   ],
-  { shell: true }
+  {
+    name: "xterm-color",
+    cols: 80,
+    rows: 30,
+    cwd: process.env.HOME,
+    env: { ...process.env, INSTALL_DIR: installDir },
+  }
 );
 
 // Pipe stdout and stderr to the log file and to the parent process
-consensus.stdout.pipe(logStream);
-consensus.stderr.pipe(logStream);
-consensus.stdout.pipe(process.stdout);
-consensus.stderr.pipe(process.stderr);
-
-consensus.stdout.on("data", (data) => {
-  process.send({ log: data.toString() }); // Send logs to parent process
+consensus.on("data", (data) => {
+  logStream.write(stripAnsiCodes(data));
+  if (process.send) {
+    process.send({ log: data }); // No need for .toString(), pty preserves colors
+  }
+  process.stdout.write(data); // Also log to console for real-time feedback
 });
 
-consensus.stderr.on("data", (data) => {
-  process.send({ log: data.toString() }); // Send logs to parent process
-});
-
-consensus.on("close", (code) => {
-  console.log(`geth process exited with code ${code}`);
+consensus.on("exit", (code) => {
+  const exitMessage = `prysm process exited with code ${code}`;
+  logStream.write(exitMessage);
   logStream.end();
+  if (process.send) {
+    process.send({ log: exitMessage }); // Send exit code to parent process
+  }
+  console.log(exitMessage); // Log exit message to console
+});
+
+consensus.on("error", (err) => {
+  const errorMessage = `Error: ${err.message}`;
+  logStream.write(errorMessage);
+  if (process.send) {
+    process.send({ log: errorMessage }); // Send error message to parent process
+  }
+  console.error(errorMessage); // Log error message to console
 });
 
 function getFormattedDateTime() {

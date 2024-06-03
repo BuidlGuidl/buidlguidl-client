@@ -244,12 +244,24 @@ minimist@^1.2.8:
   resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.8.tgz#c1a464e7693302e082a075cee0c057741ac4772c"
   integrity sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==
 
+nan@^2.17.0:
+  version "2.19.0"
+  resolved "https://registry.yarnpkg.com/nan/-/nan-2.19.0.tgz#bb58122ad55a6c5bc973303908d5b16cfdd5a8c0"
+  integrity sha512-nO1xXxfh/RWNxfd/XPfbIfFk5vgLsAxUR9y5O0cHMJu/AW9U95JLXqthYHjEp+8gQ5p96K9jUp8nbVOxCdRbtw==
+
 node-emoji@^1.11.0:
   version "1.11.0"
   resolved "https://registry.yarnpkg.com/node-emoji/-/node-emoji-1.11.0.tgz#69a0150e6946e2f115e9d7ea4df7971e2628301c"
   integrity sha512-wo2DpQkQp7Sjm2A0cq+sN7EHKO6Sl0ctXeBdFZrL9T9+UywORbufTcTZxom8YqpLQt/FqNMUkOpkZrJVYSKD3A==
   dependencies:
     lodash "^4.17.21"
+
+node-pty@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/node-pty/-/node-pty-1.0.0.tgz#7daafc0aca1c4ca3de15c61330373af4af5861fd"
+  integrity sha512-wtBMWWS7dFZm/VgqElrTvtfMq4GzJ6+edFI0Y0zyzygUSZMgZdraDUMUhCIvkjhJjme15qWmbyJbtAx4ot4uZA==
+  dependencies:
+    nan "^2.17.0"
 
 nopt@~2.1.2:
   version "2.1.2"
