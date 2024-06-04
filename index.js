@@ -15,10 +15,10 @@ const { mainnet } = require("viem/chains");
 // TODO: Make sure snapshot dl works on linux (and windows). This line works on mac
 // TODO: Figure out where to put the snapshot dl
 // TODO: Figure out how to get most recent snapshot
-// TODO: Figure out if lighthouse can start syncing while reth snapshot downloads (might be a pain)
 // TODO: Fix reth and lighthouse logging (match geth or prsym)
 // TODO: Fix reth and lighthouse custom -d directory path (match geth or prysm)
 // TODO: Display sync status. geth attach http://localhost:8545 && eth.syncing will give currentBlock
+// Probably want to parse geth logs for sync status. There's a beacon header download step before syncing starts that takes ~1 hour
 
 // Set default values
 let executionClient = "geth";
@@ -436,6 +436,87 @@ function installWindowsConsensusClient(consensusClient) {
   }
 }
 
+function stripAnsiCodes(input) {
+  return input.replace(
+    /[\u001b\u009b][[()#;?]*(?:(?:[a-zA-Z\d]*(?:;[a-zA-Z\d]*)*)?\u0007|(?:\d{1,4}(?:;\d{0,4})*)?[0-9A-ORZcf-nq-uy=><~])/g,
+    ""
+  );
+}
+
+function parseExecutionLogs(line) {
+  line = stripAnsiCodes(line);
+
+  if (line.includes("Looking for peers")) {
+    const peerCountMatch = line.match(/peercount=(\d+)/);
+    const peerCount = parseInt(peerCountMatch[1], 10);
+    updatePeerCountGauge(peerCount);
+  } else if (line.includes("Syncing beacon headers")) {
+    const headerDlMatch = line.match(
+      /downloaded=([\d,]+)\s+left=([\d,]+)\s+eta=([^\s]+)/
+    );
+
+    const headerDlDownloaded = parseInt(headerDlMatch[1].replace(/,/g, ""), 10);
+    const headerDlLeft = parseInt(headerDlMatch[2].replace(/,/g, ""), 10);
+    const headerDlEta = headerDlMatch[3];
+
+    const headerDlProgress =
+      headerDlDownloaded / (headerDlDownloaded + headerDlLeft);
+
+    updateHeaderDlGauge(headerDlProgress);
+  } else if (line.includes("Syncing: chain download in progress")) {
+    const chainSyncMatch = line.match(/synced=([\d.]+)%/);
+    const chainDlProgress = parseFloat(chainSyncMatch[1]) / 100;
+
+    updateChainDlGauge(chainDlProgress);
+  } else if (line.includes("Syncing: state download in progress")) {
+    const stateSyncMatch = line.match(/synced=([\d.]+)%/);
+    const stateDlProgress = parseFloat(stateSyncMatch[1]) / 100;
+
+    updateStateDlGauge(stateDlProgress);
+  }
+}
+
+function startClient(clientName, installDir, logBox) {
+  let clientCommand, clientArgs;
+
+  if (clientName === "geth") {
+    clientCommand = path.join(__dirname, "geth.js");
+    clientArgs = [];
+  } else if (clientName === "prysm") {
+    clientCommand = path.join(__dirname, "prysm.js");
+    clientArgs = [];
+  } else {
+    clientCommand = path.join(installDir, "bgnode", clientName, clientName);
+    clientArgs = [];
+  }
+
+  const child = pty.spawn("node", [clientCommand, ...clientArgs], {
+    name: "xterm-color",
+    cols: 80,
+    rows: 30,
+    cwd: process.env.HOME,
+    env: { ...process.env, INSTALL_DIR: installDir },
+  });
+
+  child.on("data", (data) => {
+    logBox.log(data);
+
+    if (clientName === "geth") {
+      parseExecutionLogs(data);
+    }
+  });
+
+  child.on("exit", (code) => {
+    logBox.log(`${clientName} process exited with code ${code}`);
+  });
+
+  child.on("error", (err) => {
+    logBox.log(`Error: ${err.message}`);
+  });
+}
+
+module.exports = { startClient };
+
 let lastStats = {
   totalSent: 0,
   totalReceived: 0,
@@ -449,6 +530,10 @@ let dataReceivedY = [];
 let cpuLine;
 let cpuDataX = [];
 let dataCpuUsage;
+let headerDlGauge;
+let stateDlGauge;
+let chainDlGauge;
+let peerCountGauge;
 let memGauge;
 let storageGauge;
 
@@ -593,56 +678,121 @@ async function updateNetworkLinePlot() {
       dataReceivedY.shift();
     }
   } catch (error) {
-    debugToFile(
-      `updateNetworkPlot() Failed to update plot: ${error}`,
-      () => {}
-    );
+    debugToFile(`updateNetworkPlot(): ${error}`, () => {});
   }
 }
 
-const localClient = createPublicClient({
-  name: "localClient",
-  chain: mainnet,
-  transport: http("http://localhost:8545"),
-});
-
-async function isSyncing(client) {
+async function updatePeerCountGauge(peerCount) {
   try {
-    const syncingStatus = await client.request({
-      method: "eth_syncing",
-      params: [],
-    });
-
-    return syncingStatus;
-  } catch (error) {
-    throw new Error(`Failed to fetch syncing status: ${error.message}`);
-  }
-}
-
-async function updateSyncProgressGauge(client, gauge) {
-  try {
-    const syncingStatus = await isSyncing(client);
-
-    if (syncingStatus) {
-      const currentBlock = parseInt(syncingStatus.currentBlock, 16);
-      const highestBlock = parseInt(syncingStatus.highestBlock, 16);
-      if (highestBlock > 0) {
-        const progress = ((currentBlock / highestBlock) * 100).toFixed(1); // Calculate sync progress
-        gauge.setPercent(progress);
-      }
-    } else {
-      gauge.setPercent(100); // If not syncing, assume fully synced
-    }
+    peerCountGauge.setDisplay(peerCount);
 
     screen.render();
   } catch (error) {
-    console.error();
-    debugToFile(
-      `updateSyncProgressGauge() Failed to update sync progress gauge: ${error}`,
-      () => {}
-    );
+    debugToFile(`updatePeerCountGauge(): ${error}`, () => {});
   }
 }
+
+const progressFilePath = path.join(installDir, "bgnode", "progress.json");
+
+function saveProgress(progress) {
+  fs.writeFileSync(
+    progressFilePath,
+    JSON.stringify(progress, null, 2),
+    "utf-8"
+  );
+}
+
+function loadProgress() {
+  if (fs.existsSync(progressFilePath)) {
+    const data = fs.readFileSync(progressFilePath, "utf-8");
+    return JSON.parse(data);
+  }
+  return {
+    headerDlProgress: 0,
+    chainDlProgress: 0,
+    stateDlProgress: 0,
+  };
+}
+
+const progress = loadProgress();
+
+async function updateHeaderDlGauge(headerDlProgress) {
+  try {
+    headerDlGauge.setPercent(headerDlProgress);
+    progress.headerDlProgress = headerDlProgress;
+    saveProgress(progress);
+    screen.render();
+  } catch (error) {
+    debugToFile(`updateHeaderDlGauge(): ${error}`, () => {});
+  }
+}
+
+async function updateChainDlGauge(chainDlProgress) {
+  try {
+    chainDlGauge.setPercent(chainDlProgress);
+    progress.chainDlProgress = chainDlProgress;
+    saveProgress(progress);
+    screen.render();
+  } catch (error) {
+    debugToFile(`updateChainDlGauge(): ${error}`, () => {});
+  }
+}
+
+async function updateStateDlGauge(stateDlProgress) {
+  try {
+    stateDlGauge.setPercent(stateDlProgress);
+    progress.stateDlProgress = stateDlProgress;
+    saveProgress(progress);
+    screen.render();
+  } catch (error) {
+    debugToFile(`updateStateDlGauge(): ${error}`, () => {});
+  }
+}
+
+// TODO: Replace these with functions that parse logs
+// const localClient = createPublicClient({
+//   name: "localClient",
+//   chain: mainnet,
+//   transport: http("http://localhost:8545"),
+// });
+
+// async function isSyncing(client) {
+//   try {
+//     const syncingStatus = await client.request({
+//       method: "eth_syncing",
+//       params: [],
+//     });
+
+//     return syncingStatus;
+//   } catch (error) {
+//     throw new Error(`Failed to fetch syncing status: ${error.message}`);
+//   }
+// }
+
+// async function updateSyncProgressGauge(client, gauge) {
+//   try {
+//     const syncingStatus = await isSyncing(client);
+
+//     if (syncingStatus) {
+//       const currentBlock = parseInt(syncingStatus.currentBlock, 16);
+//       const highestBlock = parseInt(syncingStatus.highestBlock, 16);
+//       if (highestBlock > 0) {
+//         const progress = ((currentBlock / highestBlock) * 100).toFixed(1); // Calculate sync progress
+//         gauge.setPercent(progress);
+//       }
+//     } else {
+//       gauge.setPercent(100); // If not syncing, assume fully synced
+//     }
+
+//     screen.render();
+//   } catch (error) {
+//     console.error();
+//     debugToFile(
+//       `updateSyncProgressGauge() Failed to update sync progress gauge: ${error}`,
+//       () => {}
+//     );
+//   }
+// }
 
 function getDiskUsage(installDir) {
   return new Promise((resolve, reject) => {
@@ -723,43 +873,6 @@ async function updateMemoryGauge() {
   }
 }
 
-function startClient(clientName, installDir, logBox) {
-  let clientCommand, clientArgs;
-
-  if (clientName === "geth") {
-    clientCommand = path.join(__dirname, "geth.js");
-    clientArgs = [];
-  } else if (clientName === "prysm") {
-    clientCommand = path.join(__dirname, "prysm.js");
-    clientArgs = [];
-  } else {
-    clientCommand = path.join(installDir, "bgnode", clientName, clientName);
-    clientArgs = [];
-  }
-
-  const child = pty.spawn("node", [clientCommand, ...clientArgs], {
-    name: "xterm-color",
-    cols: 80,
-    rows: 30,
-    cwd: process.env.HOME,
-    env: { ...process.env, INSTALL_DIR: installDir },
-  });
-
-  child.on("data", (data) => {
-    logBox.log(data); // No need for .toString(), pty preserves colors
-  });
-
-  child.on("exit", (code) => {
-    logBox.log(`${clientName} process exited with code ${code}`);
-  });
-
-  child.on("error", (err) => {
-    logBox.log(`Error: ${err.message}`);
-  });
-}
-
-module.exports = { startClient };
-
 function startBlessedContrib(executionClient, consensusClient) {
   const now = new Date();
 
@@ -810,7 +923,7 @@ function startBlessedContrib(executionClient, consensusClient) {
     label: "CPU Load (%)",
     top: "50%",
     height: "25%",
-    width: "90%",
+    width: "80%",
     border: {
       type: "line",
       fg: "cyan",
@@ -826,18 +939,66 @@ function startBlessedContrib(executionClient, consensusClient) {
     label: "Network Traffic (MB/sec)",
     top: "75%",
     height: "25%",
-    width: "90%",
+    width: "80%",
     border: {
       type: "line",
       fg: "cyan",
     },
   });
 
-  syncProgressGauge = contrib.gauge({
-    label: "Sync Progress",
+  headerDlGauge = contrib.gauge({
+    label: "Header DL Progress",
     stroke: "cyan",
     fill: "white",
-    top: "64%",
+    top: "50%",
+    height: "12%",
+    left: "80%",
+    width: "10%",
+    border: {
+      type: "line",
+      fg: "cyan",
+    },
+  });
+
+  stateDlGauge = contrib.gauge({
+    label: "State DL Progress",
+    stroke: "cyan",
+    fill: "white",
+    top: "62%",
+    height: "12%",
+    left: "80%",
+    width: "10%",
+    border: {
+      type: "line",
+      fg: "cyan",
+    },
+  });
+
+  chainDlGauge = contrib.gauge({
+    label: "Chain DL Progress",
+    stroke: "cyan",
+    fill: "white",
+    top: "74%",
+    height: "12%",
+    left: "80%",
+    width: "10%",
+    border: {
+      type: "line",
+      fg: "cyan",
+    },
+  });
+
+  peerCountGauge = contrib.lcd({
+    segmentWidth: 0.06, // how wide are the segments in % so 50% = 0.5
+    segmentInterval: 0.11, // spacing between the segments in % so 50% = 0.550% = 0.5
+    strokeWidth: 0.11, // spacing between the segments in % so 50% = 0.5
+    elements: 3, // how many elements in the display. or how many characters can be displayed.
+    display: 0, // what should be displayed before first call to setDisplay
+    elementSpacing: 4, // spacing between each element
+    elementPadding: 2, // how far away from the edges to put the elements
+    color: "green", // color for the segments
+    label: "Peer Count",
+    top: "62%",
     height: "12%",
     left: "90%",
     width: "10%",
@@ -851,7 +1012,7 @@ function startBlessedContrib(executionClient, consensusClient) {
     label: "Memory",
     stroke: "green",
     fill: "white",
-    top: "76%",
+    top: "74%",
     height: "12%",
     left: "90%",
     width: "10%",
@@ -865,7 +1026,7 @@ function startBlessedContrib(executionClient, consensusClient) {
     label: "Storage",
     stroke: "blue",
     fill: "white",
-    top: "88%",
+    top: "86%",
     height: "12%",
     left: "90%",
     width: "10%",
@@ -880,7 +1041,10 @@ function startBlessedContrib(executionClient, consensusClient) {
   screen.append(consensusLog);
   screen.append(cpuLine);
   screen.append(networkLine);
-  screen.append(syncProgressGauge);
+  screen.append(headerDlGauge);
+  screen.append(stateDlGauge);
+  screen.append(chainDlGauge);
+  screen.append(peerCountGauge);
   screen.append(memGauge);
   screen.append(storageGauge);
 
@@ -889,10 +1053,10 @@ function startBlessedContrib(executionClient, consensusClient) {
   setInterval(updateMemoryGauge, 1000);
   updateDiskGauge(installDir);
   setInterval(updateDiskGauge, 10000);
-  setInterval(
-    () => updateSyncProgressGauge(localClient, syncProgressGauge),
-    10000
-  );
+
+  headerDlGauge.setPercent(progress.headerDlProgress);
+  chainDlGauge.setPercent(progress.chainDlProgress);
+  stateDlGauge.setPercent(progress.stateDlProgress);
 
   // Quit on Escape, q, or Control-C.
   screen.key(["escape", "q", "C-c"], function (ch, key) {
@@ -904,7 +1068,7 @@ function startBlessedContrib(executionClient, consensusClient) {
   return { executionLog, consensusLog };
 }
 
-console.log(`Execution client selected: ${executionClient}`);
+console.log(`\nExecution client selected: ${executionClient}`);
 console.log(`Consensus client selected: ${consensusClient}\n`);
 
 getNetworkStats();

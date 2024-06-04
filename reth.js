@@ -31,7 +31,7 @@ const execution = spawn(
     "--http.api",
     // "trace,web3,eth,debug",
     // "trace,web3,eth,debug,net",
-    "admin,debug,eth,net,trace,txpool,web3,rpc",
+    "debug,eth,net,trace,txpool,web3,rpc",
     "--ws",
     "--ws.api",
     "trace,web3,eth,debug",

@@ -40,7 +40,7 @@ const execution = pty.spawn(
     "snap",
     "--http",
     "--http.api",
-    "eth,net,engine,admin",
+    "eth,net,engine",
     "--http.addr",
     "0.0.0.0",
     "--datadir",
@@ -61,7 +61,7 @@ const execution = pty.spawn(
 execution.on("data", (data) => {
   logStream.write(stripAnsiCodes(data));
   if (process.send) {
-    process.send({ log: data }); // No need for .toString(), pty preserves colors
+    process.send({ log: data });
   }
   process.stdout.write(data); // Also log to console for real-time feedback
 });
