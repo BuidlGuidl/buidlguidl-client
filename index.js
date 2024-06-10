@@ -10,16 +10,6 @@ const pty = require("node-pty");
 const { createPublicClient, http } = require("viem");
 const { mainnet } = require("viem/chains");
 
-// TODO: Make reth snapshot dl. Figure out how to make it get the latest snapshot. Remember it downloads as db/file
-// valid dates found so far: 2024-05-14, 2024-04-30, 2024-04-17
-// TODO: Make sure snapshot dl works on linux (and windows). This line works on mac
-// TODO: Figure out where to put the snapshot dl
-// TODO: Figure out how to get most recent snapshot
-// TODO: Fix reth and lighthouse logging (match geth or prsym)
-// TODO: Fix reth and lighthouse custom -d directory path (match geth or prysm)
-// TODO: Display sync status. geth attach http://localhost:8545 && eth.syncing will give currentBlock
-// Probably want to parse geth logs for sync status. There's a beacon header download step before syncing starts that takes ~1 hour
-
 // Set default values
 let executionClient = "geth";
 let consensusClient = "prysm";
@@ -449,7 +439,7 @@ function parseExecutionLogs(line) {
   if (line.includes("Looking for peers")) {
     const peerCountMatch = line.match(/peercount=(\d+)/);
     const peerCount = parseInt(peerCountMatch[1], 10);
-    updatePeerCountGauge(peerCount);
+    updatePeerCountLcd(peerCount);
   } else if (line.includes("Syncing beacon headers")) {
     const headerDlMatch = line.match(
       /downloaded=([\d,]+)\s+left=([\d,]+)\s+eta=([^\s]+)/
@@ -476,6 +466,58 @@ function parseExecutionLogs(line) {
   }
 }
 
+let executionChild;
+let consensusChild;
+
+let executionExited = false;
+let consensusExited = false;
+
+function handleExit(signal) {
+  console.log(`Received ${signal}. Exiting...`);
+
+  if (executionChild) {
+    executionChild.kill("SIGINT");
+  }
+
+  if (consensusChild) {
+    consensusChild.kill("SIGINT");
+  }
+
+  // Check if both child processes have exited
+  const checkExit = () => {
+    if (executionExited && consensusExited) {
+      process.exit(0);
+    }
+  };
+
+  // Listen for exit events
+  if (executionChild) {
+    executionChild.on("exit", (code) => {
+      console.log(`Execution client exited with code ${code}`);
+      executionExited = true;
+      checkExit();
+    });
+  } else {
+    executionExited = true;
+  }
+
+  if (consensusChild) {
+    consensusChild.on("exit", (code) => {
+      console.log(`Consensus client exited with code ${code}`);
+      consensusExited = true;
+      checkExit();
+    });
+  } else {
+    consensusExited = true;
+  }
+
+  // Initial check in case both children are already not running
+  checkExit();
+}
+
+process.on("SIGINT", handleExit);
+process.on("SIGTERM", handleExit);
+
 function startClient(clientName, installDir, logBox) {
   let clientCommand, clientArgs;
 
@@ -490,19 +532,23 @@ function startClient(clientName, installDir, logBox) {
     clientArgs = [];
   }
 
-  const child = pty.spawn("node", [clientCommand, ...clientArgs], {
-    name: "xterm-color",
-    cols: 80,
-    rows: 30,
+  const child = spawn("node", [clientCommand, ...clientArgs], {
+    stdio: ["inherit", "pipe", "inherit"],
     cwd: process.env.HOME,
     env: { ...process.env, INSTALL_DIR: installDir },
   });
 
-  child.on("data", (data) => {
-    logBox.log(data);
+  if (clientName === "geth") {
+    executionChild = child;
+  } else if (clientName === "prysm") {
+    consensusChild = child;
+  }
+
+  child.stdout.on("data", (data) => {
+    logBox.log(data.toString());
 
     if (clientName === "geth") {
-      parseExecutionLogs(data);
+      parseExecutionLogs(data.toString());
     }
   });
 
@@ -533,7 +579,7 @@ let dataCpuUsage;
 let headerDlGauge;
 let stateDlGauge;
 let chainDlGauge;
-let peerCountGauge;
+let peerCountLcd;
 let memGauge;
 let storageGauge;
 
@@ -682,13 +728,13 @@ async function updateNetworkLinePlot() {
   }
 }
 
-async function updatePeerCountGauge(peerCount) {
+async function updatePeerCountLcd(peerCount) {
   try {
-    peerCountGauge.setDisplay(peerCount);
+    peerCountLcd.setDisplay(peerCount.toString());
 
     screen.render();
   } catch (error) {
-    debugToFile(`updatePeerCountGauge(): ${error}`, () => {});
+    debugToFile(`updatePeerCountLcd(): ${error}`, () => {});
   }
 }
 
@@ -749,7 +795,6 @@ async function updateStateDlGauge(stateDlProgress) {
   }
 }
 
-// TODO: Replace these with functions that parse logs
 // const localClient = createPublicClient({
 //   name: "localClient",
 //   chain: mainnet,
@@ -877,6 +922,7 @@ function startBlessedContrib(executionClient, consensusClient) {
   const now = new Date();
 
   screen = blessed.screen();
+  const grid = new contrib.grid({ rows: 8, cols: 10, screen: screen });
 
   // const bgLogo = contrib.picture({
   //   file: "bgLogo.png",
@@ -887,12 +933,11 @@ function startBlessedContrib(executionClient, consensusClient) {
   //   type: "ansi",
   // });
 
-  // Create two log boxes
-  const executionLog = contrib.log({
+  const executionLog = grid.set(0, 0, 2, 10, contrib.log, {
     label: `${executionClient} Logs`,
-    top: "0%",
-    height: "25%",
-    width: "100%",
+    // top: "0%",
+    // height: "25%",
+    // width: "100%",
     border: {
       type: "line",
       fg: "cyan",
@@ -901,11 +946,11 @@ function startBlessedContrib(executionClient, consensusClient) {
     // scrollbar: { ch: " ", inverse: true },
   });
 
-  const consensusLog = contrib.log({
+  const consensusLog = grid.set(2, 0, 2, 10, contrib.log, {
     label: `${consensusClient} Logs`,
-    top: "25%",
-    height: "25%",
-    width: "100%",
+    // top: "25%",
+    // height: "25%",
+    // width: "100%",
     border: {
       type: "line",
       fg: "cyan",
@@ -914,81 +959,39 @@ function startBlessedContrib(executionClient, consensusClient) {
     // scrollbar: { ch: " ", inverse: true },
   });
 
-  cpuLine = contrib.line({
+  cpuLine = grid.set(4, 0, 2, 8, contrib.line, {
     style: { line: "blue", text: "green", baseline: "green" },
     xLabelPadding: 3,
     xPadding: 5,
     showLegend: true,
     wholeNumbersOnly: false,
     label: "CPU Load (%)",
-    top: "50%",
-    height: "25%",
-    width: "80%",
+    // top: "50%",
+    // height: "25%",
+    // width: "80%",
     border: {
       type: "line",
       fg: "cyan",
     },
   });
 
-  networkLine = contrib.line({
+  networkLine = grid.set(6, 0, 2, 8, contrib.line, {
     style: { line: "yellow", text: "green", baseline: "green" },
     xLabelPadding: 3,
     xPadding: 5,
     showLegend: true,
     wholeNumbersOnly: false,
     label: "Network Traffic (MB/sec)",
-    top: "75%",
-    height: "25%",
-    width: "80%",
+    // top: "75%",
+    // height: "25%",
+    // width: "80%",
     border: {
       type: "line",
       fg: "cyan",
     },
   });
 
-  headerDlGauge = contrib.gauge({
-    label: "Header DL Progress",
-    stroke: "cyan",
-    fill: "white",
-    top: "50%",
-    height: "12%",
-    left: "80%",
-    width: "10%",
-    border: {
-      type: "line",
-      fg: "cyan",
-    },
-  });
-
-  stateDlGauge = contrib.gauge({
-    label: "State DL Progress",
-    stroke: "cyan",
-    fill: "white",
-    top: "62%",
-    height: "12%",
-    left: "80%",
-    width: "10%",
-    border: {
-      type: "line",
-      fg: "cyan",
-    },
-  });
-
-  chainDlGauge = contrib.gauge({
-    label: "Chain DL Progress",
-    stroke: "cyan",
-    fill: "white",
-    top: "74%",
-    height: "12%",
-    left: "80%",
-    width: "10%",
-    border: {
-      type: "line",
-      fg: "cyan",
-    },
-  });
-
-  peerCountGauge = contrib.lcd({
+  peerCountLcd = contrib.lcd({
     segmentWidth: 0.06, // how wide are the segments in % so 50% = 0.5
     segmentInterval: 0.11, // spacing between the segments in % so 50% = 0.550% = 0.5
     strokeWidth: 0.11, // spacing between the segments in % so 50% = 0.5
@@ -998,9 +1001,9 @@ function startBlessedContrib(executionClient, consensusClient) {
     elementPadding: 2, // how far away from the edges to put the elements
     color: "green", // color for the segments
     label: "Peer Count",
-    top: "62%",
+    top: "50%",
     height: "12%",
-    left: "90%",
+    left: "80%",
     width: "10%",
     border: {
       type: "line",
@@ -1008,28 +1011,87 @@ function startBlessedContrib(executionClient, consensusClient) {
     },
   });
 
-  memGauge = contrib.gauge({
+  // peerCountLcd = grid.set(4, 8, 1, 1, blessed.bigtext, {
+  //   label: "Peer Count",
+  //   content: "Hello, World!",
+  //   border: {
+  //     type: "line",
+  //     fg: "cyan",
+  //   },
+  //   style: {
+  //     fg: "blue",
+  //   },
+  //   shrink: true,
+  //   width: "100%",
+  //   height: "100%",
+  //   align: "center",
+  //   valign: "middle",
+  // });
+
+  headerDlGauge = grid.set(5, 8, 1, 1, contrib.gauge, {
+    label: "Header DL Progress",
+    stroke: "cyan",
+    fill: "white",
+    // top: "62%",
+    // height: "12%",
+    // left: "80%",
+    // width: "10%",
+    border: {
+      type: "line",
+      fg: "cyan",
+    },
+  });
+
+  stateDlGauge = grid.set(6, 8, 1, 1, contrib.gauge, {
+    label: "State DL Progress",
+    stroke: "cyan",
+    fill: "white",
+    // top: "74%",
+    // height: "12%",
+    // left: "80%",
+    // width: "10%",
+    border: {
+      type: "line",
+      fg: "cyan",
+    },
+  });
+
+  chainDlGauge = grid.set(7, 8, 1, 1, contrib.gauge, {
+    label: "Chain DL Progress",
+    stroke: "cyan",
+    fill: "white",
+    // top: "86%",
+    // height: "12%",
+    // left: "80%",
+    // width: "10%",
+    border: {
+      type: "line",
+      fg: "cyan",
+    },
+  });
+
+  memGauge = grid.set(6, 9, 1, 1, contrib.gauge, {
     label: "Memory",
     stroke: "green",
     fill: "white",
-    top: "74%",
-    height: "12%",
-    left: "90%",
-    width: "10%",
+    // top: "74%",
+    // height: "12%",
+    // left: "90%",
+    // width: "10%",
     border: {
       type: "line",
       fg: "cyan",
     },
   });
 
-  storageGauge = contrib.gauge({
+  storageGauge = grid.set(7, 9, 1, 1, contrib.gauge, {
     label: "Storage",
     stroke: "blue",
     fill: "white",
-    top: "86%",
-    height: "12%",
-    left: "90%",
-    width: "10%",
+    // top: "86%",
+    // height: "12%",
+    // left: "90%",
+    // width: "10%",
     border: {
       type: "line",
       fg: "cyan",
@@ -1044,7 +1106,7 @@ function startBlessedContrib(executionClient, consensusClient) {
   screen.append(headerDlGauge);
   screen.append(stateDlGauge);
   screen.append(chainDlGauge);
-  screen.append(peerCountGauge);
+  screen.append(peerCountLcd);
   screen.append(memGauge);
   screen.append(storageGauge);
 
@@ -1059,8 +1121,15 @@ function startBlessedContrib(executionClient, consensusClient) {
   stateDlGauge.setPercent(progress.stateDlProgress);
 
   // Quit on Escape, q, or Control-C.
-  screen.key(["escape", "q", "C-c"], function (ch, key) {
-    return process.exit(0);
+  // screen.key(["escape", "q", "C-c"], function (ch, key) {
+  //   return process.exit(0);
+  // });
+
+  screen.on("resize", () => {
+    cpuLine.emit("attach");
+    networkLine.emit("attach");
+
+    screen.render();
   });
 
   screen.render();

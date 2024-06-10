@@ -74,7 +74,6 @@ consensus.on("exit", (code) => {
   if (process.send) {
     process.send({ log: exitMessage }); // Send exit code to parent process
   }
-  console.log(exitMessage); // Log exit message to console
 });
 
 consensus.on("error", (err) => {
@@ -90,3 +89,7 @@ function getFormattedDateTime() {
   const now = new Date();
   return now.toISOString().replace(/T/, "_").replace(/\..+/, "");
 }
+
+process.on("SIGINT", () => {
+  consensus.kill("SIGINT");
+});

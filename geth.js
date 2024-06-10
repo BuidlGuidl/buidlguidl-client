@@ -32,6 +32,7 @@ function stripAnsiCodes(input) {
   );
 }
 
+// const execution = pty.spawn(
 const execution = pty.spawn(
   gethCommand,
   [
@@ -73,7 +74,6 @@ execution.on("exit", (code) => {
   if (process.send) {
     process.send({ log: exitMessage }); // Send exit code to parent process
   }
-  console.log(exitMessage); // Log exit message to console
 });
 
 execution.on("error", (err) => {
@@ -89,3 +89,7 @@ function getFormattedDateTime() {
   const now = new Date();
   return now.toISOString().replace(/T/, "_").replace(/\..+/, "");
 }
+
+process.on("SIGINT", () => {
+  execution.kill("SIGINT");
+});

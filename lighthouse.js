@@ -30,7 +30,6 @@ const logFilePath = path.join(
   `lighthouse_${getFormattedDateTime()}.log`
 );
 
-// TODO: Make log outputs match terminal view (like geth or prysm)
 const consensus = spawn(
   `${lighthouseCommand}`,
   [
