@@ -473,8 +473,6 @@ let executionExited = false;
 let consensusExited = false;
 
 function handleExit(signal) {
-  console.log(`Received ${signal}. Exiting...`);
-
   if (executionChild) {
     executionChild.kill("SIGINT");
   }
@@ -493,7 +491,6 @@ function handleExit(signal) {
   // Listen for exit events
   if (executionChild) {
     executionChild.on("exit", (code) => {
-      console.log(`Execution client exited with code ${code}`);
       executionExited = true;
       checkExit();
     });
@@ -503,7 +500,6 @@ function handleExit(signal) {
 
   if (consensusChild) {
     consensusChild.on("exit", (code) => {
-      console.log(`Consensus client exited with code ${code}`);
       consensusExited = true;
       checkExit();
     });
@@ -918,10 +914,33 @@ async function updateMemoryGauge() {
   }
 }
 
-function startBlessedContrib(executionClient, consensusClient) {
+function suppressMouseOutput(screen) {
+  screen.on("element mouse", (el, data) => {
+    if (data.button === "mouseup" || data.button === "mousedown") {
+      return false; // Suppress mouse up/down events
+    }
+  });
+
+  // Optionally, you can suppress keypress events like arrow keys as well
+  screen.on("keypress", (ch, key) => {
+    if (
+      key.name === "up" ||
+      key.name === "down" ||
+      key.name === "left" ||
+      key.name === "right"
+    ) {
+      if (!key.ctrl && !key.meta && !key.shift) {
+        return false; // Suppress arrow key events unless combined with Ctrl, Meta, or Shift
+      }
+    }
+  });
+}
+
+function handleBlessedContrib(executionClient, consensusClient) {
   const now = new Date();
 
   screen = blessed.screen();
+  suppressMouseOutput(screen);
   const grid = new contrib.grid({ rows: 8, cols: 10, screen: screen });
 
   // const bgLogo = contrib.picture({
@@ -1134,6 +1153,10 @@ function startBlessedContrib(executionClient, consensusClient) {
 
   screen.render();
 
+  screen.key(["escape", "q", "C-c"], function (ch, key) {
+    handleExit("SIGINT");
+  });
+
   return { executionLog, consensusLog };
 }
 
@@ -1154,7 +1177,7 @@ if (["darwin", "linux"].includes(platform)) {
 }
 
 createJwtSecret(jwtDir);
-const { executionLog, consensusLog } = startBlessedContrib(
+const { executionLog, consensusLog } = handleBlessedContrib(
   executionClient,
   consensusClient
 );

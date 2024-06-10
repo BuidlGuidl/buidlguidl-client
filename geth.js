@@ -71,9 +71,6 @@ execution.on("exit", (code) => {
   const exitMessage = `geth process exited with code ${code}`;
   logStream.write(exitMessage);
   logStream.end();
-  if (process.send) {
-    process.send({ log: exitMessage }); // Send exit code to parent process
-  }
 });
 
 execution.on("error", (err) => {

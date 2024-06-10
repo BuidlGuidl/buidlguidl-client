@@ -71,9 +71,6 @@ consensus.on("exit", (code) => {
   const exitMessage = `prysm process exited with code ${code}`;
   logStream.write(exitMessage);
   logStream.end();
-  if (process.send) {
-    process.send({ log: exitMessage }); // Send exit code to parent process
-  }
 });
 
 consensus.on("error", (err) => {
