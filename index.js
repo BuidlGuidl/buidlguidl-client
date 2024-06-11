@@ -726,9 +726,10 @@ async function updateNetworkLinePlot() {
 
 async function updatePeerCountLcd(peerCount) {
   try {
-    peerCountLcd.setDisplay(peerCount.toString());
-
-    screen.render();
+    if (peerCountLcd) {
+      peerCountLcd.setDisplay(peerCount.toString());
+      screen.render();
+    }
   } catch (error) {
     debugToFile(`updatePeerCountLcd(): ${error}`, () => {});
   }
@@ -760,10 +761,12 @@ const progress = loadProgress();
 
 async function updateHeaderDlGauge(headerDlProgress) {
   try {
-    headerDlGauge.setPercent(headerDlProgress);
-    progress.headerDlProgress = headerDlProgress;
-    saveProgress(progress);
-    screen.render();
+    if (headerDlGauge) {
+      headerDlGauge.setPercent(headerDlProgress);
+      progress.headerDlProgress = headerDlProgress;
+      saveProgress(progress);
+      screen.render();
+    }
   } catch (error) {
     debugToFile(`updateHeaderDlGauge(): ${error}`, () => {});
   }
@@ -771,10 +774,12 @@ async function updateHeaderDlGauge(headerDlProgress) {
 
 async function updateChainDlGauge(chainDlProgress) {
   try {
-    chainDlGauge.setPercent(chainDlProgress);
-    progress.chainDlProgress = chainDlProgress;
-    saveProgress(progress);
-    screen.render();
+    if (chainDlGauge) {
+      chainDlGauge.setPercent(chainDlProgress);
+      progress.chainDlProgress = chainDlProgress;
+      saveProgress(progress);
+      screen.render();
+    }
   } catch (error) {
     debugToFile(`updateChainDlGauge(): ${error}`, () => {});
   }
@@ -782,10 +787,12 @@ async function updateChainDlGauge(chainDlProgress) {
 
 async function updateStateDlGauge(stateDlProgress) {
   try {
-    stateDlGauge.setPercent(stateDlProgress);
-    progress.stateDlProgress = stateDlProgress;
-    saveProgress(progress);
-    screen.render();
+    if (stateDlGauge) {
+      stateDlGauge.setPercent(stateDlProgress);
+      progress.stateDlProgress = stateDlProgress;
+      saveProgress(progress);
+      screen.render();
+    }
   } catch (error) {
     debugToFile(`updateStateDlGauge(): ${error}`, () => {});
   }
@@ -943,12 +950,22 @@ function handleBlessedContrib(executionClient, consensusClient) {
   suppressMouseOutput(screen);
   const grid = new contrib.grid({ rows: 8, cols: 10, screen: screen });
 
+  var logo = contrib.picture({
+    top: 0,
+    left: 0,
+    type: "overlay",
+    preserveAspectRatio: true,
+    width: "20%",
+    height: "20%",
+    file: "bgLogo.png",
+  });
+
   // const bgLogo = contrib.picture({
   //   file: "bgLogo.png",
   //   top: 0,
   //   left: "80%",
   //   width: "20%",
-  //   height: "25%",
+  //   height: "20%",
   //   type: "ansi",
   // });
 
@@ -1010,25 +1027,27 @@ function handleBlessedContrib(executionClient, consensusClient) {
     },
   });
 
-  peerCountLcd = contrib.lcd({
-    segmentWidth: 0.06, // how wide are the segments in % so 50% = 0.5
-    segmentInterval: 0.11, // spacing between the segments in % so 50% = 0.550% = 0.5
-    strokeWidth: 0.11, // spacing between the segments in % so 50% = 0.5
-    elements: 3, // how many elements in the display. or how many characters can be displayed.
-    display: 0, // what should be displayed before first call to setDisplay
-    elementSpacing: 4, // spacing between each element
-    elementPadding: 2, // how far away from the edges to put the elements
-    color: "green", // color for the segments
-    label: "Peer Count",
-    top: "50%",
-    height: "12%",
-    left: "80%",
-    width: "10%",
-    border: {
-      type: "line",
-      fg: "cyan",
-    },
-  });
+  if (progress.chainDlProgress !== 1) {
+    peerCountLcd = contrib.lcd({
+      segmentWidth: 0.06, // how wide are the segments in % so 50% = 0.5
+      segmentInterval: 0.11, // spacing between the segments in % so 50% = 0.550% = 0.5
+      strokeWidth: 0.11, // spacing between the segments in % so 50% = 0.5
+      elements: 3, // how many elements in the display. or how many characters can be displayed.
+      display: 0, // what should be displayed before first call to setDisplay
+      elementSpacing: 4, // spacing between each element
+      elementPadding: 2, // how far away from the edges to put the elements
+      color: "green", // color for the segments
+      label: "Peer Count",
+      top: "50%",
+      height: "12%",
+      left: "80%",
+      width: "10%",
+      border: {
+        type: "line",
+        fg: "cyan",
+      },
+    });
+  }
 
   // peerCountLcd = grid.set(4, 8, 1, 1, blessed.bigtext, {
   //   label: "Peer Count",
@@ -1047,47 +1066,49 @@ function handleBlessedContrib(executionClient, consensusClient) {
   //   valign: "middle",
   // });
 
-  headerDlGauge = grid.set(5, 8, 1, 1, contrib.gauge, {
-    label: "Header DL Progress",
-    stroke: "cyan",
-    fill: "white",
-    // top: "62%",
-    // height: "12%",
-    // left: "80%",
-    // width: "10%",
-    border: {
-      type: "line",
-      fg: "cyan",
-    },
-  });
+  if (progress.chainDlProgress !== 1) {
+    headerDlGauge = grid.set(5, 8, 1, 1, contrib.gauge, {
+      label: "Header DL Progress",
+      stroke: "cyan",
+      fill: "white",
+      // top: "62%",
+      // height: "12%",
+      // left: "80%",
+      // width: "10%",
+      border: {
+        type: "line",
+        fg: "cyan",
+      },
+    });
+  }
 
-  stateDlGauge = grid.set(6, 8, 1, 1, contrib.gauge, {
-    label: "State DL Progress",
-    stroke: "cyan",
-    fill: "white",
-    // top: "74%",
-    // height: "12%",
-    // left: "80%",
-    // width: "10%",
-    border: {
-      type: "line",
-      fg: "cyan",
-    },
-  });
+  if (progress.chainDlProgress !== 1) {
+    stateDlGauge = grid.set(6, 8, 1, 1, contrib.gauge, {
+      label: "State DL Progress",
+      stroke: "cyan",
+      fill: "white",
+      // top: "74%",
+      // height: "12%",
+      // left: "80%",
+      // width: "10%",
+      border: {
+        type: "line",
+        fg: "cyan",
+      },
+    });
+  }
 
-  chainDlGauge = grid.set(7, 8, 1, 1, contrib.gauge, {
-    label: "Chain DL Progress",
-    stroke: "cyan",
-    fill: "white",
-    // top: "86%",
-    // height: "12%",
-    // left: "80%",
-    // width: "10%",
-    border: {
-      type: "line",
-      fg: "cyan",
-    },
-  });
+  if (progress.chainDlProgress !== 1) {
+    chainDlGauge = grid.set(7, 8, 1, 1, contrib.gauge, {
+      label: "Chain DL Progress",
+      stroke: "cyan",
+      fill: "white",
+      border: {
+        type: "line",
+        fg: "cyan",
+      },
+    });
+  }
 
   memGauge = grid.set(6, 9, 1, 1, contrib.gauge, {
     label: "Memory",
@@ -1117,17 +1138,17 @@ function handleBlessedContrib(executionClient, consensusClient) {
     },
   });
 
-  // screen.append(bgLogo);
   screen.append(executionLog);
   screen.append(consensusLog);
   screen.append(cpuLine);
   screen.append(networkLine);
-  screen.append(headerDlGauge);
-  screen.append(stateDlGauge);
-  screen.append(chainDlGauge);
-  screen.append(peerCountLcd);
+  if (headerDlGauge) screen.append(headerDlGauge);
+  if (stateDlGauge) screen.append(stateDlGauge);
+  if (chainDlGauge) screen.append(chainDlGauge);
+  if (chainDlGauge) screen.append(peerCountLcd);
   screen.append(memGauge);
   screen.append(storageGauge);
+  // screen.append(logo);
 
   setInterval(updateCpuLinePlot, 1000);
   setInterval(updateNetworkLinePlot, 1000);
@@ -1135,9 +1156,15 @@ function handleBlessedContrib(executionClient, consensusClient) {
   updateDiskGauge(installDir);
   setInterval(updateDiskGauge, 10000);
 
-  headerDlGauge.setPercent(progress.headerDlProgress);
-  chainDlGauge.setPercent(progress.chainDlProgress);
-  stateDlGauge.setPercent(progress.stateDlProgress);
+  if (progress.chainDlProgress !== 1) {
+    headerDlGauge.setPercent(progress.headerDlProgress);
+  }
+  if (chainDlGauge && progress.chainDlProgress !== 1) {
+    chainDlGauge.setPercent(progress.chainDlProgress);
+  }
+  if (progress.chainDlProgress !== 1) {
+    stateDlGauge.setPercent(progress.stateDlProgress);
+  }
 
   // Quit on Escape, q, or Control-C.
   // screen.key(["escape", "q", "C-c"], function (ch, key) {
