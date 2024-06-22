@@ -49,6 +49,14 @@ if (argv.e) {
   }
 }
 
+// if (argv.e) {
+//   executionClient = argv.e;
+//   if (executionClient !== "geth" && executionClient !== "reth") {
+//     console.log("Invalid option for -e. Use 'geth' or 'reth'.");
+//     process.exit(1);
+//   }
+// }
+
 if (argv.c) {
   consensusClient = argv.c;
   if (consensusClient !== "prysm") {
@@ -56,6 +64,14 @@ if (argv.c) {
     process.exit(1);
   }
 }
+
+// if (argv.c) {
+//   consensusClient = argv.c;
+//   if (consensusClient !== "prysm" && consensusClient !== "lighthouse") {
+//     console.log("Invalid option for -c. Use 'prysm' or 'lighthouse'.");
+//     process.exit(1);
+//   }
+// }
 
 if (argv.d) {
   installDir = argv.d;
@@ -152,21 +168,21 @@ function installMacLinuxExecutionClient(executionClient, platform) {
     darwin: {
       x64: {
         gethFileName: "geth-darwin-amd64-1.14.3-ab48ba42",
-        rethFileName: "reth-v0.2.0-beta.6-x86_64-apple-darwin",
+        rethFileName: "reth-v1.0.0-rc.2-x86_64-apple-darwin",
       },
       arm64: {
         gethFileName: "geth-darwin-arm64-1.14.3-ab48ba42",
-        rethFileName: "reth-v0.2.0-beta.6-aarch64-apple-darwin",
+        rethFileName: "reth-v1.0.0-rc.2-aarch64-apple-darwin",
       },
     },
     linux: {
       x64: {
         gethFileName: "geth-linux-amd64-1.14.3-ab48ba42",
-        rethFileName: "reth-v0.2.0-beta.6-x86_64-unknown-linux-gnu",
+        rethFileName: "reth-v1.0.0-rc.2-x86_64-unknown-linux-gnu",
       },
       arm64: {
         gethFileName: "geth-linux-arm64-1.14.3-ab48ba42",
-        rethFileName: "reth-v0.2.0-beta.6-aarch64-unknown-linux-gnu",
+        rethFileName: "reth-v1.0.0-rc.2-aarch64-unknown-linux-gnu",
       },
     },
   };
@@ -215,7 +231,7 @@ function installMacLinuxExecutionClient(executionClient, platform) {
       }
       console.log("Downloading Reth.");
       execSync(
-        `cd "${rethDir}" && curl -L -O -# https://github.com/paradigmxyz/reth/releases/download/v0.2.0-beta.6/${rethFileName}.tar.gz`,
+        `cd "${rethDir}" && curl -L -O -# https://github.com/paradigmxyz/reth/releases/download/v1.0.0-rc.2/${rethFileName}.tar.gz`,
         { stdio: "inherit" }
       );
       console.log("Uncompressing Reth.");
@@ -227,7 +243,7 @@ function installMacLinuxExecutionClient(executionClient, platform) {
         stdio: "inherit",
       });
 
-      downloadRethSnapshot(rethDir, platform);
+      // downloadRethSnapshot(rethDir, platform);
     } else {
       console.log("Reth is already installed.");
     }
@@ -520,8 +536,14 @@ function startClient(clientName, installDir, logBox) {
   if (clientName === "geth") {
     clientCommand = path.join(__dirname, "geth.js");
     clientArgs = [];
+  } else if (clientName === "reth") {
+    clientCommand = path.join(__dirname, "reth.js");
+    clientArgs = [];
   } else if (clientName === "prysm") {
     clientCommand = path.join(__dirname, "prysm.js");
+    clientArgs = [];
+  } else if (clientName === "lighthouse") {
+    clientCommand = path.join(__dirname, "lighthouse.js");
     clientArgs = [];
   } else {
     clientCommand = path.join(installDir, "bgnode", clientName, clientName);
@@ -536,7 +558,11 @@ function startClient(clientName, installDir, logBox) {
 
   if (clientName === "geth") {
     executionChild = child;
+  } else if (clientName === "reth") {
+    consensusChild = child;
   } else if (clientName === "prysm") {
+    consensusChild = child;
+  } else if (clientName === "lighthouse") {
     consensusChild = child;
   }
 
