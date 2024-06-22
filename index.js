@@ -10,10 +10,15 @@ const pty = require("node-pty");
 const { createPublicClient, http } = require("viem");
 const { mainnet } = require("viem/chains");
 
-// Set default values
+// Set default command line option values
 let executionClient = "geth";
 let consensusClient = "prysm";
 let installDir = os.homedir();
+
+// Set client versions. Note: Prsym version works differently and is parsed from logs
+const gethVer = "1.14.3";
+const rethVer = "1.0.0";
+const lighthouseVer = "5.1.3";
 
 function showHelp() {
   console.log("Usage: node script.js [options]");
@@ -49,14 +54,6 @@ if (argv.e) {
   }
 }
 
-// if (argv.e) {
-//   executionClient = argv.e;
-//   if (executionClient !== "geth" && executionClient !== "reth") {
-//     console.log("Invalid option for -e. Use 'geth' or 'reth'.");
-//     process.exit(1);
-//   }
-// }
-
 if (argv.c) {
   consensusClient = argv.c;
   if (consensusClient !== "prysm") {
@@ -65,6 +62,14 @@ if (argv.c) {
   }
 }
 
+// if (argv.e) {
+//   executionClient = argv.e;
+//   if (executionClient !== "geth" && executionClient !== "reth") {
+//     console.log("Invalid option for -e. Use 'geth' or 'reth'.");
+//     process.exit(1);
+//   }
+// }
+//
 // if (argv.c) {
 //   consensusClient = argv.c;
 //   if (consensusClient !== "prysm" && consensusClient !== "lighthouse") {
@@ -161,28 +166,33 @@ function downloadRethSnapshot(rethDir, platform) {
   }
 }
 
-function installMacLinuxExecutionClient(executionClient, platform) {
+function installMacLinuxExecutionClient(
+  executionClient,
+  platform,
+  gethVer,
+  rethVer
+) {
   const arch = os.arch();
 
   const configs = {
     darwin: {
       x64: {
-        gethFileName: "geth-darwin-amd64-1.14.3-ab48ba42",
-        rethFileName: "reth-v1.0.0-rc.2-x86_64-apple-darwin",
+        gethFileName: `geth-darwin-amd64-${gethVer}-ab48ba42`,
+        rethFileName: `reth-v${rethVer}-rc.2-x86_64-apple-darwin`,
       },
       arm64: {
-        gethFileName: "geth-darwin-arm64-1.14.3-ab48ba42",
-        rethFileName: "reth-v1.0.0-rc.2-aarch64-apple-darwin",
+        gethFileName: `geth-darwin-arm64-${gethVer}-ab48ba42`,
+        rethFileName: `reth-v${rethVer}-rc.2-aarch64-apple-darwin`,
       },
     },
     linux: {
       x64: {
-        gethFileName: "geth-linux-amd64-1.14.3-ab48ba42",
-        rethFileName: "reth-v1.0.0-rc.2-x86_64-unknown-linux-gnu",
+        gethFileName: `geth-linux-amd64-${gethVer}-ab48ba42`,
+        rethFileName: `reth-v${rethVer}-rc.2-x86_64-unknown-linux-gnu`,
       },
       arm64: {
-        gethFileName: "geth-linux-arm64-1.14.3-ab48ba42",
-        rethFileName: "reth-v1.0.0-rc.2-aarch64-unknown-linux-gnu",
+        gethFileName: `geth-linux-arm64-${gethVer}-ab48ba42`,
+        rethFileName: `reth-v${rethVer}-rc.2-aarch64-unknown-linux-gnu`,
       },
     },
   };
@@ -231,7 +241,7 @@ function installMacLinuxExecutionClient(executionClient, platform) {
       }
       console.log("Downloading Reth.");
       execSync(
-        `cd "${rethDir}" && curl -L -O -# https://github.com/paradigmxyz/reth/releases/download/v1.0.0-rc.2/${rethFileName}.tar.gz`,
+        `cd "${rethDir}" && curl -L -O -# https://github.com/paradigmxyz/reth/releases/download/v${rethVer}-rc.2/${rethFileName}.tar.gz`,
         { stdio: "inherit" }
       );
       console.log("Uncompressing Reth.");
@@ -250,24 +260,28 @@ function installMacLinuxExecutionClient(executionClient, platform) {
   }
 }
 
-function installMacLinuxConsensusClient(consensusClient, platform) {
+function installMacLinuxConsensusClient(
+  consensusClient,
+  platform,
+  lighthouseVer
+) {
   const arch = os.arch();
 
   const configs = {
     darwin: {
       x64: {
-        lighthouseFileName: "lighthouse-v5.1.3-x86_64-apple-darwin",
+        lighthouseFileName: `lighthouse-v${lighthouseVer}-x86_64-apple-darwin`,
       },
       arm64: {
-        lighthouseFileName: "lighthouse-v5.1.3-x86_64-apple-darwin-portable",
+        lighthouseFileName: `lighthouse-v${lighthouseVer}-x86_64-apple-darwin-portable`,
       },
     },
     linux: {
       x64: {
-        lighthouseFileName: "lighthouse-v5.1.3-x86_64-unknown-linux-gnu",
+        lighthouseFileName: `lighthouse-v${lighthouseVer}-x86_64-unknown-linux-gnu`,
       },
       arm64: {
-        lighthouseFileName: "lighthouse-v5.1.3-aarch64-unknown-linux-gnu",
+        lighthouseFileName: `lighthouse-v${lighthouseVer}-aarch64-unknown-linux-gnu`,
       },
     },
   };
@@ -305,7 +319,7 @@ function installMacLinuxConsensusClient(consensusClient, platform) {
       }
       console.log("Downloading Lighthouse.");
       execSync(
-        `cd "${lighthouseDir}" && curl -L -O -# https://github.com/sigp/lighthouse/releases/download/v5.1.3/${lighthouseFileName}.tar.gz`,
+        `cd "${lighthouseDir}" && curl -L -O -# https://github.com/sigp/lighthouse/releases/download/v${lighthouseVer}/${lighthouseFileName}.tar.gz`,
         { stdio: "inherit" }
       );
       console.log("Uncompressing Lighthouse.");
@@ -482,6 +496,17 @@ function parseExecutionLogs(line) {
   }
 }
 
+function parseConsensusLogs(line) {
+  line = stripAnsiCodes(line);
+
+  if (line.includes("Latest Prysm version is")) {
+    const prysmVerMatch = line.match(/version is v(\d+\.\d+\.\d+)/);
+    const prysmVer = prysmVerMatch[1];
+    consensusLog.setLabel(`Prysm v${prysmVer}`);
+    screen.render();
+  }
+}
+
 let executionChild;
 let consensusChild;
 
@@ -571,6 +596,8 @@ function startClient(clientName, installDir, logBox) {
 
     if (clientName === "geth") {
       parseExecutionLogs(data.toString());
+    } else if (clientName === "prysm") {
+      parseConsensusLogs(data.toString());
     }
   });
 
@@ -969,11 +996,18 @@ function suppressMouseOutput(screen) {
   });
 }
 
-function handleBlessedContrib(executionClient, consensusClient) {
+function handleBlessedContrib(
+  executionClient,
+  consensusClient,
+  gethVer,
+  rethVer,
+  lighthouseVer
+) {
   const now = new Date();
 
   screen = blessed.screen();
   suppressMouseOutput(screen);
+
   const grid = new contrib.grid({ rows: 8, cols: 10, screen: screen });
 
   var logo = contrib.picture({
@@ -995,11 +1029,15 @@ function handleBlessedContrib(executionClient, consensusClient) {
   //   type: "ansi",
   // });
 
+  let executionClientLabel;
+  if (executionClient === "geth") {
+    executionClientLabel = `Geth v${gethVer}`;
+  } else if (executionClient === "reth") {
+    executionClientLabel = `Reth v${rethVer}`;
+  }
+
   const executionLog = grid.set(0, 0, 2, 10, contrib.log, {
-    label: `${executionClient} Logs`,
-    // top: "0%",
-    // height: "25%",
-    // width: "100%",
+    label: `${executionClientLabel}`,
     border: {
       type: "line",
       fg: "cyan",
@@ -1008,11 +1046,15 @@ function handleBlessedContrib(executionClient, consensusClient) {
     // scrollbar: { ch: " ", inverse: true },
   });
 
+  let consensusClientLabel;
+  if (consensusClient === "prysm") {
+    consensusClientLabel = "Prysm";
+  } else if (consensusClient === "lighthouse") {
+    consensusClientLabel = `Lighthouse v${lighthouseVer}`;
+  }
+
   const consensusLog = grid.set(2, 0, 2, 10, contrib.log, {
-    label: `${consensusClient} Logs`,
-    // top: "25%",
-    // height: "25%",
-    // width: "100%",
+    label: `${consensusClientLabel}`,
     border: {
       type: "line",
       fg: "cyan",
@@ -1028,9 +1070,6 @@ function handleBlessedContrib(executionClient, consensusClient) {
     showLegend: true,
     wholeNumbersOnly: false,
     label: "CPU Load (%)",
-    // top: "50%",
-    // height: "25%",
-    // width: "80%",
     border: {
       type: "line",
       fg: "cyan",
@@ -1044,9 +1083,6 @@ function handleBlessedContrib(executionClient, consensusClient) {
     showLegend: true,
     wholeNumbersOnly: false,
     label: "Network Traffic (MB/sec)",
-    // top: "75%",
-    // height: "25%",
-    // width: "80%",
     border: {
       type: "line",
       fg: "cyan",
@@ -1097,10 +1133,6 @@ function handleBlessedContrib(executionClient, consensusClient) {
       label: "Header DL Progress",
       stroke: "cyan",
       fill: "white",
-      // top: "62%",
-      // height: "12%",
-      // left: "80%",
-      // width: "10%",
       border: {
         type: "line",
         fg: "cyan",
@@ -1113,10 +1145,6 @@ function handleBlessedContrib(executionClient, consensusClient) {
       label: "State DL Progress",
       stroke: "cyan",
       fill: "white",
-      // top: "74%",
-      // height: "12%",
-      // left: "80%",
-      // width: "10%",
       border: {
         type: "line",
         fg: "cyan",
@@ -1140,10 +1168,6 @@ function handleBlessedContrib(executionClient, consensusClient) {
     label: "Memory",
     stroke: "green",
     fill: "white",
-    // top: "74%",
-    // height: "12%",
-    // left: "90%",
-    // width: "10%",
     border: {
       type: "line",
       fg: "cyan",
@@ -1154,10 +1178,6 @@ function handleBlessedContrib(executionClient, consensusClient) {
     label: "Storage",
     stroke: "blue",
     fill: "white",
-    // top: "86%",
-    // height: "12%",
-    // left: "90%",
-    // width: "10%",
     border: {
       type: "line",
       fg: "cyan",
@@ -1192,11 +1212,6 @@ function handleBlessedContrib(executionClient, consensusClient) {
     stateDlGauge.setPercent(progress.stateDlProgress);
   }
 
-  // Quit on Escape, q, or Control-C.
-  // screen.key(["escape", "q", "C-c"], function (ch, key) {
-  //   return process.exit(0);
-  // });
-
   screen.on("resize", () => {
     cpuLine.emit("attach");
     networkLine.emit("attach");
@@ -1222,8 +1237,8 @@ const jwtDir = path.join(installDir, "bgnode", "jwt");
 const platform = os.platform();
 
 if (["darwin", "linux"].includes(platform)) {
-  installMacLinuxExecutionClient(executionClient, platform);
-  installMacLinuxConsensusClient(consensusClient, platform);
+  installMacLinuxExecutionClient(executionClient, platform, gethVer, rethVer);
+  installMacLinuxConsensusClient(consensusClient, platform, lighthouseVer);
 } else if (platform === "win32") {
   installWindowsExecutionClient(executionClient);
   installWindowsConsensusClient(consensusClient);
@@ -1232,7 +1247,10 @@ if (["darwin", "linux"].includes(platform)) {
 createJwtSecret(jwtDir);
 const { executionLog, consensusLog } = handleBlessedContrib(
   executionClient,
-  consensusClient
+  consensusClient,
+  gethVer,
+  rethVer,
+  lighthouseVer
 );
 startClient(executionClient, installDir, executionLog);
 startClient(consensusClient, installDir, consensusLog);
