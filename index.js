@@ -7,6 +7,7 @@ const blessed = require("blessed");
 const contrib = require("blessed-contrib");
 const minimist = require("minimist");
 const pty = require("node-pty");
+const WebSocket = require("ws");
 const { createPublicClient, http } = require("viem");
 const { mainnet } = require("viem/chains");
 
@@ -18,6 +19,7 @@ let installDir = os.homedir();
 // Set client versions. Note: Prsym version works differently and is parsed from logs
 const gethVer = "1.14.3";
 const rethVer = "1.0.0";
+let prysmVer = "";
 const lighthouseVer = "5.1.3";
 
 function showHelp() {
@@ -501,7 +503,7 @@ function parseConsensusLogs(line) {
 
   if (line.includes("Latest Prysm version is")) {
     const prysmVerMatch = line.match(/version is v(\d+\.\d+\.\d+)/);
-    const prysmVer = prysmVerMatch[1];
+    prysmVer = prysmVerMatch[1];
     consensusLog.setLabel(`Prysm v${prysmVer}`);
     screen.render();
   }
@@ -850,25 +852,6 @@ async function updateStateDlGauge(stateDlProgress) {
     debugToFile(`updateStateDlGauge(): ${error}`, () => {});
   }
 }
-
-// const localClient = createPublicClient({
-//   name: "localClient",
-//   chain: mainnet,
-//   transport: http("http://localhost:8545"),
-// });
-
-// async function isSyncing(client) {
-//   try {
-//     const syncingStatus = await client.request({
-//       method: "eth_syncing",
-//       params: [],
-//     });
-
-//     return syncingStatus;
-//   } catch (error) {
-//     throw new Error(`Failed to fetch syncing status: ${error.message}`);
-//   }
-// }
 
 // async function updateSyncProgressGauge(client, gauge) {
 //   try {
@@ -1254,3 +1237,74 @@ const { executionLog, consensusLog } = handleBlessedContrib(
 );
 startClient(executionClient, installDir, executionLog);
 startClient(consensusClient, installDir, consensusLog);
+
+// const localClient = createPublicClient({
+//   name: "localClient",
+//   chain: mainnet,
+//   transport: http("http://localhost:8545"),
+// });
+
+// async function isSyncing(client) {
+//   try {
+//     const syncingStatus = await client.request({
+//       method: "eth_syncing",
+//       params: [],
+//     });
+
+//     return syncingStatus;
+//   } catch (error) {
+//     throw new Error(`Failed to fetch syncing status: ${error.message}`);
+//   }
+// }
+
+const ws = new WebSocket("ws://rpc.buidlguidl.com:8080");
+
+ws.on("open", function open() {
+  checkIn();
+});
+
+async function checkIn() {
+  let executionClientResponse = executionClient;
+  let consensusClientResponse = consensusClient;
+
+  if (executionClient === "geth") {
+    executionClientResponse = executionClientResponse + " v" + gethVer;
+  } else if (executionClient === "reth") {
+    executionClientResponse = executionClientResponse + " v" + rethVer;
+  }
+
+  if (consensusClient === "prysm") {
+    consensusClientResponse = consensusClientResponse + " v" + prysmVer;
+  } else if (consensusClient === "lighthouse") {
+    consensusClientResponse = consensusClientResponse + " v" + lighthouseVer;
+  }
+
+  try {
+    const cpuUsage = await getCpuUsage();
+    const memoryUsage = await getMemoryUsage();
+    const diskUsage = await getDiskUsage(installDir);
+
+    let stringToSend = JSON.stringify({
+      os: platform,
+      nodeVersion: `${process.version}`,
+      executionClient: executionClientResponse,
+      consensusClient: consensusClientResponse,
+      cpu: `${cpuUsage.toFixed(1)}`,
+      mem: `${memoryUsage}`, // Ensure it's a string
+      storage: `${diskUsage}`, // Ensure it's a string
+    });
+    ws.send(stringToSend);
+  } catch (error) {
+    debugToFile(`checkIn() Error: ${error}`, () => {});
+  }
+}
+
+setInterval(checkIn, 25000); // Ask every client about their machine every 25 secs
+
+ws.on("close", function close() {
+  console.log("Disconnected from server");
+});
+
+ws.on("error", function error(err) {
+  console.error("WebSocket error:", err);
+});
