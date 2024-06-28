@@ -9,7 +9,7 @@ const minimist = require("minimist");
 const pty = require("node-pty");
 const { createPublicClient, http } = require("viem");
 const { mainnet } = require("viem/chains");
-const { initializeMonitoring } = require("./path/to/your/file");
+const { initializeMonitoring } = require("./monitor");
 
 // Set default command line option values
 let executionClient = "geth";
@@ -1228,8 +1228,6 @@ function handleBlessedContrib(
 
   return { executionLog, consensusLog };
 }
-
-function monitor() {}
 
 console.log(`\nExecution client selected: ${executionClient}`);
 console.log(`Consensus client selected: ${consensusClient}\n`);
