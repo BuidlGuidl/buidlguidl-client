@@ -169,3 +169,5 @@ function suppressMouseOutput(screen) {
     }
   });
 }
+
+initializeMonitoring();
