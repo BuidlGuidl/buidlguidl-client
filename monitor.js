@@ -87,7 +87,7 @@ function initializeMonitoring() {
     const now = new Date();
 
     const screen = blessed.screen();
-    // suppressMouseOutput(screen);
+    suppressMouseOutput(screen);
     const grid = new contrib.grid({ rows: 8, cols: 10, screen: screen });
 
     const executionLog = createExecutionLog(grid);
@@ -149,23 +149,23 @@ function initializeMonitoring() {
 
 module.exports = { initializeMonitoring };
 
-// function suppressMouseOutput(screen) {
-//   screen.on("element mouse", (el, data) => {
-//     if (data.button === "mouseup" || data.button === "mousedown") {
-//       return false; // Suppress mouse up/down events
-//     }
-//   });
+function suppressMouseOutput(screen) {
+  screen.on("element mouse", (el, data) => {
+    if (data.button === "mouseup" || data.button === "mousedown") {
+      return false; // Suppress mouse up/down events
+    }
+  });
 
-//   screen.on("keypress", (ch, key) => {
-//     if (
-//       key.name === "up" ||
-//       key.name === "down" ||
-//       key.name === "left" ||
-//       key.name === "right"
-//     ) {
-//       if (!key.ctrl && !key.meta && !key.shift) {
-//         return false; // Suppress arrow key events unless combined with Ctrl, Meta, or Shift
-//       }
-//     }
-//   });
-// }
+  screen.on("keypress", (ch, key) => {
+    if (
+      key.name === "up" ||
+      key.name === "down" ||
+      key.name === "left" ||
+      key.name === "right"
+    ) {
+      if (!key.ctrl && !key.meta && !key.shift) {
+        return false; // Suppress arrow key events unless combined with Ctrl, Meta, or Shift
+      }
+    }
+  });
+}
