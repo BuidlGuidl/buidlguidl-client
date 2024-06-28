@@ -1253,7 +1253,7 @@ const { executionLog, consensusLog } = handleBlessedContrib(
   rethVer,
   lighthouseVer
 );
-// startClient(executionClient, installDir, executionLog);
-// startClient(consensusClient, installDir, consensusLog);
+startClient(executionClient, installDir, executionLog);
+startClient(consensusClient, installDir, consensusLog);
 
 initializeMonitoring();
