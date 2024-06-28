@@ -127,36 +127,6 @@ function createJwtSecret(jwtDir) {
   }
 }
 
-function downloadRethSnapshot(rethDir, platform) {
-  const snapshotDate = "2024-05-14";
-
-  if (
-    !fs.existsSync(
-      path.join(installDir, "bgnode", "reth", "database", "db", "mdbx.dat")
-    ) ||
-    !fs.existsSync(
-      path.join(installDir, "bgnode", "reth", "database", "blobstore")
-    )
-  ) {
-    console.log("\nDownloading Reth snapshot.");
-    if (platform === "darwin") {
-      execSync(
-        `cd "${rethDir}/database" && wget -O - https://downloads.merkle.io/reth-${snapshotDate}.tar.lz4 | lz4 -dc | tar -xvf -`,
-        { stdio: "inherit" }
-      );
-    } else if (platform === "linux") {
-      execSync(
-        `cd "${rethDir}/database" && wget -O - https://downloads.merkle.io/reth-${snapshotDate}.tar.lz4 | tar -I lz4 -xvf -`,
-        { stdio: "inherit" }
-      );
-    } else if (platform === "win32") {
-      // TODO: Add code for downloading snapshot on windows
-    }
-  } else {
-    console.log("\nReth snapshot already downloaded.");
-  }
-}
-
 let executionChild;
 let consensusChild;
 
@@ -251,13 +221,13 @@ function startClient(clientName, installDir) {
   //   }
   // });
 
-  // child.on("exit", (code) => {
-  //   logBox.log(`${clientName} process exited with code ${code}`);
-  // });
+  child.on("exit", (code) => {
+    // logBox.log(`${clientName} process exited with code ${code}`);
+  });
 
-  // child.on("error", (err) => {
-  //   logBox.log(`Error: ${err.message}`);
-  // });
+  child.on("error", (err) => {
+    // logBox.log(`Error: ${err.message}`);
+  });
 }
 
 module.exports = { startClient };

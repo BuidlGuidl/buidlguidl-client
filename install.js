@@ -293,9 +293,40 @@ function installWindowsConsensusClient(consensusClient) {
   }
 }
 
+function downloadRethSnapshot(rethDir, platform) {
+  const snapshotDate = "2024-05-14";
+
+  if (
+    !fs.existsSync(
+      path.join(installDir, "bgnode", "reth", "database", "db", "mdbx.dat")
+    ) ||
+    !fs.existsSync(
+      path.join(installDir, "bgnode", "reth", "database", "blobstore")
+    )
+  ) {
+    console.log("\nDownloading Reth snapshot.");
+    if (platform === "darwin") {
+      execSync(
+        `cd "${rethDir}/database" && wget -O - https://downloads.merkle.io/reth-${snapshotDate}.tar.lz4 | lz4 -dc | tar -xvf -`,
+        { stdio: "inherit" }
+      );
+    } else if (platform === "linux") {
+      execSync(
+        `cd "${rethDir}/database" && wget -O - https://downloads.merkle.io/reth-${snapshotDate}.tar.lz4 | tar -I lz4 -xvf -`,
+        { stdio: "inherit" }
+      );
+    } else if (platform === "win32") {
+      // TODO: Add code for downloading snapshot on windows
+    }
+  } else {
+    console.log("\nReth snapshot already downloaded.");
+  }
+}
+
 module.exports = {
   installWindowsConsensusClient,
   installWindowsExecutionClient,
   installMacLinuxConsensusClient,
   installMacLinuxExecutionClient,
+  downloadRethSnapshot,
 };
