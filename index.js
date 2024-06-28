@@ -1238,25 +1238,21 @@ const { executionLog, consensusLog } = handleBlessedContrib(
 startClient(executionClient, installDir, executionLog);
 startClient(consensusClient, installDir, consensusLog);
 
-// const localClient = createPublicClient({
-//   name: "localClient",
-//   chain: mainnet,
-//   transport: http("http://localhost:8545"),
-// });
-
-// async function isSyncing(client) {
-//   try {
-//     const syncingStatus = await client.request({
-//       method: "eth_syncing",
-//       params: [],
-//     });
-
-//     return syncingStatus;
-//   } catch (error) {
-//     throw new Error(`Failed to fetch syncing status: ${error.message}`);
-//   }
-// }
-
+const localClient = createPublicClient({
+  name: "localClient",
+  chain: mainnet,
+  transport: http("http://localhost:8545"),
+});
+/*
+setInterval(async () => {
+  try {
+    const getBlockNumber = await localClient.getBlockNumber()
+    console.log("getBlockNumber",getBlockNumber)
+  } catch (error) {
+    debugToFile(`Failed to get peer count: ${error}`, () => {});
+  }
+}, 1000);
+*/
 const ws = new WebSocket("ws://rpc.buidlguidl.com:8080");
 
 ws.on("open", function open() {
@@ -1284,6 +1280,10 @@ async function checkIn() {
     const memoryUsage = await getMemoryUsage();
     const diskUsage = await getDiskUsage(installDir);
 
+
+    const getBlockNumber = await localClient.getBlockNumber()
+
+
     let stringToSend = JSON.stringify({
       os: platform,
       nodeVersion: `${process.version}`,
@@ -1292,6 +1292,7 @@ async function checkIn() {
       cpu: `${cpuUsage.toFixed(1)}`,
       mem: `${memoryUsage}`, // Ensure it's a string
       storage: `${diskUsage}`, // Ensure it's a string
+      blockNumber: getBlockNumber.toString(),
     });
     ws.send(stringToSend);
   } catch (error) {
