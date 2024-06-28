@@ -1275,14 +1275,20 @@ async function checkIn() {
     consensusClientResponse = consensusClientResponse + " v" + lighthouseVer;
   }
 
+  let possibleBlockNumber
+  let possibleBlockHash
+  try {
+    possibleBlockNumber = await localClient.getBlockNumber();
+    const block = await localClient.getBlock({ chain: mainnet, block: possibleBlockNumber });
+    possibleBlockHash = block.hash;
+  } catch (error) {
+    debugToFile(`Failed to get block number: ${error}`, () => {});
+  }
+
   try {
     const cpuUsage = await getCpuUsage();
     const memoryUsage = await getMemoryUsage();
     const diskUsage = await getDiskUsage(installDir);
-
-
-    const getBlockNumber = await localClient.getBlockNumber()
-
 
     let stringToSend = JSON.stringify({
       os: platform,
@@ -1292,7 +1298,8 @@ async function checkIn() {
       cpu: `${cpuUsage.toFixed(1)}`,
       mem: `${memoryUsage}`, // Ensure it's a string
       storage: `${diskUsage}`, // Ensure it's a string
-      blockNumber: getBlockNumber.toString(),
+      blockNumber: possibleBlockNumber ? possibleBlockNumber.toString() : "",
+      blockHash: possibleBlockHash ? possibleBlockHash : "",
     });
     ws.send(stringToSend);
   } catch (error) {
