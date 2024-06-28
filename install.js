@@ -293,4 +293,9 @@ function installWindowsConsensusClient(consensusClient) {
   }
 }
 
-module.exports = { installWindowsConsensusClient };
+module.exports = {
+  installWindowsConsensusClient,
+  installWindowsExecutionClient,
+  installMacLinuxConsensusClient,
+  installMacLinuxExecutionClient,
+};
