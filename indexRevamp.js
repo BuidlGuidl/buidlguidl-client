@@ -1255,7 +1255,8 @@ createJwtSecret(jwtDir);
 //   rethVer,
 //   lighthouseVer
 // );
-startClient(executionClient, installDir);
-startClient(consensusClient, installDir);
 
 initializeMonitoring();
+
+startClient(executionClient, installDir);
+startClient(consensusClient, installDir);
