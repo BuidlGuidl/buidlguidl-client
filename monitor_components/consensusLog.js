@@ -22,7 +22,8 @@ function highlightWords(line) {
     { word: "outboundTCP", style: "{bold}{green-fg}" },
     { word: "total", style: "{bold}{green-fg}" },
     { word: "updated", style: "{bold}{yellow-fg}" },
-    { word: "WARN", style: "{bold}{red-fg}" },
+    { word: "WARN", style: "{bold}{yellow-fg}" },
+    { word: "ERROR", style: "{bold}{red-fg}" },
     { word: "blockchain:", style: "{bold}{blue-fg}" },
     { word: "p2p:", style: "{bold}{blue-fg}" },
   ];
