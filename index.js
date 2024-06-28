@@ -1238,25 +1238,21 @@ const { executionLog, consensusLog } = handleBlessedContrib(
 startClient(executionClient, installDir, executionLog);
 startClient(consensusClient, installDir, consensusLog);
 
-// const localClient = createPublicClient({
-//   name: "localClient",
-//   chain: mainnet,
-//   transport: http("http://localhost:8545"),
-// });
-
-// async function isSyncing(client) {
-//   try {
-//     const syncingStatus = await client.request({
-//       method: "eth_syncing",
-//       params: [],
-//     });
-
-//     return syncingStatus;
-//   } catch (error) {
-//     throw new Error(`Failed to fetch syncing status: ${error.message}`);
-//   }
-// }
-
+const localClient = createPublicClient({
+  name: "localClient",
+  chain: mainnet,
+  transport: http("http://localhost:8545"),
+});
+/*
+setInterval(async () => {
+  try {
+    const getBlockNumber = await localClient.getBlockNumber()
+    console.log("getBlockNumber",getBlockNumber)
+  } catch (error) {
+    debugToFile(`Failed to get peer count: ${error}`, () => {});
+  }
+}, 1000);
+*/
 const ws = new WebSocket("ws://rpc.buidlguidl.com:8080");
 
 ws.on("open", function open() {
@@ -1279,6 +1275,16 @@ async function checkIn() {
     consensusClientResponse = consensusClientResponse + " v" + lighthouseVer;
   }
 
+  let possibleBlockNumber
+  let possibleBlockHash
+  try {
+    possibleBlockNumber = await localClient.getBlockNumber();
+    const block = await localClient.getBlock({ chain: mainnet, block: possibleBlockNumber });
+    possibleBlockHash = block.hash;
+  } catch (error) {
+    debugToFile(`Failed to get block number: ${error}`, () => {});
+  }
+
   try {
     const cpuUsage = await getCpuUsage();
     const memoryUsage = await getMemoryUsage();
@@ -1292,6 +1298,8 @@ async function checkIn() {
       cpu: `${cpuUsage.toFixed(1)}`,
       mem: `${memoryUsage}`, // Ensure it's a string
       storage: `${diskUsage}`, // Ensure it's a string
+      blockNumber: possibleBlockNumber ? possibleBlockNumber.toString() : "",
+      blockHash: possibleBlockHash ? possibleBlockHash : "",
     });
     ws.send(stringToSend);
   } catch (error) {
