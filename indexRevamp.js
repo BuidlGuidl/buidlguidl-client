@@ -556,7 +556,7 @@ function handleExit(signal) {
 process.on("SIGINT", handleExit);
 process.on("SIGTERM", handleExit);
 
-function startClient(clientName, installDir, logBox) {
+function startClient(clientName, installDir) {
   let clientCommand, clientArgs;
 
   if (clientName === "geth") {
@@ -592,23 +592,23 @@ function startClient(clientName, installDir, logBox) {
     consensusChild = child;
   }
 
-  child.stdout.on("data", (data) => {
-    logBox.log(data.toString());
+  // child.stdout.on("data", (data) => {
+  //   logBox.log(data.toString());
 
-    if (clientName === "geth") {
-      parseExecutionLogs(data.toString());
-    } else if (clientName === "prysm") {
-      parseConsensusLogs(data.toString());
-    }
-  });
+  //   if (clientName === "geth") {
+  //     parseExecutionLogs(data.toString());
+  //   } else if (clientName === "prysm") {
+  //     parseConsensusLogs(data.toString());
+  //   }
+  // });
 
-  child.on("exit", (code) => {
-    logBox.log(`${clientName} process exited with code ${code}`);
-  });
+  // child.on("exit", (code) => {
+  //   logBox.log(`${clientName} process exited with code ${code}`);
+  // });
 
-  child.on("error", (err) => {
-    logBox.log(`Error: ${err.message}`);
-  });
+  // child.on("error", (err) => {
+  //   logBox.log(`Error: ${err.message}`);
+  // });
 }
 
 module.exports = { startClient };
@@ -1006,20 +1006,22 @@ function handleBlessedContrib(
 ) {
   const now = new Date();
 
-  screen = blessed.screen();
-  suppressMouseOutput(screen);
+  // screen = blessed.screen();
+  // // PUT INTO MONITOR!
+  // suppressMouseOutput(screen);
 
-  const grid = new contrib.grid({ rows: 8, cols: 10, screen: screen });
+  // const grid = new contrib.grid({ rows: 8, cols: 10, screen: screen });
 
-  var logo = contrib.picture({
-    top: 0,
-    left: 0,
-    type: "overlay",
-    preserveAspectRatio: true,
-    width: "20%",
-    height: "20%",
-    file: "bgLogo.png",
-  });
+  // // add a picture
+  // var logo = contrib.picture({
+  //   top: 0,
+  //   left: 0,
+  //   type: "overlay",
+  //   preserveAspectRatio: true,
+  //   width: "20%",
+  //   height: "20%",
+  //   file: "bgLogo.png",
+  // });
 
   // const bgLogo = contrib.picture({
   //   file: "bgLogo.png",
@@ -1037,15 +1039,15 @@ function handleBlessedContrib(
     executionClientLabel = `Reth v${rethVer}`;
   }
 
-  const executionLog = grid.set(0, 0, 2, 10, contrib.log, {
-    label: `${executionClientLabel}`,
-    border: {
-      type: "line",
-      fg: "cyan",
-    },
-    // scrollable: true,
-    // scrollbar: { ch: " ", inverse: true },
-  });
+  // const executionLog = grid.set(0, 0, 2, 10, contrib.log, {
+  //   label: `${executionClientLabel}`,
+  //   border: {
+  //     type: "line",
+  //     fg: "cyan",
+  //   },
+  //   // scrollable: true,
+  //   // scrollbar: { ch: " ", inverse: true },
+  // });
 
   let consensusClientLabel;
   if (consensusClient === "prysm") {
@@ -1054,63 +1056,63 @@ function handleBlessedContrib(
     consensusClientLabel = `Lighthouse v${lighthouseVer}`;
   }
 
-  const consensusLog = grid.set(2, 0, 2, 10, contrib.log, {
-    label: `${consensusClientLabel}`,
-    border: {
-      type: "line",
-      fg: "cyan",
-    },
-    // scrollable: true,
-    // scrollbar: { ch: " ", inverse: true },
-  });
+  // const consensusLog = grid.set(2, 0, 2, 10, contrib.log, {
+  //   label: `${consensusClientLabel}`,
+  //   border: {
+  //     type: "line",
+  //     fg: "cyan",
+  //   },
+  //   // scrollable: true,
+  //   // scrollbar: { ch: " ", inverse: true },
+  // });
 
-  cpuLine = grid.set(4, 0, 2, 8, contrib.line, {
-    style: { line: "blue", text: "green", baseline: "green" },
-    xLabelPadding: 3,
-    xPadding: 5,
-    showLegend: true,
-    wholeNumbersOnly: false,
-    label: "CPU Load (%)",
-    border: {
-      type: "line",
-      fg: "cyan",
-    },
-  });
+  // cpuLine = grid.set(4, 0, 2, 8, contrib.line, {
+  //   style: { line: "blue", text: "green", baseline: "green" },
+  //   xLabelPadding: 3,
+  //   xPadding: 5,
+  //   showLegend: true,
+  //   wholeNumbersOnly: false,
+  //   label: "CPU Load (%)",
+  //   border: {
+  //     type: "line",
+  //     fg: "cyan",
+  //   },
+  // });
 
-  networkLine = grid.set(6, 0, 2, 8, contrib.line, {
-    style: { line: "yellow", text: "green", baseline: "green" },
-    xLabelPadding: 3,
-    xPadding: 5,
-    showLegend: true,
-    wholeNumbersOnly: false,
-    label: "Network Traffic (MB/sec)",
-    border: {
-      type: "line",
-      fg: "cyan",
-    },
-  });
+  // networkLine = grid.set(6, 0, 2, 8, contrib.line, {
+  //   style: { line: "yellow", text: "green", baseline: "green" },
+  //   xLabelPadding: 3,
+  //   xPadding: 5,
+  //   showLegend: true,
+  //   wholeNumbersOnly: false,
+  //   label: "Network Traffic (MB/sec)",
+  //   border: {
+  //     type: "line",
+  //     fg: "cyan",
+  //   },
+  // });
 
-  if (progress.chainDlProgress !== 1) {
-    peerCountLcd = contrib.lcd({
-      segmentWidth: 0.06, // how wide are the segments in % so 50% = 0.5
-      segmentInterval: 0.11, // spacing between the segments in % so 50% = 0.550% = 0.5
-      strokeWidth: 0.11, // spacing between the segments in % so 50% = 0.5
-      elements: 3, // how many elements in the display. or how many characters can be displayed.
-      display: 0, // what should be displayed before first call to setDisplay
-      elementSpacing: 4, // spacing between each element
-      elementPadding: 2, // how far away from the edges to put the elements
-      color: "green", // color for the segments
-      label: "Peer Count",
-      top: "50%",
-      height: "12%",
-      left: "80%",
-      width: "10%",
-      border: {
-        type: "line",
-        fg: "cyan",
-      },
-    });
-  }
+  // if (progress.chainDlProgress !== 1) {
+  //   peerCountLcd = contrib.lcd({
+  //     segmentWidth: 0.06, // how wide are the segments in % so 50% = 0.5
+  //     segmentInterval: 0.11, // spacing between the segments in % so 50% = 0.550% = 0.5
+  //     strokeWidth: 0.11, // spacing between the segments in % so 50% = 0.5
+  //     elements: 3, // how many elements in the display. or how many characters can be displayed.
+  //     display: 0, // what should be displayed before first call to setDisplay
+  //     elementSpacing: 4, // spacing between each element
+  //     elementPadding: 2, // how far away from the edges to put the elements
+  //     color: "green", // color for the segments
+  //     label: "Peer Count",
+  //     top: "50%",
+  //     height: "12%",
+  //     left: "80%",
+  //     width: "10%",
+  //     border: {
+  //       type: "line",
+  //       fg: "cyan",
+  //     },
+  //   });
+  // }
 
   // peerCountLcd = grid.set(4, 8, 1, 1, blessed.bigtext, {
   //   label: "Peer Count",
@@ -1129,108 +1131,108 @@ function handleBlessedContrib(
   //   valign: "middle",
   // });
 
-  if (progress.chainDlProgress !== 1) {
-    headerDlGauge = grid.set(5, 8, 1, 1, contrib.gauge, {
-      label: "Header DL Progress",
-      stroke: "cyan",
-      fill: "white",
-      border: {
-        type: "line",
-        fg: "cyan",
-      },
-    });
-  }
+  // if (progress.chainDlProgress !== 1) {
+  //   headerDlGauge = grid.set(5, 8, 1, 1, contrib.gauge, {
+  //     label: "Header DL Progress",
+  //     stroke: "cyan",
+  //     fill: "white",
+  //     border: {
+  //       type: "line",
+  //       fg: "cyan",
+  //     },
+  //   });
+  // }
 
-  if (progress.chainDlProgress !== 1) {
-    stateDlGauge = grid.set(6, 8, 1, 1, contrib.gauge, {
-      label: "State DL Progress",
-      stroke: "cyan",
-      fill: "white",
-      border: {
-        type: "line",
-        fg: "cyan",
-      },
-    });
-  }
+  // if (progress.chainDlProgress !== 1) {
+  //   stateDlGauge = grid.set(6, 8, 1, 1, contrib.gauge, {
+  //     label: "State DL Progress",
+  //     stroke: "cyan",
+  //     fill: "white",
+  //     border: {
+  //       type: "line",
+  //       fg: "cyan",
+  //     },
+  //   });
+  // }
 
-  if (progress.chainDlProgress !== 1) {
-    chainDlGauge = grid.set(7, 8, 1, 1, contrib.gauge, {
-      label: "Chain DL Progress",
-      stroke: "cyan",
-      fill: "white",
-      border: {
-        type: "line",
-        fg: "cyan",
-      },
-    });
-  }
+  // if (progress.chainDlProgress !== 1) {
+  //   chainDlGauge = grid.set(7, 8, 1, 1, contrib.gauge, {
+  //     label: "Chain DL Progress",
+  //     stroke: "cyan",
+  //     fill: "white",
+  //     border: {
+  //       type: "line",
+  //       fg: "cyan",
+  //     },
+  //   });
+  // }
 
-  memGauge = grid.set(6, 9, 1, 1, contrib.gauge, {
-    label: "Memory",
-    stroke: "green",
-    fill: "white",
-    border: {
-      type: "line",
-      fg: "cyan",
-    },
-  });
+  // memGauge = grid.set(6, 9, 1, 1, contrib.gauge, {
+  //   label: "Memory",
+  //   stroke: "green",
+  //   fill: "white",
+  //   border: {
+  //     type: "line",
+  //     fg: "cyan",
+  //   },
+  // });
 
-  storageGauge = grid.set(7, 9, 1, 1, contrib.gauge, {
-    label: "Storage",
-    stroke: "blue",
-    fill: "white",
-    border: {
-      type: "line",
-      fg: "cyan",
-    },
-  });
+  // storageGauge = grid.set(7, 9, 1, 1, contrib.gauge, {
+  //   label: "Storage",
+  //   stroke: "blue",
+  //   fill: "white",
+  //   border: {
+  //     type: "line",
+  //     fg: "cyan",
+  //   },
+  // });
 
-  screen.append(executionLog);
-  screen.append(consensusLog);
-  screen.append(cpuLine);
-  screen.append(networkLine);
-  if (headerDlGauge) screen.append(headerDlGauge);
-  if (stateDlGauge) screen.append(stateDlGauge);
-  if (chainDlGauge) screen.append(chainDlGauge);
-  if (chainDlGauge) screen.append(peerCountLcd);
-  screen.append(memGauge);
-  screen.append(storageGauge);
+  // screen.append(executionLog);
+  // screen.append(consensusLog);
+  // screen.append(cpuLine);
+  // screen.append(networkLine);
+  // if (headerDlGauge) screen.append(headerDlGauge);
+  // if (stateDlGauge) screen.append(stateDlGauge);
+  // if (chainDlGauge) screen.append(chainDlGauge);
+  // if (chainDlGauge) screen.append(peerCountLcd);
+  // screen.append(memGauge);
+  // screen.append(storageGauge);
   // screen.append(logo);
 
-  setInterval(updateCpuLinePlot, 1000);
-  setInterval(updateNetworkLinePlot, 1000);
-  setInterval(updateMemoryGauge, 1000);
-  updateDiskGauge(installDir);
-  setInterval(updateDiskGauge, 10000);
+  // setInterval(updateCpuLinePlot, 1000);
+  // setInterval(updateNetworkLinePlot, 1000);
+  // setInterval(updateMemoryGauge, 1000);
+  // updateDiskGauge(installDir);
+  // setInterval(updateDiskGauge, 10000);
 
-  if (progress.chainDlProgress !== 1) {
-    headerDlGauge.setPercent(progress.headerDlProgress);
-  }
-  if (chainDlGauge && progress.chainDlProgress !== 1) {
-    chainDlGauge.setPercent(progress.chainDlProgress);
-  }
-  if (progress.chainDlProgress !== 1) {
-    stateDlGauge.setPercent(progress.stateDlProgress);
-  }
+  // if (progress.chainDlProgress !== 1) {
+  //   headerDlGauge.setPercent(progress.headerDlProgress);
+  // }
+  // if (chainDlGauge && progress.chainDlProgress !== 1) {
+  //   chainDlGauge.setPercent(progress.chainDlProgress);
+  // }
+  // if (progress.chainDlProgress !== 1) {
+  //   stateDlGauge.setPercent(progress.stateDlProgress);
+  // }
 
-  screen.on("resize", () => {
-    cpuLine.emit("attach");
-    networkLine.emit("attach");
+  //   screen.on("resize", () => {
+  //     cpuLine.emit("attach");
+  //     networkLine.emit("attach");
 
-    screen.render();
-  });
+  //     screen.render();
+  //   });
 
-  screen.render();
+  //   screen.render();
 
-  screen.key(["escape", "q", "C-c"], function (ch, key) {
-    handleExit("SIGINT");
-  });
+  //   screen.key(["escape", "q", "C-c"], function (ch, key) {
+  //     handleExit("SIGINT");
+  //   });
 
-  return { executionLog, consensusLog };
+  //   return { executionLog, consensusLog };
 }
 
-console.log(`\nExecution client selected: ${executionClient}`);
-console.log(`Consensus client selected: ${consensusClient}\n`);
+// console.log(`\nExecution client selected: ${executionClient}`);
+// console.log(`Consensus client selected: ${consensusClient}\n`);
 
 getNetworkStats();
 
@@ -1246,14 +1248,14 @@ if (["darwin", "linux"].includes(platform)) {
 }
 
 createJwtSecret(jwtDir);
-const { executionLog, consensusLog } = handleBlessedContrib(
-  executionClient,
-  consensusClient,
-  gethVer,
-  rethVer,
-  lighthouseVer
-);
-startClient(executionClient, installDir, executionLog);
-startClient(consensusClient, installDir, consensusLog);
+// const { executionLog, consensusLog } = handleBlessedContrib(
+//   executionClient,
+//   consensusClient,
+//   gethVer,
+//   rethVer,
+//   lighthouseVer
+// );
+startClient(executionClient, installDir);
+startClient(consensusClient, installDir);
 
 initializeMonitoring();
