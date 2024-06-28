@@ -10,6 +10,11 @@ const pty = require("node-pty");
 const { createPublicClient, http } = require("viem");
 const { mainnet } = require("viem/chains");
 
+const { createDiskGauge } = require("./monitor_components/diskGauge");
+const { createMemGauge } = require("./monitor_components/memGauge");
+const { createCpuLine } = require("./monitor_components/cpuLine");
+const { createNetworkLine } = require("./monitor_components/networkLine");
+
 // Set default command line option values
 let executionClient = "geth";
 let consensusClient = "prysm";

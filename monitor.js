@@ -30,117 +30,124 @@ const {
   setupLogStreamingConsensus,
 } = require("./monitor_components/consensusLog");
 
-const installDir = os.homedir();
-const logDir = path.join(installDir, "bgnode", "geth", "logs");
-const logDirConsensus = path.join(installDir, "bgnode", "prysm", "logs");
+function initializeMonitoring() {
+  const installDir = os.homedir();
+  const logDir = path.join(installDir, "bgnode", "geth", "logs");
+  const logDirConsensus = path.join(installDir, "bgnode", "prysm", "logs");
 
-const logFilePath = path.join(logDir, getLatestLogFile(logDir, "geth"));
-const logFilePathConsensus = path.join(
-  logDirConsensus,
-  getLatestLogFile(logDirConsensus, "prysm")
-);
+  const logFilePath = path.join(logDir, getLatestLogFile(logDir, "geth"));
+  const logFilePathConsensus = path.join(
+    logDirConsensus,
+    getLatestLogFile(logDirConsensus, "prysm")
+  );
 
-const debugLogPath = path.join(installDir, "bgnode", "debugMonitor.log");
+  const debugLogPath = path.join(installDir, "bgnode", "debugMonitor.log");
 
-if (fs.existsSync(debugLogPath)) {
-  fs.unlinkSync(debugLogPath);
-}
-
-function logDebug(message) {
-  if (typeof message === "object") {
-    message = JSON.stringify(message, null, 2);
-  }
-  fs.appendFileSync(debugLogPath, `[${new Date().toISOString()}] ${message}\n`);
-}
-
-// Override console.log to write to debug log file
-console.log = function (message, ...optionalParams) {
-  if (optionalParams.length > 0) {
-    message +=
-      " " +
-      optionalParams
-        .map((param) =>
-          typeof param === "object" ? JSON.stringify(param, null, 2) : param
-        )
-        .join(" ");
-  }
-  logDebug(message);
-};
-
-console.log(`Monitoring Geth logs from: ${logFilePath}`);
-console.log(`Monitoring Prysm logs from: ${logFilePathConsensus}`);
-
-const progress = loadProgress();
-
-console.log("progress", progress.headerDlProgress);
-
-let headerDlGauge;
-let stateDlGauge;
-let chainDlGauge;
-let peerCountGauge;
-
-function handleBlessedContrib(executionClient, consensusClient) {
-  const now = new Date();
-
-  const screen = blessed.screen();
-  // suppressMouseOutput(screen);
-  const grid = new contrib.grid({ rows: 8, cols: 10, screen: screen });
-
-  const executionLog = createExecutionLog(grid);
-  const consensusLog = createConsensusLog(grid);
-  peerCountGauge = createPeerCountLcd(grid, screen);
-  const storageGauge = createDiskGauge(grid, screen);
-  const memGauge = createMemGauge(grid, screen);
-  const cpuLine = createCpuLine(grid, screen);
-  const networkLine = createNetworkLine(grid, screen);
-  headerDlGauge = createHeaderDlGauge(grid);
-  stateDlGauge = createStateDlGauge(grid);
-  chainDlGauge = createChainDlGauge(grid);
-
-  screen.append(executionLog);
-  screen.append(consensusLog);
-  screen.append(peerCountGauge);
-  screen.append(cpuLine);
-  screen.append(networkLine);
-  screen.append(memGauge);
-  screen.append(storageGauge);
-  screen.append(headerDlGauge);
-  screen.append(stateDlGauge);
-  screen.append(chainDlGauge);
-
-  peerCountGauge.setDisplay("0");
-
-  if (progress) {
-    headerDlGauge.setPercent(progress.headerDlProgress);
-    stateDlGauge.setPercent(progress.stateDlProgress);
-    chainDlGauge.setPercent(progress.chainDlProgress);
+  if (fs.existsSync(debugLogPath)) {
+    fs.unlinkSync(debugLogPath);
   }
 
-  screen.render();
+  function logDebug(message) {
+    if (typeof message === "object") {
+      message = JSON.stringify(message, null, 2);
+    }
+    fs.appendFileSync(
+      debugLogPath,
+      `[${new Date().toISOString()}] ${message}\n`
+    );
+  }
 
-  // Quit on Escape, q, or Control-C.
-  screen.key(["escape", "q", "C-c"], function (ch, key) {
-    process.exit(0);
-  });
+  // Override console.log to write to debug log file
+  console.log = function (message, ...optionalParams) {
+    if (optionalParams.length > 0) {
+      message +=
+        " " +
+        optionalParams
+          .map((param) =>
+            typeof param === "object" ? JSON.stringify(param, null, 2) : param
+          )
+          .join(" ");
+    }
+    logDebug(message);
+  };
 
-  return { executionLog, consensusLog, screen };
+  console.log(`Monitoring Geth logs from: ${logFilePath}`);
+  console.log(`Monitoring Prysm logs from: ${logFilePathConsensus}`);
+
+  const progress = loadProgress();
+
+  console.log("progress", progress.headerDlProgress);
+
+  let headerDlGauge;
+  let stateDlGauge;
+  let chainDlGauge;
+  let peerCountGauge;
+
+  function handleBlessedContrib(executionClient, consensusClient) {
+    const now = new Date();
+
+    const screen = blessed.screen();
+    // suppressMouseOutput(screen);
+    const grid = new contrib.grid({ rows: 8, cols: 10, screen: screen });
+
+    const executionLog = createExecutionLog(grid);
+    const consensusLog = createConsensusLog(grid);
+    peerCountGauge = createPeerCountLcd(grid, screen);
+    const storageGauge = createDiskGauge(grid, screen);
+    const memGauge = createMemGauge(grid, screen);
+    const cpuLine = createCpuLine(grid, screen);
+    const networkLine = createNetworkLine(grid, screen);
+    headerDlGauge = createHeaderDlGauge(grid);
+    stateDlGauge = createStateDlGauge(grid);
+    chainDlGauge = createChainDlGauge(grid);
+
+    screen.append(executionLog);
+    screen.append(consensusLog);
+    screen.append(peerCountGauge);
+    screen.append(cpuLine);
+    screen.append(networkLine);
+    screen.append(memGauge);
+    screen.append(storageGauge);
+    screen.append(headerDlGauge);
+    screen.append(stateDlGauge);
+    screen.append(chainDlGauge);
+
+    peerCountGauge.setDisplay("0");
+
+    if (progress) {
+      headerDlGauge.setPercent(progress.headerDlProgress);
+      stateDlGauge.setPercent(progress.stateDlProgress);
+      chainDlGauge.setPercent(progress.chainDlProgress);
+    }
+
+    screen.render();
+
+    // Quit on Escape, q, or Control-C.
+    screen.key(["escape", "q", "C-c"], function (ch, key) {
+      process.exit(0);
+    });
+
+    return { executionLog, consensusLog, screen };
+  }
+
+  const { executionLog, consensusLog, screen } = handleBlessedContrib(
+    "geth",
+    "prysm"
+  );
+
+  setupLogStreaming(
+    logFilePath,
+    executionLog,
+    screen,
+    headerDlGauge,
+    stateDlGauge,
+    chainDlGauge,
+    peerCountGauge
+  );
+  setupLogStreamingConsensus(logFilePathConsensus, consensusLog, screen);
 }
 
-const { executionLog, consensusLog, screen } = handleBlessedContrib(
-  "geth",
-  "prysm"
-);
-
-setupLogStreaming(
-  logFilePath,
-  executionLog,
-  screen,
-  headerDlGauge,
-  stateDlGauge,
-  chainDlGauge,
-  peerCountGauge
-);
-setupLogStreamingConsensus(logFilePathConsensus, consensusLog, screen);
+module.exports = { initializeMonitoring };
 
 // function suppressMouseOutput(screen) {
 //   screen.on("element mouse", (el, data) => {
