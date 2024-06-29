@@ -42,45 +42,45 @@ function showHelp() {
   console.log("");
 }
 
-function isValidPath(p) {
-  try {
-    return fs.existsSync(p) && fs.statSync(p).isDirectory();
-  } catch (err) {
-    return false;
-  }
-}
+// function isValidPath(p) {
+//   try {
+//     return fs.existsSync(p) && fs.statSync(p).isDirectory();
+//   } catch (err) {
+//     return false;
+//   }
+// }
 
-// Process command-line arguments
-const argv = minimist(process.argv.slice(2));
+// // Process command-line arguments
+// const argv = minimist(process.argv.slice(2));
 
-if (argv.e) {
-  executionClient = argv.e;
-  if (executionClient !== "geth") {
-    console.log("Invalid option for -e. Use 'geth'.");
-    process.exit(1);
-  }
-}
+// if (argv.e) {
+//   executionClient = argv.e;
+//   if (executionClient !== "geth") {
+//     console.log("Invalid option for -e. Use 'geth'.");
+//     process.exit(1);
+//   }
+// }
 
-if (argv.c) {
-  consensusClient = argv.c;
-  if (consensusClient !== "prysm") {
-    console.log("Invalid option for -c. Use 'prysm'.");
-    process.exit(1);
-  }
-}
+// if (argv.c) {
+//   consensusClient = argv.c;
+//   if (consensusClient !== "prysm") {
+//     console.log("Invalid option for -c. Use 'prysm'.");
+//     process.exit(1);
+//   }
+// }
 
-if (argv.d) {
-  installDir = argv.d;
-  if (!isValidPath(installDir)) {
-    console.log(`Invalid option for -d. '${installDir}' is not a valid path.`);
-    process.exit(1);
-  }
-}
+// if (argv.d) {
+//   installDir = argv.d;
+//   if (!isValidPath(installDir)) {
+//     console.log(`Invalid option for -d. '${installDir}' is not a valid path.`);
+//     process.exit(1);
+//   }
+// }
 
-if (argv.h) {
-  showHelp();
-  process.exit(0);
-}
+// if (argv.h) {
+//   showHelp();
+//   process.exit(0);
+// }
 
 function debugToFile(data, callback) {
   const filePath = path.join(installDir, "bgnode", "debug.log");
@@ -232,57 +232,57 @@ function startClient(clientName, installDir) {
 
 module.exports = { startClient };
 
-let lastStats = {
-  totalSent: 0,
-  totalReceived: 0,
-  timestamp: Date.now(),
-};
+// let lastStats = {
+//   totalSent: 0,
+//   totalReceived: 0,
+//   timestamp: Date.now(),
+// };
 
-function getNetworkStats() {
-  return new Promise((resolve, reject) => {
-    si.networkStats()
-      .then((interfaces) => {
-        let currentTotalSent = 0;
-        let currentTotalReceived = 0;
+// function getNetworkStats() {
+//   return new Promise((resolve, reject) => {
+//     si.networkStats()
+//       .then((interfaces) => {
+//         let currentTotalSent = 0;
+//         let currentTotalReceived = 0;
 
-        interfaces.forEach((iface) => {
-          currentTotalSent += iface.tx_bytes;
-          currentTotalReceived += iface.rx_bytes;
-        });
+//         interfaces.forEach((iface) => {
+//           currentTotalSent += iface.tx_bytes;
+//           currentTotalReceived += iface.rx_bytes;
+//         });
 
-        // Calculate time difference in seconds
-        const currentTime = Date.now();
-        const timeDiff = (currentTime - lastStats.timestamp) / 1000;
+//         // Calculate time difference in seconds
+//         const currentTime = Date.now();
+//         const timeDiff = (currentTime - lastStats.timestamp) / 1000;
 
-        // Calculate bytes per second
-        const sentPerSecond =
-          (currentTotalSent - lastStats.totalSent) / timeDiff;
-        const receivedPerSecond =
-          (currentTotalReceived - lastStats.totalReceived) / timeDiff;
+//         // Calculate bytes per second
+//         const sentPerSecond =
+//           (currentTotalSent - lastStats.totalSent) / timeDiff;
+//         const receivedPerSecond =
+//           (currentTotalReceived - lastStats.totalReceived) / timeDiff;
 
-        // Update last stats for next calculation
-        lastStats = {
-          totalSent: currentTotalSent,
-          totalReceived: currentTotalReceived,
-          timestamp: currentTime,
-        };
+//         // Update last stats for next calculation
+//         lastStats = {
+//           totalSent: currentTotalSent,
+//           totalReceived: currentTotalReceived,
+//           timestamp: currentTime,
+//         };
 
-        resolve({
-          sentPerSecond: sentPerSecond / 1000000,
-          receivedPerSecond: receivedPerSecond / 1000000,
-        });
-      })
-      .catch((error) => {
-        debugToFile(
-          `getNetworkStats() Error fetching network stats: ${error}`,
-          () => {}
-        );
-        reject(error);
-      });
-  });
-}
+//         resolve({
+//           sentPerSecond: sentPerSecond / 1000000,
+//           receivedPerSecond: receivedPerSecond / 1000000,
+//         });
+//       })
+//       .catch((error) => {
+//         debugToFile(
+//           `getNetworkStats() Error fetching network stats: ${error}`,
+//           () => {}
+//         );
+//         reject(error);
+//       });
+//   });
+// }
 
-getNetworkStats();
+// getNetworkStats();
 
 const jwtDir = path.join(installDir, "bgnode", "jwt");
 const platform = os.platform();
