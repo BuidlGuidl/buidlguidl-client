@@ -221,13 +221,13 @@ function startClient(clientName, installDir) {
   //   }
   // });
 
-  child.on("exit", (code) => {
-    // logBox.log(`${clientName} process exited with code ${code}`);
-  });
+  // child.on("exit", (code) => {
+  //   // logBox.log(`${clientName} process exited with code ${code}`);
+  // });
 
-  child.on("error", (err) => {
-    // logBox.log(`Error: ${err.message}`);
-  });
+  // child.on("error", (err) => {
+  //   // logBox.log(`Error: ${err.message}`);
+  // });
 }
 
 module.exports = { startClient };
