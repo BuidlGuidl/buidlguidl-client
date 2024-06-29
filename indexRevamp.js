@@ -9,7 +9,7 @@ const minimist = require("minimist");
 const pty = require("node-pty");
 const { createPublicClient, http } = require("viem");
 const { mainnet } = require("viem/chains");
-const { initializeMonitoring } = require("./monitor");
+// const { initializeMonitoring } = require("./monitor");
 const {
   installMacLinuxConsensusClient,
   installMacLinuxExecutionClient,
