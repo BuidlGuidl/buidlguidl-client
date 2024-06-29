@@ -287,13 +287,13 @@ getNetworkStats();
 const jwtDir = path.join(installDir, "bgnode", "jwt");
 const platform = os.platform();
 
-if (["darwin", "linux"].includes(platform)) {
-  installMacLinuxExecutionClient(executionClient, platform, gethVer, rethVer);
-  installMacLinuxConsensusClient(consensusClient, platform, lighthouseVer);
-} else if (platform === "win32") {
-  installWindowsExecutionClient(executionClient);
-  installWindowsConsensusClient(consensusClient);
-}
+// if (["darwin", "linux"].includes(platform)) {
+//   installMacLinuxExecutionClient(executionClient, platform, gethVer, rethVer);
+//   installMacLinuxConsensusClient(consensusClient, platform, lighthouseVer);
+// } else if (platform === "win32") {
+//   installWindowsExecutionClient(executionClient);
+//   installWindowsConsensusClient(consensusClient);
+// }
 
 createJwtSecret(jwtDir);
 
