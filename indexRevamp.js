@@ -228,6 +228,7 @@ function startClient(clientName, installDir) {
   // child.on("error", (err) => {
   //   // logBox.log(`Error: ${err.message}`);
   // });
+  console.log(clientName, "started");
 }
 
 module.exports = { startClient };
