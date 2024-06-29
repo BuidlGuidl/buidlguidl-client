@@ -42,45 +42,45 @@ function showHelp() {
   console.log("");
 }
 
-// function isValidPath(p) {
-//   try {
-//     return fs.existsSync(p) && fs.statSync(p).isDirectory();
-//   } catch (err) {
-//     return false;
-//   }
-// }
+function isValidPath(p) {
+  try {
+    return fs.existsSync(p) && fs.statSync(p).isDirectory();
+  } catch (err) {
+    return false;
+  }
+}
 
-// // Process command-line arguments
-// const argv = minimist(process.argv.slice(2));
+// Process command-line arguments
+const argv = minimist(process.argv.slice(2));
 
-// if (argv.e) {
-//   executionClient = argv.e;
-//   if (executionClient !== "geth") {
-//     console.log("Invalid option for -e. Use 'geth'.");
-//     process.exit(1);
-//   }
-// }
+if (argv.e) {
+  executionClient = argv.e;
+  if (executionClient !== "geth") {
+    console.log("Invalid option for -e. Use 'geth'.");
+    process.exit(1);
+  }
+}
 
-// if (argv.c) {
-//   consensusClient = argv.c;
-//   if (consensusClient !== "prysm") {
-//     console.log("Invalid option for -c. Use 'prysm'.");
-//     process.exit(1);
-//   }
-// }
+if (argv.c) {
+  consensusClient = argv.c;
+  if (consensusClient !== "prysm") {
+    console.log("Invalid option for -c. Use 'prysm'.");
+    process.exit(1);
+  }
+}
 
-// if (argv.d) {
-//   installDir = argv.d;
-//   if (!isValidPath(installDir)) {
-//     console.log(`Invalid option for -d. '${installDir}' is not a valid path.`);
-//     process.exit(1);
-//   }
-// }
+if (argv.d) {
+  installDir = argv.d;
+  if (!isValidPath(installDir)) {
+    console.log(`Invalid option for -d. '${installDir}' is not a valid path.`);
+    process.exit(1);
+  }
+}
 
-// if (argv.h) {
-//   showHelp();
-//   process.exit(0);
-// }
+if (argv.h) {
+  showHelp();
+  process.exit(0);
+}
 
 function debugToFile(data, callback) {
   const filePath = path.join(installDir, "bgnode", "debug.log");
