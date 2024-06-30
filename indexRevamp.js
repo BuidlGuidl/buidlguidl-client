@@ -9,7 +9,7 @@ const minimist = require("minimist");
 const pty = require("node-pty");
 const { createPublicClient, http } = require("viem");
 const { mainnet } = require("viem/chains");
-const { initializeMonitoring } = require("./monitor");
+const { initializeMonitoring, setupDebugLogging } = require("./monitor");
 const {
   installMacLinuxConsensusClient,
   installMacLinuxExecutionClient,
@@ -21,84 +21,124 @@ const {
 let executionClient = "geth";
 let consensusClient = "prysm";
 let installDir = os.homedir();
+const lockFilePath = path.join(os.homedir(), "bgnode", "script.lock");
 
-// Set client versions. Note: Prsym version works differently and is parsed from logs
-const gethVer = "1.14.3";
-const rethVer = "1.0.0";
-const lighthouseVer = "5.1.3";
+const CONFIG = {
+  debugLogPath: path.join(os.homedir(), "bgnode", "debugIndex.log"),
+};
 
-function showHelp() {
-  console.log("Usage: node script.js [options]");
-  console.log("");
-  console.log("Options:");
-  // console.log("  -e <client>  Specify the execution client ('geth' or 'reth')");
-  console.log("  -e <client>  Specify the execution client ('geth')");
-  // console.log(
-  //   "  -c <client>  Specify the consensus client ('prysm' or 'lighthouse')"
-  // );
-  console.log("  -c <client>  Specify the consensus client ('prysm')");
-  console.log("  -d <path>  Specify the install directory (defaults to ~)");
-  console.log("  -h           Display this help message and exit");
-  console.log("");
-}
 
-function isValidPath(p) {
-  try {
-    return fs.existsSync(p) && fs.statSync(p).isDirectory();
-  } catch (err) {
-    return false;
-  }
-}
+setupDebugLogging(CONFIG.debugLogPath);
 
-// Process command-line arguments
-const argv = minimist(process.argv.slice(2));
 
-if (argv.e) {
-  executionClient = argv.e;
-  if (executionClient !== "geth") {
-    console.log("Invalid option for -e. Use 'geth'.");
-    process.exit(1);
-  }
-}
+// // Function to check if the lock file exists
+// function checkIfAlreadyRunning() {
+//   if (fs.existsSync(lockFilePath)) {
+//     console.log("Script is already running.");
+//     process.exit(1);
+//   }
+// }
 
-if (argv.c) {
-  consensusClient = argv.c;
-  if (consensusClient !== "prysm") {
-    console.log("Invalid option for -c. Use 'prysm'.");
-    process.exit(1);
-  }
-}
 
-if (argv.d) {
-  installDir = argv.d;
-  if (!isValidPath(installDir)) {
-    console.log(`Invalid option for -d. '${installDir}' is not a valid path.`);
-    process.exit(1);
-  }
-}
+// // Function to create the lock file
+// function createLockFile() {
+//   fs.writeFileSync(lockFilePath, process.pid.toString(), { flag: "w" });
+// }
 
-if (argv.h) {
-  showHelp();
-  process.exit(0);
-}
 
-function debugToFile(data, callback) {
-  const filePath = path.join(installDir, "bgnode", "debug.log");
-  const now = new Date();
-  const timestamp = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
-  const content =
-    typeof data === "object"
-      ? `${timestamp} - ${JSON.stringify(data, null, 2)}\n`
-      : `${timestamp} - ${data}\n`;
+// // Function to remove the lock file
+// function removeLockFile() {
+//   if (fs.existsSync(lockFilePath)) {
+//     fs.unlinkSync(lockFilePath);
+//   }
+// }
 
-  fs.writeFile(filePath, content, { flag: "a" }, (err) => {
-    if (err) {
-      console.error("Failed to write to file:", err);
-    } else {
-      if (callback) callback();
-    }
-  });
-}
+
+// // process.on("exit", removeLockFile);
+// // Check if the script is already running
+// checkIfAlreadyRunning();
+
+// // Create a lock file
+// createLockFile();
+
+
+// // Set client versions. Note: Prsym version works differently and is parsed from logs
+// const gethVer = "1.14.3";
+// const rethVer = "1.0.0";
+// const lighthouseVer = "5.1.3";
+
+// function showHelp() {
+//   console.log("Usage: node script.js [options]");
+//   console.log("");
+//   console.log("Options:");
+//   // console.log("  -e <client>  Specify the execution client ('geth' or 'reth')");
+//   console.log("  -e <client>  Specify the execution client ('geth')");
+//   // console.log(
+//   //   "  -c <client>  Specify the consensus client ('prysm' or 'lighthouse')"
+//   // );
+//   console.log("  -c <client>  Specify the consensus client ('prysm')");
+//   console.log("  -d <path>  Specify the install directory (defaults to ~)");
+//   console.log("  -h           Display this help message and exit");
+//   console.log("");
+// }
+
+// function isValidPath(p) {
+//   try {
+//     return fs.existsSync(p) && fs.statSync(p).isDirectory();
+//   } catch (err) {
+//     return false;
+//   }
+// }
+
+// // Process command-line arguments
+// const argv = minimist(process.argv.slice(2));
+
+// if (argv.e) {
+//   executionClient = argv.e;
+//   if (executionClient !== "geth") {
+//     console.log("Invalid option for -e. Use 'geth'.");
+//     process.exit(1);
+//   }
+// }
+
+// if (argv.c) {
+//   consensusClient = argv.c;
+//   if (consensusClient !== "prysm") {
+//     console.log("Invalid option for -c. Use 'prysm'.");
+//     process.exit(1);
+//   }
+// }
+
+// if (argv.d) {
+//   installDir = argv.d;
+//   if (!isValidPath(installDir)) {
+//     console.log(`Invalid option for -d. '${installDir}' is not a valid path.`);
+//     process.exit(1);
+//   }
+// }
+
+// if (argv.h) {
+//   showHelp();
+//   process.exit(0);
+// }
+
+// function debugToFile(data, callback) {
+//   const filePath = path.join(installDir, "bgnode", "debug.log");
+//   const now = new Date();
+//   const timestamp = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+//   const content =
+//     typeof data === "object"
+//       ? `${timestamp} - ${JSON.stringify(data, null, 2)}\n`
+//       : `${timestamp} - ${data}\n`;
+
+//   fs.writeFile(filePath, content, { flag: "a" }, (err) => {
+//     if (err) {
+//       console.error("Failed to write to file:", err);
+//     } else {
+//       if (callback) callback();
+//     }
+//   });
+// }
 
 // function getFormattedDateTime() {
 //   const now = new Date();
@@ -133,47 +173,106 @@ let consensusChild;
 let executionExited = false;
 let consensusExited = false;
 
-function handleExit(signal) {
-  if (executionChild) {
-    executionChild.kill("SIGINT");
-  }
+function handleExit() {
+  console.log("Received exit signal");
+  try {
+      // Check if both child processes have exited
+    const checkExit = () => {
+      if (executionExited && consensusExited) {
+        console.log("Both clients exited!");
+        process.exit(0);
+      }
+    };
 
-  if (consensusChild) {
-    consensusChild.kill("SIGINT");
-  }
-
-  // Check if both child processes have exited
-  const checkExit = () => {
-    if (executionExited && consensusExited) {
-      process.exit(0);
-    }
-  };
-
-  // Listen for exit events
-  if (executionChild) {
-    executionChild.on("exit", (code) => {
+    // Gracefully kill the execution client
+    if (executionChild) {
+      console.log("Exiting execution client...");
+      executionChild.kill("SIGINT");
+      executionChild.on("exit", (code) => {
+        executionExited = true;
+        console.log("Execution client exited");
+        checkExit();
+      });
+    } else {
       executionExited = true;
-      checkExit();
-    });
-  } else {
-    executionExited = true;
-  }
+    }
 
-  if (consensusChild) {
-    consensusChild.on("exit", (code) => {
+    // Gracefully kill the consensus client
+    if (consensusChild) {
+      console.log("Exiting consensus client...");
+      consensusChild.kill("SIGINT");
+      consensusChild.on("exit", (code) => {
+        consensusExited = true;
+        console.log("Consensus client exited");
+        checkExit();
+      });
+    } else {
       consensusExited = true;
-      checkExit();
-    });
-  } else {
-    consensusExited = true;
+    }
+
+    // Initial check in case both children are already not running
+    checkExit();
+  } catch (error) {
+    console.log("HUHUHUHU")
   }
 
-  // Initial check in case both children are already not running
-  checkExit();
+  
 }
 
+// function handleExit() {
+//   if (executionChild) {
+//     console.log("Exit execution client...")
+//     executionChild.kill("SIGINT");
+//   }
+
+//   if (consensusChild) {
+//     console.log("Exit consensus client...")
+//     // TODO: change back to SIGINT
+//     consensusChild.kill("SIGINT");
+//   }
+
+//   // Check if both child processes have exited
+//   const checkExit = () => {
+//     if (executionExited && consensusExited) {
+//       console.log("both clients exited")
+//       process.exit(0);
+//     }
+//   };
+
+
+//   // Listen for exit events
+//   if (executionChild) {
+//     executionChild.on("exit", (code) => {
+//       executionExited = true;
+//       console.log("Execution client exited")
+//       checkExit();
+//     });
+//   } else {
+//     executionExited = true;
+//   }
+
+//   if (consensusChild) {
+//     consensusChild.on("exit", (code) => {
+//       consensusExited = true;
+//       console.log("Consensus client exited")
+//       checkExit();
+//     });
+//   } else {
+//     consensusExited = true;
+//   }
+
+//   // Initial check in case both children are already not running
+//   checkExit();
+// }
+
 process.on("SIGINT", handleExit);
+/// SIGTERM for using kill command to shut down process
 process.on("SIGTERM", handleExit);
+
+process.on("SIGUSR2", () => {
+  console.log("SIGUSR2 received");
+  handleExit();
+});
 
 function startClient(clientName, installDir) {
   let clientCommand, clientArgs;
@@ -211,24 +310,30 @@ function startClient(clientName, installDir) {
     consensusChild = child;
   }
 
-  // child.stdout.on("data", (data) => {
-  //   logBox.log(data.toString());
-
-  //   if (clientName === "geth") {
-  //     parseExecutionLogs(data.toString());
-  //   } else if (clientName === "prysm") {
-  //     parseConsensusLogs(data.toString());
-  //   }
-  // });
-
   // child.on("exit", (code) => {
-  //   // logBox.log(`${clientName} process exited with code ${code}`);
+  //   console.log(`${clientName} process exited with code ${code}`);
   // });
 
-  // child.on("error", (err) => {
-  //   // logBox.log(`Error: ${err.message}`);
-  // });
+  child.on("exit", (code) => {
+    console.log(`${clientName} process exited with code ${code}`);
+    if (clientName === "geth") {
+      executionExited = true;
+    } else if (clientName === "prysm"){
+      consensusExited = true;
+    }
+  });
+
+  child.on("error", (err) => {
+    console.log(`Error from start client: ${err.message}`);
+  });
+  
   console.log(clientName, "started");
+
+  // Add error listeners to handle stream errors
+  child.stdout.on("error", (err) => {
+    console.error(`Error on stdout of ${clientName}: ${err.message}`);
+  });
+  
 }
 
 module.exports = { startClient };
@@ -298,7 +403,8 @@ const platform = os.platform();
 
 createJwtSecret(jwtDir);
 
-// initializeMonitoring();
 
 startClient(executionClient, installDir);
 startClient(consensusClient, installDir);
+
+initializeMonitoring();

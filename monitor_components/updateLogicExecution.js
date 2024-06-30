@@ -142,8 +142,8 @@ function setupLogStreaming(
         saveStateDlProgress(line);
         saveChainDlProgress(line);
 
-        console.log("line", line);
-        console.log("progress From stream", progress);
+        // console.log("line", line);
+        // console.log("progress From stream", progress);
 
         if (headerDlGauge) {
           headerDlGauge.setPercent(progress.headerDlProgress);
