@@ -1,4 +1,3 @@
-const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const blessed = require("blessed");
@@ -42,11 +41,24 @@ const CONFIG = {
   debugLogPath: path.join(os.homedir(), "bgnode", "debugMonitor.log"),
 };
 
+const originalConsoleLog = console.log;
+const originalConsoleError = console.error;
+
+function suppressLogs() {
+  console.log = () => {};
+  console.error = () => {};
+}
+
+function restoreLogs() {
+  console.log = originalConsoleLog;
+  console.error = originalConsoleError;
+}
+
 function initializeMonitoring() {
-  try {
-    // setupDebugLogging(CONFIG.debugLogPath);
-    
+  try {    
     const progress = loadProgress();
+
+    suppressLogs();
 
     const { screen, components } = setupUI(progress);
 
@@ -70,35 +82,6 @@ function initializeMonitoring() {
   } catch (error) {
     console.error("Error initializing monitoring:", error);
   }
-}
-
-function setupDebugLogging(debugLogPath) {
-  if (fs.existsSync(debugLogPath)) {
-    fs.unlinkSync(debugLogPath);
-  }
-
-  function logDebug(message) {
-    if (typeof message === "object") {
-      message = JSON.stringify(message, null, 2);
-    }
-    fs.appendFileSync(
-      debugLogPath,
-      `[${new Date().toISOString()}] ${message}\n`
-    );
-  }
-
-  console.log = function (message, ...optionalParams) {
-    if (optionalParams.length > 0) {
-      message +=
-        " " +
-        optionalParams
-          .map((param) =>
-            typeof param === "object" ? JSON.stringify(param, null, 2) : param
-          )
-          .join(" ");
-    }
-    logDebug(message);
-  };
 }
 
 function setupUI(progress) {
@@ -141,6 +124,7 @@ function setupUI(progress) {
   screen.key(["escape", "q", "C-c"], function (ch, key) {
     process.kill(process.pid, 'SIGUSR2');
     screen.destroy();
+    restoreLogs();
   });
 
   return {

@@ -9,7 +9,8 @@ const minimist = require("minimist");
 const pty = require("node-pty");
 const { createPublicClient, http } = require("viem");
 const { mainnet } = require("viem/chains");
-const { initializeMonitoring, setupDebugLogging } = require("./monitor");
+const {setupDebugLogging} = require("./helpers")
+const { initializeMonitoring } = require("./monitor");
 const {
   installMacLinuxConsensusClient,
   installMacLinuxExecutionClient,
@@ -28,7 +29,7 @@ const CONFIG = {
 };
 
 /// just for debugging
-// setupDebugLogging(CONFIG.debugLogPath);
+setupDebugLogging(CONFIG.debugLogPath);
 
 
 // // Function to check if the lock file exists
