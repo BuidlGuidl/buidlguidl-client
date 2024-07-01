@@ -139,8 +139,8 @@ function setupUI(progress) {
   screen.render();
 
   screen.key(["escape", "q", "C-c"], function (ch, key) {
-    
     process.kill(process.pid, 'SIGUSR2');
+    screen.destroy();
   });
 
   return {

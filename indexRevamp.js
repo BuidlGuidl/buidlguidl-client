@@ -27,8 +27,8 @@ const CONFIG = {
   debugLogPath: path.join(os.homedir(), "bgnode", "debugIndex.log"),
 };
 
-
-setupDebugLogging(CONFIG.debugLogPath);
+/// just for debugging
+// setupDebugLogging(CONFIG.debugLogPath);
 
 
 // // Function to check if the lock file exists
@@ -185,7 +185,7 @@ function handleExit() {
     };
 
     // Gracefully kill the execution client
-    if (executionChild) {
+    if (executionChild && !executionExited) {
       console.log("Exiting execution client...");
       executionChild.kill("SIGINT");
       executionChild.on("exit", (code) => {
@@ -198,7 +198,7 @@ function handleExit() {
     }
 
     // Gracefully kill the consensus client
-    if (consensusChild) {
+    if (consensusChild && !consensusExited) {
       console.log("Exiting consensus client...");
       consensusChild.kill("SIGINT");
       consensusChild.on("exit", (code) => {
