@@ -68,7 +68,7 @@ async function updateCpuLinePlot() {
 
 function createCpuLine(grid, blessedScreen) {
   screen = blessedScreen;
-  cpuLine = grid.set(4, 0, 2, 8, contrib.line, {
+  cpuLine = grid.set(5, 0, 2, 8, contrib.line, {
     style: { line: "blue", text: "green", baseline: "green" },
     xLabelPadding: 3,
     xPadding: 5,

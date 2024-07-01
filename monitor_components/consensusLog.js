@@ -38,7 +38,7 @@ function highlightWords(line) {
 }
 
 function createConsensusLog(grid) {
-  const consensusLog = grid.set(2, 0, 2, 10, contrib.log, {
+  const consensusLog = grid.set(3, 0, 2, 10, contrib.log, {
     label: `Consensus Client Logs`,
     border: {
       type: "line",

@@ -87,7 +87,7 @@ function initializeMonitoring() {
 function setupUI(progress) {
   const screen = blessed.screen();
   suppressMouseOutput(screen);
-  const grid = new contrib.grid({ rows: 8, cols: 10, screen: screen });
+  const grid = new contrib.grid({ rows: 9, cols: 10, screen: screen });
 
   const executionLog = createExecutionLog(grid);
   const consensusLog = createConsensusLog(grid);
@@ -140,7 +140,7 @@ function setupUI(progress) {
   };
 }
 
-module.exports = { initializeMonitoring, setupDebugLogging };
+module.exports = { initializeMonitoring, };
 
 function suppressMouseOutput(screen) {
   screen.on("element mouse", (el, data) => {

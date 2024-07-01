@@ -4,7 +4,7 @@ const contrib = require("blessed-contrib");
 const { highlightWords } = require("./consensusLog");
 
 function createExecutionLog(grid) {
-  const executionLog = grid.set(0, 0, 2, 10, contrib.log, {
+  const executionLog = grid.set(1, 0, 2, 10, contrib.log, {
     label: `Execution Client Logs`,
     border: {
       type: "line",
