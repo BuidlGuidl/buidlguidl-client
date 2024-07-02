@@ -13,7 +13,7 @@ function createConsensusLog(grid) {
     },
     tags: true,
     scrollable: true,
-    shrink: false,
+    shrink: true,
     alwaysScroll: true,
     scrollOnInput: true,
     wrap: true,

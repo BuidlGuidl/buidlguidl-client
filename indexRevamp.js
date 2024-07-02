@@ -22,7 +22,7 @@ const {
 let executionClient = "geth";
 let consensusClient = "prysm";
 let installDir = os.homedir();
-const lockFilePath = path.join(os.homedir(), "bgnode", "script.lock");
+// const lockFilePath = path.join(os.homedir(), "bgnode", "script.lock");
 
 const CONFIG = {
   debugLogPath: path.join(os.homedir(), "bgnode", "debugIndex.log"),
@@ -30,38 +30,6 @@ const CONFIG = {
 
 // /// just for debugging
 // setupDebugLogging(CONFIG.debugLogPath);
-
-
-// /// Function to check if the lock file exists
-// function checkIfAlreadyRunning() {
-//   if (fs.existsSync(lockFilePath)) {
-//     console.log("Script is already running.");
-//     process.exit(1);
-//   }
-// }
-
-
-// // Function to create the lock file
-// function createLockFile() {
-//   fs.writeFileSync(lockFilePath, process.pid.toString(), { flag: "w" });
-// }
-
-
-// // Function to remove the lock file
-// function removeLockFile() {
-//   if (fs.existsSync(lockFilePath)) {
-//     fs.unlinkSync(lockFilePath);
-//   }
-// }
-
-
-// // process.on("exit", removeLockFile);
-// // Check if the script is already running
-// checkIfAlreadyRunning();
-
-// // Create a lock file
-// createLockFile();
-
 
 // // Set client versions. Note: Prsym version works differently and is parsed from logs
 // const gethVer = "1.14.3";
@@ -139,19 +107,6 @@ const CONFIG = {
 //       if (callback) callback();
 //     }
 //   });
-// }
-
-// function getFormattedDateTime() {
-//   const now = new Date();
-
-//   const year = now.getFullYear();
-//   const month = (now.getMonth() + 1).toString().padStart(2, "0");
-//   const day = now.getDate().toString().padStart(2, "0");
-//   const hour = now.getHours().toString().padStart(2, "0");
-//   const minute = now.getMinutes().toString().padStart(2, "0");
-//   const second = now.getSeconds().toString().padStart(2, "0");
-
-//   return `${year}_${month}_${day}_${hour}_${minute}_${second}`;
 // }
 
 function createJwtSecret(jwtDir) {

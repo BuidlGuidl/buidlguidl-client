@@ -73,6 +73,8 @@ function initializeMonitoring() {
     console.log(`Monitoring ${CONFIG.executionClient} logs from: ${logFilePath}`);
     console.log(`Monitoring ${CONFIG.consensusClient} logs from: ${logFilePathConsensus}`);
 
+    updateConsensusClientInfo(logFilePathConsensus, components.consensusLog, screen);
+
     setupLogStreaming(
       logFilePath,
       components.executionLog,
@@ -83,7 +85,7 @@ function initializeMonitoring() {
       components.peerCountGauge
     );
 
-    updateConsensusClientInfo(logFilePathConsensus, components.consensusLog, screen);
+    
   } catch (error) {
     console.error("Error initializing monitoring:", error);
   }
@@ -152,7 +154,7 @@ module.exports = { initializeMonitoring };
 function suppressMouseOutput(screen) {
   screen.on("element mouse", (el, data) => {
     if (data.button === "mouseup" || data.button === "mousedown") {
-      return false; // Suppress mouse up/down events
+      return false;
     }
   });
 
@@ -164,10 +166,10 @@ function suppressMouseOutput(screen) {
       key.name === "right"
     ) {
       if (!key.ctrl && !key.meta && !key.shift) {
-        return false; // Suppress arrow key events unless combined with Ctrl, Meta, or Shift
+        return false; 
       }
     }
   });
 }
 
-initializeMonitoring();
+// initializeMonitoring();
