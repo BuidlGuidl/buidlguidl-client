@@ -906,10 +906,10 @@ async function updateStatusBox(client) {
         )}\nHighest Block: ${highestBlock.toFixed(0)}`
       );
     } else {
-      const currentBlock = await localClient.getBlockNumber();
+      const blockNumber = await localClient.getBlockNumber();
 
       statusBox.setContent(
-        `FOLLOWING CHAIN HEAD\nCurrent Block: ${currentBlock.toFixed(0)}`
+        `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber}`
       );
     }
 
