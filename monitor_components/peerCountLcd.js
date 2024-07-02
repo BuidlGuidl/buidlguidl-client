@@ -11,8 +11,8 @@ function createPeerCountLcd(grid) {
     elementPadding: 2, // how far away from the edges to put the elements
     color: "green", // color for the segments
     label: "Peer Count",
-    top: "50%",
-    height: "12%",
+    top: "55%",
+    height: "10%",
     left: "80%",
     width: "10%",
     border: {
