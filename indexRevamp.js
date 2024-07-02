@@ -28,11 +28,11 @@ const CONFIG = {
   debugLogPath: path.join(os.homedir(), "bgnode", "debugIndex.log"),
 };
 
-/// just for debugging
-setupDebugLogging(CONFIG.debugLogPath);
+// /// just for debugging
+// setupDebugLogging(CONFIG.debugLogPath);
 
 
-// // Function to check if the lock file exists
+// /// Function to check if the lock file exists
 // function checkIfAlreadyRunning() {
 //   if (fs.existsSync(lockFilePath)) {
 //     console.log("Script is already running.");

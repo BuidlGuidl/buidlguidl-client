@@ -3,6 +3,7 @@ const os = require("os");
 const blessed = require("blessed");
 const contrib = require("blessed-contrib");
 const si = require("systeminformation");
+const {setupDebugLogging} = require("./helpers")
 
 const {
   loadProgress,
@@ -26,7 +27,7 @@ const {
 
 const {
   createConsensusLog,
-  setupLogStreamingConsensus,
+  updateConsensusClientInfo,
 } = require("./monitor_components/consensusLog");
 const { createHeader } = require("./monitor_components/header");
 
@@ -42,24 +43,27 @@ const CONFIG = {
   debugLogPath: path.join(os.homedir(), "bgnode", "debugMonitor.log"),
 };
 
-const originalConsoleLog = console.log;
-const originalConsoleError = console.error;
+// /// to prevent showing console.logs in the terminal when blessed screen is running
+// const originalConsoleLog = console.log;
+// const originalConsoleError = console.error;
 
-function suppressLogs() {
-  console.log = () => {};
-  console.error = () => {};
-}
+// function suppressLogs() {
+//   console.log = () => {};
+//   console.error = () => {};
+// }
 
-function restoreLogs() {
-  console.log = originalConsoleLog;
-  console.error = originalConsoleError;
-}
+// function restoreLogs() {
+//   console.log = originalConsoleLog;
+//   console.error = originalConsoleError;
+// }
 
 function initializeMonitoring() {
   try {    
     const progress = loadProgress();
 
-    suppressLogs();
+    setupDebugLogging(CONFIG.debugLogPath);
+
+    // suppressLogs();
 
     const { screen, components } = setupUI(progress);
 
@@ -79,7 +83,7 @@ function initializeMonitoring() {
       components.peerCountGauge
     );
 
-    setupLogStreamingConsensus(logFilePathConsensus, components.consensusLog, screen);
+    updateConsensusClientInfo(logFilePathConsensus, components.consensusLog, screen);
   } catch (error) {
     console.error("Error initializing monitoring:", error);
   }
@@ -126,8 +130,8 @@ function setupUI(progress) {
 
   screen.key(["escape", "q", "C-c"], function (ch, key) {
     process.kill(process.pid, 'SIGUSR2');
-    screen.destroy();
-    restoreLogs();
+    // screen.destroy();
+    // restoreLogs();
   });
 
   return {
@@ -143,7 +147,7 @@ function setupUI(progress) {
   };
 }
 
-module.exports = { initializeMonitoring, };
+module.exports = { initializeMonitoring };
 
 function suppressMouseOutput(screen) {
   screen.on("element mouse", (el, data) => {

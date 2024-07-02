@@ -7,7 +7,7 @@ function createHeader(grid, screen) {
   var picOptions = { file: '/home/blubbo/buidlguidl-client/monitor_components/pixelBgLogo.png', cols: 12, onReady: ready };
 
   function ready() {
-    screen.render();
+    // screen.render();
   }
 
   // Function to get the local IP address
@@ -63,7 +63,7 @@ function createHeader(grid, screen) {
     }
   });
 
-  screen.render();
+  // screen.render();
 
   // Fetch and display the public IP address
   getPublicIPAddress().then(publicIP => {

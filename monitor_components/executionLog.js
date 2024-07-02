@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const contrib = require("blessed-contrib");
-const { highlightWords } = require("./consensusLog");
+const { highlightWords } = require("./helperFunctions");
 
 function createExecutionLog(grid) {
   const executionLog = grid.set(1, 0, 2, 9, contrib.log, {

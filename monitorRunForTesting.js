@@ -27,7 +27,7 @@ const {
 
 const {
   createConsensusLog,
-  setupLogStreamingConsensus,
+  updateConsensusClientInfo,
 } = require("./monitor_components/consensusLog");
 
 function initializeMonitoring() {
@@ -144,7 +144,7 @@ function initializeMonitoring() {
     chainDlGauge,
     peerCountGauge
   );
-  setupLogStreamingConsensus(logFilePathConsensus, consensusLog, screen);
+  updateConsensusClientInfo(logFilePathConsensus, consensusLog, screen);
 }
 
 module.exports = { initializeMonitoring };
