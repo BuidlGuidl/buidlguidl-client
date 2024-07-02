@@ -18,11 +18,11 @@ const {
   installWindowsExecutionClient,
 } = require("./install");
 
-// Set default command line option values
+/// Set default command line option values
 let executionClient = "geth";
 let consensusClient = "prysm";
 let installDir = os.homedir();
-// const lockFilePath = path.join(os.homedir(), "bgnode", "script.lock");
+const lockFilePath = path.join(os.homedir(), "bgnode", "script.lock");
 
 const CONFIG = {
   debugLogPath: path.join(os.homedir(), "bgnode", "debugIndex.log"),
@@ -31,10 +31,12 @@ const CONFIG = {
 // /// just for debugging
 // setupDebugLogging(CONFIG.debugLogPath);
 
-// // Set client versions. Note: Prsym version works differently and is parsed from logs
-// const gethVer = "1.14.3";
-// const rethVer = "1.0.0";
-// const lighthouseVer = "5.1.3";
+
+
+// Set client versions. Note: Prsym version works differently and is parsed from logs
+const gethVer = "1.14.3";
+const rethVer = "1.0.0";
+const prysmVer = "5.1.3";
 
 // function showHelp() {
 //   console.log("Usage: node script.js [options]");
@@ -292,75 +294,74 @@ function startClient(clientName, installDir) {
   
 }
 
+function isAlreadyRunning() {
+  try {
+    if (fs.existsSync(lockFilePath)) {
+      const pid = fs.readFileSync(lockFilePath, 'utf8');
+      try {
+        process.kill(pid, 0);
+        return true;
+      } catch (e) {
+        if (e.code === 'ESRCH') {
+          fs.unlinkSync(lockFilePath);
+          return false;
+        }
+        throw e;
+      }
+    }
+    return false;
+  } catch (err) {
+    console.error("Error checking for existing process:", err);
+    return false;
+  }
+}
+
+function createLockFile() {
+  fs.writeFileSync(lockFilePath, process.pid.toString(), 'utf8');
+}
+
+function removeLockFile() {
+  if (fs.existsSync(lockFilePath)) {
+    fs.unlinkSync(lockFilePath);
+  }
+}
+
 module.exports = { startClient };
-
-// let lastStats = {
-//   totalSent: 0,
-//   totalReceived: 0,
-//   timestamp: Date.now(),
-// };
-
-// function getNetworkStats() {
-//   return new Promise((resolve, reject) => {
-//     si.networkStats()
-//       .then((interfaces) => {
-//         let currentTotalSent = 0;
-//         let currentTotalReceived = 0;
-
-//         interfaces.forEach((iface) => {
-//           currentTotalSent += iface.tx_bytes;
-//           currentTotalReceived += iface.rx_bytes;
-//         });
-
-//         // Calculate time difference in seconds
-//         const currentTime = Date.now();
-//         const timeDiff = (currentTime - lastStats.timestamp) / 1000;
-
-//         // Calculate bytes per second
-//         const sentPerSecond =
-//           (currentTotalSent - lastStats.totalSent) / timeDiff;
-//         const receivedPerSecond =
-//           (currentTotalReceived - lastStats.totalReceived) / timeDiff;
-
-//         // Update last stats for next calculation
-//         lastStats = {
-//           totalSent: currentTotalSent,
-//           totalReceived: currentTotalReceived,
-//           timestamp: currentTime,
-//         };
-
-//         resolve({
-//           sentPerSecond: sentPerSecond / 1000000,
-//           receivedPerSecond: receivedPerSecond / 1000000,
-//         });
-//       })
-//       .catch((error) => {
-//         debugToFile(
-//           `getNetworkStats() Error fetching network stats: ${error}`,
-//           () => {}
-//         );
-//         reject(error);
-//       });
-//   });
-// }
-
-// getNetworkStats();
 
 const jwtDir = path.join(installDir, "bgnode", "jwt");
 const platform = os.platform();
 
-// if (["darwin", "linux"].includes(platform)) {
-//   installMacLinuxExecutionClient(executionClient, platform, gethVer, rethVer);
-//   installMacLinuxConsensusClient(consensusClient, platform, lighthouseVer);
-// } else if (platform === "win32") {
-//   installWindowsExecutionClient(executionClient);
-//   installWindowsConsensusClient(consensusClient);
-// }
+if (["darwin", "linux"].includes(platform)) {
+  installMacLinuxExecutionClient(executionClient, platform, gethVer, rethVer);
+  installMacLinuxConsensusClient(consensusClient, platform, prysmVer);
+} else if (platform === "win32") {
+  installWindowsExecutionClient(executionClient);
+  installWindowsConsensusClient(consensusClient);
+}
+
+let messageForHeader = "";
 
 createJwtSecret(jwtDir);
 
+if (!isAlreadyRunning()) {
+  startClient(executionClient, installDir);
+  startClient(consensusClient, installDir);
+  messageForHeader = "Node execution"
+} else {
+  console.log("Node already started. Initializing monitoring only.");
+  messageForHeader = "Only dashboard, client already running"
+}
 
-startClient(executionClient, installDir);
-startClient(consensusClient, installDir);
+initializeMonitoring(messageForHeader, gethVer, rethVer, prysmVer);
 
-initializeMonitoring();
+createLockFile();
+
+process.on("exit", removeLockFile);
+process.on("SIGINT", () => {
+  removeLockFile();
+  process.exit(0);
+});
+process.on("SIGTERM", () => {
+  removeLockFile();
+  process.exit(0);
+});

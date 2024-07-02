@@ -139,7 +139,7 @@ function setupLogStreaming(
 
 module.exports = { setupLogStreaming };
 
-
+// /// if want to have old logs showing when you start to process again
 // const stream = fs.createReadStream(logFilePath, {
   //   encoding: "utf8",
   //   flags: "r",

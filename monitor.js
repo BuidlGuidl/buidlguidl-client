@@ -57,7 +57,7 @@ const CONFIG = {
 //   console.error = originalConsoleError;
 // }
 
-function initializeMonitoring() {
+function initializeMonitoring(messageForHeader, gethVer, rethVer, prysmVer) {
   try {    
     const progress = loadProgress();
 
@@ -65,7 +65,7 @@ function initializeMonitoring() {
 
     // suppressLogs();
 
-    const { screen, components } = setupUI(progress);
+    const { screen, components } = setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer);
 
     const logFilePath = path.join(CONFIG.logDirs.geth, getLatestLogFile(CONFIG.logDirs.geth, CONFIG.executionClient));
     const logFilePathConsensus = path.join(CONFIG.logDirs.prysm, getLatestLogFile(CONFIG.logDirs.prysm, CONFIG.consensusClient));
@@ -91,13 +91,13 @@ function initializeMonitoring() {
   }
 }
 
-function setupUI(progress) {
+function setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer) {
   const screen = blessed.screen();
   suppressMouseOutput(screen);
   const grid = new contrib.grid({ rows: 9, cols: 9, screen: screen });
 
-  const executionLog = createExecutionLog(grid);
-  const consensusLog = createConsensusLog(grid);
+  const executionLog = createExecutionLog(grid, gethVer, rethVer);
+  const consensusLog = createConsensusLog(grid, prysmVer);
   const peerCountGauge = createPeerCountLcd(grid, screen);
   const storageGauge = createDiskGauge(grid, screen);
   const memGauge = createMemGauge(grid, screen);
@@ -106,7 +106,7 @@ function setupUI(progress) {
   const headerDlGauge = createHeaderDlGauge(grid);
   const stateDlGauge = createStateDlGauge(grid);
   const chainDlGauge = createChainDlGauge(grid);
-  const header = createHeader(grid, screen);
+  const header = createHeader(grid, screen, messageForHeader);
 
   screen.append(executionLog);
   screen.append(consensusLog);

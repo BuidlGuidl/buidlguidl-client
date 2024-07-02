@@ -45,3 +45,56 @@ function setupDebugLogging(debugLogPath) {
 
 
   module.exports = { setupDebugLogging };
+
+
+  // let lastStats = {
+//   totalSent: 0,
+//   totalReceived: 0,
+//   timestamp: Date.now(),
+// };
+
+// function getNetworkStats() {
+//   return new Promise((resolve, reject) => {
+//     si.networkStats()
+//       .then((interfaces) => {
+//         let currentTotalSent = 0;
+//         let currentTotalReceived = 0;
+
+//         interfaces.forEach((iface) => {
+//           currentTotalSent += iface.tx_bytes;
+//           currentTotalReceived += iface.rx_bytes;
+//         });
+
+//         // Calculate time difference in seconds
+//         const currentTime = Date.now();
+//         const timeDiff = (currentTime - lastStats.timestamp) / 1000;
+
+//         // Calculate bytes per second
+//         const sentPerSecond =
+//           (currentTotalSent - lastStats.totalSent) / timeDiff;
+//         const receivedPerSecond =
+//           (currentTotalReceived - lastStats.totalReceived) / timeDiff;
+
+//         // Update last stats for next calculation
+//         lastStats = {
+//           totalSent: currentTotalSent,
+//           totalReceived: currentTotalReceived,
+//           timestamp: currentTime,
+//         };
+
+//         resolve({
+//           sentPerSecond: sentPerSecond / 1000000,
+//           receivedPerSecond: receivedPerSecond / 1000000,
+//         });
+//       })
+//       .catch((error) => {
+//         debugToFile(
+//           `getNetworkStats() Error fetching network stats: ${error}`,
+//           () => {}
+//         );
+//         reject(error);
+//       });
+//   });
+// }
+
+// getNetworkStats();

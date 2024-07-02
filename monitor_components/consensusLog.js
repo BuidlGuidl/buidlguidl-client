@@ -4,9 +4,9 @@ const contrib = require("blessed-contrib");
 const blessed = require("blessed");
 const { highlightWords } = require("./helperFunctions");
 
-function createConsensusLog(grid) {
+function createConsensusLog(grid, prysmVer) {
   const consensusLog = grid.set(3, 0, 2, 9, contrib.log, {
-    label: `Consensus Client Logs`,
+    label: `Prysm v${prysmVer}`,
     border: {
       type: "line",
       fg: "cyan",

@@ -3,7 +3,7 @@ const contrib = require('blessed-contrib');
 const os = require('os');
 const axios = require('axios');
 
-function createHeader(grid, screen) {
+function createHeader(grid, screen, messageForHeader) {
   var picOptions = { file: '/home/blubbo/buidlguidl-client/monitor_components/pixelBgLogo.png', cols: 12, onReady: ready };
 
   function ready() {
@@ -37,7 +37,7 @@ function createHeader(grid, screen) {
   const pic = grid.set(0, 0, 1, 1, contrib.picture, picOptions);
 
   const bigText = grid.set(0, 1, 1, 4, blessed.box, {
-    content: '{center}{bold}B u i d l G u i d l  N o d e{/bold}{/center}',
+    content: `{center}{bold}B u i d l G u i d l  N o d e {/bold}{/center}\n{center}{red-fg}${messageForHeader}{/red-fg}{/center}`,
     tags: true,
     align: 'center',
     valign: 'middle',

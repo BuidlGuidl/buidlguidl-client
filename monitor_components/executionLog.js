@@ -2,9 +2,9 @@ const fs = require("fs");
 const path = require("path");
 const contrib = require("blessed-contrib");
 
-function createExecutionLog(grid) {
+function createExecutionLog(grid, gethVer, rethVer) {
   const executionLog = grid.set(1, 0, 2, 9, contrib.log, {
-    label: `Execution Client Logs`,
+    label: `Geth v${gethVer}`,
     border: {
       type: "line",
       fg: "cyan",
