@@ -469,9 +469,9 @@ function parseExecutionLogs(line) {
   line = stripAnsiCodes(line);
 
   if (line.includes("Looking for peers")) {
-    const peerCountMatch = line.match(/peercount=(\d+)/);
-    const peerCount = parseInt(peerCountMatch[1], 10);
-    updatePeerCountLcd(peerCount);
+    // const peerCountMatch = line.match(/peercount=(\d+)/);
+    // const peerCount = parseInt(peerCountMatch[1], 10);
+    // updatePeerCountLcd(peerCount);
   } else if (line.includes("Syncing beacon headers")) {
     const headerDlMatch = line.match(
       /downloaded=([\d,]+)\s+left=([\d,]+)\s+eta=([^\s]+)/
@@ -630,7 +630,8 @@ let dataCpuUsage;
 let headerDlGauge;
 let stateDlGauge;
 let chainDlGauge;
-let peerCountLcd;
+// let peerCountLcd;
+let statusBox;
 let memGauge;
 let storageGauge;
 
@@ -779,16 +780,16 @@ async function updateNetworkLinePlot() {
   }
 }
 
-async function updatePeerCountLcd(peerCount) {
-  try {
-    if (peerCountLcd) {
-      peerCountLcd.setDisplay(peerCount.toString());
-      screen.render();
-    }
-  } catch (error) {
-    debugToFile(`updatePeerCountLcd(): ${error}`, () => {});
-  }
-}
+// async function updatePeerCountLcd(peerCount) {
+//   try {
+//     if (peerCountLcd) {
+//       peerCountLcd.setDisplay(peerCount.toString());
+//       screen.render();
+//     }
+//   } catch (error) {
+//     debugToFile(`updatePeerCountLcd(): ${error}`, () => {});
+//   }
+// }
 
 const progressFilePath = path.join(installDir, "bgnode", "progress.json");
 
@@ -877,6 +878,50 @@ async function updateStateDlGauge(stateDlProgress) {
 //     );
 //   }
 // }
+
+async function isSyncing(client) {
+  try {
+    const syncingStatus = await client.request({
+      method: "eth_syncing",
+      params: [],
+    });
+
+    return syncingStatus;
+  } catch (error) {
+    throw new Error(`Failed to fetch syncing status: ${error.message}`);
+  }
+}
+
+async function updateStatusBox(client) {
+  try {
+    const syncingStatus = await isSyncing(client);
+
+    if (syncingStatus) {
+      const currentBlock = parseInt(syncingStatus.currentBlock, 16);
+      const highestBlock = parseInt(syncingStatus.highestBlock, 16);
+
+      statusBox.setContent(
+        `INITIAL SYNC IN PROGRESS\nCurrent Block: ${currentBlock.toFixed(
+          0
+        )}\nHighest Block: ${highestBlock.toFixed(0)}`
+      );
+    } else {
+      const currentBlock = await localClient.getBlockNumber();
+
+      statusBox.setContent(
+        `FOLLOWING CHAIN HEAD\nCurrent Block: ${currentBlock.toFixed(0)}`
+      );
+    }
+
+    screen.render();
+  } catch (error) {
+    console.error();
+    debugToFile(
+      `updateStatusBox() Failed to update sync progress gauge: ${error}`,
+      () => {}
+    );
+  }
+}
 
 function getDiskUsage(installDir) {
   return new Promise((resolve, reject) => {
@@ -1021,13 +1066,28 @@ function handleBlessedContrib(
 
   const executionLog = grid.set(0, 0, 2, 10, contrib.log, {
     label: `${executionClientLabel}`,
+    // top: "0%",
+    // height: "25%",
+    // width: "100%",
     border: {
       type: "line",
       fg: "cyan",
     },
-    // scrollable: true,
-    // scrollbar: { ch: " ", inverse: true },
+    wrap: true,
   });
+
+  // const executionLog = blessed.log({
+  //   parent: screen,
+  //   label: `${executionClientLabel}`,
+  //   top: "0%",
+  //   height: "25%",
+  //   width: "100%",
+  //   border: {
+  //     type: "line",
+  //     fg: "cyan",
+  //   },
+  //   wrap: true,
+  // });
 
   let consensusClientLabel;
   if (consensusClient === "prysm") {
@@ -1042,9 +1102,21 @@ function handleBlessedContrib(
       type: "line",
       fg: "cyan",
     },
-    // scrollable: true,
-    // scrollbar: { ch: " ", inverse: true },
+    wrap: true,
   });
+
+  // const consensusLog = blessed.log({
+  //   parent: screen,
+  //   label: `${consensusClientLabel}`,
+  //   top: "25%",
+  //   height: "25%",
+  //   width: "100%",
+  //   border: {
+  //     type: "line",
+  //     fg: "cyan",
+  //   },
+  //   wrap: true,
+  // });
 
   cpuLine = grid.set(4, 0, 2, 8, contrib.line, {
     style: { line: "blue", text: "green", baseline: "green" },
@@ -1071,45 +1143,6 @@ function handleBlessedContrib(
       fg: "cyan",
     },
   });
-
-  if (progress.chainDlProgress !== 1) {
-    peerCountLcd = contrib.lcd({
-      segmentWidth: 0.06, // how wide are the segments in % so 50% = 0.5
-      segmentInterval: 0.11, // spacing between the segments in % so 50% = 0.550% = 0.5
-      strokeWidth: 0.11, // spacing between the segments in % so 50% = 0.5
-      elements: 3, // how many elements in the display. or how many characters can be displayed.
-      display: 0, // what should be displayed before first call to setDisplay
-      elementSpacing: 4, // spacing between each element
-      elementPadding: 2, // how far away from the edges to put the elements
-      color: "green", // color for the segments
-      label: "Peer Count",
-      top: "50%",
-      height: "12%",
-      left: "80%",
-      width: "10%",
-      border: {
-        type: "line",
-        fg: "cyan",
-      },
-    });
-  }
-
-  // peerCountLcd = grid.set(4, 8, 1, 1, blessed.bigtext, {
-  //   label: "Peer Count",
-  //   content: "Hello, World!",
-  //   border: {
-  //     type: "line",
-  //     fg: "cyan",
-  //   },
-  //   style: {
-  //     fg: "blue",
-  //   },
-  //   shrink: true,
-  //   width: "100%",
-  //   height: "100%",
-  //   align: "center",
-  //   valign: "middle",
-  // });
 
   if (progress.chainDlProgress !== 1) {
     headerDlGauge = grid.set(5, 8, 1, 1, contrib.gauge, {
@@ -1147,6 +1180,14 @@ function handleBlessedContrib(
     });
   }
 
+  statusBox = grid.set(4, 8, 1, 2, blessed.box, {
+    label: `Status`,
+    border: {
+      type: "line",
+      fg: "cyan",
+    },
+  });
+
   memGauge = grid.set(6, 9, 1, 1, contrib.gauge, {
     label: "Memory",
     stroke: "green",
@@ -1174,7 +1215,7 @@ function handleBlessedContrib(
   if (headerDlGauge) screen.append(headerDlGauge);
   if (stateDlGauge) screen.append(stateDlGauge);
   if (chainDlGauge) screen.append(chainDlGauge);
-  if (chainDlGauge) screen.append(peerCountLcd);
+  screen.append(statusBox);
   screen.append(memGauge);
   screen.append(storageGauge);
   // screen.append(logo);
@@ -1184,6 +1225,7 @@ function handleBlessedContrib(
   setInterval(updateMemoryGauge, 1000);
   updateDiskGauge(installDir);
   setInterval(updateDiskGauge, 10000);
+  setInterval(() => updateStatusBox(localClient), 1000);
 
   if (progress.chainDlProgress !== 1) {
     headerDlGauge.setPercent(progress.headerDlProgress);
@@ -1275,11 +1317,14 @@ async function checkIn() {
     consensusClientResponse = consensusClientResponse + " v" + lighthouseVer;
   }
 
-  let possibleBlockNumber
-  let possibleBlockHash
+  let possibleBlockNumber;
+  let possibleBlockHash;
   try {
     possibleBlockNumber = await localClient.getBlockNumber();
-    const block = await localClient.getBlock({ chain: mainnet, block: possibleBlockNumber });
+    const block = await localClient.getBlock({
+      chain: mainnet,
+      block: possibleBlockNumber,
+    });
     possibleBlockHash = block.hash;
   } catch (error) {
     debugToFile(`Failed to get block number: ${error}`, () => {});
