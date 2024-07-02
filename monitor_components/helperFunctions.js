@@ -50,11 +50,46 @@ function loadProgress() {
     headerDlProgress: 0,
     chainDlProgress: 0,
     stateDlProgress: 0,
+    peerCount: 0,
   };
+}
+
+function highlightWords(line) {
+  // Define words which should be highlighted in exec and consensus logs
+  const highlightRules = [
+    { word: "INFO", style: "{bold}{green-fg}" },
+    { word: "number", style: "{bold}{green-fg}" },
+    { word: "root", style: "{bold}{green-fg}" },
+    { word: "elapsed", style: "{bold}{green-fg}" },
+    { word: "hash", style: "{bold}{green-fg}" },
+    { word: "epoch", style: "{bold}{green-fg}" },
+    { word: "slot", style: "{bold}{green-fg}" },
+    { word: "finalizedEpoch", style: "{bold}{green-fg}" },
+    { word: "finalizedRoot", style: "{bold}{green-fg}" },
+    { word: "attestations", style: "{bold}{green-fg}" },
+    { word: "payloadHash", style: "{bold}{green-fg}" },
+    { word: "kzgCommitmentCount", style: "{bold}{green-fg}" },
+    { word: "inboundTCP", style: "{bold}{green-fg}" },
+    { word: "outboundTCP", style: "{bold}{green-fg}" },
+    { word: "total", style: "{bold}{green-fg}" },
+    { word: "updated", style: "{bold}{yellow-fg}" },
+    { word: "WARN", style: "{bold}{yellow-fg}" },
+    { word: "ERROR", style: "{bold}{red-fg}" },
+    { word: "blockchain:", style: "{bold}{blue-fg}" },
+    { word: "p2p:", style: "{bold}{blue-fg}" },
+  ];
+
+  // Apply styles to the words
+  highlightRules.forEach((rule) => {
+    const regex = new RegExp(`(${rule.word})`, "g");
+    line = line.replace(regex, `${rule.style}$1{/}`);
+  });
+
+  return line;
 }
 
 module.exports = {
   loadProgress,
   saveProgress,
-  getLatestLogFile,
+  getLatestLogFile, highlightWords
 };

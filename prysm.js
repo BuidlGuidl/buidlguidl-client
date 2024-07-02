@@ -79,7 +79,7 @@ consensus.on("error", (err) => {
   if (process.send) {
     process.send({ log: errorMessage }); // Send error message to parent process
   }
-  console.error(errorMessage); // Log error message to console
+  console.error("From Prysm client:",errorMessage); // Log error message to console
 });
 
 function getFormattedDateTime() {

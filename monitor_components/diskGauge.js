@@ -39,7 +39,7 @@ async function updateDiskGauge(screen) {
 }
 
 function createDiskGauge(grid, screen) {
-  storageGauge = grid.set(7, 9, 1, 1, contrib.gauge, {
+  storageGauge = grid.set(8, 8, 1, 1, contrib.gauge, {
     label: "Storage",
     stroke: "blue",
     fill: "white",

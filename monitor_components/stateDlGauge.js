@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 
 function createStateDlGauge(grid) {
-  let stateDlGauge = grid.set(6, 8, 1, 1, contrib.gauge, {
+  let stateDlGauge = grid.set(7, 7, 1, 1, contrib.gauge, {
     label: "State DL Progress",
     stroke: "cyan",
     fill: "white",

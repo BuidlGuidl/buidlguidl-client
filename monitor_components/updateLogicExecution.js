@@ -1,10 +1,11 @@
 const fs = require("fs");
 const readline = require("readline");
 const { loadProgress, saveProgress } = require("./helperFunctions");
+const { highlightWords } = require("./helperFunctions");
 
 const progress = loadProgress();
 
-// Peer Count
+/// Peer Count
 function getPeerCount(line) {
   const peerCountMatch = line.match(/peercount=(\d+)/);
   return peerCountMatch ? parseInt(peerCountMatch[1], 10) : null;
@@ -26,7 +27,7 @@ function stripAnsiCodes(input) {
   );
 }
 
-// Header Download Progress
+/// Header Download Progress
 function saveHeaderDlProgress(line) {
   line = stripAnsiCodes(line);
 
@@ -52,7 +53,7 @@ function saveHeaderDlProgress(line) {
   }
 }
 
-// State Download Progress
+/// State Download Progress
 function saveStateDlProgress(line) {
   if (line.includes("Syncing: chain download in progress")) {
     const chainSyncMatch = line.match(/synced=([\d.]+)%/);
@@ -62,7 +63,7 @@ function saveStateDlProgress(line) {
   }
 }
 
-// Chain Download Progress
+/// Chain Download Progress
 function saveChainDlProgress(line) {
   if (line.includes("Syncing: state download in progress")) {
     const stateSyncMatch = line.match(/synced=([\d.]+)%/);
@@ -82,40 +83,7 @@ function setupLogStreaming(
   peerCountGauge
 ) {
   // const progress = loadProgress();
-  const stream = fs.createReadStream(logFilePath, {
-    encoding: "utf8",
-    flags: "r",
-  });
-
-  const rl = readline.createInterface({
-    input: stream,
-    output: process.stdout,
-    terminal: false,
-  });
-
-  rl.on("line", (line) => {
-    executionLog.log(line);
-    screen.render();
-
-    const peerCount = getPeerCount(line);
-    if (peerCount !== null) {
-      updatePeerCountLcd(peerCountGauge, peerCount, screen);
-    }
-
-    saveHeaderDlProgress(line);
-    saveStateDlProgress(line);
-    saveChainDlProgress(line);
-
-    screen.render();
-  });
-
-  rl.on("close", () => {
-    // console.log("Log file stream ended");
-  });
-
-  rl.on("error", (err) => {
-    console.error("Error reading log file:", err);
-  });
+  
 
   fs.watchFile(logFilePath, (curr, prev) => {
     if (curr.mtime > prev.mtime) {
@@ -131,7 +99,7 @@ function setupLogStreaming(
       });
 
       newRl.on("line", (line) => {
-        executionLog.log(line);
+        executionLog.log(highlightWords(line));
         screen.render();
 
         const peerCount = getPeerCount(line);
@@ -142,8 +110,8 @@ function setupLogStreaming(
         saveStateDlProgress(line);
         saveChainDlProgress(line);
 
-        console.log("line", line);
-        console.log("progress From stream", progress);
+        // console.log("line", line);
+        // console.log("progress From stream", progress);
 
         if (headerDlGauge) {
           headerDlGauge.setPercent(progress.headerDlProgress);
@@ -170,3 +138,39 @@ function setupLogStreaming(
 }
 
 module.exports = { setupLogStreaming };
+
+// /// if want to have old logs showing when you start to process again
+// const stream = fs.createReadStream(logFilePath, {
+  //   encoding: "utf8",
+  //   flags: "r",
+  // });
+
+  // const rl = readline.createInterface({
+  //   input: stream,
+  //   output: process.stdout,
+  //   terminal: false,
+  // });
+
+  // rl.on("line", (line) => {
+  //   executionLog.log(highlightWords(line));
+  //   screen.render();
+
+  //   const peerCount = getPeerCount(line);
+  //   if (peerCount !== null) {
+  //     updatePeerCountLcd(peerCountGauge, peerCount, screen);
+  //   }
+
+  //   saveHeaderDlProgress(line);
+  //   saveStateDlProgress(line);
+  //   saveChainDlProgress(line);
+
+  //   screen.render();
+  // });
+
+  // rl.on("close", () => {
+  //   // console.log("Log file stream ended");
+  // });
+
+  // rl.on("error", (err) => {
+  //   console.error("Error reading log file:", err);
+  // });
