@@ -495,6 +495,9 @@ function parseExecutionLogs(line) {
     const stateDlProgress = parseFloat(stateSyncMatch[1]) / 100;
 
     updateStateDlGauge(stateDlProgress);
+  } else if (line.includes("Chain head was updated")) {
+    updateStatusBox(localClient);
+    checkIn();
   }
 }
 
@@ -1225,7 +1228,7 @@ function handleBlessedContrib(
   setInterval(updateMemoryGauge, 1000);
   updateDiskGauge(installDir);
   setInterval(updateDiskGauge, 10000);
-  setInterval(() => updateStatusBox(localClient), 1000);
+  setInterval(() => updateStatusBox(localClient), 2000);
 
   if (progress.chainDlProgress !== 1) {
     headerDlGauge.setPercent(progress.headerDlProgress);
