@@ -138,6 +138,7 @@ function handleExit() {
     const checkExit = () => {
       if (executionExited && consensusExited) {
         console.log("Both clients exited!");
+        removeLockFile();
         process.exit(0);
       }
     };
@@ -268,10 +269,6 @@ function startClient(clientName, installDir) {
     consensusChild = child;
   }
 
-  // child.on("exit", (code) => {
-  //   console.log(`${clientName} process exited with code ${code}`);
-  // });
-
   child.on("exit", (code) => {
     console.log(`${clientName} process exited with code ${code}`);
     if (clientName === "geth") {
@@ -287,7 +284,6 @@ function startClient(clientName, installDir) {
   
   console.log(clientName, "started");
 
-  // Add error listeners to handle stream errors
   child.stdout.on("error", (err) => {
     console.error(`Error on stdout of ${clientName}: ${err.message}`);
   });
@@ -355,13 +351,3 @@ if (!isAlreadyRunning()) {
 initializeMonitoring(messageForHeader, gethVer, rethVer, prysmVer);
 
 createLockFile();
-
-process.on("exit", removeLockFile);
-process.on("SIGINT", () => {
-  removeLockFile();
-  process.exit(0);
-});
-process.on("SIGTERM", () => {
-  removeLockFile();
-  process.exit(0);
-});
