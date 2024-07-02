@@ -11,6 +11,7 @@
   "dependencies": {
     "blessed": "^0.1.81",
     "blessed-contrib": "^4.11.0",
+    "macaddress": "^0.5.3",
     "minimist": "^1.2.8",
     "node-pty": "^1.0.0",
     "systeminformation": "^5.22.8",

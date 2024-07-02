@@ -10,6 +10,7 @@ const pty = require("node-pty");
 const WebSocket = require("ws");
 const { createPublicClient, http } = require("viem");
 const { mainnet } = require("viem/chains");
+const macaddress = require("macaddress");
 
 // Set default command line option values
 let executionClient = "geth";
@@ -1337,9 +1338,10 @@ async function checkIn() {
     const cpuUsage = await getCpuUsage();
     const memoryUsage = await getMemoryUsage();
     const diskUsage = await getDiskUsage(installDir);
+    const macAddress = await getMacAddress();
 
     let stringToSend = JSON.stringify({
-      os: platform,
+      id: `${os.hostname()}-${macAddress}-${platform}-${os.arch()}`,
       nodeVersion: `${process.version}`,
       executionClient: executionClientResponse,
       consensusClient: consensusClientResponse,
@@ -1355,7 +1357,30 @@ async function checkIn() {
   }
 }
 
-setInterval(checkIn, 25000); // Ask every client about their machine every 25 secs
+function getMacAddress() {
+  return new Promise((resolve, reject) => {
+    macaddress.all((err, all) => {
+      if (err) {
+        reject(`Error getting MAC address: ${err}`);
+        return;
+      }
+
+      // Get the first non-internal MAC address
+      let macAddress = null;
+      for (const interfaceName in all) {
+        const mac = all[interfaceName].mac;
+        if (mac && mac !== "00:00:00:00:00:00") {
+          macAddress = mac;
+          break;
+        }
+      }
+
+      resolve(macAddress);
+    });
+  });
+}
+
+setInterval(checkIn, 60000); // Ask every client about their machine every 60 secs
 
 ws.on("close", function close() {
   console.log("Disconnected from server");
