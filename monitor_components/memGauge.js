@@ -30,7 +30,7 @@ async function updateMemoryGauge(screen) {
 }
 
 function createMemGauge(grid, screen) {
-  memGauge = grid.set(7, 9, 1, 1, contrib.gauge, {
+  memGauge = grid.set(7, 8, 1, 1, contrib.gauge, {
     label: "Memory",
     stroke: "green",
     fill: "white",

@@ -28,6 +28,7 @@ const {
   createConsensusLog,
   setupLogStreamingConsensus,
 } = require("./monitor_components/consensusLog");
+const { createHeader } = require("./monitor_components/header");
 
 
 const CONFIG = {
@@ -87,7 +88,7 @@ function initializeMonitoring() {
 function setupUI(progress) {
   const screen = blessed.screen();
   suppressMouseOutput(screen);
-  const grid = new contrib.grid({ rows: 9, cols: 10, screen: screen });
+  const grid = new contrib.grid({ rows: 9, cols: 9, screen: screen });
 
   const executionLog = createExecutionLog(grid);
   const consensusLog = createConsensusLog(grid);
@@ -99,6 +100,7 @@ function setupUI(progress) {
   const headerDlGauge = createHeaderDlGauge(grid);
   const stateDlGauge = createStateDlGauge(grid);
   const chainDlGauge = createChainDlGauge(grid);
+  const header = createHeader(grid, screen);
 
   screen.append(executionLog);
   screen.append(consensusLog);
@@ -110,6 +112,7 @@ function setupUI(progress) {
   screen.append(headerDlGauge);
   screen.append(stateDlGauge);
   screen.append(chainDlGauge);
+  // screen.append(header);
 
   peerCountGauge.setDisplay("0");
 
@@ -162,3 +165,5 @@ function suppressMouseOutput(screen) {
     }
   });
 }
+
+initializeMonitoring();

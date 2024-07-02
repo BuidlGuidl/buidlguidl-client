@@ -12,9 +12,9 @@ function createPeerCountLcd(grid) {
     color: "green", // color for the segments
     label: "Peer Count",
     top: "55%",
-    height: "10%",
-    left: "80%",
-    width: "10%",
+    height: "11%",
+    left: "77.5%",
+    width: "11.5%",
     border: {
       type: "line",
       fg: "cyan",

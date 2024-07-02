@@ -94,7 +94,7 @@ async function updateNetworkLinePlot() {
 
 function createNetworkLine(grid, blessedScreen) {
   screen = blessedScreen;
-  networkLine = grid.set(7, 0, 2, 8, contrib.line, {
+  networkLine = grid.set(7, 0, 2, 7, contrib.line, {
     style: { line: "yellow", text: "green", baseline: "green" },
     xLabelPadding: 3,
     xPadding: 5,
