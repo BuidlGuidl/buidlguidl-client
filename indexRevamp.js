@@ -34,7 +34,7 @@ const CONFIG = {
 // Set client versions. Note: Prsym version works differently and is parsed from logs
 const gethVer = "1.14.3";
 const rethVer = "1.0.0";
-const prysmVer = "5.0.3";
+const prysmVer = "5.1.3";
 
 // function showHelp() {
 //   console.log("Usage: node script.js [options]");
