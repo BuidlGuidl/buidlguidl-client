@@ -170,64 +170,16 @@ function handleExit() {
     // Initial check in case both children are already not running
     checkExit();
   } catch (error) {
-    console.log("HUHUHUHU")
+    console.log("Error form handle exit",error)
   }
-
-  
 }
-
-// function handleExit() {
-//   if (executionChild) {
-//     console.log("Exit execution client...")
-//     executionChild.kill("SIGINT");
-//   }
-
-//   if (consensusChild) {
-//     console.log("Exit consensus client...")
-//     // TODO: change back to SIGINT
-//     consensusChild.kill("SIGINT");
-//   }
-
-//   // Check if both child processes have exited
-//   const checkExit = () => {
-//     if (executionExited && consensusExited) {
-//       console.log("both clients exited")
-//       process.exit(0);
-//     }
-//   };
-
-
-//   // Listen for exit events
-//   if (executionChild) {
-//     executionChild.on("exit", (code) => {
-//       executionExited = true;
-//       console.log("Execution client exited")
-//       checkExit();
-//     });
-//   } else {
-//     executionExited = true;
-//   }
-
-//   if (consensusChild) {
-//     consensusChild.on("exit", (code) => {
-//       consensusExited = true;
-//       console.log("Consensus client exited")
-//       checkExit();
-//     });
-//   } else {
-//     consensusExited = true;
-//   }
-
-//   // Initial check in case both children are already not running
-//   checkExit();
-// }
 
 process.on("SIGINT", handleExit);
 /// SIGTERM for using kill command to shut down process
 process.on("SIGTERM", handleExit);
 
 process.on("SIGUSR2", () => {
-  console.log("SIGUSR2 received");
+  // console.log("SIGUSR2 received");
   handleExit();
 });
 
@@ -312,7 +264,9 @@ function isAlreadyRunning() {
 
 function createLockFile() {
   fs.writeFileSync(lockFilePath, process.pid.toString(), 'utf8');
+  // console.log(process.pid.toString())
 }
+
 
 function removeLockFile() {
   if (fs.existsSync(lockFilePath)) {
@@ -334,6 +288,7 @@ if (["darwin", "linux"].includes(platform)) {
 }
 
 let messageForHeader = "";
+let runsClient = false;
 
 createJwtSecret(jwtDir);
 
@@ -341,11 +296,13 @@ if (!isAlreadyRunning()) {
   startClient(executionClient, installDir);
   startClient(consensusClient, installDir);
   messageForHeader = "Node execution"
+  runsClient = true
+  createLockFile();
 } else {
   console.log("Node already started. Initializing monitoring only.");
-  messageForHeader = "Only dashboard, client already running"
+  messageForHeader = "Only dashboard, client already running";
+  runsClient = false;
 }
 
-initializeMonitoring(messageForHeader, gethVer, rethVer, prysmVer);
+initializeMonitoring(messageForHeader, gethVer, rethVer, prysmVer, runsClient);
 
-createLockFile();

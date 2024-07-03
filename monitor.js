@@ -43,29 +43,15 @@ const CONFIG = {
   debugLogPath: path.join(os.homedir(), "bgnode", "debugMonitor.log"),
 };
 
-// /// to prevent showing console.logs in the terminal when blessed screen is running
-// const originalConsoleLog = console.log;
-// const originalConsoleError = console.error;
 
-// function suppressLogs() {
-//   console.log = () => {};
-//   console.error = () => {};
-// }
 
-// function restoreLogs() {
-//   console.log = originalConsoleLog;
-//   console.error = originalConsoleError;
-// }
-
-function initializeMonitoring(messageForHeader, gethVer, rethVer, prysmVer) {
+function initializeMonitoring(messageForHeader, gethVer, rethVer, prysmVer, runsClient) {
   try {    
     const progress = loadProgress();
 
-    setupDebugLogging(CONFIG.debugLogPath);
+    // setupDebugLogging(CONFIG.debugLogPath);
 
-    // suppressLogs();
-
-    const { screen, components } = setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer);
+    const { screen, components } = setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer, runsClient);
 
     const logFilePath = path.join(CONFIG.logDirs.geth, getLatestLogFile(CONFIG.logDirs.geth, CONFIG.executionClient));
     const logFilePathConsensus = path.join(CONFIG.logDirs.prysm, getLatestLogFile(CONFIG.logDirs.prysm, CONFIG.consensusClient));
@@ -91,7 +77,7 @@ function initializeMonitoring(messageForHeader, gethVer, rethVer, prysmVer) {
   }
 }
 
-function setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer) {
+function setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer, runsClient) {
   const screen = blessed.screen();
   suppressMouseOutput(screen);
   const grid = new contrib.grid({ rows: 9, cols: 9, screen: screen });
@@ -118,7 +104,6 @@ function setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer) {
   screen.append(headerDlGauge);
   screen.append(stateDlGauge);
   screen.append(chainDlGauge);
-  // screen.append(header);
 
   peerCountGauge.setDisplay("0");
 
@@ -131,9 +116,14 @@ function setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer) {
   screen.render();
 
   screen.key(["escape", "q", "C-c"], function (ch, key) {
-    process.kill(process.pid, 'SIGUSR2');
-    // screen.destroy();
-    // restoreLogs();
+    if (runsClient) {
+      process.kill(process.pid, 'SIGUSR2');
+      console.log("Clients exited from monitor");
+    } else {
+      console.log("not working", runsClient)
+      process.exit(0);
+    }
+    screen.destroy();
   });
 
   return {
