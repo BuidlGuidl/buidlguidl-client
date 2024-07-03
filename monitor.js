@@ -57,7 +57,7 @@ const CONFIG = {
 //   console.error = originalConsoleError;
 // }
 
-function initializeMonitoring(messageForHeader, gethVer, rethVer, prysmVer) {
+function initializeMonitoring(messageForHeader, gethVer, rethVer, prysmVer, runsClient) {
   try {    
     const progress = loadProgress();
 
@@ -65,7 +65,7 @@ function initializeMonitoring(messageForHeader, gethVer, rethVer, prysmVer) {
 
     // suppressLogs();
 
-    const { screen, components } = setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer);
+    const { screen, components } = setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer, runsClient);
 
     const logFilePath = path.join(CONFIG.logDirs.geth, getLatestLogFile(CONFIG.logDirs.geth, CONFIG.executionClient));
     const logFilePathConsensus = path.join(CONFIG.logDirs.prysm, getLatestLogFile(CONFIG.logDirs.prysm, CONFIG.consensusClient));
@@ -91,7 +91,7 @@ function initializeMonitoring(messageForHeader, gethVer, rethVer, prysmVer) {
   }
 }
 
-function setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer) {
+function setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer, runsClient) {
   const screen = blessed.screen();
   suppressMouseOutput(screen);
   const grid = new contrib.grid({ rows: 9, cols: 9, screen: screen });
@@ -131,8 +131,12 @@ function setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer) {
   screen.render();
 
   screen.key(["escape", "q", "C-c"], function (ch, key) {
-    process.kill(process.pid, 'SIGUSR2');
-    // screen.destroy();
+    if (runsClient) {
+      process.kill(process.pid, 'SIGUSR2');
+    } else {
+      process.exit(0);
+    }
+    screen.destroy();
     // restoreLogs();
   });
 
