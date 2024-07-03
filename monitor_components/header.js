@@ -2,9 +2,14 @@ const blessed = require('blessed');
 const contrib = require('blessed-contrib');
 const os = require('os');
 const axios = require('axios');
+const path = require('path');
 
 function createHeader(grid, screen, messageForHeader) {
-  var picOptions = { file: '/home/blubbo/buidlguidl-client/monitor_components/pixelBgLogo.png', cols: 12, onReady: ready };
+  const picOptions = { 
+    file: path.join(__dirname, 'pixelBgLogo.png'), 
+    cols: 12, 
+    onReady: ready 
+  };
 
   function ready() {
     // screen.render();
