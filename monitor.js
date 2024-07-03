@@ -43,27 +43,13 @@ const CONFIG = {
   debugLogPath: path.join(os.homedir(), "bgnode", "debugMonitor.log"),
 };
 
-// /// to prevent showing console.logs in the terminal when blessed screen is running
-// const originalConsoleLog = console.log;
-// const originalConsoleError = console.error;
 
-// function suppressLogs() {
-//   console.log = () => {};
-//   console.error = () => {};
-// }
-
-// function restoreLogs() {
-//   console.log = originalConsoleLog;
-//   console.error = originalConsoleError;
-// }
 
 function initializeMonitoring(messageForHeader, gethVer, rethVer, prysmVer, runsClient) {
   try {    
     const progress = loadProgress();
 
-    setupDebugLogging(CONFIG.debugLogPath);
-
-    // suppressLogs();
+    // setupDebugLogging(CONFIG.debugLogPath);
 
     const { screen, components } = setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer, runsClient);
 
@@ -118,7 +104,6 @@ function setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer, runsCli
   screen.append(headerDlGauge);
   screen.append(stateDlGauge);
   screen.append(chainDlGauge);
-  // screen.append(header);
 
   peerCountGauge.setDisplay("0");
 
@@ -133,11 +118,12 @@ function setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer, runsCli
   screen.key(["escape", "q", "C-c"], function (ch, key) {
     if (runsClient) {
       process.kill(process.pid, 'SIGUSR2');
+      console.log("Clients exited from monitor");
     } else {
+      console.log("not working", runsClient)
       process.exit(0);
     }
     screen.destroy();
-    // restoreLogs();
   });
 
   return {

@@ -170,10 +170,8 @@ function handleExit() {
     // Initial check in case both children are already not running
     checkExit();
   } catch (error) {
-    console.log("HUHUHUHU")
+    console.log("Error form handle exit",error)
   }
-
-  
 }
 
 process.on("SIGINT", handleExit);
@@ -181,7 +179,7 @@ process.on("SIGINT", handleExit);
 process.on("SIGTERM", handleExit);
 
 process.on("SIGUSR2", () => {
-  console.log("SIGUSR2 received");
+  // console.log("SIGUSR2 received");
   handleExit();
 });
 
@@ -266,7 +264,7 @@ function isAlreadyRunning() {
 
 function createLockFile() {
   fs.writeFileSync(lockFilePath, process.pid.toString(), 'utf8');
-  console.log(process.pid.toString())
+  // console.log(process.pid.toString())
 }
 
 
