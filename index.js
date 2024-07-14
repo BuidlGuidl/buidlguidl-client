@@ -21,6 +21,11 @@ const { createDiskGauge } = require("./monitor_components/diskGauge");
 const { createMemGauge } = require("./monitor_components/memGauge");
 const { createCpuLine } = require("./monitor_components/cpuLine");
 const { createNetworkLine } = require("./monitor_components/networkLine");
+const {
+  updateBandwidthBox,
+  setBandwidthBox,
+  startBandwidthMonitoring,
+} = require("./monitor_components/bandwidthGauge");
 
 // Set default command line option values
 let executionClient = "geth";
@@ -1222,6 +1227,19 @@ function handleBlessedContrib(
     },
   });
 
+  let bandwidthBox;
+  bandwidthBox = grid.set(5, 9, 1, 1, blessed.box, {
+      label: "Bandwidth Usage",
+      style: {
+          fg: "blue",
+      },
+      border: {
+          type: "line",
+          fg: "cyan",
+      },
+      content: "Calculating...",
+  });
+
   screen.append(executionLog);
   screen.append(consensusLog);
   screen.append(cpuLine);
@@ -1230,6 +1248,7 @@ function handleBlessedContrib(
   if (stateDlGauge) screen.append(stateDlGauge);
   if (chainDlGauge) screen.append(chainDlGauge);
   screen.append(statusBox);
+  screen.append(bandwidthBox);
   screen.append(memGauge);
   screen.append(storageGauge);
   // screen.append(logo);
@@ -1240,6 +1259,9 @@ function handleBlessedContrib(
   updateDiskGauge(installDir);
   setInterval(updateDiskGauge, 10000);
   setInterval(() => updateStatusBox(localClient), 2000);
+  setBandwidthBox(bandwidthBox);
+  startBandwidthMonitoring(screen);
+  setInterval(() => updateBandwidthBox(screen), 1000);
 
   if (progress.chainDlProgress !== 1) {
     headerDlGauge.setPercent(progress.headerDlProgress);
