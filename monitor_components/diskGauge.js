@@ -3,7 +3,7 @@ import si from "systeminformation";
 
 let storageGauge;
 
-function getDiskUsage() {
+export function getDiskUsage() {
   return new Promise((resolve, reject) => {
     si.fsSize()
       .then((drives) => {

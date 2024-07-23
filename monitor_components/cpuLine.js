@@ -6,7 +6,7 @@ let cpuDataX = [];
 let dataCpuUsage = [];
 let screen;
 
-function getCpuUsage() {
+export function getCpuUsage() {
   return new Promise((resolve, reject) => {
     si.currentLoad()
       .then((load) => {

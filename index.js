@@ -4,13 +4,6 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-// import si from "systeminformation";
-// import blessed from "blessed";
-// import contrib from "blessed-contrib";
-// import minimist from "minimist";
-// import pty from "node-pty";
-// import { createPublicClient, http } from "viem";
-// import { mainnet } from "viem/chains";
 // import { setupDebugLogging } from "./helpers";
 import { initializeMonitoring } from "./monitor.js";
 import {
@@ -19,6 +12,7 @@ import {
   installWindowsConsensusClient,
   installWindowsExecutionClient,
 } from "./node_clients/install.js";
+import { initializeWSConnection } from "./ws_connection/wsConnection.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -26,7 +20,7 @@ const __dirname = dirname(__filename);
 /// Set default command line option values
 let executionClient = "geth";
 let consensusClient = "prysm";
-let installDir = os.homedir();
+const installDir = os.homedir();
 const lockFilePath = path.join(os.homedir(), "bgnode", "script.lock");
 
 const CONFIG = {
@@ -40,79 +34,7 @@ const CONFIG = {
 const gethVer = "1.14.3";
 const rethVer = "1.0.0";
 const prysmVer = "5.1.3";
-
-// function showHelp() {
-//   console.log("Usage: node script.js [options]");
-//   console.log("");
-//   console.log("Options:");
-//   // console.log("  -e <client>  Specify the execution client ('geth' or 'reth')");
-//   console.log("  -e <client>  Specify the execution client ('geth')");
-//   // console.log(
-//   //   "  -c <client>  Specify the consensus client ('prysm' or 'lighthouse')"
-//   // );
-//   console.log("  -c <client>  Specify the consensus client ('prysm')");
-//   console.log("  -d <path>  Specify the install directory (defaults to ~)");
-//   console.log("  -h           Display this help message and exit");
-//   console.log("");
-// }
-
-// function isValidPath(p) {
-//   try {
-//     return fs.existsSync(p) && fs.statSync(p).isDirectory();
-//   } catch (err) {
-//     return false;
-//   }
-// }
-
-// // Process command-line arguments
-// const argv = minimist(process.argv.slice(2));
-
-// if (argv.e) {
-//   executionClient = argv.e;
-//   if (executionClient !== "geth") {
-//     console.log("Invalid option for -e. Use 'geth'.");
-//     process.exit(1);
-//   }
-// }
-
-// if (argv.c) {
-//   consensusClient = argv.c;
-//   if (consensusClient !== "prysm") {
-//     console.log("Invalid option for -c. Use 'prysm'.");
-//     process.exit(1);
-//   }
-// }
-
-// if (argv.d) {
-//   installDir = argv.d;
-//   if (!isValidPath(installDir)) {
-//     console.log(`Invalid option for -d. '${installDir}' is not a valid path.`);
-//     process.exit(1);
-//   }
-// }
-
-// if (argv.h) {
-//   showHelp();
-//   process.exit(0);
-// }
-
-// function debugToFile(data, callback) {
-//   const filePath = path.join(installDir, "bgnode", "debug.log");
-//   const now = new Date();
-//   const timestamp = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
-//   const content =
-//     typeof data === "object"
-//       ? `${timestamp} - ${JSON.stringify(data, null, 2)}\n`
-//       : `${timestamp} - ${data}\n`;
-
-//   fs.writeFile(filePath, content, { flag: "a" }, (err) => {
-//     if (err) {
-//       console.error("Failed to write to file:", err);
-//     } else {
-//       if (callback) callback();
-//     }
-//   });
-// }
+const lighthouseVer = "5.1.3";
 
 function createJwtSecret(jwtDir) {
   if (!fs.existsSync(jwtDir)) {
@@ -293,9 +215,21 @@ let runsClient = false;
 
 createJwtSecret(jwtDir);
 
+const wsConfig = {
+  executionClient: executionClient,
+  consensusClient: consensusClient,
+  gethVer: gethVer,
+  rethVer: rethVer,
+  prysmVer: prysmVer,
+  lighthouseVer: lighthouseVer,
+};
+
 if (!isAlreadyRunning()) {
   startClient(executionClient, installDir);
   startClient(consensusClient, installDir);
+
+  initializeWSConnection(wsConfig);
+
   messageForHeader = "Node execution";
   runsClient = true;
   createLockFile();

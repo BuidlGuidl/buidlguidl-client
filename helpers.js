@@ -1,4 +1,8 @@
 import fs from "fs";
+import os from "os";
+import path from "path";
+
+const installDir = os.homedir();
 
 export function setupDebugLogging(debugLogPath) {
   if (fs.existsSync(debugLogPath)) {
@@ -27,6 +31,24 @@ export function setupDebugLogging(debugLogPath) {
     }
     logDebug(message);
   };
+}
+
+export function debugToFile(data, callback) {
+  const filePath = path.join(installDir, "bgnode", "debug.log");
+  const now = new Date();
+  const timestamp = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+  const content =
+    typeof data === "object"
+      ? `${timestamp} - ${JSON.stringify(data, null, 2)}\n`
+      : `${timestamp} - ${data}\n`;
+
+  fs.writeFile(filePath, content, { flag: "a" }, (err) => {
+    if (err) {
+      console.error("Failed to write to file:", err);
+    } else {
+      if (callback) callback();
+    }
+  });
 }
 
 // function getFormattedDateTime() {

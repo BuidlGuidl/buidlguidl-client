@@ -3,7 +3,7 @@ import si from "systeminformation";
 
 let memGauge;
 
-function getMemoryUsage() {
+export function getMemoryUsage() {
   return new Promise((resolve, reject) => {
     si.mem()
       .then((memory) => {
