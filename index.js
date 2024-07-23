@@ -1,22 +1,27 @@
-const { exec, execSync, spawn } = require("child_process");
-const os = require("os");
-const fs = require("fs");
-const path = require("path");
-const si = require("systeminformation");
-const blessed = require("blessed");
-const contrib = require("blessed-contrib");
-const minimist = require("minimist");
-const pty = require("node-pty");
-const { createPublicClient, http } = require("viem");
-const { mainnet } = require("viem/chains");
-const { setupDebugLogging } = require("./helpers");
-const { initializeMonitoring } = require("./monitor");
-const {
+import { exec, execSync, spawn } from "child_process";
+import os from "os";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+// import si from "systeminformation";
+// import blessed from "blessed";
+// import contrib from "blessed-contrib";
+// import minimist from "minimist";
+// import pty from "node-pty";
+// import { createPublicClient, http } from "viem";
+// import { mainnet } from "viem/chains";
+// import { setupDebugLogging } from "./helpers";
+import { initializeMonitoring } from "./monitor.js";
+import {
   installMacLinuxConsensusClient,
   installMacLinuxExecutionClient,
   installWindowsConsensusClient,
   installWindowsExecutionClient,
-} = require("./node_clients/install");
+} from "./node_clients/install.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 /// Set default command line option values
 let executionClient = "geth";
@@ -271,8 +276,6 @@ function removeLockFile() {
     fs.unlinkSync(lockFilePath);
   }
 }
-
-module.exports = { startClient };
 
 const jwtDir = path.join(installDir, "bgnode", "jwt");
 const platform = os.platform();

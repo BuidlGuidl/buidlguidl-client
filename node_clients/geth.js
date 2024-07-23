@@ -1,7 +1,7 @@
-const pty = require("node-pty");
-const fs = require("fs");
-const path = require("path");
-const os = require("os");
+import pty from "node-pty";
+import fs from "fs";
+import os from "os";
+import path from "path";
 
 const installDir = process.env.INSTALL_DIR || os.homedir();
 

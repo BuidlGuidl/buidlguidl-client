@@ -1,7 +1,7 @@
-const pty = require("node-pty");
-const fs = require("fs");
-const path = require("path");
-const os = require("os");
+import pty from "node-pty";
+import fs from "fs";
+import path from "path";
+import os from "os";
 
 const installDir = process.env.INSTALL_DIR || os.homedir();
 
@@ -79,7 +79,7 @@ consensus.on("error", (err) => {
   if (process.send) {
     process.send({ log: errorMessage }); // Send error message to parent process
   }
-  console.error("From Prysm client:",errorMessage); // Log error message to console
+  console.error("From Prysm client:", errorMessage); // Log error message to console
 });
 
 function getFormattedDateTime() {

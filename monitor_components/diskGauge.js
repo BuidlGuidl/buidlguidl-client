@@ -1,5 +1,5 @@
-const contrib = require("blessed-contrib");
-const si = require("systeminformation");
+import contrib from "blessed-contrib";
+import si from "systeminformation";
 
 let storageGauge;
 
@@ -38,7 +38,7 @@ async function updateDiskGauge(screen) {
   }
 }
 
-function createDiskGauge(grid, screen) {
+export function createDiskGauge(grid, screen) {
   storageGauge = grid.set(8, 8, 1, 1, contrib.gauge, {
     label: "Storage",
     stroke: "blue",
@@ -53,5 +53,3 @@ function createDiskGauge(grid, screen) {
 
   return storageGauge;
 }
-
-module.exports = { createDiskGauge };

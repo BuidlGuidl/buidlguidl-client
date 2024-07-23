@@ -1,31 +1,36 @@
-const { exec, execSync, spawn } = require("child_process");
-const os = require("os");
-const fs = require("fs");
-const path = require("path");
-const si = require("systeminformation");
-const blessed = require("blessed");
-const contrib = require("blessed-contrib");
-const minimist = require("minimist");
-const pty = require("node-pty");
-const WebSocket = require("ws");
-const { createPublicClient, http } = require("viem");
-const { mainnet } = require("viem/chains");
-const macaddress = require("macaddress");
+import { exec, execSync, spawn } from "child_process";
+import os from "os";
+import fs from "fs";
+import path from "path";
+import si from "systeminformation";
+import blessed from "blessed";
+import contrib from "blessed-contrib";
+import minimist from "minimist";
+import pty from "node-pty";
+import WebSocket from "ws";
+import { createPublicClient, http } from "viem";
+import { mainnet } from "viem/chains";
+import macaddress from "macaddress";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 
-// const { createDiskGauge } = require("./monitor_components/diskGauge");
-// const { createMemGauge } = require("./monitor_components/memGauge");
-// const { createCpuLine } = require("./monitor_components/cpuLine");
-// const { createNetworkLine } = require("./monitor_components/networkLine");
+// import { createDiskGauge } from "./monitor_components/diskGauge";
+// import { createMemGauge } from "./monitor_components/memGauge";
+// import { createCpuLine } from "./monitor_components/cpuLine";
+// import { createNetworkLine } from "./monitor_components/networkLine";
 
-const { createDiskGauge } = require("./monitor_components/diskGauge");
-const { createMemGauge } = require("./monitor_components/memGauge");
-const { createCpuLine } = require("./monitor_components/cpuLine");
-const { createNetworkLine } = require("./monitor_components/networkLine");
-const {
+import { createDiskGauge } from "./monitor_components/diskGauge";
+import { createMemGauge } from "./monitor_components/memGauge";
+import { createCpuLine } from "./monitor_components/cpuLine";
+import { createNetworkLine } from "./monitor_components/networkLine";
+import {
   updateBandwidthBox,
   setBandwidthBox,
   startBandwidthMonitoring,
-} = require("./monitor_components/bandwidthGauge");
+} from "./monitor_components/bandwidthGauge";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Set default command line option values
 let executionClient = "geth";

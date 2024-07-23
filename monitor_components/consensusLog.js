@@ -1,10 +1,9 @@
-const fs = require("fs");
-const readline = require("readline");
-const contrib = require("blessed-contrib");
-const blessed = require("blessed");
-const { highlightWords } = require("./helperFunctions");
+import fs from "fs";
+import readline from "readline";
+import contrib from "blessed-contrib";
+import { highlightWords } from "./helperFunctions.js";
 
-function createConsensusLog(grid, prysmVer) {
+export function createConsensusLog(grid, prysmVer) {
   const consensusLog = grid.set(3, 0, 2, 9, contrib.log, {
     label: `Prysm v${prysmVer}`,
     border: {
@@ -22,7 +21,7 @@ function createConsensusLog(grid, prysmVer) {
   return consensusLog;
 }
 
-function updateConsensusClientInfo(logFilePath, log, screen) {
+export function updateConsensusClientInfo(logFilePath, log, screen) {
   fs.watchFile(logFilePath, (curr, prev) => {
     if (curr.mtime > prev.mtime) {
       const newStream = fs.createReadStream(logFilePath, {
@@ -51,9 +50,3 @@ function updateConsensusClientInfo(logFilePath, log, screen) {
     }
   });
 }
-
-module.exports = {
-  createConsensusLog,
-  updateConsensusClientInfo,
-  highlightWords,
-};

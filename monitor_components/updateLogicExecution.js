@@ -1,7 +1,10 @@
-const fs = require("fs");
-const readline = require("readline");
-const { loadProgress, saveProgress } = require("./helperFunctions");
-const { highlightWords } = require("./helperFunctions");
+import fs from "fs";
+import readline from "readline";
+import {
+  loadProgress,
+  saveProgress,
+  highlightWords,
+} from "./helperFunctions.js";
 
 const progress = loadProgress();
 
@@ -73,7 +76,7 @@ function saveChainDlProgress(line) {
   }
 }
 
-function setupLogStreaming(
+export function setupLogStreaming(
   logFilePath,
   executionLog,
   screen,
@@ -83,7 +86,6 @@ function setupLogStreaming(
   peerCountGauge
 ) {
   // const progress = loadProgress();
-  
 
   fs.watchFile(logFilePath, (curr, prev) => {
     if (curr.mtime > prev.mtime) {
@@ -137,40 +139,38 @@ function setupLogStreaming(
   });
 }
 
-module.exports = { setupLogStreaming };
-
 // /// if want to have old logs showing when you start to process again
 // const stream = fs.createReadStream(logFilePath, {
-  //   encoding: "utf8",
-  //   flags: "r",
-  // });
+//   encoding: "utf8",
+//   flags: "r",
+// });
 
-  // const rl = readline.createInterface({
-  //   input: stream,
-  //   output: process.stdout,
-  //   terminal: false,
-  // });
+// const rl = readline.createInterface({
+//   input: stream,
+//   output: process.stdout,
+//   terminal: false,
+// });
 
-  // rl.on("line", (line) => {
-  //   executionLog.log(highlightWords(line));
-  //   screen.render();
+// rl.on("line", (line) => {
+//   executionLog.log(highlightWords(line));
+//   screen.render();
 
-  //   const peerCount = getPeerCount(line);
-  //   if (peerCount !== null) {
-  //     updatePeerCountLcd(peerCountGauge, peerCount, screen);
-  //   }
+//   const peerCount = getPeerCount(line);
+//   if (peerCount !== null) {
+//     updatePeerCountLcd(peerCountGauge, peerCount, screen);
+//   }
 
-  //   saveHeaderDlProgress(line);
-  //   saveStateDlProgress(line);
-  //   saveChainDlProgress(line);
+//   saveHeaderDlProgress(line);
+//   saveStateDlProgress(line);
+//   saveChainDlProgress(line);
 
-  //   screen.render();
-  // });
+//   screen.render();
+// });
 
-  // rl.on("close", () => {
-  //   // console.log("Log file stream ended");
-  // });
+// rl.on("close", () => {
+//   // console.log("Log file stream ended");
+// });
 
-  // rl.on("error", (err) => {
-  //   console.error("Error reading log file:", err);
-  // });
+// rl.on("error", (err) => {
+//   console.error("Error reading log file:", err);
+// });

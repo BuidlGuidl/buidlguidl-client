@@ -1,5 +1,5 @@
-const contrib = require("blessed-contrib");
-const si = require("systeminformation");
+import contrib from "blessed-contrib";
+import si from "systeminformation";
 
 let cpuLine;
 let cpuDataX = [];
@@ -66,7 +66,7 @@ async function updateCpuLinePlot() {
   }
 }
 
-function createCpuLine(grid, blessedScreen) {
+export function createCpuLine(grid, blessedScreen) {
   screen = blessedScreen;
   cpuLine = grid.set(5, 0, 2, 7, contrib.line, {
     style: { line: "blue", text: "green", baseline: "green" },
@@ -85,5 +85,3 @@ function createCpuLine(grid, blessedScreen) {
 
   return cpuLine;
 }
-
-module.exports = { createCpuLine };

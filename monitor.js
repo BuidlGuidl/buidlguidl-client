@@ -1,41 +1,37 @@
-const path = require("path");
-const os = require("os");
-const blessed = require("blessed");
-const contrib = require("blessed-contrib");
-const si = require("systeminformation");
-const {setupDebugLogging} = require("./helpers")
+import path from "path";
+import os from "os";
+import blessed from "blessed";
+import contrib from "blessed-contrib";
+// import { setupDebugLogging } from "./helpers.js";
 
-const {
+import {
   loadProgress,
   getLatestLogFile,
-} = require("./monitor_components/helperFunctions");
+} from "./monitor_components/helperFunctions.js";
 
-const { createDiskGauge } = require("./monitor_components/diskGauge");
-const { createMemGauge } = require("./monitor_components/memGauge");
-const { createCpuLine } = require("./monitor_components/cpuLine");
-const { createNetworkLine } = require("./monitor_components/networkLine");
-const { createStateDlGauge } = require("./monitor_components/stateDlGauge");
-const { createHeaderDlGauge } = require("./monitor_components/headerDlGauge");
-const { createChainDlGauge } = require("./monitor_components/chainDlGauge");
-const { createPeerCountLcd } = require("./monitor_components/peerCountLcd");
+import { createDiskGauge } from "./monitor_components/diskGauge.js";
+import { createMemGauge } from "./monitor_components/memGauge.js";
+import { createCpuLine } from "./monitor_components/cpuLine.js";
+import { createNetworkLine } from "./monitor_components/networkLine.js";
+import { createStateDlGauge } from "./monitor_components/stateDlGauge.js";
+import { createHeaderDlGauge } from "./monitor_components/headerDlGauge.js";
+import { createChainDlGauge } from "./monitor_components/chainDlGauge.js";
+import { createPeerCountLcd } from "./monitor_components/peerCountLcd.js";
 
-const { createExecutionLog } = require("./monitor_components/executionLog");
+import { createExecutionLog } from "./monitor_components/executionLog.js";
 
-const {
-  setupLogStreaming,
-} = require("./monitor_components/updateLogicExecution");
+import { setupLogStreaming } from "./monitor_components/updateLogicExecution.js";
 
-const {
+import {
   createConsensusLog,
   updateConsensusClientInfo,
-} = require("./monitor_components/consensusLog");
-const { createHeader } = require("./monitor_components/header");
-
+} from "./monitor_components/consensusLog.js";
+import { createHeader } from "./monitor_components/header.js";
 
 const CONFIG = {
   installDir: os.homedir(),
-  executionClient: 'geth',
-  consensusClient: 'prysm',
+  executionClient: "geth",
+  consensusClient: "prysm",
   logDirs: {
     geth: path.join(os.homedir(), "bgnode", "geth", "logs"),
     prysm: path.join(os.homedir(), "bgnode", "prysm", "logs"),
@@ -43,23 +39,48 @@ const CONFIG = {
   debugLogPath: path.join(os.homedir(), "bgnode", "debugMonitor.log"),
 };
 
-
-
-function initializeMonitoring(messageForHeader, gethVer, rethVer, prysmVer, runsClient) {
-  try {    
+export function initializeMonitoring(
+  messageForHeader,
+  gethVer,
+  rethVer,
+  prysmVer,
+  runsClient
+) {
+  try {
     const progress = loadProgress();
 
     // setupDebugLogging(CONFIG.debugLogPath);
 
-    const { screen, components } = setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer, runsClient);
+    const { screen, components } = setupUI(
+      progress,
+      messageForHeader,
+      gethVer,
+      rethVer,
+      prysmVer,
+      runsClient
+    );
 
-    const logFilePath = path.join(CONFIG.logDirs.geth, getLatestLogFile(CONFIG.logDirs.geth, CONFIG.executionClient));
-    const logFilePathConsensus = path.join(CONFIG.logDirs.prysm, getLatestLogFile(CONFIG.logDirs.prysm, CONFIG.consensusClient));
+    const logFilePath = path.join(
+      CONFIG.logDirs.geth,
+      getLatestLogFile(CONFIG.logDirs.geth, CONFIG.executionClient)
+    );
+    const logFilePathConsensus = path.join(
+      CONFIG.logDirs.prysm,
+      getLatestLogFile(CONFIG.logDirs.prysm, CONFIG.consensusClient)
+    );
 
-    console.log(`Monitoring ${CONFIG.executionClient} logs from: ${logFilePath}`);
-    console.log(`Monitoring ${CONFIG.consensusClient} logs from: ${logFilePathConsensus}`);
+    console.log(
+      `Monitoring ${CONFIG.executionClient} logs from: ${logFilePath}`
+    );
+    console.log(
+      `Monitoring ${CONFIG.consensusClient} logs from: ${logFilePathConsensus}`
+    );
 
-    updateConsensusClientInfo(logFilePathConsensus, components.consensusLog, screen);
+    updateConsensusClientInfo(
+      logFilePathConsensus,
+      components.consensusLog,
+      screen
+    );
 
     setupLogStreaming(
       logFilePath,
@@ -70,14 +91,19 @@ function initializeMonitoring(messageForHeader, gethVer, rethVer, prysmVer, runs
       components.chainDlGauge,
       components.peerCountGauge
     );
-
-    
   } catch (error) {
     console.error("Error initializing monitoring:", error);
   }
 }
 
-function setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer, runsClient) {
+function setupUI(
+  progress,
+  messageForHeader,
+  gethVer,
+  rethVer,
+  prysmVer,
+  runsClient
+) {
   const screen = blessed.screen();
   suppressMouseOutput(screen);
   const grid = new contrib.grid({ rows: 9, cols: 9, screen: screen });
@@ -117,10 +143,10 @@ function setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer, runsCli
 
   screen.key(["escape", "q", "C-c"], function (ch, key) {
     if (runsClient) {
-      process.kill(process.pid, 'SIGUSR2');
+      process.kill(process.pid, "SIGUSR2");
       console.log("Clients exited from monitor");
     } else {
-      console.log("not working", runsClient)
+      console.log("not working", runsClient);
       process.exit(0);
     }
     screen.destroy();
@@ -134,12 +160,10 @@ function setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer, runsCli
       peerCountGauge,
       headerDlGauge,
       stateDlGauge,
-      chainDlGauge
+      chainDlGauge,
     },
   };
 }
-
-module.exports = { initializeMonitoring };
 
 function suppressMouseOutput(screen) {
   screen.on("element mouse", (el, data) => {
@@ -156,7 +180,7 @@ function suppressMouseOutput(screen) {
       key.name === "right"
     ) {
       if (!key.ctrl && !key.meta && !key.shift) {
-        return false; 
+        return false;
       }
     }
   });

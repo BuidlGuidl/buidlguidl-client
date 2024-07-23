@@ -1,5 +1,5 @@
-const contrib = require("blessed-contrib");
-const si = require("systeminformation");
+import contrib from "blessed-contrib";
+import si from "systeminformation";
 
 let networkLine;
 let networkDataX = [];
@@ -92,7 +92,7 @@ async function updateNetworkLinePlot() {
   }
 }
 
-function createNetworkLine(grid, blessedScreen) {
+export function createNetworkLine(grid, blessedScreen) {
   screen = blessedScreen;
   networkLine = grid.set(7, 0, 2, 7, contrib.line, {
     style: { line: "yellow", text: "green", baseline: "green" },
@@ -111,5 +111,3 @@ function createNetworkLine(grid, blessedScreen) {
 
   return networkLine;
 }
-
-module.exports = { createNetworkLine };
