@@ -16,12 +16,13 @@ import { createNetworkLine } from "./monitor_components/networkLine.js";
 import { createStateDlGauge } from "./monitor_components/stateDlGauge.js";
 import { createHeaderDlGauge } from "./monitor_components/headerDlGauge.js";
 import { createChainDlGauge } from "./monitor_components/chainDlGauge.js";
-// import { createPeerCountLcd } from "./monitor_components/peerCountLcd.js";
 import { createExecutionLog } from "./monitor_components/executionLog.js";
+import { createStatusBox } from "./monitor_components/statusBox.js";
 import {
-  createStatusBox,
-  updateStatusBox,
-} from "./monitor_components/statusBox.js";
+  createBandwidthBox,
+  setBandwidthBox,
+  startBandwidthMonitoring,
+} from "./monitor_components/bandwidthGauge.js";
 
 import { setupLogStreaming } from "./monitor_components/updateLogicExecution.js";
 
@@ -92,7 +93,6 @@ export function initializeMonitoring(
       components.headerDlGauge,
       components.stateDlGauge,
       components.chainDlGauge
-      // components.peerCountGauge
     );
   } catch (error) {
     console.error("Error initializing monitoring:", error);
@@ -120,7 +120,8 @@ function setupUI(
   const headerDlGauge = createHeaderDlGauge(grid);
   const stateDlGauge = createStateDlGauge(grid);
   const chainDlGauge = createChainDlGauge(grid);
-  const statusBox = createStatusBox(grid);
+  const statusBox = createStatusBox(grid, screen);
+  const bandwidthBox = createBandwidthBox(grid);
   const header = createHeader(grid, screen, messageForHeader);
 
   screen.append(executionLog);
@@ -133,8 +134,10 @@ function setupUI(
   screen.append(stateDlGauge);
   screen.append(chainDlGauge);
   screen.append(statusBox);
+  screen.append(bandwidthBox);
 
-  setInterval(() => updateStatusBox(statusBox), 2000);
+  setBandwidthBox(bandwidthBox);
+  startBandwidthMonitoring(screen);
 
   if (progress) {
     headerDlGauge.setPercent(progress.headerDlProgress);
@@ -160,7 +163,6 @@ function setupUI(
     components: {
       executionLog,
       consensusLog,
-      // peerCountGauge,
       headerDlGauge,
       stateDlGauge,
       chainDlGauge,

@@ -1,4 +1,5 @@
 import si from "systeminformation";
+import blessed from "blessed";
 
 let bandwidthBox;
 const interval = 60 * 1000; // 1 minute in milliseconds
@@ -92,4 +93,20 @@ export function setBandwidthBox(box) {
 
 export function startBandwidthMonitoring(screen) {
   setInterval(() => updateBandwidthBox(screen), interval);
+}
+
+export function createBandwidthBox(grid) {
+  const bandwidthBox = grid.set(6, 8, 1, 1, blessed.box, {
+    label: "Bandwidth",
+    style: {
+      fg: "blue",
+    },
+    border: {
+      type: "line",
+      fg: "cyan",
+    },
+    content: "\n Updating...",
+  });
+
+  return bandwidthBox;
 }

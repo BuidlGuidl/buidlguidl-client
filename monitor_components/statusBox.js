@@ -22,19 +22,22 @@ async function isSyncing() {
   }
 }
 
-export async function updateStatusBox(statusBox) {
+export async function updateStatusBox(statusBox, screen) {
   try {
-    const syncingStatus = await isSyncing(localClient);
+    const syncingStatus = await isSyncing();
 
     if (syncingStatus) {
       const currentBlock = parseInt(syncingStatus.currentBlock, 16);
       const highestBlock = parseInt(syncingStatus.highestBlock, 16);
 
       statusBox.setContent(
-        `INITIAL SYNC IN PROGRESS\nCurrent Block: ${currentBlock.toFixed(
-          0
-        )}\nHighest Block: ${highestBlock.toFixed(0)}`
+        `INITIAL SYNC IN PROGRESS\nCurrent Block: ${currentBlock}\nHighest Block: ${highestBlock}`
       );
+      // statusBox.setContent(
+      //   `INITIAL SYNC IN PROGRESS\nCurrent Block: ${currentBlock.toFixed(
+      //     0
+      //   )}\nHighest Block: ${highestBlock.toFixed(0)}`
+      // );
     } else {
       const blockNumber = await localClient.getBlockNumber();
 
@@ -53,7 +56,7 @@ export async function updateStatusBox(statusBox) {
   }
 }
 
-export function createStatusBox(grid) {
+export function createStatusBox(grid, screen) {
   const statusBox = grid.set(5, 7, 1, 2, blessed.box, {
     label: `Status`,
     border: {
@@ -61,6 +64,8 @@ export function createStatusBox(grid) {
       fg: "cyan",
     },
   });
+
+  setInterval(() => updateStatusBox(statusBox, screen), 2000);
 
   return statusBox;
 }
