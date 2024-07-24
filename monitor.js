@@ -16,9 +16,12 @@ import { createNetworkLine } from "./monitor_components/networkLine.js";
 import { createStateDlGauge } from "./monitor_components/stateDlGauge.js";
 import { createHeaderDlGauge } from "./monitor_components/headerDlGauge.js";
 import { createChainDlGauge } from "./monitor_components/chainDlGauge.js";
-import { createPeerCountLcd } from "./monitor_components/peerCountLcd.js";
-
+// import { createPeerCountLcd } from "./monitor_components/peerCountLcd.js";
 import { createExecutionLog } from "./monitor_components/executionLog.js";
+import {
+  createStatusBox,
+  updateStatusBox,
+} from "./monitor_components/statusBox.js";
 
 import { setupLogStreaming } from "./monitor_components/updateLogicExecution.js";
 
@@ -88,8 +91,8 @@ export function initializeMonitoring(
       screen,
       components.headerDlGauge,
       components.stateDlGauge,
-      components.chainDlGauge,
-      components.peerCountGauge
+      components.chainDlGauge
+      // components.peerCountGauge
     );
   } catch (error) {
     console.error("Error initializing monitoring:", error);
@@ -110,7 +113,6 @@ function setupUI(
 
   const executionLog = createExecutionLog(grid, gethVer, rethVer);
   const consensusLog = createConsensusLog(grid, prysmVer);
-  const peerCountGauge = createPeerCountLcd(grid, screen);
   const storageGauge = createDiskGauge(grid, screen);
   const memGauge = createMemGauge(grid, screen);
   const cpuLine = createCpuLine(grid, screen);
@@ -118,11 +120,11 @@ function setupUI(
   const headerDlGauge = createHeaderDlGauge(grid);
   const stateDlGauge = createStateDlGauge(grid);
   const chainDlGauge = createChainDlGauge(grid);
+  const statusBox = createStatusBox(grid);
   const header = createHeader(grid, screen, messageForHeader);
 
   screen.append(executionLog);
   screen.append(consensusLog);
-  screen.append(peerCountGauge);
   screen.append(cpuLine);
   screen.append(networkLine);
   screen.append(memGauge);
@@ -130,8 +132,9 @@ function setupUI(
   screen.append(headerDlGauge);
   screen.append(stateDlGauge);
   screen.append(chainDlGauge);
+  screen.append(statusBox);
 
-  peerCountGauge.setDisplay("0");
+  setInterval(() => updateStatusBox(statusBox), 2000);
 
   if (progress) {
     headerDlGauge.setPercent(progress.headerDlProgress);
@@ -157,7 +160,7 @@ function setupUI(
     components: {
       executionLog,
       consensusLog,
-      peerCountGauge,
+      // peerCountGauge,
       headerDlGauge,
       stateDlGauge,
       chainDlGauge,

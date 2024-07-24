@@ -82,8 +82,8 @@ export function setupLogStreaming(
   screen,
   headerDlGauge,
   stateDlGauge,
-  chainDlGauge,
-  peerCountGauge
+  chainDlGauge
+  // peerCountGauge
 ) {
   // const progress = loadProgress();
 
@@ -104,10 +104,10 @@ export function setupLogStreaming(
         executionLog.log(highlightWords(line));
         screen.render();
 
-        const peerCount = getPeerCount(line);
-        if (peerCount !== null) {
-          updatePeerCountLcd(peerCountGauge, peerCount, screen);
-        }
+        // const peerCount = getPeerCount(line);
+        // if (peerCount !== null) {
+        //   updatePeerCountLcd(peerCountGauge, peerCount, screen);
+        // }
         saveHeaderDlProgress(line);
         saveStateDlProgress(line);
         saveChainDlProgress(line);
