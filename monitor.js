@@ -122,7 +122,8 @@ function setupUI(
   const chainDlGauge = createChainDlGauge(grid);
   const statusBox = createStatusBox(grid, screen);
   const bandwidthBox = createBandwidthBox(grid);
-  const header = createHeader(grid, screen, messageForHeader);
+
+  createHeader(grid, screen, messageForHeader);
 
   screen.append(executionLog);
   screen.append(consensusLog);
