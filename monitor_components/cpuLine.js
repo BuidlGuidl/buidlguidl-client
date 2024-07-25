@@ -1,12 +1,10 @@
-const contrib = require("blessed-contrib");
-const si = require("systeminformation");
+import contrib from "blessed-contrib";
+import si from "systeminformation";
 
-let cpuLine;
 let cpuDataX = [];
 let dataCpuUsage = [];
-let screen;
 
-function getCpuUsage() {
+export function getCpuUsage() {
   return new Promise((resolve, reject) => {
     si.currentLoad()
       .then((load) => {
@@ -20,7 +18,7 @@ function getCpuUsage() {
   });
 }
 
-async function updateCpuLinePlot() {
+async function updateCpuLinePlot(cpuLine, screen) {
   try {
     const currentLoad = await getCpuUsage(); // Get the overall CPU load
 
@@ -66,9 +64,8 @@ async function updateCpuLinePlot() {
   }
 }
 
-function createCpuLine(grid, blessedScreen) {
-  screen = blessedScreen;
-  cpuLine = grid.set(5, 0, 2, 7, contrib.line, {
+export function createCpuLine(grid, screen) {
+  const cpuLine = grid.set(5, 0, 2, 7, contrib.line, {
     style: { line: "blue", text: "green", baseline: "green" },
     xLabelPadding: 3,
     xPadding: 5,
@@ -81,9 +78,7 @@ function createCpuLine(grid, blessedScreen) {
     },
   });
 
-  setInterval(updateCpuLinePlot, 1000);
+  setInterval(() => updateCpuLinePlot(cpuLine, screen), 1000);
 
   return cpuLine;
 }
-
-module.exports = { createCpuLine };

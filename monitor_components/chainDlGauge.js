@@ -1,8 +1,6 @@
-const contrib = require("blessed-contrib");
-const fs = require("fs");
-const path = require("path");
+import contrib from "blessed-contrib";
 
-function createChainDlGauge(grid) {
+export function createChainDlGauge(grid) {
   const chainDlGauge = grid.set(8, 7, 1, 1, contrib.gauge, {
     label: "Chain DL Progress",
     stroke: "cyan",
@@ -15,7 +13,3 @@ function createChainDlGauge(grid) {
 
   return chainDlGauge;
 }
-
-module.exports = {
-  createChainDlGauge,
-};

@@ -1,26 +1,26 @@
-const pty = require("node-pty");
-const fs = require("fs");
-const path = require("path");
-const os = require("os");
+import pty from "node-pty";
+import fs from "fs";
+import path from "path";
+import os from "os";
 
 const installDir = process.env.INSTALL_DIR || os.homedir();
 
 const jwtPath = path.join(installDir, "bgnode", "jwt", "jwt.hex");
 
-let gethCommand;
+let prysmCommand;
 const platform = os.platform();
 if (["darwin", "linux"].includes(platform)) {
-  gethCommand = path.join(installDir, "bgnode", "geth", "geth");
+  prysmCommand = path.join(installDir, "bgnode", "prysm", "prysm.sh");
 } else if (platform === "win32") {
-  gethCommand = path.join(installDir, "bgnode", "geth", "geth.exe");
+  prysmCommand = path.join(installDir, "bgnode", "prysm", "prysm.exe");
 }
 
 const logFilePath = path.join(
   installDir,
   "bgnode",
-  "geth",
+  "prysm",
   "logs",
-  `geth_${getFormattedDateTime()}.log`
+  `prysm_${getFormattedDateTime()}.log`
 );
 
 const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
@@ -32,25 +32,21 @@ function stripAnsiCodes(input) {
   );
 }
 
-// const execution = pty.spawn(
-const execution = pty.spawn(
-  gethCommand,
+const consensus = pty.spawn(
+  prysmCommand,
   [
+    "beacon-chain",
     "--mainnet",
-    "--syncmode",
-    "snap",
-    "--http",
-    "--http.api",
-    "eth,net,engine",
-    "--http.addr",
-    "0.0.0.0",
-    "--http.port",
-    "8545",
-    "--http.corsdomain",
-    "*",
+    "--execution-endpoint",
+    "http://localhost:8551",
+    "--grpc-gateway-host=0.0.0.0",
+    "--grpc-gateway-port=3500",
+    "--checkpoint-sync-url=https://mainnet-checkpoint-sync.attestant.io/",
+    "--genesis-beacon-api-url=https://mainnet-checkpoint-sync.attestant.io/",
     "--datadir",
-    path.join(installDir, "bgnode", "geth", "database"),
-    "--authrpc.jwtsecret",
+    path.join(installDir, "bgnode", "prysm", "database"),
+    "--accept-terms-of-use=true",
+    "--jwt-secret",
     jwtPath,
   ],
   {
@@ -63,27 +59,27 @@ const execution = pty.spawn(
 );
 
 // Pipe stdout and stderr to the log file and to the parent process
-execution.on("data", (data) => {
+consensus.on("data", (data) => {
   logStream.write(stripAnsiCodes(data));
   if (process.send) {
-    process.send({ log: data });
+    process.send({ log: data }); // No need for .toString(), pty preserves colors
   }
   process.stdout.write(data); // Also log to console for real-time feedback
 });
 
-execution.on("exit", (code) => {
-  const exitMessage = `geth process exited with code ${code}`;
+consensus.on("exit", (code) => {
+  const exitMessage = `prysm process exited with code ${code}`;
   logStream.write(exitMessage);
   logStream.end();
 });
 
-execution.on("error", (err) => {
+consensus.on("error", (err) => {
   const errorMessage = `Error: ${err.message}`;
   logStream.write(errorMessage);
   if (process.send) {
     process.send({ log: errorMessage }); // Send error message to parent process
   }
-  console.error(errorMessage); // Log error message to console
+  console.error("From Prysm client:", errorMessage); // Log error message to console
 });
 
 function getFormattedDateTime() {
@@ -92,5 +88,5 @@ function getFormattedDateTime() {
 }
 
 process.on("SIGINT", () => {
-  execution.kill("SIGINT");
+  consensus.kill("SIGINT");
 });

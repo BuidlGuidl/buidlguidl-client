@@ -1,9 +1,9 @@
-const contrib = require("blessed-contrib");
-const si = require("systeminformation");
+import contrib from "blessed-contrib";
+import si from "systeminformation";
 
 let memGauge;
 
-function getMemoryUsage() {
+export function getMemoryUsage() {
   return new Promise((resolve, reject) => {
     si.mem()
       .then((memory) => {
@@ -29,7 +29,7 @@ async function updateMemoryGauge(screen) {
   }
 }
 
-function createMemGauge(grid, screen) {
+export function createMemGauge(grid, screen) {
   memGauge = grid.set(7, 8, 1, 1, contrib.gauge, {
     label: "Memory",
     stroke: "green",
@@ -44,5 +44,3 @@ function createMemGauge(grid, screen) {
 
   return memGauge;
 }
-
-module.exports = { createMemGauge };

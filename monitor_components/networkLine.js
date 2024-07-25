@@ -1,7 +1,6 @@
-const contrib = require("blessed-contrib");
-const si = require("systeminformation");
+import contrib from "blessed-contrib";
+import si from "systeminformation";
 
-let networkLine;
 let networkDataX = [];
 let dataSentY = [];
 let dataReceivedY = [];
@@ -10,7 +9,6 @@ let lastStats = {
   totalReceived: 0,
   timestamp: Date.now(),
 };
-let screen;
 
 function getNetworkStats() {
   return new Promise((resolve, reject) => {
@@ -55,7 +53,7 @@ function getNetworkStats() {
   });
 }
 
-async function updateNetworkLinePlot() {
+async function updateNetworkLinePlot(networkLine, screen) {
   try {
     const stats = await getNetworkStats();
     const now = new Date();
@@ -92,9 +90,8 @@ async function updateNetworkLinePlot() {
   }
 }
 
-function createNetworkLine(grid, blessedScreen) {
-  screen = blessedScreen;
-  networkLine = grid.set(7, 0, 2, 7, contrib.line, {
+export function createNetworkLine(grid, screen) {
+  const networkLine = grid.set(7, 0, 2, 7, contrib.line, {
     style: { line: "yellow", text: "green", baseline: "green" },
     xLabelPadding: 3,
     xPadding: 5,
@@ -107,9 +104,7 @@ function createNetworkLine(grid, blessedScreen) {
     },
   });
 
-  setInterval(updateNetworkLinePlot, 1000);
+  setInterval(() => updateNetworkLinePlot(networkLine, screen), 2000);
 
   return networkLine;
 }
-
-module.exports = { createNetworkLine };

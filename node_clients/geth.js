@@ -1,26 +1,26 @@
-const pty = require("node-pty");
-const fs = require("fs");
-const path = require("path");
-const os = require("os");
+import pty from "node-pty";
+import fs from "fs";
+import os from "os";
+import path from "path";
 
 const installDir = process.env.INSTALL_DIR || os.homedir();
 
-const jwtPath = path.join(os.homedir(), "bgnode", "jwt", "jwt.hex");
+const jwtPath = path.join(installDir, "bgnode", "jwt", "jwt.hex");
 
-let rethCommand;
+let gethCommand;
 const platform = os.platform();
 if (["darwin", "linux"].includes(platform)) {
-  rethCommand = path.join(os.homedir(), "bgnode", "reth", "reth");
+  gethCommand = path.join(installDir, "bgnode", "geth", "geth");
 } else if (platform === "win32") {
-  rethCommand = path.join(os.homedir(), "bgnode", "reth", "reth.exe");
+  gethCommand = path.join(installDir, "bgnode", "geth", "geth.exe");
 }
 
 const logFilePath = path.join(
-  os.homedir(),
+  installDir,
   "bgnode",
-  "reth",
+  "geth",
   "logs",
-  `reth_${getFormattedDateTime()}.log`
+  `geth_${getFormattedDateTime()}.log`
 );
 
 const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
@@ -32,28 +32,26 @@ function stripAnsiCodes(input) {
   );
 }
 
+// const execution = pty.spawn(
 const execution = pty.spawn(
-  `${rethCommand}`,
+  gethCommand,
   [
-    "node",
+    "--mainnet",
+    "--syncmode",
+    "snap",
     "--http",
+    "--http.api",
+    "eth,net,engine",
     "--http.addr",
     "0.0.0.0",
-    "--http.api",
-    // "trace,web3,eth,debug",
-    // "trace,web3,eth,debug,net",
-    "debug,eth,net,trace,txpool,web3,rpc",
-    "--ws",
-    "--ws.api",
-    "trace,web3,eth,debug",
-    "--authrpc.addr",
-    "127.0.0.1",
-    "--authrpc.port",
-    "8551",
+    "--http.port",
+    "8545",
+    "--http.corsdomain",
+    "*",
     "--datadir",
-    path.join(os.homedir(), "bgnode", "reth", "database"),
+    path.join(installDir, "bgnode", "geth", "database"),
     "--authrpc.jwtsecret",
-    `${jwtPath}`,
+    jwtPath,
   ],
   {
     name: "xterm-color",

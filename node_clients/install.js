@@ -1,11 +1,11 @@
-const fs = require("fs");
-const path = require("path");
-const { execSync } = require("child_process");
-const os = require("os");
+import fs from "fs";
+import path from "path";
+import { execSync } from "child_process";
+import os from "os";
 
 let installDir = os.homedir();
 
-function installMacLinuxExecutionClient(
+export function installMacLinuxExecutionClient(
   executionClient,
   platform,
   gethVer,
@@ -99,7 +99,7 @@ function installMacLinuxExecutionClient(
   }
 }
 
-function installMacLinuxConsensusClient(
+export function installMacLinuxConsensusClient(
   consensusClient,
   platform,
   lighthouseVer
@@ -178,7 +178,7 @@ function installMacLinuxConsensusClient(
   }
 }
 
-function installWindowsExecutionClient(executionClient) {
+export function installWindowsExecutionClient(executionClient) {
   if (executionClient === "geth") {
     const gethDir = path.join(installDir, "bgnode", "geth");
     const gethScript = path.join(gethDir, "geth.exe");
@@ -241,7 +241,7 @@ function installWindowsExecutionClient(executionClient) {
   }
 }
 
-function installWindowsConsensusClient(consensusClient) {
+export function installWindowsConsensusClient(consensusClient) {
   if (consensusClient === "prysm") {
     const prysmDir = path.join(installDir, "bgnode", "prysm");
     const prysmScript = path.join(prysmDir, "prysm.bat");
@@ -295,7 +295,7 @@ function installWindowsConsensusClient(consensusClient) {
   }
 }
 
-function downloadRethSnapshot(rethDir, platform) {
+export function downloadRethSnapshot(rethDir, platform) {
   const snapshotDate = "2024-05-14";
 
   if (
@@ -324,11 +324,3 @@ function downloadRethSnapshot(rethDir, platform) {
     console.log("\nReth snapshot already downloaded.");
   }
 }
-
-module.exports = {
-  installWindowsConsensusClient,
-  installWindowsExecutionClient,
-  installMacLinuxConsensusClient,
-  installMacLinuxExecutionClient,
-  downloadRethSnapshot,
-};

@@ -1,6 +1,6 @@
-const contrib = require("blessed-contrib");
+import contrib from "blessed-contrib";
 
-function createPeerCountLcd(grid) {
+export function createPeerCountLcd(grid) {
   const peerCountLcd = contrib.lcd({
     segmentWidth: 0.06, // how wide are the segments in % so 50% = 0.5
     segmentInterval: 0.11, // spacing between the segments in % so 50% = 0.550% = 0.5
@@ -23,5 +23,3 @@ function createPeerCountLcd(grid) {
 
   return peerCountLcd;
 }
-
-module.exports = { createPeerCountLcd };
