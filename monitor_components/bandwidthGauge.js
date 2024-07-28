@@ -5,11 +5,9 @@ const interval = 60 * 1000; // 1 minute in milliseconds
 const hours24 = 24 * 60; // 24 hours in minutes
 const days7 = 7 * 24 * 60; // 7 days in minutes
 
-let history24 = new Array(hours24).fill({ sent: 0, received: 0 });
-let history7 = new Array(days7).fill({ sent: 0, received: 0 });
+let history24 = [];
+let history7 = [];
 
-let currentIndex24 = 0;
-let currentIndex7 = 0;
 let previousStats = null;
 
 async function getNetworkStats() {
@@ -23,23 +21,43 @@ async function getNetworkStats() {
             (sum, iface) => sum + iface.rx_bytes,
             0
         );
-        return { sent: totalSent, received: totalReceived };
+        return {
+            timestamp: Date.now(),
+            sent: totalSent,
+            received: totalReceived,
+        };
     } catch (error) {
         console.error("Failed to get network stats:", error);
-        return { sent: 0, received: 0 };
+        return { timestamp: Date.now(), sent: 0, received: 0 };
     }
 }
 
 function updateHistory(stats) {
+    const currentTime = Date.now();
+
     if (previousStats) {
         const sentDiff = stats.sent - previousStats.sent;
         const receivedDiff = stats.received - previousStats.received;
 
-        history24[currentIndex24] = { sent: sentDiff, received: receivedDiff };
-        history7[currentIndex7] = { sent: sentDiff, received: receivedDiff };
+        // Add new entry with timestamp
+        history24.push({
+            timestamp: currentTime,
+            sent: sentDiff,
+            received: receivedDiff,
+        });
+        history7.push({
+            timestamp: currentTime,
+            sent: sentDiff,
+            received: receivedDiff,
+        });
 
-        currentIndex24 = (currentIndex24 + 1) % hours24;
-        currentIndex7 = (currentIndex7 + 1) % days7;
+        // Remove old entries
+        history24 = history24.filter(
+            (entry) => currentTime - entry.timestamp <= 24 * 60 * 60 * 1000
+        );
+        history7 = history7.filter(
+            (entry) => currentTime - entry.timestamp <= 7 * 24 * 60 * 60 * 1000
+        );
     }
     previousStats = stats;
 }
@@ -69,13 +87,13 @@ async function updateBandwidthBox(screen) {
         const dailyStats = calculateStatsForPeriod(history24);
         const weeklyStats = calculateStatsForPeriod(history7);
 
-        const formattedText = `\x1b[34m⬆\x1b[0m \x1b[37m1D:\x1b[0m ${formatBytes(
+        const formattedText = `\x1b[34m▲\x1b[0m \x1b[37m1D:\x1b[0m ${formatBytes(
             dailyStats.sent
-        )}\n\x1b[32m⬇\x1b[0m \x1b[37m1D:\x1b[0m ${formatBytes(
+        )}\n\x1b[32m▽\x1b[0m \x1b[37m1D:\x1b[0m ${formatBytes(
             dailyStats.received
-        )}\n\x1b[34m⬆\x1b[0m \x1b[37m7D:\x1b[0m ${formatBytes(
+        )}\n\x1b[34m▲\x1b[0m \x1b[37m7D:\x1b[0m ${formatBytes(
             weeklyStats.sent
-        )}\n\x1b[32m⬇\x1b[0m \x1b[37m7D:\x1b[0m ${formatBytes(
+        )}\n\x1b[32m▽\x1b[0m \x1b[37m7D:\x1b[0m ${formatBytes(
             weeklyStats.received
         )}`;
 
@@ -91,7 +109,16 @@ function setBandwidthBox(box) {
 }
 
 function startBandwidthMonitoring(screen) {
-    setInterval(() => updateBandwidthBox(screen), interval);
+    async function scheduleNextUpdate() {
+        const startTime = Date.now();
+        await updateBandwidthBox(screen);
+        const endTime = Date.now();
+        const elapsedTime = endTime - startTime;
+        const nextInterval = Math.max(interval - elapsedTime, 0);
+        setTimeout(scheduleNextUpdate, nextInterval);
+    }
+
+    scheduleNextUpdate();
 }
 
 module.exports = {

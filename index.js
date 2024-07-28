@@ -926,10 +926,17 @@ async function updateStatusBox(client) {
       );
     } else {
       const blockNumber = await localClient.getBlockNumber();
+      const latestBlock = await client.getBlockNumber();
 
-      statusBox.setContent(
-        `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber}`
-      );
+      if (blockNumber === latestBlock) {
+        statusBox.setContent(
+          `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber}`
+        );
+      } else {
+        statusBox.setContent(
+          `CURRENT BLOCK\nBlock: ${blockNumber}/${latestBlock}`
+        );
+      }
     }
 
     screen.render();
