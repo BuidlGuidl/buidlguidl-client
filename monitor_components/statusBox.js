@@ -48,7 +48,7 @@ export async function updateStatusBox(statusBox, screen) {
       const blockNumber = await localClient.getBlockNumber();
       const latestBlock = await client.getBlockNumber();
 
-      if (blockNumber === latestBlock) {
+      if (blockNumber === latestBlock || blockNumber === latestBlock + 1) {
         statusBox.setContent(
           `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber}`
         );
