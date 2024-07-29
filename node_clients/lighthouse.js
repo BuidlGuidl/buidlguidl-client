@@ -1,26 +1,36 @@
-const pty = require("node-pty");
-const fs = require("fs");
-const path = require("path");
-const os = require("os");
+import pty from "node-pty";
+import fs from "fs";
+import path from "path";
+import os from "os";
 
 const installDir = process.env.INSTALL_DIR || os.homedir();
 
-const jwtPath = path.join(installDir, "bgnode", "jwt", "jwt.hex");
+const jwtPath = path.join(os.homedir(), "bgnode", "jwt", "jwt.hex");
 
-let prysmCommand;
+let lighthouseCommand;
 const platform = os.platform();
 if (["darwin", "linux"].includes(platform)) {
-  prysmCommand = path.join(installDir, "bgnode", "prysm", "prysm.sh");
+  lighthouseCommand = path.join(
+    os.homedir(),
+    "bgnode",
+    "lighthouse",
+    "lighthouse"
+  );
 } else if (platform === "win32") {
-  prysmCommand = path.join(installDir, "bgnode", "prysm", "prysm.exe");
+  lighthouseCommand = path.join(
+    os.homedir(),
+    "bgnode",
+    "lighthouse",
+    "lighthouse.exe"
+  );
 }
 
 const logFilePath = path.join(
-  installDir,
+  os.homedir(),
   "bgnode",
-  "prysm",
+  "lighthouse",
   "logs",
-  `prysm_${getFormattedDateTime()}.log`
+  `lighthouse_${getFormattedDateTime()}.log`
 );
 
 const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
@@ -33,21 +43,22 @@ function stripAnsiCodes(input) {
 }
 
 const consensus = pty.spawn(
-  prysmCommand,
+  `${lighthouseCommand}`,
   [
-    "beacon-chain",
-    "--mainnet",
+    "bn",
+    "--network",
+    "mainnet",
     "--execution-endpoint",
     "http://localhost:8551",
-    "--grpc-gateway-host=0.0.0.0",
-    "--grpc-gateway-port=3500",
-    "--checkpoint-sync-url=https://mainnet-checkpoint-sync.attestant.io/",
-    "--genesis-beacon-api-url=https://mainnet-checkpoint-sync.attestant.io/",
+    "--checkpoint-sync-url",
+    "https://mainnet.checkpoint.sigp.io",
+    "--checkpoint-sync-url-timeout",
+    "600",
+    "--disable-deposit-contract-sync",
     "--datadir",
-    path.join(installDir, "bgnode", "prysm", "database"),
-    "--accept-terms-of-use=true",
-    "--jwt-secret",
-    jwtPath,
+    path.join(os.homedir(), "bgnode", "lighthouse", "database"),
+    "--execution-jwt",
+    `${jwtPath}`,
   ],
   {
     name: "xterm-color",
@@ -79,7 +90,7 @@ consensus.on("error", (err) => {
   if (process.send) {
     process.send({ log: errorMessage }); // Send error message to parent process
   }
-  console.error("From Prysm client:",errorMessage); // Log error message to console
+  console.error(errorMessage); // Log error message to console
 });
 
 function getFormattedDateTime() {
