@@ -1,9 +1,10 @@
-const si = require("systeminformation");
+import si from 'systeminformation';
+import blessed from 'blessed';
 
 let bandwidthBox;
 const interval = 60 * 1000; // 1 minute in milliseconds
 const hours24 = 24 * 60; // 24 hours in minutes
-const days7 = 7 * 24 * 60; // 7 days in minutes
+const days7 = 7 * 24 * 60 * 60; // 7 days in minutes
 
 let history24 = [];
 let history7 = [];
@@ -21,11 +22,7 @@ async function getNetworkStats() {
             (sum, iface) => sum + iface.rx_bytes,
             0
         );
-        return {
-            timestamp: Date.now(),
-            sent: totalSent,
-            received: totalReceived,
-        };
+        return { timestamp: Date.now(), sent: totalSent, received: totalReceived };
     } catch (error) {
         console.error("Failed to get network stats:", error);
         return { timestamp: Date.now(), sent: 0, received: 0 };
@@ -40,24 +37,12 @@ function updateHistory(stats) {
         const receivedDiff = stats.received - previousStats.received;
 
         // Add new entry with timestamp
-        history24.push({
-            timestamp: currentTime,
-            sent: sentDiff,
-            received: receivedDiff,
-        });
-        history7.push({
-            timestamp: currentTime,
-            sent: sentDiff,
-            received: receivedDiff,
-        });
+        history24.push({ timestamp: currentTime, sent: sentDiff, received: receivedDiff });
+        history7.push({ timestamp: currentTime, sent: sentDiff, received: receivedDiff });
 
         // Remove old entries
-        history24 = history24.filter(
-            (entry) => currentTime - entry.timestamp <= 24 * 60 * 60 * 1000
-        );
-        history7 = history7.filter(
-            (entry) => currentTime - entry.timestamp <= 7 * 24 * 60 * 60 * 1000
-        );
+        history24 = history24.filter(entry => currentTime - entry.timestamp <= 24 * 60 * 60 * 1000);
+        history7 = history7.filter(entry => currentTime - entry.timestamp <= 7 * 24 * 60 * 60 * 1000);
     }
     previousStats = stats;
 }
@@ -87,15 +72,7 @@ async function updateBandwidthBox(screen) {
         const dailyStats = calculateStatsForPeriod(history24);
         const weeklyStats = calculateStatsForPeriod(history7);
 
-        const formattedText = `\x1b[34m▲\x1b[0m \x1b[37m1D:\x1b[0m ${formatBytes(
-            dailyStats.sent
-        )}\n\x1b[32m▽\x1b[0m \x1b[37m1D:\x1b[0m ${formatBytes(
-            dailyStats.received
-        )}\n\x1b[34m▲\x1b[0m \x1b[37m7D:\x1b[0m ${formatBytes(
-            weeklyStats.sent
-        )}\n\x1b[32m▽\x1b[0m \x1b[37m7D:\x1b[0m ${formatBytes(
-            weeklyStats.received
-        )}`;
+        const formattedText = `▲ 1D: ${formatBytes(dailyStats.sent)}\n▽ 1D: ${formatBytes(dailyStats.received)}\n▲ 7D: ${formatBytes(weeklyStats.sent)}\n▽ 7D: ${formatBytes(weeklyStats.received)}`;
 
         bandwidthBox.setContent(formattedText);
         screen.render();
@@ -104,11 +81,11 @@ async function updateBandwidthBox(screen) {
     }
 }
 
-function setBandwidthBox(box) {
+export function setBandwidthBox(box) {
     bandwidthBox = box;
 }
 
-function startBandwidthMonitoring(screen) {
+export function startBandwidthMonitoring(screen) {
     async function scheduleNextUpdate() {
         const startTime = Date.now();
         await updateBandwidthBox(screen);
@@ -121,8 +98,19 @@ function startBandwidthMonitoring(screen) {
     scheduleNextUpdate();
 }
 
-module.exports = {
-    updateBandwidthBox,
-    setBandwidthBox,
-    startBandwidthMonitoring,
-};
+export function createBandwidthBox(grid) {
+    const box = grid.set(6, 8, 1, 1, blessed.box, {
+        label: "Bandwidth Usage",
+        style: {
+            fg: "blue",
+        },
+        border: {
+            type: "line",
+            fg: "cyan",
+        },
+        content: "Calculating...",
+    });
+    return box;
+}
+
+export { updateBandwidthBox };

@@ -22,6 +22,7 @@ import {
   createBandwidthBox,
   setBandwidthBox,
   startBandwidthMonitoring,
+  updateBandwidthBox,
 } from "./monitor_components/bandwidthGauge.js";
 
 import { setupLogStreaming } from "./monitor_components/updateLogicExecution.js";
@@ -139,6 +140,8 @@ function setupUI(
 
   setBandwidthBox(bandwidthBox);
   startBandwidthMonitoring(screen);
+
+  setInterval(() => updateBandwidthBox(screen), 2000);
 
   if (progress) {
     headerDlGauge.setPercent(progress.headerDlProgress);
