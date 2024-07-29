@@ -1,41 +1,42 @@
-const path = require("path");
-const os = require("os");
-const blessed = require("blessed");
-const contrib = require("blessed-contrib");
-const si = require("systeminformation");
-const {setupDebugLogging} = require("./helpers")
+import path from "path";
+import os from "os";
+import blessed from "blessed";
+import contrib from "blessed-contrib";
+// import { setupDebugLogging } from "./helpers.js";
 
-const {
+import {
   loadProgress,
   getLatestLogFile,
-} = require("./monitor_components/helperFunctions");
+} from "./monitor_components/helperFunctions.js";
 
-const { createDiskGauge } = require("./monitor_components/diskGauge");
-const { createMemGauge } = require("./monitor_components/memGauge");
-const { createCpuLine } = require("./monitor_components/cpuLine");
-const { createNetworkLine } = require("./monitor_components/networkLine");
-const { createStateDlGauge } = require("./monitor_components/stateDlGauge");
-const { createHeaderDlGauge } = require("./monitor_components/headerDlGauge");
-const { createChainDlGauge } = require("./monitor_components/chainDlGauge");
-const { createPeerCountLcd } = require("./monitor_components/peerCountLcd");
+import { createDiskGauge } from "./monitor_components/diskGauge.js";
+import { createMemGauge } from "./monitor_components/memGauge.js";
+import { createCpuLine } from "./monitor_components/cpuLine.js";
+import { createNetworkLine } from "./monitor_components/networkLine.js";
+import { createStateDlGauge } from "./monitor_components/stateDlGauge.js";
+import { createHeaderDlGauge } from "./monitor_components/headerDlGauge.js";
+import { createChainDlGauge } from "./monitor_components/chainDlGauge.js";
+import { createExecutionLog } from "./monitor_components/executionLog.js";
+import { createStatusBox } from "./monitor_components/statusBox.js";
+import {
+  createBandwidthBox,
+  setBandwidthBox,
+  startBandwidthMonitoring,
+  updateBandwidthBox,
+} from "./monitor_components/bandwidthGauge.js";
 
-const { createExecutionLog } = require("./monitor_components/executionLog");
+import { setupLogStreaming } from "./monitor_components/updateLogicExecution.js";
 
-const {
-  setupLogStreaming,
-} = require("./monitor_components/updateLogicExecution");
-
-const {
+import {
   createConsensusLog,
   updateConsensusClientInfo,
-} = require("./monitor_components/consensusLog");
-const { createHeader } = require("./monitor_components/header");
-
+} from "./monitor_components/consensusLog.js";
+import { createHeader } from "./monitor_components/header.js";
 
 const CONFIG = {
   installDir: os.homedir(),
-  executionClient: 'geth',
-  consensusClient: 'prysm',
+  executionClient: "geth",
+  consensusClient: "prysm",
   logDirs: {
     geth: path.join(os.homedir(), "bgnode", "geth", "logs"),
     prysm: path.join(os.homedir(), "bgnode", "prysm", "logs"),
@@ -43,23 +44,48 @@ const CONFIG = {
   debugLogPath: path.join(os.homedir(), "bgnode", "debugMonitor.log"),
 };
 
-
-
-function initializeMonitoring(messageForHeader, gethVer, rethVer, prysmVer, runsClient) {
-  try {    
+export function initializeMonitoring(
+  messageForHeader,
+  gethVer,
+  rethVer,
+  prysmVer,
+  runsClient
+) {
+  try {
     const progress = loadProgress();
 
     // setupDebugLogging(CONFIG.debugLogPath);
 
-    const { screen, components } = setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer, runsClient);
+    const { screen, components } = setupUI(
+      progress,
+      messageForHeader,
+      gethVer,
+      rethVer,
+      prysmVer,
+      runsClient
+    );
 
-    const logFilePath = path.join(CONFIG.logDirs.geth, getLatestLogFile(CONFIG.logDirs.geth, CONFIG.executionClient));
-    const logFilePathConsensus = path.join(CONFIG.logDirs.prysm, getLatestLogFile(CONFIG.logDirs.prysm, CONFIG.consensusClient));
+    const logFilePath = path.join(
+      CONFIG.logDirs.geth,
+      getLatestLogFile(CONFIG.logDirs.geth, CONFIG.executionClient)
+    );
+    const logFilePathConsensus = path.join(
+      CONFIG.logDirs.prysm,
+      getLatestLogFile(CONFIG.logDirs.prysm, CONFIG.consensusClient)
+    );
 
-    console.log(`Monitoring ${CONFIG.executionClient} logs from: ${logFilePath}`);
-    console.log(`Monitoring ${CONFIG.consensusClient} logs from: ${logFilePathConsensus}`);
+    console.log(
+      `Monitoring ${CONFIG.executionClient} logs from: ${logFilePath}`
+    );
+    console.log(
+      `Monitoring ${CONFIG.consensusClient} logs from: ${logFilePathConsensus}`
+    );
 
-    updateConsensusClientInfo(logFilePathConsensus, components.consensusLog, screen);
+    updateConsensusClientInfo(
+      logFilePathConsensus,
+      components.consensusLog,
+      screen
+    );
 
     setupLogStreaming(
       logFilePath,
@@ -67,24 +93,27 @@ function initializeMonitoring(messageForHeader, gethVer, rethVer, prysmVer, runs
       screen,
       components.headerDlGauge,
       components.stateDlGauge,
-      components.chainDlGauge,
-      components.peerCountGauge
+      components.chainDlGauge
     );
-
-    
   } catch (error) {
     console.error("Error initializing monitoring:", error);
   }
 }
 
-function setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer, runsClient) {
+function setupUI(
+  progress,
+  messageForHeader,
+  gethVer,
+  rethVer,
+  prysmVer,
+  runsClient
+) {
   const screen = blessed.screen();
   suppressMouseOutput(screen);
   const grid = new contrib.grid({ rows: 9, cols: 9, screen: screen });
 
   const executionLog = createExecutionLog(grid, gethVer, rethVer);
   const consensusLog = createConsensusLog(grid, prysmVer);
-  const peerCountGauge = createPeerCountLcd(grid, screen);
   const storageGauge = createDiskGauge(grid, screen);
   const memGauge = createMemGauge(grid, screen);
   const cpuLine = createCpuLine(grid, screen);
@@ -92,11 +121,13 @@ function setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer, runsCli
   const headerDlGauge = createHeaderDlGauge(grid);
   const stateDlGauge = createStateDlGauge(grid);
   const chainDlGauge = createChainDlGauge(grid);
-  const header = createHeader(grid, screen, messageForHeader);
+  const statusBox = createStatusBox(grid, screen);
+  const bandwidthBox = createBandwidthBox(grid);
+
+  createHeader(grid, screen, messageForHeader);
 
   screen.append(executionLog);
   screen.append(consensusLog);
-  screen.append(peerCountGauge);
   screen.append(cpuLine);
   screen.append(networkLine);
   screen.append(memGauge);
@@ -104,8 +135,13 @@ function setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer, runsCli
   screen.append(headerDlGauge);
   screen.append(stateDlGauge);
   screen.append(chainDlGauge);
+  screen.append(statusBox);
+  screen.append(bandwidthBox);
 
-  peerCountGauge.setDisplay("0");
+  setBandwidthBox(bandwidthBox);
+  startBandwidthMonitoring(screen);
+
+  setInterval(() => updateBandwidthBox(screen), 2000);
 
   if (progress) {
     headerDlGauge.setPercent(progress.headerDlProgress);
@@ -117,10 +153,10 @@ function setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer, runsCli
 
   screen.key(["escape", "q", "C-c"], function (ch, key) {
     if (runsClient) {
-      process.kill(process.pid, 'SIGUSR2');
+      process.kill(process.pid, "SIGUSR2");
       console.log("Clients exited from monitor");
     } else {
-      console.log("not working", runsClient)
+      console.log("not working", runsClient);
       process.exit(0);
     }
     screen.destroy();
@@ -131,15 +167,12 @@ function setupUI(progress, messageForHeader, gethVer, rethVer, prysmVer, runsCli
     components: {
       executionLog,
       consensusLog,
-      peerCountGauge,
       headerDlGauge,
       stateDlGauge,
-      chainDlGauge
+      chainDlGauge,
     },
   };
 }
-
-module.exports = { initializeMonitoring };
 
 function suppressMouseOutput(screen) {
   screen.on("element mouse", (el, data) => {
@@ -156,7 +189,7 @@ function suppressMouseOutput(screen) {
       key.name === "right"
     ) {
       if (!key.ctrl && !key.meta && !key.shift) {
-        return false; 
+        return false;
       }
     }
   });

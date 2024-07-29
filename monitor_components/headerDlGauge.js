@@ -1,9 +1,8 @@
-const contrib = require("blessed-contrib");
-const fs = require("fs");
-const path = require("path");
+import contrib from "blessed-contrib";
+
 let headerDlGauge;
 
-function createHeaderDlGauge(grid) {
+export function createHeaderDlGauge(grid) {
   headerDlGauge = grid.set(6, 7, 1, 1, contrib.gauge, {
     label: "Header DL Progress",
     stroke: "cyan",
@@ -16,7 +15,3 @@ function createHeaderDlGauge(grid) {
 
   return headerDlGauge;
 }
-
-module.exports = {
-  createHeaderDlGauge,
-};

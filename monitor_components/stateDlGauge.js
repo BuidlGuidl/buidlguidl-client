@@ -1,8 +1,6 @@
-const contrib = require("blessed-contrib");
-const fs = require("fs");
-const path = require("path");
+import contrib from "blessed-contrib";
 
-function createStateDlGauge(grid) {
+export function createStateDlGauge(grid) {
   let stateDlGauge = grid.set(7, 7, 1, 1, contrib.gauge, {
     label: "State DL Progress",
     stroke: "cyan",
@@ -15,7 +13,3 @@ function createStateDlGauge(grid) {
 
   return stateDlGauge;
 }
-
-module.exports = {
-  createStateDlGauge,
-};

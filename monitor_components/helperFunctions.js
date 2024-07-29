@@ -1,6 +1,6 @@
-const fs = require("fs");
-const path = require("path");
-const os = require("os");
+import fs from "fs";
+import path from "path";
+import os from "os";
 
 const installDir = os.homedir();
 const progressFilePath = path.join(
@@ -9,7 +9,7 @@ const progressFilePath = path.join(
   "progressMonitor.json"
 );
 
-function getLatestLogFile(dir, client) {
+export function getLatestLogFile(dir, client) {
   const files = fs.readdirSync(dir);
   let logFiles;
   if (client === "geth") {
@@ -31,7 +31,7 @@ function getLatestLogFile(dir, client) {
   return logFiles[0];
 }
 
-function saveProgress(progress) {
+export function saveProgress(progress) {
   //   console.log("Saving progress:", progress);
   fs.writeFileSync(
     progressFilePath,
@@ -40,7 +40,7 @@ function saveProgress(progress) {
   );
 }
 
-function loadProgress() {
+export function loadProgress() {
   if (fs.existsSync(progressFilePath)) {
     const data = fs.readFileSync(progressFilePath, "utf-8");
     return JSON.parse(data);
@@ -54,7 +54,7 @@ function loadProgress() {
   };
 }
 
-function highlightWords(line) {
+export function highlightWords(line) {
   // Define words which should be highlighted in exec and consensus logs
   const highlightRules = [
     { word: "INFO", style: "{bold}{green-fg}" },
@@ -87,9 +87,3 @@ function highlightWords(line) {
 
   return line;
 }
-
-module.exports = {
-  loadProgress,
-  saveProgress,
-  getLatestLogFile, highlightWords
-};
