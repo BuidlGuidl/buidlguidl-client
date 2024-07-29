@@ -44,7 +44,6 @@ export function debugToFile(data, callback) {
 
   fs.writeFile(filePath, content, { flag: "a" }, (err) => {
     if (err) {
-      console.error("Failed to write to file:", err);
     } else {
       if (callback) callback();
     }
