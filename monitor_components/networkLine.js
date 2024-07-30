@@ -10,6 +10,7 @@ let lastStats = {
   totalReceived: 0,
   timestamp: Date.now(),
 };
+let firstTime = true;
 
 function getNetworkStats() {
   return new Promise((resolve, reject) => {
@@ -40,10 +41,19 @@ function getNetworkStats() {
           timestamp: currentTime,
         };
 
-        resolve({
-          sentPerSecond: sentPerSecond / 1000000,
-          receivedPerSecond: receivedPerSecond / 1000000,
-        });
+        if (firstTime) {
+          resolve({
+            sentPerSecond: 0,
+            receivedPerSecond: 0,
+          });
+
+          firstTime = false;
+        } else {
+          resolve({
+            sentPerSecond: sentPerSecond / 1000000,
+            receivedPerSecond: receivedPerSecond / 1000000,
+          });
+        }
       })
       .catch((error) => {
         debugToFile(
@@ -106,7 +116,7 @@ export function createNetworkLine(grid, screen) {
     },
   });
 
-  setInterval(() => updateNetworkLinePlot(networkLine, screen), 2000);
+  setInterval(() => updateNetworkLinePlot(networkLine, screen), 1000);
 
   return networkLine;
 }
