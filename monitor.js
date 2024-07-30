@@ -3,6 +3,7 @@ import os from "os";
 import blessed from "blessed";
 import contrib from "blessed-contrib";
 // import { setupDebugLogging } from "./helpers.js";
+import { debugToFile } from "./helpers.js";
 
 import {
   loadProgress,
@@ -74,11 +75,13 @@ export function initializeMonitoring(
       getLatestLogFile(CONFIG.logDirs.prysm, CONFIG.consensusClient)
     );
 
-    console.log(
-      `Monitoring ${CONFIG.executionClient} logs from: ${logFilePath}`
+    debugToFile(
+      `Monitoring ${CONFIG.executionClient} logs from: ${logFilePath}`,
+      () => {}
     );
-    console.log(
-      `Monitoring ${CONFIG.consensusClient} logs from: ${logFilePathConsensus}`
+    debugToFile(
+      `Monitoring ${CONFIG.consensusClient} logs from: ${logFilePathConsensus}`,
+      () => {}
     );
 
     updateConsensusClientInfo(
@@ -96,7 +99,7 @@ export function initializeMonitoring(
       components.chainDlGauge
     );
   } catch (error) {
-    console.error("Error initializing monitoring:", error);
+    debugToFile(`Error initializing monitoring: ${error}`, () => {});
   }
 }
 

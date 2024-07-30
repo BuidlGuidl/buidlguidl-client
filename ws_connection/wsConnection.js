@@ -98,6 +98,6 @@ export function initializeWSConnection(wsConfig) {
   });
 
   ws.on("error", function error(err) {
-    console.error("WebSocket error:", err);
+    debugToFile(`WebSocket error: ${err}`, () => {});
   });
 }

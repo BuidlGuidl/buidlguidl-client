@@ -1,5 +1,6 @@
 import contrib from "blessed-contrib";
 import si from "systeminformation";
+import { debugToFile } from "../helpers.js";
 
 let networkDataX = [];
 let dataSentY = [];
@@ -45,8 +46,9 @@ function getNetworkStats() {
         });
       })
       .catch((error) => {
-        console.error(
-          `getNetworkStats() Error fetching network stats: ${error}`
+        debugToFile(
+          `getNetworkStats() Error fetching network stats: ${error}`,
+          () => {}
         );
         reject(error);
       });
@@ -86,7 +88,7 @@ async function updateNetworkLinePlot(networkLine, screen) {
       dataReceivedY.shift();
     }
   } catch (error) {
-    console.error(`updateNetworkPlot(): ${error}`);
+    debugToFile(`updateNetworkPlot(): ${error}`, () => {});
   }
 }
 

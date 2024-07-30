@@ -2,6 +2,7 @@ import pty from "node-pty";
 import fs from "fs";
 import os from "os";
 import path from "path";
+import { debugToFile } from "../helpers.js";
 
 const installDir = process.env.INSTALL_DIR || os.homedir();
 
@@ -83,7 +84,7 @@ execution.on("error", (err) => {
   if (process.send) {
     process.send({ log: errorMessage }); // Send error message to parent process
   }
-  console.error(errorMessage); // Log error message to console
+  debugToFile(`${errorMessage}`, () => {});
 });
 
 function getFormattedDateTime() {

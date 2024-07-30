@@ -5,6 +5,7 @@ import axios from "axios";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import { debugToFile } from "../helpers.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -39,7 +40,7 @@ export function createHeader(grid, screen, messageForHeader) {
       const response = await axios.get("https://api.ipify.org?format=json");
       return response.data.ip;
     } catch (error) {
-      console.error("Error fetching public IP address:", error);
+      debugToFile(`Error fetching public IP address: ${error}`, () => {});
       return "Public IP not found";
     }
   }

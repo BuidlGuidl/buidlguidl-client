@@ -64,7 +64,6 @@ export async function updateStatusBox(statusBox, screen) {
 
     screen.render();
   } catch (error) {
-    console.error();
     debugToFile(
       `updateStatusBox() Failed to update sync progress gauge: ${error}`,
       () => {}

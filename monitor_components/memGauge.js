@@ -1,5 +1,6 @@
 import contrib from "blessed-contrib";
 import si from "systeminformation";
+import { debugToFile } from "../helpers.js";
 
 let memGauge;
 
@@ -13,7 +14,7 @@ export function getMemoryUsage() {
         resolve(memoryUsagePercent.toFixed(1)); // Return memory usage as a percentage
       })
       .catch((error) => {
-        console.error("Error fetching memory stats:", error);
+        debugToFile(`Error fetching memory stats:: ${error}`, () => {});
         reject(error);
       });
   });
@@ -25,7 +26,7 @@ async function updateMemoryGauge(screen) {
     memGauge.setPercent(memoryUsagePercent);
     screen.render();
   } catch (error) {
-    console.error("Failed to update memory gauge:", error);
+    debugToFile(`Failed to update memory gauge: ${error}`, () => {});
   }
 }
 

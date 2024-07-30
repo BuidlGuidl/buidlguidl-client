@@ -2,6 +2,7 @@ import fs from "fs";
 import readline from "readline";
 import contrib from "blessed-contrib";
 import { highlightWords } from "./helperFunctions.js";
+import { debugToFile } from "../helpers.js";
 
 export function createConsensusLog(grid, prysmVer) {
   const consensusLog = grid.set(3, 0, 2, 9, contrib.log, {
@@ -41,11 +42,11 @@ export function updateConsensusClientInfo(logFilePath, log, screen) {
       });
 
       newRl.on("close", () => {
-        // console.log("New log file stream ended");
+        // debugToFile(`New log file stream ended`, () => {});
       });
 
       newRl.on("error", (err) => {
-        console.error("Error reading new log file stream:", err);
+        debugToFile(`Error reading new log file stream: ${err}`, () => {});
       });
     }
   });

@@ -5,6 +5,7 @@ import {
   saveProgress,
   highlightWords,
 } from "./helperFunctions.js";
+import { debugToFile } from "../helpers.js";
 
 const progress = loadProgress();
 
@@ -19,7 +20,7 @@ function updatePeerCountLcd(peerCountGauge, peerCount, screen) {
     peerCountGauge.setDisplay(peerCount.toString());
     screen.render();
   } catch (error) {
-    console.log(`updatePeerCountLcd(): ${error}`, () => {});
+    debugToFile(`updatePeerCountLcd(): ${error}`, () => {});
   }
 }
 
@@ -39,20 +40,20 @@ function saveHeaderDlProgress(line) {
       /downloaded=([\d,]+)\s+left=([\d,]+)\s+eta=([^\s]+)/
     );
 
-    console.log("HEADER DL updated!!!!!!!!!!");
-    console.log("headerDlMatch: ", headerDlMatch);
+    debugToFile(`HEADER DL updated!!!!!!!!!!`, () => {});
+    debugToFile(`headerDlMatch: ${headerDlMatch}`, () => {});
 
     const headerDlDownloaded = parseInt(headerDlMatch[1].replace(/,/g, ""), 10);
-    console.log("headerDlDownloaded: ", headerDlDownloaded);
+    debugToFile(`headerDlDownloaded: ${headerDlDownloaded}`, () => {});
     const headerDlLeft = parseInt(headerDlMatch[2].replace(/,/g, ""), 10);
-    console.log("headerDlLeft: ", headerDlLeft);
+    debugToFile(`headerDlLeft: ${headerDlLeft}`, () => {});
     const headerDlProgress =
       headerDlDownloaded / (headerDlDownloaded + headerDlLeft);
 
-    console.log("headerDlProgress: ", headerDlProgress);
+    debugToFile(`headerDlProgress: ${headerDlProgress}`, () => {});
     progress.headerDlProgress = headerDlProgress;
     saveProgress(progress);
-    console.log("Progress from getHeaderDlProgress: ", progress);
+    debugToFile(`Progress from getHeaderDlProgress: ${progress}`, () => {});
   }
 }
 
@@ -112,8 +113,8 @@ export function setupLogStreaming(
         saveStateDlProgress(line);
         saveChainDlProgress(line);
 
-        // console.log("line", line);
-        // console.log("progress From stream", progress);
+        // debugToFile(`line ${line}`, () => {});
+        // debugToFile(`progress From stream ${progress}`, () => {});
 
         if (headerDlGauge) {
           headerDlGauge.setPercent(progress.headerDlProgress);
@@ -129,11 +130,11 @@ export function setupLogStreaming(
       });
 
       newRl.on("close", () => {
-        // console.log("New log file stream ended");
+        // debugToFile(`New log file stream ended`, () => {});
       });
 
       newRl.on("error", (err) => {
-        console.error("Error reading new log file stream:", err);
+        debugToFile(`Error reading new log file stream: ${err}`, () => {});
       });
     }
   });
@@ -168,9 +169,9 @@ export function setupLogStreaming(
 // });
 
 // rl.on("close", () => {
-//   // console.log("Log file stream ended");
+// debugToFile(`Log file stream ended`, () => {});
 // });
 
 // rl.on("error", (err) => {
-//   console.error("Error reading log file:", err);
+// debugToFile(`Error reading log file: ${err}`, () => {});
 // });

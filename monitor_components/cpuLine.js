@@ -1,5 +1,6 @@
 import contrib from "blessed-contrib";
 import si from "systeminformation";
+import { debugToFile } from "../helpers.js";
 
 let cpuDataX = [];
 let dataCpuUsage = [];
@@ -12,7 +13,10 @@ export function getCpuUsage() {
         resolve(currentLoad);
       })
       .catch((error) => {
-        console.error(`getCpuUsage() Error fetching CPU usage stats: ${error}`);
+        debugToFile(
+          `getCpuUsage() Error fetching CPU usage stats: ${error}`,
+          () => {}
+        );
         reject(error);
       });
   });
@@ -58,8 +62,9 @@ async function updateCpuLinePlot(cpuLine, screen) {
       dataCpuUsage.shift();
     }
   } catch (error) {
-    console.error(
-      `updateCpuLinePlot() Failed to update CPU usage line chart: ${error}`
+    debugToFile(
+      `updateCpuLinePlot() Failed to update CPU usage line chart: ${error}`,
+      () => {}
     );
   }
 }

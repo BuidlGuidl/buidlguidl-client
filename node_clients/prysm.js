@@ -2,6 +2,7 @@ import pty from "node-pty";
 import fs from "fs";
 import path from "path";
 import os from "os";
+import { debugToFile } from "../helpers.js";
 
 const installDir = process.env.INSTALL_DIR || os.homedir();
 
@@ -79,7 +80,7 @@ consensus.on("error", (err) => {
   if (process.send) {
     process.send({ log: errorMessage }); // Send error message to parent process
   }
-  console.error("From Prysm client:", errorMessage); // Log error message to console
+  debugToFile(`From Prysm client: ${errorMessage}`, () => {});
 });
 
 function getFormattedDateTime() {

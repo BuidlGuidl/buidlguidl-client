@@ -1,5 +1,6 @@
 import contrib from "blessed-contrib";
 import si from "systeminformation";
+import { debugToFile } from "../helpers.js";
 
 let storageGauge;
 
@@ -16,13 +17,16 @@ export function getDiskUsage() {
         if (osDrive) {
           diskUsagePercent = 100 - (osDrive.available / osDrive.size) * 100;
         } else {
-          console.error("OS Drive not found.");
+          debugToFile(`getDiskUsage(): OS Drive not found.`, () => {});
         }
 
         resolve(diskUsagePercent.toFixed(1));
       })
       .catch((error) => {
-        console.error("Error fetching disk usage stats:", error);
+        debugToFile(
+          `getDiskUsage(): Error fetching disk usage stats: ${error}`,
+          () => {}
+        );
         reject(error);
       });
   });
@@ -34,7 +38,7 @@ async function updateDiskGauge(screen) {
     storageGauge.setPercent(diskUsagePercent);
     screen.render();
   } catch (error) {
-    console.error("Failed to update disk usage donut:", error);
+    debugToFile(`Failed to update disk usage donut: ${error}`, () => {});
   }
 }
 
