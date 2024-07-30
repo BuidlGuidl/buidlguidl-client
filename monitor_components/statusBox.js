@@ -57,7 +57,7 @@ export async function updateStatusBox(statusBox, screen) {
         );
       } else {
         statusBox.setContent(
-          `CURRENT BLOCK\nBlock: ${blockNumber}/${latestBlock}`
+          `CATCHING UP TO HEAD\nLocal Block: ${blockNumber}\nMainnet Block: ${latestBlock}`
         );
       }
     }
