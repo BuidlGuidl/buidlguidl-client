@@ -37,7 +37,7 @@ export async function updateStatusBox(statusBox, screen) {
       const highestBlock = parseInt(syncingStatus.highestBlock, 16);
 
       statusBox.setContent(
-        `INITIAL SYNC IN PROGRESS\nCurrent Block: ${currentBlock}\nHighest Block: ${highestBlock}`
+        `SYNC IN PROGRESS\nCurrent Block: ${currentBlock}\nHighest Block: ${highestBlock}`
       );
       // statusBox.setContent(
       //   `INITIAL SYNC IN PROGRESS\nCurrent Block: ${currentBlock.toFixed(
@@ -50,7 +50,8 @@ export async function updateStatusBox(statusBox, screen) {
 
       if (
         blockNumber === latestBlock ||
-        blockNumber === latestBlock + BigInt(1)
+        blockNumber === latestBlock + BigInt(1) ||
+        blockNumber === latestBlock - BigInt(1)
       ) {
         statusBox.setContent(
           `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber}`
