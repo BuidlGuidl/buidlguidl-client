@@ -79,7 +79,7 @@ export function createHeader(grid, screen, messageForHeader) {
   // Fetch and display the public IP address
   getPublicIPAddress().then((publicIP) => {
     ipAddressBox.setContent(
-      `{center}{bold}IP Address: ${getIPAddress()}{/bold}\n{center}{bold}Public IP: ${publicIP}{/bold}{/center}`
+      `{center}{bold}Local IP: ${getIPAddress()}{/bold}\n{center}{bold}Public IP: ${publicIP}{/bold}{/center}`
     );
     screen.render();
   });
