@@ -105,6 +105,7 @@ function handleExit() {
   try {
     // Check if both child processes have exited
     const checkExit = () => {
+      console.log("Running checkExit()");
       if (executionExited && consensusExited) {
         console.log("Both clients exited!");
         removeLockFile();
