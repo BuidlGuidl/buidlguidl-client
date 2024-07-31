@@ -130,7 +130,6 @@ function handleExit() {
     if (executionChild && !executionExited) {
       console.log("Exiting execution client...");
       executionChild.on("exit", handleExecutionExit);
-      executionChild.kill("SIGINT");
     } else {
       executionExited = true;
     }
@@ -138,9 +137,17 @@ function handleExit() {
     if (consensusChild && !consensusExited) {
       console.log("Exiting consensus client...");
       consensusChild.on("exit", handleConsensusExit);
-      consensusChild.kill("SIGINT");
     } else {
       consensusExited = true;
+    }
+
+    // Send the kill signals after setting the event listeners
+    if (executionChild && !executionExited) {
+      executionChild.kill("SIGINT");
+    }
+
+    if (consensusChild && !consensusExited) {
+      consensusChild.kill("SIGINT");
     }
 
     // Initial check in case both children are already not running
