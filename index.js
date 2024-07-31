@@ -105,7 +105,6 @@ function handleExit() {
   try {
     // Check if both child processes have exited
     const checkExit = () => {
-      console.log("Running checkExit()");
       if (executionExited && consensusExited) {
         console.log("Both clients exited!");
         removeLockFile();
@@ -151,9 +150,6 @@ function handleExit() {
 
     // Ensure event listeners are set before killing the processes
     if (executionChild && !executionExited) {
-      console.log(
-        "Setting up exit and close listeners for execution client..."
-      );
       executionChild.on("exit", handleExecutionExit);
       executionChild.on("close", handleExecutionClose);
     } else {
@@ -161,9 +157,6 @@ function handleExit() {
     }
 
     if (consensusChild && !consensusExited) {
-      console.log(
-        "Setting up exit and close listeners for consensus client..."
-      );
       consensusChild.on("exit", handleConsensusExit);
       consensusChild.on("close", handleConsensusClose);
     } else {
@@ -175,14 +168,14 @@ function handleExit() {
       console.log("Exiting execution client...");
       setTimeout(() => {
         executionChild.kill("SIGINT");
-      }, 500);
+      }, 750);
     }
 
     if (consensusChild && !consensusExited) {
       console.log("Exiting consensus client...");
       setTimeout(() => {
         consensusChild.kill("SIGINT");
-      }, 500);
+      }, 750);
     }
 
     // Initial check in case both children are already not running
@@ -195,9 +188,9 @@ function handleExit() {
       if (executionExited && consensusExited) {
         clearInterval(intervalId);
       }
-    }, 5000);
+    }, 1000);
   } catch (error) {
-    console.log("Error from handleExit", error);
+    console.log("Error from handleExit()", error);
   }
 }
 
