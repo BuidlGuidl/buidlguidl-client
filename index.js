@@ -114,39 +114,69 @@ function handleExit() {
 
     // Handle execution client exit
     const handleExecutionExit = (code) => {
-      executionExited = true;
-      console.log(`Execution client exited with code ${code}`);
-      checkExit();
+      if (!executionExited) {
+        executionExited = true;
+        console.log(`Execution client exited with code ${code}`);
+        checkExit();
+      }
     };
 
     // Handle consensus client exit
     const handleConsensusExit = (code) => {
-      consensusExited = true;
-      console.log(`Consensus client exited with code ${code}`);
-      checkExit();
+      if (!consensusExited) {
+        consensusExited = true;
+        console.log(`Consensus client exited with code ${code}`);
+        checkExit();
+      }
+    };
+
+    // Handle execution client close
+    const handleExecutionClose = (code) => {
+      if (!executionExited) {
+        executionExited = true;
+        console.log(`Execution client closed with code ${code}`);
+        checkExit();
+      }
+    };
+
+    // Handle consensus client close
+    const handleConsensusClose = (code) => {
+      if (!consensusExited) {
+        consensusExited = true;
+        console.log(`Consensus client closed with code ${code}`);
+        checkExit();
+      }
     };
 
     // Ensure event listeners are set before killing the processes
     if (executionChild && !executionExited) {
-      console.log("Exiting execution client...");
+      console.log(
+        "Setting up exit and close listeners for execution client..."
+      );
       executionChild.on("exit", handleExecutionExit);
+      executionChild.on("close", handleExecutionClose);
     } else {
       executionExited = true;
     }
 
     if (consensusChild && !consensusExited) {
-      console.log("Exiting consensus client...");
+      console.log(
+        "Setting up exit and close listeners for consensus client..."
+      );
       consensusChild.on("exit", handleConsensusExit);
+      consensusChild.on("close", handleConsensusClose);
     } else {
       consensusExited = true;
     }
 
     // Send the kill signals after setting the event listeners
     if (executionChild && !executionExited) {
+      console.log("Exiting execution client...");
       executionChild.kill("SIGINT");
     }
 
     if (consensusChild && !consensusExited) {
+      console.log("Exiting consensus client...");
       consensusChild.kill("SIGINT");
     }
 
