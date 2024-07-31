@@ -41,6 +41,14 @@ function getNetworkStats() {
           timestamp: currentTime,
         };
 
+        if (sentPerSecond < 0) {
+          sentPerSecond = 0;
+        }
+
+        if (receivedPerSecond < 0) {
+          receivedPerSecond = 0;
+        }
+
         if (firstTime) {
           resolve({
             sentPerSecond: 0,
