@@ -173,12 +173,16 @@ function handleExit() {
     // Send the kill signals after setting the event listeners
     if (executionChild && !executionExited) {
       console.log("Exiting execution client...");
-      executionChild.kill("SIGINT");
+      setTimeout(() => {
+        executionChild.kill("SIGINT");
+      }, 500);
     }
 
     if (consensusChild && !consensusExited) {
       console.log("Exiting consensus client...");
-      consensusChild.kill("SIGINT");
+      setTimeout(() => {
+        consensusChild.kill("SIGINT");
+      }, 500);
     }
 
     // Initial check in case both children are already not running
