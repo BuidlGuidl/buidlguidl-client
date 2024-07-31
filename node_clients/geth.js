@@ -73,8 +73,8 @@ execution.on("data", (data) => {
 });
 
 execution.on("exit", (code) => {
-  const exitMessage = `geth process exited with code ${code}`;
-  logStream.write(exitMessage);
+  // const exitMessage = `geth process exited with code ${code}`;
+  // logStream.write(exitMessage);
   logStream.end();
 });
 

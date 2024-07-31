@@ -216,7 +216,7 @@ function startClient(clientName, installDir) {
   }
 
   child.on("exit", (code) => {
-    console.log(`${clientName} process exited with code ${code}`);
+    // console.log(`${clientName} process exited with code ${code}`);
     if (clientName === "geth") {
       executionExited = true;
     } else if (clientName === "prysm") {
