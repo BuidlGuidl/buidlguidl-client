@@ -182,6 +182,15 @@ function handleExit() {
 
     // Initial check in case both children are already not running
     checkExit();
+
+    // Periodically check if both child processes have exited
+    const intervalId = setInterval(() => {
+      checkExit();
+      // Clear interval if both clients have exited
+      if (executionExited && consensusExited) {
+        clearInterval(intervalId);
+      }
+    }, 5000);
   } catch (error) {
     console.log("Error from handleExit", error);
   }
