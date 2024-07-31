@@ -55,6 +55,51 @@ let consensusChild;
 let executionExited = false;
 let consensusExited = false;
 
+// function handleExit() {
+//   console.log("Received exit signal");
+//   try {
+//     // Check if both child processes have exited
+//     const checkExit = () => {
+//       if (executionExited && consensusExited) {
+//         console.log("Both clients exited!");
+//         removeLockFile();
+//         process.exit(0);
+//       }
+//     };
+
+//     // Gracefully kill the execution client
+//     if (executionChild && !executionExited) {
+//       console.log("Exiting execution client...");
+//       executionChild.kill("SIGINT");
+//       executionChild.on("exit", (code) => {
+//         executionExited = true;
+//         console.log("Execution client exited");
+//         checkExit();
+//       });
+//     } else {
+//       executionExited = true;
+//     }
+
+//     // Gracefully kill the consensus client
+//     if (consensusChild && !consensusExited) {
+//       console.log("Exiting consensus client...");
+//       consensusChild.kill("SIGINT");
+//       consensusChild.on("exit", (code) => {
+//         consensusExited = true;
+//         console.log("Consensus client exited");
+//         checkExit();
+//       });
+//     } else {
+//       consensusExited = true;
+//     }
+
+//     // Initial check in case both children are already not running
+//     checkExit();
+//   } catch (error) {
+//     console.log("Error form handle exit", error);
+//   }
+// }
+
 function handleExit() {
   console.log("Received exit signal");
   try {
@@ -67,28 +112,33 @@ function handleExit() {
       }
     };
 
-    // Gracefully kill the execution client
+    // Handle execution client exit
+    const handleExecutionExit = (code) => {
+      executionExited = true;
+      console.log(`Execution client exited with code ${code}`);
+      checkExit();
+    };
+
+    // Handle consensus client exit
+    const handleConsensusExit = (code) => {
+      consensusExited = true;
+      console.log(`Consensus client exited with code ${code}`);
+      checkExit();
+    };
+
+    // Ensure event listeners are set before killing the processes
     if (executionChild && !executionExited) {
       console.log("Exiting execution client...");
+      executionChild.on("exit", handleExecutionExit);
       executionChild.kill("SIGINT");
-      executionChild.on("exit", (code) => {
-        executionExited = true;
-        console.log("Execution client exited");
-        checkExit();
-      });
     } else {
       executionExited = true;
     }
 
-    // Gracefully kill the consensus client
     if (consensusChild && !consensusExited) {
       console.log("Exiting consensus client...");
+      consensusChild.on("exit", handleConsensusExit);
       consensusChild.kill("SIGINT");
-      consensusChild.on("exit", (code) => {
-        consensusExited = true;
-        console.log("Consensus client exited");
-        checkExit();
-      });
     } else {
       consensusExited = true;
     }
@@ -96,7 +146,7 @@ function handleExit() {
     // Initial check in case both children are already not running
     checkExit();
   } catch (error) {
-    console.log("Error form handle exit", error);
+    console.log("Error from handleExit", error);
   }
 }
 
