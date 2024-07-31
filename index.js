@@ -114,27 +114,51 @@ function handleExit() {
 
     // Handle execution client exit
     const handleExecutionExit = (code) => {
-      executionExited = true;
-      console.log(`Execution client exited with code ${code}`);
-      checkExit();
+      if (!executionExited) {
+        executionExited = true;
+        console.log(`Execution client exited with code ${code}`);
+        checkExit();
+      }
     };
 
     // Handle consensus client exit
     const handleConsensusExit = (code) => {
-      consensusExited = true;
-      console.log(`Consensus client exited with code ${code}`);
-      checkExit();
+      if (!consensusExited) {
+        consensusExited = true;
+        console.log(`Consensus client exited with code ${code}`);
+        checkExit();
+      }
+    };
+
+    // Handle execution client close
+    const handleExecutionClose = (code) => {
+      if (!executionExited) {
+        executionExited = true;
+        console.log(`Execution client closed with code ${code}`);
+        checkExit();
+      }
+    };
+
+    // Handle consensus client close
+    const handleConsensusClose = (code) => {
+      if (!consensusExited) {
+        consensusExited = true;
+        console.log(`Consensus client closed with code ${code}`);
+        checkExit();
+      }
     };
 
     // Ensure event listeners are set before killing the processes
     if (executionChild && !executionExited) {
       executionChild.on("exit", handleExecutionExit);
+      executionChild.on("close", handleExecutionClose);
     } else {
       executionExited = true;
     }
 
     if (consensusChild && !consensusExited) {
       consensusChild.on("exit", handleConsensusExit);
+      consensusChild.on("close", handleConsensusClose);
     } else {
       consensusExited = true;
     }
@@ -216,7 +240,7 @@ function startClient(clientName, installDir) {
   }
 
   child.on("exit", (code) => {
-    // console.log(`${clientName} process exited with code ${code}`);
+    console.log(`${clientName} process exited with code ${code}`);
     if (clientName === "geth") {
       executionExited = true;
     } else if (clientName === "prysm") {
