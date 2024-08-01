@@ -1,8 +1,8 @@
 import contrib from "blessed-contrib";
 
-export function createExecutionLog(grid, gethVer, rethVer) {
+export function createExecutionLog(grid, executionClientLabel) {
   const executionLog = grid.set(1, 0, 2, 9, contrib.log, {
-    label: `Geth v${gethVer}`,
+    label: `${executionClientLabel}`,
     border: {
       type: "line",
       fg: "cyan",

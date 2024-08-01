@@ -96,7 +96,7 @@ export function highlightWords(line) {
     line = line.replace(regex, `${rule.style}$1{/}`);
   });
 
-  // Highlight words followed by "="
+  // Highlight words followed by "=" in green
   line = line.replace(/\b(\w+)(?==)/g, "{bold}{green-fg}$1{/}");
 
   return line;

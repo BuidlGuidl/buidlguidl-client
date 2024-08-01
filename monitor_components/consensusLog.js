@@ -4,9 +4,9 @@ import contrib from "blessed-contrib";
 import { highlightWords } from "./helperFunctions.js";
 import { debugToFile } from "../helpers.js";
 
-export function createConsensusLog(grid, prysmVer) {
+export function createConsensusLog(grid, consensusClientLabel) {
   const consensusLog = grid.set(3, 0, 2, 9, contrib.log, {
-    label: `Prysm v${prysmVer}`,
+    label: `${consensusClientLabel}`,
     border: {
       type: "line",
       fg: "cyan",

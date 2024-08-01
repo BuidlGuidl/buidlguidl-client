@@ -34,85 +34,8 @@ import {
 } from "./monitor_components/consensusLog.js";
 import { createHeader } from "./monitor_components/header.js";
 
-// const CONFIG = {
-//   installDir: os.homedir(),
-//   executionClient: "geth",
-//   consensusClient: "prysm",
-//   logDirs: {
-//     geth: path.join(os.homedir(), "bgnode", "geth", "logs"),
-//     prysm: path.join(os.homedir(), "bgnode", "prysm", "logs"),
-//   },
-//   debugLogPath: path.join(os.homedir(), "bgnode", "debugMonitor.log"),
-// };
-
-// export function initializeMonitoring(
-//   messageForHeader,
-//   gethVer,
-//   rethVer,
-//   prysmVer,
-//   runsClient
-// ) {
-//   try {
-//     const progress = loadProgress();
-
-//     // setupDebugLogging(CONFIG.debugLogPath);
-
-//     const { screen, components } = setupUI(
-//       progress,
-//       messageForHeader,
-//       gethVer,
-//       rethVer,
-//       prysmVer,
-//       runsClient
-//     );
-
-//     const logFilePath = path.join(
-//       CONFIG.logDirs.geth,
-//       getLatestLogFile(CONFIG.logDirs.geth, CONFIG.executionClient)
-//     );
-//     const logFilePathConsensus = path.join(
-//       CONFIG.logDirs.prysm,
-//       getLatestLogFile(CONFIG.logDirs.prysm, CONFIG.consensusClient)
-//     );
-
-//     debugToFile(
-//       `Monitoring ${CONFIG.executionClient} logs from: ${logFilePath}`,
-//       () => {}
-//     );
-//     debugToFile(
-//       `Monitoring ${CONFIG.consensusClient} logs from: ${logFilePathConsensus}`,
-//       () => {}
-//     );
-
-//     updateConsensusClientInfo(
-//       logFilePathConsensus,
-//       components.consensusLog,
-//       screen
-//     );
-
-//     setupLogStreaming(
-//       logFilePath,
-//       components.executionLog,
-//       screen,
-//       components.headerDlGauge,
-//       components.stateDlGauge,
-//       components.chainDlGauge
-//     );
-//   } catch (error) {
-//     debugToFile(`Error initializing monitoring: ${error}`, () => {});
-//   }
-// }
-
-// const CONFIG = {
-//   // installDir: os.homedir(),
-//   executionClient: "geth",
-//   consensusClient: "prysm",
-//   logDirs: {
-//     geth: path.join(os.homedir(), "bgnode", "geth", "logs"),
-//     prysm: path.join(os.homedir(), "bgnode", "prysm", "logs"),
-//   },
-//   debugLogPath: path.join(os.homedir(), "bgnode", "debugMonitor.log"),
-// };
+let executionClientGlobal;
+let consensusClientGlobal;
 
 export function initializeMonitoring(
   messageForHeader,
@@ -125,6 +48,9 @@ export function initializeMonitoring(
   runsClient
 ) {
   try {
+    executionClientGlobal = executionClient;
+    consensusClientGlobal = consensusClient;
+
     const progress = loadProgress();
 
     // setupDebugLogging(CONFIG.debugLogPath);
@@ -135,6 +61,7 @@ export function initializeMonitoring(
       gethVer,
       rethVer,
       prysmVer,
+      lighthouseVer,
       runsClient
     );
 
@@ -195,14 +122,30 @@ function setupUI(
   gethVer,
   rethVer,
   prysmVer,
+  lighthouseVer,
   runsClient
 ) {
   const screen = blessed.screen();
   suppressMouseOutput(screen);
   const grid = new contrib.grid({ rows: 9, cols: 9, screen: screen });
 
-  const executionLog = createExecutionLog(grid, gethVer, rethVer);
-  const consensusLog = createConsensusLog(grid, prysmVer);
+  let executionClientLabel;
+  let consensusClientLabel;
+
+  if (executionClientGlobal == "geth") {
+    executionClientLabel = `Geth v${gethVer}`;
+  } else if (executionClientGlobal == "reth") {
+    executionClientLabel = `Reth v${rethVer}`;
+  }
+
+  if (consensusClientGlobal == "prysm") {
+    consensusClientLabel = `Prysm v${prysmVer}`;
+  } else if (consensusClientGlobal == "lighthouse") {
+    consensusClientLabel = `Lighthouse v${lighthouseVer}`;
+  }
+
+  const executionLog = createExecutionLog(grid, executionClientLabel);
+  const consensusLog = createConsensusLog(grid, consensusClientLabel);
   const storageGauge = createDiskGauge(grid, screen);
   const memGauge = createMemGauge(grid, screen);
   const cpuLine = createCpuLine(grid, screen);
