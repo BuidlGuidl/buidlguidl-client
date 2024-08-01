@@ -101,15 +101,3 @@ export function highlightWords(line) {
 
   return line;
 }
-
-export function stripAnsiCodes(input) {
-  return input.replace(
-    /[\u001b\u009b][[()#;?]*(?:(?:[a-zA-Z\d]*(?:;[a-zA-Z\d]*)*)?\u0007|(?:\d{1,4}(?:;\d{0,4})*)?[0-9A-ORZcf-nq-uy=><~])/g,
-    ""
-  );
-}
-
-export function getFormattedDateTime() {
-  const now = new Date();
-  return now.toISOString().replace(/T/, "_").replace(/\..+/, "");
-}

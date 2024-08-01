@@ -3,10 +3,7 @@ import fs from "fs";
 import path from "path";
 import os from "os";
 import { debugToFile } from "../helpers.js";
-import {
-  stripAnsiCodes,
-  getFormattedDateTime,
-} from "../monitor_components/helperFunctions.js";
+import { stripAnsiCodes, getFormattedDateTime } from "../helpers.js";
 
 const installDir = process.env.INSTALL_DIR || os.homedir();
 
