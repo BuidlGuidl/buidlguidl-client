@@ -108,3 +108,8 @@ export function stripAnsiCodes(input) {
     ""
   );
 }
+
+export function getFormattedDateTime() {
+  const now = new Date();
+  return now.toISOString().replace(/T/, "_").replace(/\..+/, "");
+}

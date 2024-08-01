@@ -3,7 +3,10 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import { debugToFile } from "../helpers.js";
-import { stripAnsiCodes } from "../monitor_components/helperFunctions.js";
+import {
+  stripAnsiCodes,
+  getFormattedDateTime,
+} from "../monitor_components/helperFunctions.js";
 
 const installDir = process.env.INSTALL_DIR || os.homedir();
 
@@ -79,11 +82,6 @@ execution.on("error", (err) => {
   }
   debugToFile(`${errorMessage}`, () => {});
 });
-
-function getFormattedDateTime() {
-  const now = new Date();
-  return now.toISOString().replace(/T/, "_").replace(/\..+/, "");
-}
 
 process.on("SIGINT", () => {
   execution.kill("SIGINT");
