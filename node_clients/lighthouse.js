@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import os from "os";
 import { debugToFile } from "../helpers.js";
+import { stripAnsiCodes } from "../monitor_components/helperFunctions.js";
 
 const installDir = process.env.INSTALL_DIR || os.homedir();
 
@@ -35,13 +36,6 @@ const logFilePath = path.join(
 );
 
 const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
-
-function stripAnsiCodes(input) {
-  return input.replace(
-    /[\u001b\u009b][[()#;?]*(?:(?:[a-zA-Z\d]*(?:;[a-zA-Z\d]*)*)?\u0007|(?:\d{1,4}(?:;\d{0,4})*)?[0-9A-ORZcf-nq-uy=><~])/g,
-    ""
-  );
-}
 
 const consensus = pty.spawn(
   `${lighthouseCommand}`,
