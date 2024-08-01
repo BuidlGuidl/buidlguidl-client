@@ -65,7 +65,6 @@ consensus.on("data", (data) => {
   if (process.send) {
     process.send({ log: data }); // No need for .toString(), pty preserves colors
   }
-  process.stdout.write(data); // Also log to console for real-time feedback
 });
 
 consensus.on("exit", (code) => {

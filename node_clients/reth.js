@@ -71,7 +71,6 @@ execution.on("data", (data) => {
   if (process.send) {
     process.send({ log: data });
   }
-  process.stdout.write(data); // Also log to console for real-time feedback
 });
 
 execution.on("exit", (code) => {
