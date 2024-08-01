@@ -290,7 +290,7 @@ function startClient(clientName, installDir) {
   if (clientName === "geth") {
     executionChild = child;
   } else if (clientName === "reth") {
-    consensusChild = child;
+    executionChild = child;
   } else if (clientName === "prysm") {
     consensusChild = child;
   } else if (clientName === "lighthouse") {
@@ -299,9 +299,9 @@ function startClient(clientName, installDir) {
 
   child.on("exit", (code) => {
     console.log(`${clientName} process exited with code ${code}`);
-    if (clientName === "geth") {
+    if (clientName === "geth" || clientName === "reth") {
       executionExited = true;
-    } else if (clientName === "prysm") {
+    } else if (clientName === "prysm" || clientName === "lighthouse") {
       consensusExited = true;
     }
   });
