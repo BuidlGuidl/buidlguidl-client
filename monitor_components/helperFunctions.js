@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import os from "os";
+import { debugToFile } from "../helpers.js";
 
 const installDir = os.homedir();
 const progressFilePath = path.join(
@@ -16,12 +17,23 @@ export function getLatestLogFile(dir, client) {
     logFiles = files.filter(
       (file) => file.startsWith("geth_") && file.endsWith(".log")
     );
+  } else if (client === "reth") {
+    logFiles = files.filter(
+      (file) => file.startsWith("reth_") && file.endsWith(".log")
+    );
   } else if (client === "prysm") {
     logFiles = files.filter(
       (file) => file.startsWith("prysm_") && file.endsWith(".log")
     );
+  } else if (client === "lighthouse") {
+    logFiles = files.filter(
+      (file) => file.startsWith("lighthouse_") && file.endsWith(".log")
+    );
   } else {
-    console.log("Invalid client specified. Must be 'geth' or 'prysm'");
+    debugToFile(
+      `getLatestLogFile(): Invalid client specified. Must be 'geth', 'reth', 'prysm', or 'lighthouse'.`,
+      () => {}
+    );
   }
   logFiles.sort(
     (a, b) =>
