@@ -34,22 +34,94 @@ import {
 } from "./monitor_components/consensusLog.js";
 import { createHeader } from "./monitor_components/header.js";
 
-const CONFIG = {
-  installDir: os.homedir(),
-  executionClient: "geth",
-  consensusClient: "prysm",
-  logDirs: {
-    geth: path.join(os.homedir(), "bgnode", "geth", "logs"),
-    prysm: path.join(os.homedir(), "bgnode", "prysm", "logs"),
-  },
-  debugLogPath: path.join(os.homedir(), "bgnode", "debugMonitor.log"),
-};
+// const CONFIG = {
+//   installDir: os.homedir(),
+//   executionClient: "geth",
+//   consensusClient: "prysm",
+//   logDirs: {
+//     geth: path.join(os.homedir(), "bgnode", "geth", "logs"),
+//     prysm: path.join(os.homedir(), "bgnode", "prysm", "logs"),
+//   },
+//   debugLogPath: path.join(os.homedir(), "bgnode", "debugMonitor.log"),
+// };
+
+// export function initializeMonitoring(
+//   messageForHeader,
+//   gethVer,
+//   rethVer,
+//   prysmVer,
+//   runsClient
+// ) {
+//   try {
+//     const progress = loadProgress();
+
+//     // setupDebugLogging(CONFIG.debugLogPath);
+
+//     const { screen, components } = setupUI(
+//       progress,
+//       messageForHeader,
+//       gethVer,
+//       rethVer,
+//       prysmVer,
+//       runsClient
+//     );
+
+//     const logFilePath = path.join(
+//       CONFIG.logDirs.geth,
+//       getLatestLogFile(CONFIG.logDirs.geth, CONFIG.executionClient)
+//     );
+//     const logFilePathConsensus = path.join(
+//       CONFIG.logDirs.prysm,
+//       getLatestLogFile(CONFIG.logDirs.prysm, CONFIG.consensusClient)
+//     );
+
+//     debugToFile(
+//       `Monitoring ${CONFIG.executionClient} logs from: ${logFilePath}`,
+//       () => {}
+//     );
+//     debugToFile(
+//       `Monitoring ${CONFIG.consensusClient} logs from: ${logFilePathConsensus}`,
+//       () => {}
+//     );
+
+//     updateConsensusClientInfo(
+//       logFilePathConsensus,
+//       components.consensusLog,
+//       screen
+//     );
+
+//     setupLogStreaming(
+//       logFilePath,
+//       components.executionLog,
+//       screen,
+//       components.headerDlGauge,
+//       components.stateDlGauge,
+//       components.chainDlGauge
+//     );
+//   } catch (error) {
+//     debugToFile(`Error initializing monitoring: ${error}`, () => {});
+//   }
+// }
+
+// const CONFIG = {
+//   // installDir: os.homedir(),
+//   executionClient: "geth",
+//   consensusClient: "prysm",
+//   logDirs: {
+//     geth: path.join(os.homedir(), "bgnode", "geth", "logs"),
+//     prysm: path.join(os.homedir(), "bgnode", "prysm", "logs"),
+//   },
+//   debugLogPath: path.join(os.homedir(), "bgnode", "debugMonitor.log"),
+// };
 
 export function initializeMonitoring(
   messageForHeader,
+  executionClient,
+  consensusClient,
   gethVer,
   rethVer,
   prysmVer,
+  lighthouseVer,
   runsClient
 ) {
   try {
@@ -66,21 +138,35 @@ export function initializeMonitoring(
       runsClient
     );
 
-    const logFilePath = path.join(
-      CONFIG.logDirs.geth,
-      getLatestLogFile(CONFIG.logDirs.geth, CONFIG.executionClient)
+    const executionLogsPath = path.join(
+      os.homedir(),
+      "bgnode",
+      executionClient,
+      "logs"
+    );
+
+    const consensusLogsPath = path.join(
+      os.homedir(),
+      "bgnode",
+      consensusClient,
+      "logs"
+    );
+
+    const logFilePathExecution = path.join(
+      executionLogsPath,
+      getLatestLogFile(executionLogsPath, executionClient)
     );
     const logFilePathConsensus = path.join(
-      CONFIG.logDirs.prysm,
-      getLatestLogFile(CONFIG.logDirs.prysm, CONFIG.consensusClient)
+      consensusLogsPath,
+      getLatestLogFile(consensusLogsPath, consensusClient)
     );
 
     debugToFile(
-      `Monitoring ${CONFIG.executionClient} logs from: ${logFilePath}`,
+      `Monitoring ${executionClient} logs from: ${logFilePathExecution}`,
       () => {}
     );
     debugToFile(
-      `Monitoring ${CONFIG.consensusClient} logs from: ${logFilePathConsensus}`,
+      `Monitoring ${consensusClient} logs from: ${logFilePathConsensus}`,
       () => {}
     );
 
@@ -91,7 +177,7 @@ export function initializeMonitoring(
     );
 
     setupLogStreaming(
-      logFilePath,
+      logFilePathExecution,
       components.executionLog,
       screen,
       components.headerDlGauge,

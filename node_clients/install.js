@@ -102,6 +102,7 @@ export function installMacLinuxExecutionClient(
 export function installMacLinuxConsensusClient(
   consensusClient,
   platform,
+  // prysmVer,
   lighthouseVer
 ) {
   const arch = os.arch();

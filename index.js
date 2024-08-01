@@ -13,6 +13,7 @@ import {
   installWindowsExecutionClient,
 } from "./node_clients/install.js";
 import { initializeWSConnection } from "./ws_connection/wsConnection.js";
+import minimist from "minimist";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -21,6 +22,68 @@ const __dirname = dirname(__filename);
 let executionClient = "geth";
 let consensusClient = "prysm";
 const installDir = os.homedir();
+
+const gethVer = "1.14.3";
+const rethVer = "1.0.0";
+const prysmVer = "5.0.3";
+const lighthouseVer = "5.1.3";
+
+function showHelp() {
+  console.log("");
+  console.log("Options:");
+  // console.log("  -e <client>  Specify the execution client ('geth' or 'reth')");
+  console.log("  -e <client>  Specify the execution client ('geth' or 'reth')");
+  // console.log(
+  //   "  -c <client>  Specify the consensus client ('prysm' or 'lighthouse')"
+  // );
+  console.log(
+    "  -c <client>  Specify the consensus client ('prysm or 'lighthouse')"
+  );
+  console.log("  -d <path>    Specify the install directory (defaults to ~)");
+  console.log("  -h           Display this help message and exit");
+  console.log("");
+}
+
+function isValidPath(p) {
+  try {
+    return fs.existsSync(p) && fs.statSync(p).isDirectory();
+  } catch (err) {
+    return false;
+  }
+}
+
+// Process command-line arguments
+const argv = minimist(process.argv.slice(2));
+
+if (argv.e) {
+  executionClient = argv.e;
+  if (executionClient !== "geth" && executionClient !== "reth") {
+    console.log("Invalid option for -e. Use 'geth' or 'reth'.");
+    process.exit(1);
+  }
+}
+
+if (argv.c) {
+  consensusClient = argv.c;
+  if (consensusClient !== "prysm" && consensusClient !== "lighthouse") {
+    console.log("Invalid option for -c. Use 'prysm' or 'lighthouse'.");
+    process.exit(1);
+  }
+}
+
+if (argv.d) {
+  installDir = argv.d;
+  if (!isValidPath(installDir)) {
+    console.log(`Invalid option for -d. '${installDir}' is not a valid path.`);
+    process.exit(1);
+  }
+}
+
+if (argv.h) {
+  showHelp();
+  process.exit(0);
+}
+
 const lockFilePath = path.join(os.homedir(), "bgnode", "script.lock");
 
 const CONFIG = {
@@ -29,11 +92,6 @@ const CONFIG = {
 
 // /// just for debugging
 // setupDebugLogging(CONFIG.debugLogPath);
-
-const gethVer = "1.14.3";
-const rethVer = "1.0.0";
-const prysmVer = "5.0.3";
-const lighthouseVer = "5.1.3";
 
 function createJwtSecret(jwtDir) {
   if (!fs.existsSync(jwtDir)) {
@@ -297,7 +355,12 @@ const platform = os.platform();
 
 if (["darwin", "linux"].includes(platform)) {
   installMacLinuxExecutionClient(executionClient, platform, gethVer, rethVer);
-  installMacLinuxConsensusClient(consensusClient, platform, prysmVer);
+  installMacLinuxConsensusClient(
+    consensusClient,
+    platform,
+    // prysmVer,
+    lighthouseVer
+  );
 } else if (platform === "win32") {
   installWindowsExecutionClient(executionClient);
   installWindowsConsensusClient(consensusClient);
@@ -332,4 +395,13 @@ if (!isAlreadyRunning()) {
   runsClient = false;
 }
 
-initializeMonitoring(messageForHeader, gethVer, rethVer, prysmVer, runsClient);
+initializeMonitoring(
+  messageForHeader,
+  executionClient,
+  consensusClient,
+  gethVer,
+  rethVer,
+  prysmVer,
+  lighthouseVer,
+  runsClient
+);
