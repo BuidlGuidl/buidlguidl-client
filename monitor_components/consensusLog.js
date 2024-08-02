@@ -1,30 +1,28 @@
 import fs from "fs";
 import readline from "readline";
-import contrib from "blessed-contrib";
+import blessed from "blessed";
 import { highlightWords, layoutHeightThresh } from "./helperFunctions.js";
 import { debugToFile } from "../helpers.js";
 
 export function createConsensusLog(grid, screen, consensusClientLabel) {
   const colSpan = screen.height < layoutHeightThresh ? 7 : 9;
 
-  const consensusLog = grid.set(3, 0, 2, colSpan, contrib.log, {
+  const consensusLog = grid.set(3, 0, 2, colSpan, blessed.box, {
     label: `${consensusClientLabel}`,
     border: {
       type: "line",
       fg: "cyan",
     },
     tags: true,
-    scrollable: true,
     shrink: true,
-    alwaysScroll: true,
-    scrollOnInput: true,
-    wrap: true,
   });
 
   return consensusLog;
 }
 
 export function updateConsensusClientInfo(logFilePath, log, screen) {
+  let logBuffer = [];
+
   fs.watchFile(logFilePath, (curr, prev) => {
     if (curr.mtime > prev.mtime) {
       const newStream = fs.createReadStream(logFilePath, {
@@ -39,7 +37,13 @@ export function updateConsensusClientInfo(logFilePath, log, screen) {
       });
 
       newRl.on("line", (line) => {
-        log.log(highlightWords(line));
+        logBuffer.push(highlightWords(line));
+
+        if (logBuffer.length > 20) {
+          logBuffer.shift();
+        }
+
+        log.setContent(logBuffer.join("\n"));
         screen.render();
       });
 

@@ -87,6 +87,7 @@ export function setupLogStreaming(
   // peerCountGauge
 ) {
   // const progress = loadProgress();
+  let logBuffer = [];
 
   fs.watchFile(logFilePath, (curr, prev) => {
     if (curr.mtime > prev.mtime) {
@@ -102,7 +103,14 @@ export function setupLogStreaming(
       });
 
       newRl.on("line", (line) => {
-        executionLog.log(highlightWords(line));
+        logBuffer.push(highlightWords(line));
+
+        if (logBuffer.length > 20) {
+          logBuffer.shift();
+        }
+
+        // executionLog.log(highlightWords(line));
+        executionLog.setContent(logBuffer.join("\n"));
         screen.render();
 
         saveHeaderDlProgress(line);
