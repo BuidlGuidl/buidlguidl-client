@@ -183,6 +183,13 @@ function setupUI(
 
   screen.render();
 
+  screen.on("resize", () => {
+    cpuLine.emit("attach");
+    networkLine.emit("attach");
+
+    screen.render();
+  });
+
   screen.key(["escape", "q", "C-c"], function (ch, key) {
     if (runsClient) {
       process.kill(process.pid, "SIGUSR2");

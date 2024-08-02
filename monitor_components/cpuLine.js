@@ -74,7 +74,7 @@ export function createCpuLine(grid, screen) {
     style: { line: "blue", text: "green", baseline: "green" },
     xLabelPadding: 3,
     xPadding: 5,
-    showLegend: true,
+    showLegend: false,
     wholeNumbersOnly: false,
     label: "CPU Load (%)",
     border: {
