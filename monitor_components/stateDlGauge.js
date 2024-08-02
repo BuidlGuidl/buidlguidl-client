@@ -1,7 +1,11 @@
 import contrib from "blessed-contrib";
+import { layoutHeightThresh } from "./helperFunctions.js";
 
-export function createStateDlGauge(grid) {
-  let stateDlGauge = grid.set(7, 7, 1, 1, contrib.gauge, {
+export function createStateDlGauge(grid, screen) {
+  const row = screen.height < layoutHeightThresh ? 5 : 7;
+  const rowSpan = screen.height < layoutHeightThresh ? 2 : 1;
+
+  let stateDlGauge = grid.set(row, 7, rowSpan, 1, contrib.gauge, {
     label: "State DL Progress",
     stroke: "cyan",
     fill: "white",

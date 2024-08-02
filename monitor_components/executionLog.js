@@ -1,7 +1,10 @@
 import contrib from "blessed-contrib";
+import { layoutHeightThresh } from "./helperFunctions.js";
 
-export function createExecutionLog(grid, executionClientLabel) {
-  const executionLog = grid.set(1, 0, 2, 9, contrib.log, {
+export function createExecutionLog(grid, screen, executionClientLabel) {
+  const colSpan = screen.height < layoutHeightThresh ? 7 : 9;
+
+  const executionLog = grid.set(1, 0, 2, colSpan, contrib.log, {
     label: `${executionClientLabel}`,
     border: {
       type: "line",

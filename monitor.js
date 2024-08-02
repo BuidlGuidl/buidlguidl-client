@@ -144,17 +144,17 @@ function setupUI(
     consensusClientLabel = `Lighthouse v${lighthouseVer}`;
   }
 
-  const executionLog = createExecutionLog(grid, executionClientLabel);
-  const consensusLog = createConsensusLog(grid, consensusClientLabel);
+  const executionLog = createExecutionLog(grid, screen, executionClientLabel);
+  const consensusLog = createConsensusLog(grid, screen, consensusClientLabel);
   const storageGauge = createDiskGauge(grid, screen);
   const memGauge = createMemGauge(grid, screen);
   const cpuLine = createCpuLine(grid, screen);
   const networkLine = createNetworkLine(grid, screen);
-  const headerDlGauge = createHeaderDlGauge(grid);
-  const stateDlGauge = createStateDlGauge(grid);
-  const chainDlGauge = createChainDlGauge(grid);
+  const headerDlGauge = createHeaderDlGauge(grid, screen);
+  const stateDlGauge = createStateDlGauge(grid, screen);
+  const chainDlGauge = createChainDlGauge(grid, screen);
   const statusBox = createStatusBox(grid, screen);
-  const bandwidthBox = createBandwidthBox(grid);
+  const bandwidthBox = createBandwidthBox(grid, screen);
 
   createHeader(grid, screen, messageForHeader);
 

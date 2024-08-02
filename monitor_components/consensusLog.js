@@ -1,11 +1,13 @@
 import fs from "fs";
 import readline from "readline";
 import contrib from "blessed-contrib";
-import { highlightWords } from "./helperFunctions.js";
+import { highlightWords, layoutHeightThresh } from "./helperFunctions.js";
 import { debugToFile } from "../helpers.js";
 
-export function createConsensusLog(grid, consensusClientLabel) {
-  const consensusLog = grid.set(3, 0, 2, 9, contrib.log, {
+export function createConsensusLog(grid, screen, consensusClientLabel) {
+  const colSpan = screen.height < layoutHeightThresh ? 7 : 9;
+
+  const consensusLog = grid.set(3, 0, 2, colSpan, contrib.log, {
     label: `${consensusClientLabel}`,
     border: {
       type: "line",

@@ -1,6 +1,7 @@
 import si from "systeminformation";
 import blessed from "blessed";
 import { debugToFile } from "../helpers.js";
+import { layoutHeightThresh } from "./helperFunctions.js";
 
 let bandwidthBox;
 const interval = 60 * 1000; // 1 minute in milliseconds
@@ -115,8 +116,11 @@ export function startBandwidthMonitoring(screen) {
   scheduleNextUpdate();
 }
 
-export function createBandwidthBox(grid) {
-  const box = grid.set(6, 8, 1, 1, blessed.box, {
+export function createBandwidthBox(grid, screen) {
+  const row = screen.height < layoutHeightThresh ? 3 : 6;
+  const rowSpan = screen.height < layoutHeightThresh ? 2 : 1;
+
+  const box = grid.set(row, 8, rowSpan, 1, blessed.box, {
     label: "Bandwidth Usage",
     style: {
       fg: "blue",

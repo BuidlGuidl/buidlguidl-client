@@ -1,6 +1,7 @@
 import contrib from "blessed-contrib";
 import si from "systeminformation";
 import { debugToFile } from "../helpers.js";
+import { layoutHeightThresh } from "./helperFunctions.js";
 
 let memGauge;
 
@@ -31,7 +32,10 @@ async function updateMemoryGauge(screen) {
 }
 
 export function createMemGauge(grid, screen) {
-  memGauge = grid.set(7, 8, 1, 1, contrib.gauge, {
+  const row = screen.height < layoutHeightThresh ? 5 : 7;
+  const rowSpan = screen.height < layoutHeightThresh ? 2 : 1;
+
+  memGauge = grid.set(row, 8, rowSpan, 1, contrib.gauge, {
     label: "Memory",
     stroke: "green",
     fill: "white",
@@ -39,6 +43,7 @@ export function createMemGauge(grid, screen) {
       type: "line",
       fg: "cyan",
     },
+    gaugeHeight: 1,
   });
 
   setInterval(() => updateMemoryGauge(screen), 10000);

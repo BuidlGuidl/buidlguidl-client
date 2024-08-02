@@ -1,6 +1,7 @@
 import contrib from "blessed-contrib";
 import si from "systeminformation";
 import { debugToFile } from "../helpers.js";
+import { layoutHeightThresh } from "./helperFunctions.js";
 
 let storageGauge;
 
@@ -43,7 +44,10 @@ async function updateDiskGauge(screen) {
 }
 
 export function createDiskGauge(grid, screen) {
-  storageGauge = grid.set(8, 8, 1, 1, contrib.gauge, {
+  const row = screen.height < layoutHeightThresh ? 7 : 8;
+  const rowSpan = screen.height < layoutHeightThresh ? 2 : 1;
+
+  storageGauge = grid.set(row, 8, rowSpan, 1, contrib.gauge, {
     label: "Storage",
     stroke: "blue",
     fill: "white",

@@ -10,6 +10,9 @@ const progressFilePath = path.join(
   "progressMonitor.json"
 );
 
+// The cutoff (in terminal lines) for switching the widget layout style
+export const layoutHeightThresh = 55;
+
 export function getLatestLogFile(dir, client) {
   const files = fs.readdirSync(dir);
   let logFiles;

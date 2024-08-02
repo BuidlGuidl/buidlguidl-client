@@ -2,6 +2,7 @@ import { createPublicClient, http } from "viem";
 import { mainnet } from "viem/chains";
 import blessed from "blessed";
 import { debugToFile } from "../helpers.js";
+import { layoutHeightThresh } from "./helperFunctions.js";
 
 const client = createPublicClient({
   name: "client",
@@ -73,7 +74,10 @@ export async function updateStatusBox(statusBox, screen) {
 }
 
 export function createStatusBox(grid, screen) {
-  const statusBox = grid.set(5, 7, 1, 2, blessed.box, {
+  const row = screen.height < layoutHeightThresh ? 1 : 5;
+  const rowSpan = screen.height < layoutHeightThresh ? 2 : 1;
+
+  const statusBox = grid.set(row, 7, rowSpan, 2, blessed.box, {
     label: `Status`,
     border: {
       type: "line",
