@@ -17,6 +17,7 @@ import { createNetworkLine } from "./monitor_components/networkLine.js";
 import { createStateDlGauge } from "./monitor_components/stateDlGauge.js";
 import { createHeaderDlGauge } from "./monitor_components/headerDlGauge.js";
 import { createChainDlGauge } from "./monitor_components/chainDlGauge.js";
+import { createRethStageGauge } from "./monitor_components/rethStageGauge.js";
 import { createExecutionLog } from "./monitor_components/executionLog.js";
 import { createStatusBox } from "./monitor_components/statusBox.js";
 import {
@@ -109,7 +110,8 @@ export function initializeMonitoring(
       screen,
       components.headerDlGauge,
       components.stateDlGauge,
-      components.chainDlGauge
+      components.chainDlGauge,
+      components.rethStageGauge
     );
   } catch (error) {
     debugToFile(`Error initializing monitoring: ${error}`, () => {});
@@ -153,6 +155,7 @@ function setupUI(
   const headerDlGauge = createHeaderDlGauge(grid, screen);
   const stateDlGauge = createStateDlGauge(grid, screen);
   const chainDlGauge = createChainDlGauge(grid, screen);
+  const rethStageGauge = createRethStageGauge(grid, screen);
   const statusBox = createStatusBox(grid, screen);
   const bandwidthBox = createBandwidthBox(grid, screen);
 
@@ -164,18 +167,23 @@ function setupUI(
   screen.append(networkLine);
   screen.append(memGauge);
   screen.append(storageGauge);
-  screen.append(headerDlGauge);
-  screen.append(stateDlGauge);
-  screen.append(chainDlGauge);
   screen.append(statusBox);
   screen.append(bandwidthBox);
+  if (executionClientGlobal == "geth") {
+    //START HERE: Figure out why geth gauges are being appended
+    screen.append(headerDlGauge);
+    screen.append(stateDlGauge);
+    screen.append(chainDlGauge);
+  } else if (executionClientGlobal == "reth") {
+    screen.append(rethStageGauge);
+  }
 
   setBandwidthBox(bandwidthBox);
   startBandwidthMonitoring(screen);
 
   setInterval(() => updateBandwidthBox(screen), 2000);
 
-  if (progress) {
+  if (executionClientGlobal == "geth" || progress) {
     headerDlGauge.setPercent(progress.headerDlProgress);
     stateDlGauge.setPercent(progress.stateDlProgress);
     chainDlGauge.setPercent(progress.chainDlProgress);
@@ -209,6 +217,7 @@ function setupUI(
       headerDlGauge,
       stateDlGauge,
       chainDlGauge,
+      rethStageGauge,
     },
   };
 }

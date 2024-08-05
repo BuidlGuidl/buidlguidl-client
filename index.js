@@ -405,3 +405,5 @@ initializeMonitoring(
   lighthouseVer,
   runsClient
 );
+
+export { executionClient };

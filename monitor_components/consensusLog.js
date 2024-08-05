@@ -39,7 +39,7 @@ export function updateConsensusClientInfo(logFilePath, log, screen) {
       newRl.on("line", (line) => {
         logBuffer.push(highlightWords(line));
 
-        if (logBuffer.length > 20) {
+        if (logBuffer.length > log.height - 2) {
           logBuffer.shift();
         }
 

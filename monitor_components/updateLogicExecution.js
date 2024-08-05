@@ -6,6 +6,7 @@ import {
   highlightWords,
 } from "./helperFunctions.js";
 import { debugToFile } from "../helpers.js";
+import { executionClient } from "../index.js";
 
 const progress = loadProgress();
 
@@ -83,7 +84,8 @@ export function setupLogStreaming(
   screen,
   headerDlGauge,
   stateDlGauge,
-  chainDlGauge
+  chainDlGauge,
+  rethStageGauge
   // peerCountGauge
 ) {
   // const progress = loadProgress();
@@ -105,29 +107,34 @@ export function setupLogStreaming(
       newRl.on("line", (line) => {
         logBuffer.push(highlightWords(line));
 
-        if (logBuffer.length > 20) {
+        if (logBuffer.length > executionLog.height - 2) {
           logBuffer.shift();
         }
 
         // executionLog.log(highlightWords(line));
         executionLog.setContent(logBuffer.join("\n"));
-        screen.render();
 
-        saveHeaderDlProgress(line);
-        saveStateDlProgress(line);
-        saveChainDlProgress(line);
+        if (executionClient == "geth") {
+          saveHeaderDlProgress(line);
+          saveStateDlProgress(line);
+          saveChainDlProgress(line);
 
-        // debugToFile(`line ${line}`, () => {});
-        // debugToFile(`progress From stream ${progress}`, () => {});
+          // debugToFile(`line ${line}`, () => {});
+          // debugToFile(`progress From stream ${progress}`, () => {});
 
-        if (headerDlGauge) {
-          headerDlGauge.setPercent(progress.headerDlProgress);
-        }
-        if (stateDlGauge) {
-          stateDlGauge.setPercent(progress.stateDlProgress);
-        }
-        if (chainDlGauge) {
-          chainDlGauge.setPercent(progress.chainDlProgress);
+          if (headerDlGauge) {
+            headerDlGauge.setPercent(progress.headerDlProgress);
+          }
+          if (stateDlGauge) {
+            stateDlGauge.setPercent(progress.stateDlProgress);
+          }
+          if (chainDlGauge) {
+            chainDlGauge.setPercent(progress.chainDlProgress);
+          }
+        } else if (executionClient == "reth") {
+          parseRethLog(line);
+
+          rethStageGauge.setPercent(percentComplete);
         }
 
         screen.render();
@@ -142,6 +149,40 @@ export function setupLogStreaming(
       });
     }
   });
+}
+
+let rethStatusMessage = "INITIALIZING";
+let largestToBlock = 0;
+let percentComplete = 0;
+
+function parseRethLog(line) {
+  try {
+    if (line.includes("stage=Headers") || line.includes("to_block=")) {
+      const matchToBlock = line.match(/to_block=(\d+)/);
+      const toBlock = parseInt(matchToBlock[1], 10);
+
+      if (toBlock > largestToBlock) {
+        largestToBlock = toBlock;
+      }
+
+      percentComplete = (largestToBlock - toBlock) / largestToBlock;
+
+      rethStatusMessage = `[Stage: 1/12] SYNCING HEADERS\nBlocks Remaining: ${toBlock}\nLargest Block:    ${largestToBlock}`;
+    } else if (line.includes("stage=Bodies")) {
+      rethStatusMessage = "[Stage: 2/12] SYNCING BODIES";
+    }
+  } catch (error) {
+    debugToFile(`parseRethLog(): ${error}`, () => {});
+  }
+}
+
+export async function passRethStatus() {
+  try {
+    return rethStatusMessage;
+  } catch (error) {
+    debugToFile(`passRethStatus(): ${error}`, () => {});
+    return "";
+  }
 }
 
 // /// if want to have old logs showing when you start to process again
