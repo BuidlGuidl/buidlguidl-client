@@ -91,6 +91,7 @@ export function highlightWords(line) {
     { word: " state-gen:", style: "{bold}{blue-fg}" },
     { word: " sync:", style: "{bold}{blue-fg}" },
     { word: " Syncing:", style: "{bold}{blue-fg}" },
+    { word: "latestProcessedSlot", style: "{bold}{green-fg}" },
   ];
 
   // Apply styles to the words
