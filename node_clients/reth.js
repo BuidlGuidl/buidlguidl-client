@@ -31,6 +31,7 @@ const execution = pty.spawn(
   `${rethCommand}`,
   [
     "node",
+    "--full",
     "--http",
     "--http.addr",
     "0.0.0.0",
