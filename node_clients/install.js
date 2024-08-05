@@ -17,21 +17,21 @@ export function installMacLinuxExecutionClient(
     darwin: {
       x64: {
         gethFileName: `geth-darwin-amd64-${gethVer}-ab48ba42`,
-        rethFileName: `reth-v${rethVer}-rc.2-x86_64-apple-darwin`,
+        rethFileName: `reth-v${rethVer}-x86_64-apple-darwin`,
       },
       arm64: {
         gethFileName: `geth-darwin-arm64-${gethVer}-ab48ba42`,
-        rethFileName: `reth-v${rethVer}-rc.2-aarch64-apple-darwin`,
+        rethFileName: `reth-v${rethVer}-aarch64-apple-darwin`,
       },
     },
     linux: {
       x64: {
         gethFileName: `geth-linux-amd64-${gethVer}-ab48ba42`,
-        rethFileName: `reth-v${rethVer}-rc.2-x86_64-unknown-linux-gnu`,
+        rethFileName: `reth-v${rethVer}-x86_64-unknown-linux-gnu`,
       },
       arm64: {
         gethFileName: `geth-linux-arm64-${gethVer}-ab48ba42`,
-        rethFileName: `reth-v${rethVer}-rc.2-aarch64-unknown-linux-gnu`,
+        rethFileName: `reth-v${rethVer}-aarch64-unknown-linux-gnu`,
       },
     },
   };
@@ -80,7 +80,7 @@ export function installMacLinuxExecutionClient(
       }
       console.log("Downloading Reth.");
       execSync(
-        `cd "${rethDir}" && curl -L -O -# https://github.com/paradigmxyz/reth/releases/download/v${rethVer}-rc.2/${rethFileName}.tar.gz`,
+        `cd "${rethDir}" && curl -L -O -# https://github.com/paradigmxyz/reth/releases/download/v${rethVer}/${rethFileName}.tar.gz`,
         { stdio: "inherit" }
       );
       console.log("Uncompressing Reth.");
