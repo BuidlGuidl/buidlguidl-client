@@ -18,6 +18,7 @@ import { createGethStateDlGauge } from "./monitor_components/gethStateDlGauge.js
 import { createGethHeaderDlGauge } from "./monitor_components/gethHeaderDlGauge.js";
 import { createGethChainDlGauge } from "./monitor_components/gethChainDlGauge.js";
 import { createRethStageGauge } from "./monitor_components/rethStageGauge.js";
+import { createRethOverallSyncGauge } from "./monitor_components/rethOverallSyncGauge.js";
 import { createExecutionLog } from "./monitor_components/executionLog.js";
 import { createStatusBox } from "./monitor_components/statusBox.js";
 import {
@@ -111,7 +112,8 @@ export function initializeMonitoring(
       components.gethHeaderDlGauge,
       components.gethStateDlGauge,
       components.gethChainDlGauge,
-      components.rethStageGauge
+      components.rethStageGauge,
+      components.rethOverallSyncGauge
     );
   } catch (error) {
     debugToFile(`Error initializing monitoring: ${error}`, () => {});
@@ -155,7 +157,11 @@ function setupUI(
   const statusBox = createStatusBox(grid, screen);
   const bandwidthBox = createBandwidthBox(grid, screen);
 
-  let gethHeaderDlGauge, gethStateDlGauge, gethChainDlGauge, rethStageGauge;
+  let gethHeaderDlGauge,
+    gethStateDlGauge,
+    gethChainDlGauge,
+    rethStageGauge,
+    rethOverallSyncGauge;
 
   if (executionClientGlobal == "geth") {
     gethHeaderDlGauge = createGethHeaderDlGauge(grid, screen);
@@ -163,6 +169,7 @@ function setupUI(
     gethChainDlGauge = createGethChainDlGauge(grid, screen);
   } else if (executionClientGlobal == "reth") {
     rethStageGauge = createRethStageGauge(grid, screen);
+    rethOverallSyncGauge = createRethOverallSyncGauge(grid, screen);
   }
 
   createHeader(grid, screen, messageForHeader);
@@ -182,6 +189,7 @@ function setupUI(
     screen.append(gethChainDlGauge);
   } else if (executionClientGlobal == "reth") {
     screen.append(rethStageGauge);
+    screen.append(rethOverallSyncGauge);
   }
 
   setBandwidthBox(bandwidthBox);
@@ -224,6 +232,7 @@ function setupUI(
       gethStateDlGauge,
       gethChainDlGauge,
       rethStageGauge,
+      rethOverallSyncGauge,
     },
   };
 }

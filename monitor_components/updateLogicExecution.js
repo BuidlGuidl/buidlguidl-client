@@ -85,7 +85,8 @@ export function setupLogStreaming(
   gethHeaderDlGauge,
   gethStateDlGauge,
   gethChainDlGauge,
-  rethStageGauge
+  rethStageGauge,
+  rethOverallSyncGauge
   // peerCountGauge
 ) {
   // const progress = loadProgress();
@@ -134,7 +135,7 @@ export function setupLogStreaming(
         } else if (executionClient == "reth") {
           parseRethLog(line);
 
-          rethStageGauge.setPercent(percentComplete);
+          rethStageGauge.setPercent(stagePercentComplete);
         }
 
         screen.render();
@@ -151,25 +152,32 @@ export function setupLogStreaming(
   });
 }
 
-let rethStatusMessage = "INITIALIZING";
+let rethStatusMessage = "INITIALIZING...";
 let largestToBlock = 0;
-let percentComplete = 0;
+let stagePercentComplete = 0;
 
 function parseRethLog(line) {
   try {
-    if (line.includes("stage=Headers") || line.includes("to_block=")) {
-      // const matchToBlock = line.match(/to_block=(\d+)/);
+    if (line.includes("Received headers") && line.includes("to_block=")) {
       const toBlock = parseInt(line.match(/to_block=(\d+)/)[1], 10);
 
       if (toBlock > largestToBlock) {
         largestToBlock = toBlock;
       }
 
-      percentComplete = (largestToBlock - toBlock) / largestToBlock;
+      stagePercentComplete = (largestToBlock - toBlock) / largestToBlock;
 
-      rethStatusMessage = `[Stage: 1/12] SYNCING HEADERS\nBlocks Remaining: ${toBlock}\nLargest Block:    ${largestToBlock}`;
-    } else if (line.includes("stage=Bodies")) {
-      rethStatusMessage = "[Stage: 2/12] SYNCING BODIES";
+      rethStatusMessage = `[SYNC STAGE: 1/12] SYNCING HEADERS\nBlocks Remaining: ${toBlock}\nLargest Block:    ${largestToBlock}`;
+    } else if (
+      line.includes("stage=Bodies" && line.includes("stage_progress="))
+    ) {
+      const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
+      const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
+      stagePercentComplete = parseFloat(
+        line.match(/stage_progress=([\d.]+)%/)[1]
+      );
+
+      rethStatusMessage = `[SYNC STAGE: 2/12] SYNCING BODIES\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
     }
   } catch (error) {
     debugToFile(`parseRethLog(): ${error}`, () => {});
