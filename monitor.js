@@ -14,9 +14,9 @@ import { createDiskGauge } from "./monitor_components/diskGauge.js";
 import { createMemGauge } from "./monitor_components/memGauge.js";
 import { createCpuLine } from "./monitor_components/cpuLine.js";
 import { createNetworkLine } from "./monitor_components/networkLine.js";
-import { createStateDlGauge } from "./monitor_components/stateDlGauge.js";
-import { createHeaderDlGauge } from "./monitor_components/headerDlGauge.js";
-import { createChainDlGauge } from "./monitor_components/chainDlGauge.js";
+import { createGethStateDlGauge } from "./monitor_components/gethStateDlGauge.js";
+import { createGethHeaderDlGauge } from "./monitor_components/gethHeaderDlGauge.js";
+import { createGethChainDlGauge } from "./monitor_components/gethChainDlGauge.js";
 import { createRethStageGauge } from "./monitor_components/rethStageGauge.js";
 import { createExecutionLog } from "./monitor_components/executionLog.js";
 import { createStatusBox } from "./monitor_components/statusBox.js";
@@ -108,9 +108,9 @@ export function initializeMonitoring(
       logFilePathExecution,
       components.executionLog,
       screen,
-      components.headerDlGauge,
-      components.stateDlGauge,
-      components.chainDlGauge,
+      components.gethHeaderDlGauge,
+      components.gethStateDlGauge,
+      components.gethChainDlGauge,
       components.rethStageGauge
     );
   } catch (error) {
@@ -152,12 +152,18 @@ function setupUI(
   const memGauge = createMemGauge(grid, screen);
   const cpuLine = createCpuLine(grid, screen);
   const networkLine = createNetworkLine(grid, screen);
-  const headerDlGauge = createHeaderDlGauge(grid, screen);
-  const stateDlGauge = createStateDlGauge(grid, screen);
-  const chainDlGauge = createChainDlGauge(grid, screen);
-  const rethStageGauge = createRethStageGauge(grid, screen);
   const statusBox = createStatusBox(grid, screen);
   const bandwidthBox = createBandwidthBox(grid, screen);
+
+  let gethHeaderDlGauge, gethStateDlGauge, gethChainDlGauge, rethStageGauge;
+
+  if (executionClientGlobal == "geth") {
+    gethHeaderDlGauge = createGethHeaderDlGauge(grid, screen);
+    gethStateDlGauge = createGethStateDlGauge(grid, screen);
+    gethChainDlGauge = createGethChainDlGauge(grid, screen);
+  } else if (executionClientGlobal == "reth") {
+    rethStageGauge = createRethStageGauge(grid, screen);
+  }
 
   createHeader(grid, screen, messageForHeader);
 
@@ -171,9 +177,9 @@ function setupUI(
   screen.append(bandwidthBox);
   if (executionClientGlobal == "geth") {
     //START HERE: Figure out why geth gauges are being appended
-    screen.append(headerDlGauge);
-    screen.append(stateDlGauge);
-    screen.append(chainDlGauge);
+    screen.append(gethHeaderDlGauge);
+    screen.append(gethStateDlGauge);
+    screen.append(gethChainDlGauge);
   } else if (executionClientGlobal == "reth") {
     screen.append(rethStageGauge);
   }
@@ -183,10 +189,10 @@ function setupUI(
 
   setInterval(() => updateBandwidthBox(screen), 2000);
 
-  if (executionClientGlobal == "geth" || progress) {
-    headerDlGauge.setPercent(progress.headerDlProgress);
-    stateDlGauge.setPercent(progress.stateDlProgress);
-    chainDlGauge.setPercent(progress.chainDlProgress);
+  if (executionClientGlobal == "geth" && progress) {
+    gethHeaderDlGauge.setPercent(progress.headerDlProgress);
+    gethStateDlGauge.setPercent(progress.stateDlProgress);
+    gethChainDlGauge.setPercent(progress.chainDlProgress);
   }
 
   screen.render();
@@ -214,9 +220,9 @@ function setupUI(
     components: {
       executionLog,
       consensusLog,
-      headerDlGauge,
-      stateDlGauge,
-      chainDlGauge,
+      gethHeaderDlGauge,
+      gethStateDlGauge,
+      gethChainDlGauge,
       rethStageGauge,
     },
   };

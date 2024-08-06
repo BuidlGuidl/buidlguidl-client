@@ -82,9 +82,9 @@ export function setupLogStreaming(
   logFilePath,
   executionLog,
   screen,
-  headerDlGauge,
-  stateDlGauge,
-  chainDlGauge,
+  gethHeaderDlGauge,
+  gethStateDlGauge,
+  gethChainDlGauge,
   rethStageGauge
   // peerCountGauge
 ) {
@@ -122,14 +122,14 @@ export function setupLogStreaming(
           // debugToFile(`line ${line}`, () => {});
           // debugToFile(`progress From stream ${progress}`, () => {});
 
-          if (headerDlGauge) {
-            headerDlGauge.setPercent(progress.headerDlProgress);
+          if (gethHeaderDlGauge) {
+            gethHeaderDlGauge.setPercent(progress.headerDlProgress);
           }
-          if (stateDlGauge) {
-            stateDlGauge.setPercent(progress.stateDlProgress);
+          if (gethStateDlGauge) {
+            gethStateDlGauge.setPercent(progress.stateDlProgress);
           }
-          if (chainDlGauge) {
-            chainDlGauge.setPercent(progress.chainDlProgress);
+          if (gethChainDlGauge) {
+            gethChainDlGauge.setPercent(progress.chainDlProgress);
           }
         } else if (executionClient == "reth") {
           parseRethLog(line);
@@ -158,8 +158,8 @@ let percentComplete = 0;
 function parseRethLog(line) {
   try {
     if (line.includes("stage=Headers") || line.includes("to_block=")) {
-      const matchToBlock = line.match(/to_block=(\d+)/);
-      const toBlock = parseInt(matchToBlock[1], 10);
+      // const matchToBlock = line.match(/to_block=(\d+)/);
+      const toBlock = parseInt(line.match(/to_block=(\d+)/)[1], 10);
 
       if (toBlock > largestToBlock) {
         largestToBlock = toBlock;
