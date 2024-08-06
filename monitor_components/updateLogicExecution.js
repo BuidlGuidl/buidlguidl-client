@@ -135,8 +135,12 @@ export function setupLogStreaming(
         } else if (executionClient == "reth") {
           parseRethLog(line);
 
-          rethStageGauge.setPercent(stagePercentComplete);
-          rethOverallSyncGauge.setPercent(overallPercentComplete);
+          rethStageGauge.setPercent(
+            Math.floor(stagePercentComplete * 100) / 100
+          );
+          rethOverallSyncGauge.setPercent(
+            Math.floor(overallPercentComplete * 100) / 100
+          );
         }
 
         screen.render();
