@@ -174,12 +174,6 @@ function parseRethLog(line) {
       stagePercentComplete = (largestToBlock - toBlock) / largestToBlock;
       overallPercentComplete = (stagePercentComplete * 100) / 1200;
 
-      debugToFile(`stagePercentComplete: ${stagePercentComplete}`, () => {});
-      debugToFile(
-        `overallPercentComplete: ${overallPercentComplete}`,
-        () => {}
-      );
-
       rethStatusMessage = `[SYNC STAGE: 1/12] HEADERS\nBlocks Remaining: ${toBlock}\nLargest Block:    ${largestToBlock}`;
     } else if (
       line.includes("stage=Bodies") &&
@@ -192,15 +186,9 @@ function parseRethLog(line) {
 
       overallPercentComplete = (stagePercentComplete * 100 + 100) / 1200;
 
-      debugToFile(`stagePercentComplete: ${stagePercentComplete}`, () => {});
-      debugToFile(
-        `overallPercentComplete: ${overallPercentComplete}`,
-        () => {}
-      );
-
       rethStatusMessage = `[SYNC STAGE: 2/12] BODIES\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
     } else if (
-      line.includes("stage=Transactions") &&
+      line.includes("stage=SenderRecovery") &&
       line.includes("stage_progress=")
     ) {
       const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
@@ -210,7 +198,7 @@ function parseRethLog(line) {
 
       overallPercentComplete = (stagePercentComplete * 100 + 200) / 1200;
 
-      rethStatusMessage = `[SYNC STAGE: 3/12] TRANSACTIONS\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
+      rethStatusMessage = `[SYNC STAGE: 3/12] SENDER RECOVERY\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
     } else if (
       line.includes("stage=Execution") &&
       line.includes("stage_progress=")
