@@ -169,7 +169,8 @@ function parseRethLog(line) {
 
       rethStatusMessage = `[SYNC STAGE: 1/12] SYNCING HEADERS\nBlocks Remaining: ${toBlock}\nLargest Block:    ${largestToBlock}`;
     } else if (
-      line.includes("stage=Bodies" && line.includes("stage_progress="))
+      line.includes("stage=Bodies") &&
+      line.includes("stage_progress=")
     ) {
       const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
       const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
