@@ -174,6 +174,12 @@ function parseRethLog(line) {
       stagePercentComplete = (largestToBlock - toBlock) / largestToBlock;
       overallPercentComplete = (stagePercentComplete / 1200) * 100;
 
+      debugToFile(`stagePercentComplete: ${stagePercentComplete}`, () => {});
+      debugToFile(
+        `overallPercentComplete: ${overallPercentComplete}`,
+        () => {}
+      );
+
       rethStatusMessage = `[SYNC STAGE: 1/12] HEADERS\nBlocks Remaining: ${toBlock}\nLargest Block:    ${largestToBlock}`;
     } else if (
       line.includes("stage=Bodies") &&
@@ -186,6 +192,12 @@ function parseRethLog(line) {
       );
 
       overallPercentComplete = ((stagePercentComplete + 100) / 1200) * 100;
+
+      debugToFile(`stagePercentComplete: ${stagePercentComplete}`, () => {});
+      debugToFile(
+        `overallPercentComplete: ${overallPercentComplete}`,
+        () => {}
+      );
 
       rethStatusMessage = `[SYNC STAGE: 2/12] BODIES\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
     } else if (
