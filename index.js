@@ -26,7 +26,7 @@ const installDir = os.homedir();
 const gethVer = "1.14.3";
 const rethVer = "1.0.1";
 const prysmVer = "5.0.3";
-const lighthouseVer = "5.1.3";
+const lighthouseVer = "5.2.1";
 
 function showHelp() {
   console.log("");
