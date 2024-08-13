@@ -183,7 +183,6 @@ function setupUI(
   screen.append(statusBox);
   screen.append(bandwidthBox);
   if (executionClientGlobal == "geth") {
-    //START HERE: Figure out why geth gauges are being appended
     screen.append(gethHeaderDlGauge);
     screen.append(gethStateDlGauge);
     screen.append(gethChainDlGauge);

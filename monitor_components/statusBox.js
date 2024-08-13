@@ -5,12 +5,7 @@ import { debugToFile } from "../helpers.js";
 import { layoutHeightThresh } from "./helperFunctions.js";
 import { executionClient } from "../index.js";
 import { passRethStatus } from "./updateLogicExecution.js";
-
-const client = createPublicClient({
-  name: "client",
-  chain: mainnet,
-  transport: http("https://eth-mainnet.g.alchemy.com/v2/demo"),
-});
+import { mainnetClient } from "./mainnetClient.js";
 
 const localClient = createPublicClient({
   name: "localClient",
@@ -50,7 +45,7 @@ export async function updateStatusBox(statusBox, screen) {
         // );
       } else {
         const blockNumber = await localClient.getBlockNumber();
-        const latestBlock = await client.getBlockNumber();
+        const latestBlock = await mainnetClient.getBlockNumber();
 
         if (
           blockNumber === latestBlock ||
