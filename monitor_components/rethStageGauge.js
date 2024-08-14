@@ -40,18 +40,18 @@ export function createRethStageGauge(grid, screen) {
 export function populateRethStageGauge(stagePercentages) {
   // Define the custom stage names inside the function
   const stageNames = [
-    "Headers",
-    "Bodies",
-    "Sender Recovery",
-    "Execution",
-    "Merkle Unwind",
-    "Account Hashing",
-    "Storage Hashing",
-    "Merkle Execute",
-    "Transaction Lookup",
-    "Index Storage History",
-    "Index Account History",
-    "Finish",
+    "HEADERS",
+    "BODIES",
+    "SENDER RECOVERY",
+    "EXECUTION",
+    "MERKLE UNWIND",
+    "ACCOUNT HASHING",
+    "STORAGE HASHING",
+    "MERKLE EXECUTE",
+    "TRANSACTION LOOKUP",
+    "INDEX STORAGE HISTORY",
+    "INDEX ACCOUNT HISTORY",
+    "FINISH",
   ];
 
   // Get the width of the rethStageGauge box
@@ -63,18 +63,16 @@ export function populateRethStageGauge(stagePercentages) {
   // Iterate over each stage's percentage and name
   stagePercentages.forEach((percentComplete, index) => {
     // Calculate the number of filled bars for this stage
-    const filledBars = Math.round(boxWidth * percentComplete);
+    const filledBars = Math.floor(boxWidth * percentComplete);
 
     // Create the bar string
     const bar = "█".repeat(filledBars) + " ".repeat(boxWidth - filledBars);
 
     // Create the percentage string
-    const percentString = `${Math.round(percentComplete * 100)}%`;
+    const percentString = `${Math.floor(percentComplete * 100)}%`;
 
     // Append the custom stage title, progress bar, and percentage to the content
-    content += `${index + 1}/12 ${
-      stageNames[index]
-    }\n[${bar}] ${percentString}\n`;
+    content += `${stageNames[index]}\n[${bar}] ${percentString}\n`;
   });
 
   // Set the content of the rethStageGauge box
