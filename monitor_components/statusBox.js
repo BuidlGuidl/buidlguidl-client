@@ -1,76 +1,7 @@
-// import { createPublicClient, http } from "viem";
-// import { mainnet } from "viem/chains";
 import blessed from "blessed";
 import { debugToFile } from "../helpers.js";
 import { layoutHeightThresh } from "./helperFunctions.js";
-// import { executionClient } from "../index.js";
 import { passStatusMessage } from "./updateLogicExecution.js";
-// import { mainnetClient } from "./mainnetClient.js";
-
-// const localClient = createPublicClient({
-//   name: "localClient",
-//   chain: mainnet,
-//   transport: http("http://localhost:8545"),
-// });
-
-// async function isSyncing() {
-//   try {
-//     const syncingStatus = await localClient.request({
-//       method: "eth_syncing",
-//       params: [],
-//     });
-
-//     return syncingStatus;
-//   } catch (error) {
-//     throw new Error(`Failed to fetch syncing status: ${error.message}`);
-//   }
-// }
-
-// export async function updateStatusBox(statusBox, screen) {
-//   try {
-//     if (executionClient == "geth") {
-//       // const syncingStatus = await isSyncing();
-
-//       // if (syncingStatus) {
-//       //   const currentBlock = parseInt(syncingStatus.currentBlock, 16);
-//       //   const highestBlock = parseInt(syncingStatus.highestBlock, 16);
-
-//       //   statusBox.setContent(
-//       //     `SYNC IN PROGRESS\nCurrent Block: ${currentBlock}\nHighest Block: ${highestBlock}`
-//       //   );
-//       // } else {
-//       //   const blockNumber = await localClient.getBlockNumber();
-//       //   const latestBlock = await mainnetClient.getBlockNumber();
-
-//       //   if (
-//       //     blockNumber === latestBlock ||
-//       //     blockNumber === latestBlock + BigInt(1) ||
-//       //     blockNumber === latestBlock - BigInt(1)
-//       //   ) {
-//       //     statusBox.setContent(
-//       //       `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber}`
-//       //     );
-//       //   } else {
-//       //     statusBox.setContent(
-//       //       `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber}\nMainnet Block: ${latestBlock}`
-//       //     );
-//       //   }
-//       // }
-
-//       screen.render();
-//     } else if (executionClient == "reth") {
-//       const rethStatus = await passStatusMessage();
-//       statusBox.setContent(rethStatus);
-
-//       screen.render();
-//     }
-//   } catch (error) {
-//     debugToFile(
-//       `updateStatusBox() Failed to update sync progress gauge: ${error}`,
-//       () => {}
-//     );
-//   }
-// }
 
 export async function updateStatusBox(statusBox, screen) {
   try {

@@ -18,10 +18,16 @@ const localClient = createPublicClient({
   transport: http("http://localhost:8545"),
 });
 
+// const mainnetClient = createPublicClient({
+//   name: "mainnetClient",
+//   chain: mainnet,
+//   transport: http("https://eth-mainnet.g.alchemy.com/v2/demo"),
+// });
+
 const mainnetClient = createPublicClient({
   name: "mainnetClient",
   chain: mainnet,
-  transport: http("https://eth-mainnet.g.alchemy.com/v2/demo"),
+  transport: http(),
 });
 
 async function isSyncing() {
