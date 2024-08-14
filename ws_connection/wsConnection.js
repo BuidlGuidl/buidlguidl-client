@@ -4,6 +4,7 @@ import { debugToFile } from "../helpers.js";
 import { getCpuUsage } from "../monitor_components/cpuLine.js";
 import { getMemoryUsage } from "../monitor_components/memGauge.js";
 import { getDiskUsage } from "../monitor_components/diskGauge.js";
+import { localClient } from "../monitor_components/localClient.js";
 
 const ws = new WebSocket("ws://rpc.buidlguidl.com:8080");
 

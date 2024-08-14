@@ -9,14 +9,9 @@ import { debugToFile } from "../helpers.js";
 import { executionClient } from "../index.js";
 import { createPublicClient, http } from "viem";
 import { mainnet } from "viem/chains";
+import { localClient } from "./localClient.js";
 
 const progress = loadProgress();
-
-const localClient = createPublicClient({
-  name: "localClient",
-  chain: mainnet,
-  transport: http("http://localhost:8545"),
-});
 
 // const mainnetClient = createPublicClient({
 //   name: "mainnetClient",
