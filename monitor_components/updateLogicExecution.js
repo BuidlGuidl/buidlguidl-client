@@ -7,8 +7,30 @@ import {
 } from "./helperFunctions.js";
 import { debugToFile } from "../helpers.js";
 import { executionClient } from "../index.js";
+import { mainnetClient } from "./mainnetClient.js";
+import { createPublicClient, http } from "viem";
+import { mainnet } from "viem/chains";
 
 const progress = loadProgress();
+
+const localClient = createPublicClient({
+  name: "localClient",
+  chain: mainnet,
+  transport: http("http://localhost:8545"),
+});
+
+async function isSyncing() {
+  try {
+    const syncingStatus = await localClient.request({
+      method: "eth_syncing",
+      params: [],
+    });
+
+    return syncingStatus;
+  } catch (error) {
+    throw new Error(`Failed to fetch syncing status: ${error.message}`);
+  }
+}
 
 /// Peer Count
 function getPeerCount(line) {
@@ -112,16 +134,14 @@ export function setupLogStreaming(
           logBuffer.shift();
         }
 
-        // executionLog.log(highlightWords(line));
         executionLog.setContent(logBuffer.join("\n"));
 
         if (executionClient == "geth") {
+          createGethMessage();
+
           saveHeaderDlProgress(line);
           saveStateDlProgress(line);
           saveChainDlProgress(line);
-
-          // debugToFile(`line ${line}`, () => {});
-          // debugToFile(`progress From stream ${progress}`, () => {});
 
           if (gethHeaderDlGauge) {
             gethHeaderDlGauge.setPercent(progress.headerDlProgress);
@@ -133,7 +153,7 @@ export function setupLogStreaming(
             gethChainDlGauge.setPercent(progress.chainDlProgress);
           }
         } else if (executionClient == "reth") {
-          parseRethLog(line);
+          createRethMessage(line);
 
           rethStageGauge.setPercent(
             Math.floor(stagePercentComplete * 100) / 100
@@ -157,200 +177,222 @@ export function setupLogStreaming(
   });
 }
 
-let rethStatusMessage = "INITIALIZING...";
+let statusMessage = "INITIALIZING...";
+
+async function createGethMessage() {
+  const syncingStatus = await isSyncing();
+
+  if (syncingStatus) {
+    const currentBlock = parseInt(syncingStatus.currentBlock, 16);
+    const highestBlock = parseInt(syncingStatus.highestBlock, 16);
+
+    statusMessage = `SYNC IN PROGRESS\nCurrent Block: ${currentBlock}\nHighest Block: ${highestBlock}`;
+  } else {
+    const blockNumber = await localClient.getBlockNumber();
+    const latestBlock = await mainnetClient.getBlockNumber();
+
+    if (
+      blockNumber === latestBlock ||
+      blockNumber === latestBlock + BigInt(1) ||
+      blockNumber === latestBlock - BigInt(1)
+    ) {
+      statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber}`;
+    } else {
+      statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber}\nMainnet Block: ${latestBlock}`;
+    }
+  }
+}
+
 let largestToBlock = 0;
 let stagePercentComplete = 0;
 let overallPercentComplete = 0;
 
-function parseRethLog(line) {
+async function createRethMessage(line) {
   try {
-    if (line.includes("Received headers") && line.includes("to_block=")) {
-      const toBlock = parseInt(line.match(/to_block=(\d+)/)[1], 10);
+    const syncingStatus = await isSyncing();
 
-      if (toBlock > largestToBlock) {
-        largestToBlock = toBlock;
+    if (syncingStatus) {
+      if (line.includes("Received headers") && line.includes("to_block=")) {
+        const toBlock = parseInt(line.match(/to_block=(\d+)/)[1], 10);
+
+        if (toBlock > largestToBlock) {
+          largestToBlock = toBlock;
+        }
+
+        stagePercentComplete = (largestToBlock - toBlock) / largestToBlock;
+        overallPercentComplete = (stagePercentComplete * 100) / 1200;
+
+        statusMessage = `[SYNC STAGE: 1/12] HEADERS\nBlocks Remaining: ${toBlock}\nLargest Block:    ${largestToBlock}`;
+      } else if (
+        line.includes("stage=Bodies") &&
+        line.includes("stage_progress=")
+      ) {
+        const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
+        const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
+        stagePercentComplete =
+          parseFloat(line.match(/stage_progress=([\d.]+)%/)[1]) / 100;
+
+        overallPercentComplete = (stagePercentComplete * 100 + 100) / 1200;
+
+        statusMessage = `[SYNC STAGE: 2/12] BODIES\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
+      } else if (
+        line.includes("stage=SenderRecovery") &&
+        line.includes("stage_progress=")
+      ) {
+        const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
+        const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
+        stagePercentComplete =
+          parseFloat(line.match(/stage_progress=([\d.]+)%/)[1]) / 100;
+
+        overallPercentComplete = (stagePercentComplete * 100 + 200) / 1200;
+
+        statusMessage = `[SYNC STAGE: 3/12] SENDER RECOVERY\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
+      } else if (
+        line.includes("stage=Execution") &&
+        line.includes("stage_progress=")
+      ) {
+        const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
+        const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
+        stagePercentComplete =
+          parseFloat(line.match(/stage_progress=([\d.]+)%/)[1]) / 100;
+
+        overallPercentComplete = (stagePercentComplete * 100 + 300) / 1200;
+
+        statusMessage = `[SYNC STAGE: 4/12] EXECUTION\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
+      } else if (
+        line.includes("stage=AccountHashing") &&
+        line.includes("stage_progress=")
+      ) {
+        const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
+        const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
+        stagePercentComplete =
+          parseFloat(line.match(/stage_progress=([\d.]+)%/)[1]) / 100;
+
+        overallPercentComplete = (stagePercentComplete * 100 + 400) / 1200;
+
+        statusMessage = `[SYNC STAGE: 5/12] ACCOUNT HASHING\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
+      } else if (
+        line.includes("stage=StorageHashing") &&
+        line.includes("stage_progress=")
+      ) {
+        const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
+        const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
+        stagePercentComplete =
+          parseFloat(line.match(/stage_progress=([\d.]+)%/)[1]) / 100;
+
+        overallPercentComplete = (stagePercentComplete * 100 + 500) / 1200;
+
+        statusMessage = `[SYNC STAGE: 6/12] STORAGE HASHING\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
+      } else if (
+        line.includes("stage=Merkle") &&
+        line.includes("stage_progress=")
+      ) {
+        const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
+        const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
+        stagePercentComplete =
+          parseFloat(line.match(/stage_progress=([\d.]+)%/)[1]) / 100;
+
+        overallPercentComplete = (stagePercentComplete * 100 + 600) / 1200;
+
+        statusMessage = `[SYNC STAGE: 7/12] MERKLE\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
+      } else if (
+        line.includes("stage=TransactionLookup") &&
+        line.includes("stage_progress=")
+      ) {
+        const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
+        const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
+        stagePercentComplete =
+          parseFloat(line.match(/stage_progress=([\d.]+)%/)[1]) / 100;
+
+        overallPercentComplete = (stagePercentComplete * 100 + 700) / 1200;
+
+        statusMessage = `[SYNC STAGE: 8/12] TRANSACTION LOOKUP\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
+      } else if (
+        line.includes("stage=IndexAccountHistory") &&
+        line.includes("stage_progress=")
+      ) {
+        const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
+        const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
+        stagePercentComplete =
+          parseFloat(line.match(/stage_progress=([\d.]+)%/)[1]) / 100;
+
+        overallPercentComplete = (stagePercentComplete * 100 + 800) / 1200;
+
+        statusMessage = `[SYNC STAGE: 9/12] INDEX ACCOUNT HISTORY\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
+      } else if (
+        line.includes("stage=IndexStorageHistory") &&
+        line.includes("stage_progress=")
+      ) {
+        const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
+        const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
+        stagePercentComplete =
+          parseFloat(line.match(/stage_progress=([\d.]+)%/)[1]) / 100;
+
+        overallPercentComplete = (stagePercentComplete * 100 + 900) / 1200;
+
+        statusMessage = `[SYNC STAGE: 10/12] INDEX STORAGE HISTORY\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
+      } else if (
+        line.includes("stage=ETL") &&
+        line.includes("stage_progress=")
+      ) {
+        const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
+        const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
+        stagePercentComplete =
+          parseFloat(line.match(/stage_progress=([\d.]+)%/)[1]) / 100;
+
+        overallPercentComplete = (stagePercentComplete * 100 + 1000) / 1200;
+
+        statusMessage = `[SYNC STAGE: 11/12] ETL\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
+      } else if (
+        line.includes("stage=Finalization") &&
+        line.includes("stage_progress=")
+      ) {
+        const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
+        const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
+        stagePercentComplete =
+          parseFloat(line.match(/stage_progress=([\d.]+)%/)[1]) / 100;
+
+        overallPercentComplete = (stagePercentComplete * 100 + 1100) / 1200;
+
+        statusMessage = `[SYNC STAGE: 12/12] FINALIZATION\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
+      } else if (line.includes("INFO Canonical chain committed")) {
+        const blockNumber = parseInt(logLine.match(/number=(\d+)/)[1], 10);
+        const latestBlock = await mainnetClient.getBlockNumber();
+
+        if (
+          blockNumber === latestBlock ||
+          blockNumber === latestBlock + BigInt(1) ||
+          blockNumber === latestBlock - BigInt(1)
+        ) {
+          statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber}`;
+        } else {
+          statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber}\nMainnet Block: ${latestBlock}`;
+        }
       }
+    } else {
+      const blockNumber = await localClient.getBlockNumber();
+      const latestBlock = await mainnetClient.getBlockNumber();
 
-      stagePercentComplete = (largestToBlock - toBlock) / largestToBlock;
-      overallPercentComplete = (stagePercentComplete * 100) / 1200;
-
-      rethStatusMessage = `[SYNC STAGE: 1/12] HEADERS\nBlocks Remaining: ${toBlock}\nLargest Block:    ${largestToBlock}`;
-    } else if (
-      line.includes("stage=Bodies") &&
-      line.includes("stage_progress=")
-    ) {
-      const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
-      const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
-      stagePercentComplete =
-        parseFloat(line.match(/stage_progress=([\d.]+)%/)[1]) / 100;
-
-      overallPercentComplete = (stagePercentComplete * 100 + 100) / 1200;
-
-      rethStatusMessage = `[SYNC STAGE: 2/12] BODIES\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
-    } else if (
-      line.includes("stage=SenderRecovery") &&
-      line.includes("stage_progress=")
-    ) {
-      const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
-      const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
-      stagePercentComplete =
-        parseFloat(line.match(/stage_progress=([\d.]+)%/)[1]) / 100;
-
-      overallPercentComplete = (stagePercentComplete * 100 + 200) / 1200;
-
-      rethStatusMessage = `[SYNC STAGE: 3/12] SENDER RECOVERY\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
-    } else if (
-      line.includes("stage=Execution") &&
-      line.includes("stage_progress=")
-    ) {
-      const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
-      const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
-      stagePercentComplete =
-        parseFloat(line.match(/stage_progress=([\d.]+)%/)[1]) / 100;
-
-      overallPercentComplete = (stagePercentComplete * 100 + 300) / 1200;
-
-      rethStatusMessage = `[SYNC STAGE: 4/12] EXECUTION\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
-    } else if (
-      line.includes("stage=AccountHashing") &&
-      line.includes("stage_progress=")
-    ) {
-      const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
-      const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
-      stagePercentComplete =
-        parseFloat(line.match(/stage_progress=([\d.]+)%/)[1]) / 100;
-
-      overallPercentComplete = (stagePercentComplete * 100 + 400) / 1200;
-
-      rethStatusMessage = `[SYNC STAGE: 5/12] ACCOUNT HASHING\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
-    } else if (
-      line.includes("stage=StorageHashing") &&
-      line.includes("stage_progress=")
-    ) {
-      const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
-      const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
-      stagePercentComplete =
-        parseFloat(line.match(/stage_progress=([\d.]+)%/)[1]) / 100;
-
-      overallPercentComplete = (stagePercentComplete * 100 + 500) / 1200;
-
-      rethStatusMessage = `[SYNC STAGE: 6/12] STORAGE HASHING\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
-    } else if (
-      line.includes("stage=Merkle") &&
-      line.includes("stage_progress=")
-    ) {
-      const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
-      const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
-      stagePercentComplete =
-        parseFloat(line.match(/stage_progress=([\d.]+)%/)[1]) / 100;
-
-      overallPercentComplete = (stagePercentComplete * 100 + 600) / 1200;
-
-      rethStatusMessage = `[SYNC STAGE: 7/12] MERKLE\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
-    } else if (
-      line.includes("stage=TransactionLookup") &&
-      line.includes("stage_progress=")
-    ) {
-      const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
-      const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
-      stagePercentComplete =
-        parseFloat(line.match(/stage_progress=([\d.]+)%/)[1]) / 100;
-
-      overallPercentComplete = (stagePercentComplete * 100 + 700) / 1200;
-
-      rethStatusMessage = `[SYNC STAGE: 8/12] TRANSACTION LOOKUP\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
-    } else if (
-      line.includes("stage=IndexAccountHistory") &&
-      line.includes("stage_progress=")
-    ) {
-      const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
-      const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
-      stagePercentComplete =
-        parseFloat(line.match(/stage_progress=([\d.]+)%/)[1]) / 100;
-
-      overallPercentComplete = (stagePercentComplete * 100 + 800) / 1200;
-
-      rethStatusMessage = `[SYNC STAGE: 9/12] INDEX ACCOUNT HISTORY\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
-    } else if (
-      line.includes("stage=IndexStorageHistory") &&
-      line.includes("stage_progress=")
-    ) {
-      const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
-      const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
-      stagePercentComplete =
-        parseFloat(line.match(/stage_progress=([\d.]+)%/)[1]) / 100;
-
-      overallPercentComplete = (stagePercentComplete * 100 + 900) / 1200;
-
-      rethStatusMessage = `[SYNC STAGE: 10/12] INDEX STORAGE HISTORY\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
-    } else if (line.includes("stage=ETL") && line.includes("stage_progress=")) {
-      const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
-      const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
-      stagePercentComplete =
-        parseFloat(line.match(/stage_progress=([\d.]+)%/)[1]) / 100;
-
-      overallPercentComplete = (stagePercentComplete * 100 + 1000) / 1200;
-
-      rethStatusMessage = `[SYNC STAGE: 11/12] ETL\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
-    } else if (
-      line.includes("stage=Finalization") &&
-      line.includes("stage_progress=")
-    ) {
-      const currentBlock = parseInt(line.match(/checkpoint=(\d+)/)[1], 10);
-      const largestBlock = parseInt(line.match(/target=(\d+)/)[1], 10);
-      stagePercentComplete =
-        parseFloat(line.match(/stage_progress=([\d.]+)%/)[1]) / 100;
-
-      overallPercentComplete = (stagePercentComplete * 100 + 1100) / 1200;
-
-      rethStatusMessage = `[SYNC STAGE: 12/12] FINALIZATION\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
+      if (
+        blockNumber === latestBlock ||
+        blockNumber === latestBlock + BigInt(1) ||
+        blockNumber === latestBlock - BigInt(1)
+      ) {
+        statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber}`;
+      } else {
+        statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber}\nMainnet Block: ${latestBlock}`;
+      }
     }
   } catch (error) {
-    debugToFile(`parseRethLog(): ${error}`, () => {});
+    debugToFile(`createRethMessage(): ${error}`, () => {});
   }
 }
 
-export async function passRethStatus() {
+export async function passStatusMessage() {
   try {
-    return rethStatusMessage;
+    return statusMessage;
   } catch (error) {
     debugToFile(`passRethStatus(): ${error}`, () => {});
     return "";
   }
 }
-
-// /// if want to have old logs showing when you start to process again
-// const stream = fs.createReadStream(logFilePath, {
-//   encoding: "utf8",
-//   flags: "r",
-// });
-
-// const rl = readline.createInterface({
-//   input: stream,
-//   output: process.stdout,
-//   terminal: false,
-// });
-
-// rl.on("line", (line) => {
-//   executionLog.log(highlightWords(line));
-//   screen.render();
-
-//   const peerCount = getPeerCount(line);
-//   if (peerCount !== null) {
-//     updatePeerCountLcd(peerCountGauge, peerCount, screen);
-//   }
-
-//   saveHeaderDlProgress(line);
-//   saveStateDlProgress(line);
-//   saveChainDlProgress(line);
-
-//   screen.render();
-// });
-
-// rl.on("close", () => {
-// debugToFile(`Log file stream ended`, () => {});
-// });
-
-// rl.on("error", (err) => {
-// debugToFile(`Error reading log file: ${err}`, () => {});
-// });
