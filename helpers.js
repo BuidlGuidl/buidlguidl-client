@@ -62,6 +62,8 @@ export function getFormattedDateTime() {
   return now.toISOString().replace(/T/, "_").replace(/\..+/, "");
 }
 
+export { installDir };
+
 // function getFormattedDateTime() {
 //   const now = new Date();
 

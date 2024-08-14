@@ -5,6 +5,7 @@ import { getCpuUsage } from "../monitor_components/cpuLine.js";
 import { getMemoryUsage } from "../monitor_components/memGauge.js";
 import { getDiskUsage } from "../monitor_components/diskGauge.js";
 import { localClient } from "../monitor_components/localClient.js";
+import { installDir } from "../helpers.js";
 
 const ws = new WebSocket("ws://rpc.buidlguidl.com:8080");
 
@@ -60,10 +61,7 @@ export function initializeWSConnection(wsConfig) {
     let possibleBlockHash;
     try {
       possibleBlockNumber = await localClient.getBlockNumber();
-      const block = await localClient.getBlock({
-        chain: mainnet,
-        block: possibleBlockNumber,
-      });
+      const block = await localClient.getBlock();
       possibleBlockHash = block.hash;
     } catch (error) {
       debugToFile(`Failed to get block number: ${error}`, () => {});
