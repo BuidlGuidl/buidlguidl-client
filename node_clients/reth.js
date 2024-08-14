@@ -50,6 +50,8 @@ const execution = pty.spawn(
     path.join(os.homedir(), "bgnode", "reth", "database"),
     "--authrpc.jwtsecret",
     `${jwtPath}`,
+    "--metrics",
+    "127.0.0.1:9001",
   ],
   {
     name: "xterm-color",

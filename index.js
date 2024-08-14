@@ -21,7 +21,7 @@ const __dirname = dirname(__filename);
 /// Set default command line option values
 let executionClient = "geth";
 let consensusClient = "prysm";
-const installDir = os.homedir();
+let installDir = os.homedir();
 
 const gethVer = "1.14.3";
 const rethVer = "1.0.0";

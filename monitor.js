@@ -112,8 +112,8 @@ export function initializeMonitoring(
       components.gethHeaderDlGauge,
       components.gethStateDlGauge,
       components.gethChainDlGauge,
-      components.rethStageGauge,
-      components.rethOverallSyncGauge
+      components.rethStageGauge
+      // components.rethOverallSyncGauge
     );
   } catch (error) {
     debugToFile(`Error initializing monitoring: ${error}`, () => {});
@@ -157,11 +157,8 @@ function setupUI(
   const statusBox = createStatusBox(grid, screen);
   const bandwidthBox = createBandwidthBox(grid, screen);
 
-  let gethHeaderDlGauge,
-    gethStateDlGauge,
-    gethChainDlGauge,
-    rethStageGauge,
-    rethOverallSyncGauge;
+  let gethHeaderDlGauge, gethStateDlGauge, gethChainDlGauge, rethStageGauge;
+  // rethOverallSyncGauge;
 
   if (executionClientGlobal == "geth") {
     gethHeaderDlGauge = createGethHeaderDlGauge(grid, screen);
@@ -169,7 +166,7 @@ function setupUI(
     gethChainDlGauge = createGethChainDlGauge(grid, screen);
   } else if (executionClientGlobal == "reth") {
     rethStageGauge = createRethStageGauge(grid, screen);
-    rethOverallSyncGauge = createRethOverallSyncGauge(grid, screen);
+    // rethOverallSyncGauge = createRethOverallSyncGauge(grid, screen);
   }
 
   createHeader(grid, screen, messageForHeader);
@@ -188,7 +185,7 @@ function setupUI(
     screen.append(gethChainDlGauge);
   } else if (executionClientGlobal == "reth") {
     screen.append(rethStageGauge);
-    screen.append(rethOverallSyncGauge);
+    // screen.append(rethOverallSyncGauge);
   }
 
   setBandwidthBox(bandwidthBox);
@@ -231,7 +228,7 @@ function setupUI(
       gethStateDlGauge,
       gethChainDlGauge,
       rethStageGauge,
-      rethOverallSyncGauge,
+      // rethOverallSyncGauge,
     },
   };
 }
