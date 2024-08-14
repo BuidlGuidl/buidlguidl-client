@@ -7,7 +7,6 @@ import {
 } from "./helperFunctions.js";
 import { debugToFile } from "../helpers.js";
 import { executionClient } from "../index.js";
-import { mainnetClient } from "./mainnetClient.js";
 import { createPublicClient, http } from "viem";
 import { mainnet } from "viem/chains";
 
@@ -17,6 +16,12 @@ const localClient = createPublicClient({
   name: "localClient",
   chain: mainnet,
   transport: http("http://localhost:8545"),
+});
+
+const mainnetClient = createPublicClient({
+  name: "mainnetClient",
+  chain: mainnet,
+  transport: http("https://eth-mainnet.g.alchemy.com/v2/demo"),
 });
 
 async function isSyncing() {
@@ -355,19 +360,6 @@ async function createRethMessage(line) {
         overallPercentComplete = (stagePercentComplete * 100 + 1100) / 1200;
 
         statusMessage = `[SYNC STAGE: 12/12] FINALIZATION\nCurrent Block: ${currentBlock}\nLargest Block: ${largestBlock}`;
-      } else if (line.includes("INFO Canonical chain committed")) {
-        const blockNumber = parseInt(logLine.match(/number=(\d+)/)[1], 10);
-        const latestBlock = await mainnetClient.getBlockNumber();
-
-        if (
-          blockNumber === latestBlock ||
-          blockNumber === latestBlock + BigInt(1) ||
-          blockNumber === latestBlock - BigInt(1)
-        ) {
-          statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber}`;
-        } else {
-          statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber}\nMainnet Block: ${latestBlock}`;
-        }
       }
     } else {
       const blockNumber = await localClient.getBlockNumber();

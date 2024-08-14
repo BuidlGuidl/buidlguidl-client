@@ -1,11 +1,11 @@
-import { createPublicClient, http } from "viem";
-import { mainnet } from "viem/chains";
+// import { createPublicClient, http } from "viem";
+// import { mainnet } from "viem/chains";
 import blessed from "blessed";
 import { debugToFile } from "../helpers.js";
 import { layoutHeightThresh } from "./helperFunctions.js";
-import { executionClient } from "../index.js";
+// import { executionClient } from "../index.js";
 import { passStatusMessage } from "./updateLogicExecution.js";
-import { mainnetClient } from "./mainnetClient.js";
+// import { mainnetClient } from "./mainnetClient.js";
 
 // const localClient = createPublicClient({
 //   name: "localClient",
