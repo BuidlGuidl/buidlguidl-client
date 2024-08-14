@@ -1,5 +1,6 @@
 import WebSocket from "ws";
 import macaddress from "macaddress";
+import os from "os";
 import { debugToFile } from "../helpers.js";
 import { getCpuUsage } from "../monitor_components/cpuLine.js";
 import { getMemoryUsage } from "../monitor_components/memGauge.js";
@@ -74,7 +75,7 @@ export function initializeWSConnection(wsConfig) {
       const macAddress = await getMacAddress();
 
       let stringToSend = JSON.stringify({
-        id: `${os.hostname()}-${macAddress}-${platform}-${os.arch()}`,
+        id: `${os.hostname()}-${macAddress}-${os.platform()}-${os.arch()}`,
         nodeVersion: `${process.version}`,
         executionClient: executionClientResponse,
         consensusClient: consensusClientResponse,

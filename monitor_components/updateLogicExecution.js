@@ -34,7 +34,8 @@ async function isSyncing() {
 
     return syncingStatus;
   } catch (error) {
-    throw new Error(`Failed to fetch syncing status: ${error.message}`);
+    // throw new Error(`Failed to fetch syncing status: ${error.message}`);
+    debugToFile(`isSyncing(): ${error}`, () => {});
   }
 }
 
