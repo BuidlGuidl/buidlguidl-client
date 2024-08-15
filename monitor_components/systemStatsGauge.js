@@ -26,7 +26,7 @@ export function createSystemStatsGauge(grid, screen) {
   });
 
   populateSystemStatsGauge();
-  setInterval(() => populateSystemStatsGauge(), 10000);
+  setInterval(() => populateSystemStatsGauge(), 5000);
 
   return systemStatsGauge;
 }
