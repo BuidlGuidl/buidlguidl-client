@@ -252,7 +252,7 @@ async function createRethMessage() {
         /reth_sync_entities_total\{stage="Headers"\} (\d+)/
       );
 
-      debugToFile(`createRethMessage() globalLine: ${globalLine}`, () => {});
+      // debugToFile(`createRethMessage() globalLine: ${globalLine}`, () => {});
 
       let headersPercent = 0;
       if (headersProcessedMatch && headersTotalMatch) {
@@ -269,7 +269,7 @@ async function createRethMessage() {
 
             headersPercent = (largestToBlock - toBlock) / largestToBlock;
           }
-        } else {
+        } else if (headersProcessed == headersTotal && headersTotal > 0) {
           headersPercent = 1;
         }
 
