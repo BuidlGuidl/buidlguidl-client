@@ -86,11 +86,13 @@ async function updateBandwidthBox(screen) {
     const dailyStats = calculateStatsForPeriod(history24);
     const weeklyStats = calculateStatsForPeriod(history7);
 
-    const formattedText = `▲ 1D: ${formatBytes(
+    const formattedText = `{red-fg}▲ 1D: ${formatBytes(
       dailyStats.sent
-    )}\n▽ 1D: ${formatBytes(dailyStats.received)}\n▲ 7D: ${formatBytes(
+    )}\n{blue-fg}▽ 1D: ${formatBytes(
+      dailyStats.received
+    )}\n{red-fg}▲ 7D: ${formatBytes(
       weeklyStats.sent
-    )}\n▽ 7D: ${formatBytes(weeklyStats.received)}`;
+    )}\n{blue-fg}▽ 7D: ${formatBytes(weeklyStats.received)}`;
 
     bandwidthBox.setContent(formattedText);
     screen.render();
@@ -130,6 +132,7 @@ export function createBandwidthBox(grid, screen) {
       fg: "cyan",
     },
     content: "Calculating...",
+    tags: true,
   });
   return box;
 }
