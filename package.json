@@ -16,8 +16,10 @@
     "macaddress": "^0.5.3",
     "minimist": "^1.2.8",
     "node-pty": "^1.0.0",
-    "osx-temperature-sensor": "^1.0.8",
     "systeminformation": "^5.22.8",
     "viem": "^2.13.3"
+  },
+  "optionalDependencies": {
+    "osx-temperature-sensor": "^1.0.8"
   }
 }
