@@ -32,6 +32,7 @@ export function createRethStageGauge(grid, screen) {
       type: "line",
       fg: "cyan",
     },
+    wrap: false,
   });
 
   return rethStageGauge;
