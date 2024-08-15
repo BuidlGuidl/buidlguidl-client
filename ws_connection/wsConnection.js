@@ -7,7 +7,7 @@ import {
   getCpuUsage,
   getDiskUsage,
 } from "../getSystemStats.js";
-import { localClient } from "../monitor_components/localClient.js";
+import { localClient } from "../monitor_components/viemClients.js";
 import { installDir } from "../helpers.js";
 
 const ws = new WebSocket("ws://rpc.buidlguidl.com:8080");

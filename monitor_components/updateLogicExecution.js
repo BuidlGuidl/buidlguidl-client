@@ -7,32 +7,11 @@ import {
 } from "./helperFunctions.js";
 import { debugToFile } from "../helpers.js";
 import { executionClient } from "../index.js";
-import { createPublicClient, http } from "viem";
-import { mainnet } from "viem/chains";
-import { localClient } from "./localClient.js";
+import { mainnetClient, localClient, isSyncing } from "./viemClients.js";
 import { exec } from "child_process";
 import { populateRethStageGauge } from "./rethStageGauge.js";
 
 const progress = loadProgress();
-
-const mainnetClient = createPublicClient({
-  name: "mainnetClient",
-  chain: mainnet,
-  transport: http(),
-});
-
-async function isSyncing() {
-  try {
-    const syncingStatus = await localClient.request({
-      method: "eth_syncing",
-      params: [],
-    });
-
-    return syncingStatus;
-  } catch (error) {
-    debugToFile(`isSyncing(): ${error}`, () => {});
-  }
-}
 
 function stripAnsiCodes(input) {
   return input.replace(

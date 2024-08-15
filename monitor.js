@@ -178,7 +178,6 @@ function setupUI(
     screen.append(gethChainDlGauge);
   } else if (executionClientGlobal == "reth") {
     screen.append(rethStageGauge);
-    // screen.append(rethOverallSyncGauge);
   }
 
   setBandwidthBox(bandwidthBox);

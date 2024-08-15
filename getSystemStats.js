@@ -60,7 +60,8 @@ export function getCpuTemperature() {
   return new Promise((resolve, reject) => {
     si.cpuTemperature()
       .then((data) => {
-        debugToFile(`CPU data: ${JSON.stringify(data, null, 2)}`, () => {});
+        // debugToFile(`CPU data: ${JSON.stringify(data, null, 2)}`, () => {});
+
         const cpuTemp = data.main;
         if (cpuTemp !== null && cpuTemp !== undefined) {
           resolve(cpuTemp.toFixed(1)); // Return CPU temperature as a fixed-point number
