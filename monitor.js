@@ -90,14 +90,14 @@ export function initializeMonitoring(
       getLatestLogFile(consensusLogsPath, consensusClient)
     );
 
-    debugToFile(
-      `Monitoring ${executionClient} logs from: ${logFilePathExecution}`,
-      () => {}
-    );
-    debugToFile(
-      `Monitoring ${consensusClient} logs from: ${logFilePathConsensus}`,
-      () => {}
-    );
+    // debugToFile(
+    //   `Monitoring ${executionClient} logs from: ${logFilePathExecution}`,
+    //   () => {}
+    // );
+    // debugToFile(
+    //   `Monitoring ${consensusClient} logs from: ${logFilePathConsensus}`,
+    //   () => {}
+    // );
 
     updateConsensusClientInfo(
       logFilePathConsensus,

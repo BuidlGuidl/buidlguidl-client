@@ -235,6 +235,7 @@ async function getRethSyncMetrics() {
 }
 
 let largestToBlock = 0;
+let headersPercent = 0;
 
 async function createRethMessage() {
   try {
@@ -254,7 +255,6 @@ async function createRethMessage() {
 
       // debugToFile(`createRethMessage() globalLine: ${globalLine}`, () => {});
 
-      let headersPercent = 0;
       if (headersProcessedMatch && headersTotalMatch) {
         const headersProcessed = parseInt(headersProcessedMatch[1], 10);
         const headersTotal = parseInt(headersTotalMatch[1], 10);
