@@ -1,5 +1,9 @@
 import blessed from "blessed";
-import { getMemoryUsage, getDiskUsage } from "../getSystemStats.js";
+import {
+  getMemoryUsage,
+  getDiskUsage,
+  getCpuTemperature,
+} from "../getSystemStats.js";
 import { debugToFile } from "../helpers.js";
 import { layoutHeightThresh } from "./helperFunctions.js";
 
@@ -27,34 +31,46 @@ export function createSystemStatsGauge(grid, screen) {
   return systemStatsGauge;
 }
 
-let gaugePercentages = [0, 0];
+let gaugePercentages = [0, 0, 0];
 
 async function populateSystemStatsGauge() {
-  gaugePercentages[0] = (await getMemoryUsage()) / 100;
-  gaugePercentages[1] = (await getDiskUsage()) / 100;
+  try {
+    gaugePercentages[0] = (await getMemoryUsage()) / 100;
+    gaugePercentages[1] = (await getDiskUsage()) / 100;
+    gaugePercentages[2] = (await getCpuTemperature()) / 100;
 
-  const gaugeNames = ["MEMORY", "STORAGE"];
-  const gaugeColors = ["{green-fg}", "{blue-fg}"];
+    const gaugeNames = ["MEMORY", "STORAGE", "CPU TEMP"];
+    const gaugeColors = ["{magenta-fg}", "{green-fg}", "{blue-fg}"];
+    const units = ["%", "%", "C"];
 
-  const boxWidth = systemStatsGauge.width - 9; // Subtracting 9 for padding/border
-  let content = "";
+    const boxWidth = systemStatsGauge.width - 9; // Subtracting 9 for padding/border
+    let content = "";
 
-  // Iterate over each stage's percentage and name
-  gaugePercentages.forEach((percentComplete, index) => {
-    // Calculate the number of filled bars for this stage
-    const filledBars = Math.floor(boxWidth * percentComplete);
+    // Iterate over each stage's percentage and name
+    gaugePercentages.forEach((percentComplete, index) => {
+      // Create the percentage string
+      const percentString = `${Math.floor(percentComplete * 100)}${
+        units[index]
+      }`;
 
-    // Create the bar string
-    const bar = "█".repeat(filledBars) + " ".repeat(boxWidth - filledBars);
+      if (percentComplete > 1) {
+        percentComplete = 1;
+      }
 
-    // Create the percentage string
-    const percentString = `${Math.floor(percentComplete * 100)}%`;
+      // Calculate the number of filled bars for this stage
+      const filledBars = Math.floor(boxWidth * percentComplete);
 
-    // Append the custom stage title, progress bar, and percentage to the content
-    content += `${gaugeColors[index]}${gaugeNames[index]}\n[${bar}] ${percentString}{/}\n`;
-  });
+      // Create the bar string
+      const bar = "█".repeat(filledBars) + " ".repeat(boxWidth - filledBars);
 
-  systemStatsGauge.setContent(content.trim());
+      // Append the custom stage title, progress bar, and percentage to the content
+      content += `${gaugeColors[index]}${gaugeNames[index]}\n[${bar}] ${percentString}{/}\n`;
+    });
 
-  systemStatsGauge.screen.render();
+    systemStatsGauge.setContent(content.trim());
+
+    systemStatsGauge.screen.render();
+  } catch (error) {
+    debugToFile(`populateSystemStatsGauge(): ${error}`, () => {});
+  }
 }

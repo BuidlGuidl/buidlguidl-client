@@ -1,4 +1,5 @@
 import si from "systeminformation";
+import { debugToFile } from "./helpers.js";
 
 export function getMemoryUsage() {
   return new Promise((resolve, reject) => {
@@ -10,7 +11,7 @@ export function getMemoryUsage() {
         resolve(memoryUsagePercent.toFixed(1)); // Return memory usage as a percentage
       })
       .catch((error) => {
-        debugToFile(`Error fetching memory stats: ${error}`, () => {});
+        debugToFile(`getMemoryUsage(): ${error}`, () => {});
         reject(error);
       });
   });
@@ -24,10 +25,7 @@ export function getCpuUsage() {
         resolve(currentLoad);
       })
       .catch((error) => {
-        debugToFile(
-          `getCpuUsage() Error fetching CPU usage stats: ${error}`,
-          () => {}
-        );
+        debugToFile(`getCpuUsage(): ${error}`, () => {});
         reject(error);
       });
   });
@@ -52,10 +50,26 @@ export function getDiskUsage() {
         resolve(diskUsagePercent.toFixed(1));
       })
       .catch((error) => {
-        debugToFile(
-          `getDiskUsage(): Error fetching disk usage stats: ${error}`,
-          () => {}
-        );
+        debugToFile(`getDiskUsage(): ${error}`, () => {});
+        reject(error);
+      });
+  });
+}
+
+export function getCpuTemperature() {
+  return new Promise((resolve, reject) => {
+    si.cpuTemperature()
+      .then((data) => {
+        debugToFile(`CPU data: ${JSON.stringify(data, null, 2)}`, () => {});
+        const cpuTemp = data.main;
+        if (cpuTemp !== null && cpuTemp !== undefined) {
+          resolve(cpuTemp.toFixed(1)); // Return CPU temperature as a fixed-point number
+        } else {
+          resolve(0);
+        }
+      })
+      .catch((error) => {
+        debugToFile(`Error fetching CPU temperature: ${error}`, () => {});
         reject(error);
       });
   });

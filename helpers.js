@@ -37,18 +37,39 @@ export function debugToFile(data, callback) {
   const filePath = path.join(installDir, "bgnode", "debug.log");
   const now = new Date();
   const timestamp = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+
+  // Convert the data to a string, handling objects separately
   const content =
     typeof data === "object"
       ? `${timestamp} - ${JSON.stringify(data, null, 2)}\n`
       : `${timestamp} - ${data}\n`;
 
+  // Append the content to the log file
   fs.writeFile(filePath, content, { flag: "a" }, (err) => {
     if (err) {
+      console.error("Error writing to log file:", err); // Handle the error, if any
     } else {
       if (callback) callback();
     }
   });
 }
+
+// export function debugToFile(data, callback) {
+//   const filePath = path.join(installDir, "bgnode", "debug.log");
+//   const now = new Date();
+//   const timestamp = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+//   const content =
+//     typeof data === "object"
+//       ? `${timestamp} - ${JSON.stringify(data, null, 2)}\n`
+//       : `${timestamp} - ${data}\n`;
+
+//   fs.writeFile(filePath, content, { flag: "a" }, (err) => {
+//     if (err) {
+//     } else {
+//       if (callback) callback();
+//     }
+//   });
+// }
 
 export function stripAnsiCodes(input) {
   return input.replace(
