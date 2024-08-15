@@ -161,28 +161,32 @@ export function setupLogStreaming(
 let statusMessage = "INITIALIZING...";
 
 async function createGethMessage() {
-  const syncingStatus = await isSyncing();
+  try {
+    const syncingStatus = await isSyncing();
 
-  if (syncingStatus) {
-    const currentBlock = parseInt(syncingStatus.currentBlock, 16);
-    const highestBlock = parseInt(syncingStatus.highestBlock, 16);
+    if (syncingStatus) {
+      const currentBlock = parseInt(syncingStatus.currentBlock, 16);
+      const highestBlock = parseInt(syncingStatus.highestBlock, 16);
 
-    statusMessage = `SYNC IN PROGRESS\nCurrent Block: ${currentBlock}\nHighest Block: ${highestBlock}`;
-  } else {
-    const blockNumber = await localClient.getBlockNumber();
-    const latestBlock = await mainnetClient.getBlockNumber();
-
-    if (
-      blockNumber === latestBlock ||
-      blockNumber === latestBlock + BigInt(1) ||
-      blockNumber === latestBlock - BigInt(1)
-    ) {
-      statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber}`;
+      statusMessage = `SYNC IN PROGRESS\nCurrent Block: ${currentBlock}\nHighest Block: ${highestBlock}`;
     } else {
-      statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber}\nMainnet Block: ${latestBlock}`;
+      const blockNumber = await localClient.getBlockNumber();
+      const latestBlock = await mainnetClient.getBlockNumber();
+
+      if (
+        blockNumber === latestBlock ||
+        blockNumber === latestBlock + BigInt(1) ||
+        blockNumber === latestBlock - BigInt(1)
+      ) {
+        statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber}`;
+      } else {
+        statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber}\nMainnet Block: ${latestBlock}`;
+      }
     }
+    statusMessage += await peerCountMessage();
+  } catch (error) {
+    debugToFile(`createGethMessage(): ${error}`, () => {});
   }
-  statusMessage += await peerCountMessage();
 }
 
 async function getRethSyncMetrics() {
