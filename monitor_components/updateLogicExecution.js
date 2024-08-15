@@ -259,7 +259,7 @@ async function createRethMessage() {
         const headersProcessed = parseInt(headersProcessedMatch[1], 10);
         const headersTotal = parseInt(headersTotalMatch[1], 10);
 
-        if (headersProcessed != headersTotal && headersTotal > 0) {
+        if (headersProcessed == 0 && headersTotal == 0) {
           if (line.includes("Received headers") && line.includes("to_block=")) {
             const toBlock = parseInt(line.match(/to_block=(\d+)/)[1], 10);
 
