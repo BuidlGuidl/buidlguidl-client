@@ -261,7 +261,7 @@ async function createRethMessage() {
 
         if (headersProcessed == 0 && headersTotal == 0) {
           if (line.includes("Received headers") && line.includes("to_block=")) {
-            const toBlock = parseInt(line.match(/to_block=(\d+)/)[1], 10);
+            const toBlock = parseInt(globalLine.match(/to_block=(\d+)/)[1], 10);
 
             if (toBlock > largestToBlock) {
               largestToBlock = toBlock;
