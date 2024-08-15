@@ -18,9 +18,11 @@ export function createSystemStatsGauge(grid, screen) {
       fg: "cyan",
     },
     wrap: false,
+    tags: true,
   });
 
-  setInterval(() => populateSystemStatsGauge(), 1000);
+  populateSystemStatsGauge();
+  setInterval(() => populateSystemStatsGauge(), 10000);
 
   return systemStatsGauge;
 }
@@ -31,13 +33,10 @@ async function populateSystemStatsGauge() {
   gaugePercentages[0] = (await getMemoryUsage()) / 100;
   gaugePercentages[1] = (await getDiskUsage()) / 100;
 
-  // Define the custom stage names inside the function
-  const stageNames = ["MEMORY", "STORAGE"];
+  const gaugeNames = ["MEMORY", "STORAGE"];
+  const gaugeColors = ["{green-fg}", "{blue-fg}"];
 
-  // Get the width of the systemStatsGauge box
   const boxWidth = systemStatsGauge.width - 9; // Subtracting 9 for padding/border
-
-  // Initialize the content string
   let content = "";
 
   // Iterate over each stage's percentage and name
@@ -52,12 +51,10 @@ async function populateSystemStatsGauge() {
     const percentString = `${Math.floor(percentComplete * 100)}%`;
 
     // Append the custom stage title, progress bar, and percentage to the content
-    content += `${stageNames[index]}\n[${bar}] ${percentString}\n`;
+    content += `${gaugeColors[index]}${gaugeNames[index]}\n[${bar}] ${percentString}{/}\n`;
   });
 
-  // Set the content of the systemStatsGauge box
   systemStatsGauge.setContent(content.trim());
 
-  // Render the screen to reflect the changes
   systemStatsGauge.screen.render();
 }
