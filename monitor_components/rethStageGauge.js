@@ -55,7 +55,7 @@ export function populateRethStageGauge(stagePercentages) {
   ];
 
   // Get the width of the rethStageGauge box
-  const boxWidth = rethStageGauge.width - 9; // Subtracting 4 for padding/border
+  const boxWidth = rethStageGauge.width - 9; // Subtracting 9 for padding/border
 
   // Initialize the content string
   let content = "";
