@@ -1,26 +1,9 @@
 import contrib from "blessed-contrib";
-import si from "systeminformation";
 import { debugToFile } from "../helpers.js";
+import { getCpuUsage } from "../getSystemStats.js";
 
 let cpuDataX = [];
 let dataCpuUsage = [];
-
-export function getCpuUsage() {
-  return new Promise((resolve, reject) => {
-    si.currentLoad()
-      .then((load) => {
-        const currentLoad = load.currentLoad;
-        resolve(currentLoad);
-      })
-      .catch((error) => {
-        debugToFile(
-          `getCpuUsage() Error fetching CPU usage stats: ${error}`,
-          () => {}
-        );
-        reject(error);
-      });
-  });
-}
 
 async function updateCpuLinePlot(cpuLine, screen) {
   try {

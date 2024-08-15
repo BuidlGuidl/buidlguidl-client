@@ -2,7 +2,6 @@ import path from "path";
 import os from "os";
 import blessed from "blessed";
 import contrib from "blessed-contrib";
-// import { setupDebugLogging } from "./helpers.js";
 import { debugToFile } from "./helpers.js";
 
 import {
@@ -10,15 +9,13 @@ import {
   getLatestLogFile,
 } from "./monitor_components/helperFunctions.js";
 
-import { createDiskGauge } from "./monitor_components/diskGauge.js";
-import { createMemGauge } from "./monitor_components/memGauge.js";
+import { createSystemStatsGauge } from "./monitor_components/systemStatsGauge.js";
 import { createCpuLine } from "./monitor_components/cpuLine.js";
 import { createNetworkLine } from "./monitor_components/networkLine.js";
 import { createGethStateDlGauge } from "./monitor_components/gethStateDlGauge.js";
 import { createGethHeaderDlGauge } from "./monitor_components/gethHeaderDlGauge.js";
 import { createGethChainDlGauge } from "./monitor_components/gethChainDlGauge.js";
 import { createRethStageGauge } from "./monitor_components/rethStageGauge.js";
-import { createRethOverallSyncGauge } from "./monitor_components/rethOverallSyncGauge.js";
 import { createExecutionLog } from "./monitor_components/executionLog.js";
 import { createStatusBox } from "./monitor_components/statusBox.js";
 import {
@@ -113,7 +110,6 @@ export function initializeMonitoring(
       components.gethStateDlGauge,
       components.gethChainDlGauge,
       components.rethStageGauge
-      // components.rethOverallSyncGauge
     );
   } catch (error) {
     debugToFile(`Error initializing monitoring: ${error}`, () => {});
@@ -150,8 +146,7 @@ function setupUI(
 
   const executionLog = createExecutionLog(grid, screen, executionClientLabel);
   const consensusLog = createConsensusLog(grid, screen, consensusClientLabel);
-  const storageGauge = createDiskGauge(grid, screen);
-  const memGauge = createMemGauge(grid, screen);
+  const systemStatsGauge = createSystemStatsGauge(grid, screen);
   const cpuLine = createCpuLine(grid, screen);
   const networkLine = createNetworkLine(grid, screen);
   const statusBox = createStatusBox(grid, screen);
@@ -166,7 +161,6 @@ function setupUI(
     gethChainDlGauge = createGethChainDlGauge(grid, screen);
   } else if (executionClientGlobal == "reth") {
     rethStageGauge = createRethStageGauge(grid, screen);
-    // rethOverallSyncGauge = createRethOverallSyncGauge(grid, screen);
   }
 
   createHeader(grid, screen, messageForHeader);
@@ -175,8 +169,7 @@ function setupUI(
   screen.append(consensusLog);
   screen.append(cpuLine);
   screen.append(networkLine);
-  screen.append(memGauge);
-  screen.append(storageGauge);
+  screen.append(systemStatsGauge);
   screen.append(statusBox);
   screen.append(bandwidthBox);
   if (executionClientGlobal == "geth") {
@@ -228,7 +221,6 @@ function setupUI(
       gethStateDlGauge,
       gethChainDlGauge,
       rethStageGauge,
-      // rethOverallSyncGauge,
     },
   };
 }

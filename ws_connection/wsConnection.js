@@ -2,9 +2,11 @@ import WebSocket from "ws";
 import macaddress from "macaddress";
 import os from "os";
 import { debugToFile } from "../helpers.js";
-import { getCpuUsage } from "../monitor_components/cpuLine.js";
-import { getMemoryUsage } from "../monitor_components/memGauge.js";
-import { getDiskUsage } from "../monitor_components/diskGauge.js";
+import {
+  getMemoryUsage,
+  getCpuUsage,
+  getDiskUsage,
+} from "../getSystemStats.js";
 import { localClient } from "../monitor_components/localClient.js";
 import { installDir } from "../helpers.js";
 

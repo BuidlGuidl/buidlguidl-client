@@ -15,12 +15,6 @@ import { populateRethStageGauge } from "./rethStageGauge.js";
 
 const progress = loadProgress();
 
-// const mainnetClient = createPublicClient({
-//   name: "mainnetClient",
-//   chain: mainnet,
-//   transport: http("https://eth-mainnet.g.alchemy.com/v2/demo"),
-// });
-
 const mainnetClient = createPublicClient({
   name: "mainnetClient",
   chain: mainnet,
@@ -36,23 +30,7 @@ async function isSyncing() {
 
     return syncingStatus;
   } catch (error) {
-    // throw new Error(`Failed to fetch syncing status: ${error.message}`);
     debugToFile(`isSyncing(): ${error}`, () => {});
-  }
-}
-
-/// Peer Count
-function getPeerCount(line) {
-  const peerCountMatch = line.match(/peercount=(\d+)/);
-  return peerCountMatch ? parseInt(peerCountMatch[1], 10) : null;
-}
-
-function updatePeerCountLcd(peerCountGauge, peerCount, screen) {
-  try {
-    peerCountGauge.setDisplay(peerCount.toString());
-    screen.render();
-  } catch (error) {
-    debugToFile(`updatePeerCountLcd(): ${error}`, () => {});
   }
 }
 
@@ -118,8 +96,8 @@ export function setupLogStreaming(
   gethHeaderDlGauge,
   gethStateDlGauge,
   gethChainDlGauge,
-  rethStageGauge,
-  rethOverallSyncGauge
+  rethStageGauge
+  // rethOverallSyncGauge
   // peerCountGauge
 ) {
   // const progress = loadProgress();
@@ -164,14 +142,6 @@ export function setupLogStreaming(
           if (gethChainDlGauge) {
             gethChainDlGauge.setPercent(progress.chainDlProgress);
           }
-        } else if (executionClient == "reth") {
-          // createRethMessage(line);
-          // rethStageGauge.setPercent(
-          //   Math.floor(stagePercentComplete * 100) / 100
-          // );
-          // rethOverallSyncGauge.setPercent(
-          //   Math.floor(overallPercentComplete * 100) / 100
-          // );
         }
 
         screen.render();
@@ -275,10 +245,6 @@ async function createRethMessage() {
         } else if (headersProcessed == headersTotal && headersTotal > 0) {
           headersPercent = 1;
         }
-
-        // if (headersProcessed > 0) {
-        //   headersPercent = headersProcessed / headersTotal;
-        // }
       }
 
       // Handle bodies progress [2/12]

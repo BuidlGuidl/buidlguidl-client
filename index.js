@@ -4,7 +4,6 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-// import { setupDebugLogging } from "./helpers";
 import { initializeMonitoring } from "./monitor.js";
 import {
   installMacLinuxConsensusClient,
@@ -86,9 +85,6 @@ const CONFIG = {
   debugLogPath: path.join(os.homedir(), "bgnode", "debugIndex.log"),
 };
 
-// /// just for debugging
-// setupDebugLogging(CONFIG.debugLogPath);
-
 function createJwtSecret(jwtDir) {
   if (!fs.existsSync(jwtDir)) {
     console.log(`\nCreating '${jwtDir}'`);
@@ -108,51 +104,6 @@ let consensusChild;
 
 let executionExited = false;
 let consensusExited = false;
-
-// function handleExit() {
-//   console.log("Received exit signal");
-//   try {
-//     // Check if both child processes have exited
-//     const checkExit = () => {
-//       if (executionExited && consensusExited) {
-//         console.log("Both clients exited!");
-//         removeLockFile();
-//         process.exit(0);
-//       }
-//     };
-
-//     // Gracefully kill the execution client
-//     if (executionChild && !executionExited) {
-//       console.log("Exiting execution client...");
-//       executionChild.kill("SIGINT");
-//       executionChild.on("exit", (code) => {
-//         executionExited = true;
-//         console.log("Execution client exited");
-//         checkExit();
-//       });
-//     } else {
-//       executionExited = true;
-//     }
-
-//     // Gracefully kill the consensus client
-//     if (consensusChild && !consensusExited) {
-//       console.log("Exiting consensus client...");
-//       consensusChild.kill("SIGINT");
-//       consensusChild.on("exit", (code) => {
-//         consensusExited = true;
-//         console.log("Consensus client exited");
-//         checkExit();
-//       });
-//     } else {
-//       consensusExited = true;
-//     }
-
-//     // Initial check in case both children are already not running
-//     checkExit();
-//   } catch (error) {
-//     console.log("Error form handle exit", error);
-//   }
-// }
 
 function handleExit() {
   console.log("Received exit signal");
