@@ -19,8 +19,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 /// Set default command line option values
-let executionClient = "geth";
-let consensusClient = "prysm";
+let executionClient = "reth";
+let consensusClient = "lighthouse";
 let installDir = os.homedir();
 
 const gethVer = "1.14.3";
@@ -31,15 +31,11 @@ const lighthouseVer = "5.2.1";
 function showHelp() {
   console.log("");
   console.log("Options:");
-  // console.log("  -e <client>  Specify the execution client ('geth' or 'reth')");
-  console.log("  -e <client>  Specify the execution client ('geth' or 'reth')");
-  // console.log(
-  //   "  -c <client>  Specify the consensus client ('prysm' or 'lighthouse')"
-  // );
+  console.log("  -e <client>  Specify the execution client ('reth' or 'geth')");
   console.log(
-    "  -c <client>  Specify the consensus client ('prysm or 'lighthouse')"
+    "  -c <client>  Specify the consensus client ('lighthouse or 'prysm')"
   );
-  console.log("  -d <path>    Specify the install directory (defaults to ~)");
+  // console.log("  -d <path>    Specify the install directory (defaults to ~)");
   console.log("  -h           Display this help message and exit");
   console.log("");
 }
@@ -71,13 +67,13 @@ if (argv.c) {
   }
 }
 
-if (argv.d) {
-  installDir = argv.d;
-  if (!isValidPath(installDir)) {
-    console.log(`Invalid option for -d. '${installDir}' is not a valid path.`);
-    process.exit(1);
-  }
-}
+// if (argv.d) {
+//   installDir = argv.d;
+//   if (!isValidPath(installDir)) {
+//     console.log(`Invalid option for -d. '${installDir}' is not a valid path.`);
+//     process.exit(1);
+//   }
+// }
 
 if (argv.h) {
   showHelp();
