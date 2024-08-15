@@ -109,6 +109,8 @@ function saveChainDlProgress(line) {
   }
 }
 
+let globalLine;
+
 export function setupLogStreaming(
   logFilePath,
   executionLog,
@@ -137,6 +139,7 @@ export function setupLogStreaming(
       });
 
       newRl.on("line", (line) => {
+        globalLine = line;
         logBuffer.push(highlightWords(line));
 
         if (logBuffer.length > executionLog.height - 2) {
@@ -231,6 +234,8 @@ async function getRethSyncMetrics() {
   });
 }
 
+let largestToBlock = 0;
+
 async function createRethMessage() {
   try {
     const syncingStatus = await isSyncing();
@@ -247,14 +252,30 @@ async function createRethMessage() {
         /reth_sync_entities_total\{stage="Headers"\} (\d+)/
       );
 
+      debugToFile(`createRethMessage() globalLine: ${globalLine}`, () => {});
+
       let headersPercent = 0;
       if (headersProcessedMatch && headersTotalMatch) {
         const headersProcessed = parseInt(headersProcessedMatch[1], 10);
         const headersTotal = parseInt(headersTotalMatch[1], 10);
 
-        if (headersProcessed > 0) {
-          headersPercent = headersProcessed / headersTotal;
+        if (headersProcessed != headersTotal) {
+          if (line.includes("Received headers") && line.includes("to_block=")) {
+            const toBlock = parseInt(line.match(/to_block=(\d+)/)[1], 10);
+
+            if (toBlock > largestToBlock) {
+              largestToBlock = toBlock;
+            }
+
+            headersPercent = (largestToBlock - toBlock) / largestToBlock;
+          }
+        } else {
+          headersPercent = 1;
         }
+
+        // if (headersProcessed > 0) {
+        //   headersPercent = headersProcessed / headersTotal;
+        // }
       }
 
       // Handle bodies progress [2/12]
