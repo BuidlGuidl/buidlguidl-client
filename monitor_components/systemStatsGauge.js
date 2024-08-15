@@ -11,7 +11,7 @@ let systemStatsGauge;
 
 export function createSystemStatsGauge(grid, screen) {
   const row = screen.height < layoutHeightThresh ? 5 : 7;
-  const rowSpan = screen.height < layoutHeightThresh ? 2 : 1;
+  const rowSpan = screen.height < layoutHeightThresh ? 2 : 2;
 
   systemStatsGauge = grid.set(row, 8, rowSpan, 1, blessed.box, {
     label: "System Stats",
