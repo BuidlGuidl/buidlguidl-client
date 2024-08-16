@@ -138,10 +138,11 @@ export function setupLogStreaming(
 }
 
 let statusMessage = "INITIALIZING...";
+let syncingStatus = true;
 
 async function createGethMessage() {
   try {
-    const syncingStatus = await isSyncing();
+    // const syncingStatus = await isSyncing();
 
     if (syncingStatus) {
       const currentBlock = parseInt(syncingStatus.currentBlock, 16);
@@ -192,7 +193,7 @@ let headersPercent = 0;
 
 async function createRethMessage() {
   try {
-    const syncingStatus = await isSyncing();
+    // const syncingStatus = await isSyncing();
 
     if (syncingStatus) {
       const rethSyncMetrics = await getRethSyncMetrics();
@@ -496,6 +497,25 @@ async function createRethMessage() {
     statusMessage += await peerCountMessage();
   } catch (error) {
     debugToFile(`createRethMessage(): ${error}`, () => {});
+  }
+}
+
+export async function showHideRethStageGauge(screen, rethStageGauge) {
+  try {
+    // const syncingStatus = await isSyncing();
+
+    if (syncingStatus) {
+      // Ensure the gauge is visible
+      if (!screen.children.includes(rethStageGauge)) {
+        screen.append(rethStageGauge);
+      }
+    } else {
+      if (screen.children.includes(rethStageGauge)) {
+        screen.remove(rethStageGauge);
+      }
+    }
+  } catch (error) {
+    debugToFile(`showHideRethStageGauge(): ${error}`, () => {});
   }
 }
 

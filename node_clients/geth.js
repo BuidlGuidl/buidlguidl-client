@@ -47,6 +47,9 @@ const execution = pty.spawn(
     path.join(installDir, "bgnode", "geth", "database"),
     "--authrpc.jwtsecret",
     jwtPath,
+    "--metrics",
+    "--metrics.addr",
+    "127.0.0.1",
   ],
   {
     name: "xterm-color",

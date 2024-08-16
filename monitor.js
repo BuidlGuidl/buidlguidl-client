@@ -25,7 +25,10 @@ import {
   updateBandwidthBox,
 } from "./monitor_components/bandwidthGauge.js";
 
-import { setupLogStreaming } from "./monitor_components/updateLogicExecution.js";
+import {
+  setupLogStreaming,
+  showHideRethStageGauge,
+} from "./monitor_components/updateLogicExecution.js";
 
 import {
   createConsensusLog,
@@ -111,6 +114,10 @@ export function initializeMonitoring(
       components.gethChainDlGauge,
       components.rethStageGauge
     );
+
+    setInterval(() => {
+      showHideRethStageGauge(screen, components.rethStageGauge);
+    }, 5000);
   } catch (error) {
     debugToFile(`Error initializing monitoring: ${error}`, () => {});
   }
