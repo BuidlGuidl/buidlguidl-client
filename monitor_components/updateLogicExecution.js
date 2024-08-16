@@ -153,8 +153,7 @@ async function createGethMessage() {
       const latestBlock = await mainnetClient.getBlockNumber();
 
       if (
-        blockNumber === latestBlock ||
-        blockNumber === latestBlock + BigInt(1) ||
+        blockNumber >= latestBlock ||
         blockNumber === latestBlock - BigInt(1)
       ) {
         statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber}`;
@@ -484,8 +483,7 @@ async function createRethMessage() {
       const latestBlock = await mainnetClient.getBlockNumber();
 
       if (
-        blockNumber === latestBlock ||
-        blockNumber === latestBlock + BigInt(1) ||
+        blockNumber >= latestBlock ||
         blockNumber === latestBlock - BigInt(1)
       ) {
         statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber}`;
