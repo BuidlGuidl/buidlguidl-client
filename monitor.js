@@ -16,6 +16,7 @@ import { createGethStateDlGauge } from "./monitor_components/gethStateDlGauge.js
 import { createGethHeaderDlGauge } from "./monitor_components/gethHeaderDlGauge.js";
 import { createGethChainDlGauge } from "./monitor_components/gethChainDlGauge.js";
 import { createRethStageGauge } from "./monitor_components/rethStageGauge.js";
+import { createChainInfoBox } from "./monitor_components/chainInfoBox.js";
 import { createExecutionLog } from "./monitor_components/executionLog.js";
 import { createStatusBox } from "./monitor_components/statusBox.js";
 import {
@@ -27,7 +28,7 @@ import {
 
 import {
   setupLogStreaming,
-  showHideRethStageGauge,
+  showHideRethWidgets,
 } from "./monitor_components/updateLogicExecution.js";
 
 import {
@@ -115,11 +116,16 @@ export function initializeMonitoring(
       components.gethHeaderDlGauge,
       components.gethStateDlGauge,
       components.gethChainDlGauge,
-      components.rethStageGauge
+      components.rethStageGauge,
+      components.chainInfoBox
     );
 
     setInterval(() => {
-      showHideRethStageGauge(screen, components.rethStageGauge);
+      showHideRethWidgets(
+        screen,
+        components.rethStageGauge,
+        components.chainInfoBox
+      );
     }, 5000);
   } catch (error) {
     debugToFile(`Error initializing monitoring: ${error}`, () => {});
@@ -162,7 +168,11 @@ function setupUI(
   const statusBox = createStatusBox(grid, screen);
   const bandwidthBox = createBandwidthBox(grid, screen);
 
-  let gethHeaderDlGauge, gethStateDlGauge, gethChainDlGauge, rethStageGauge;
+  let gethHeaderDlGauge,
+    gethStateDlGauge,
+    gethChainDlGauge,
+    rethStageGauge,
+    chainInfoBox;
   // rethOverallSyncGauge;
 
   if (executionClientGlobal == "geth") {
@@ -171,6 +181,7 @@ function setupUI(
     gethChainDlGauge = createGethChainDlGauge(grid, screen);
   } else if (executionClientGlobal == "reth") {
     rethStageGauge = createRethStageGauge(grid, screen);
+    chainInfoBox = createChainInfoBox(grid, screen);
   }
 
   createHeader(grid, screen, messageForHeader);
@@ -230,6 +241,7 @@ function setupUI(
       gethStateDlGauge,
       gethChainDlGauge,
       rethStageGauge,
+      chainInfoBox,
     },
   };
 }

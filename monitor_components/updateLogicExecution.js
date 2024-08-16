@@ -497,22 +497,31 @@ async function createRethMessage() {
   }
 }
 
-export async function showHideRethStageGauge(screen, rethStageGauge) {
+export async function showHideRethWidgets(
+  screen,
+  rethStageGauge,
+  chainInfoBox
+) {
   try {
     const syncingStatus = await isSyncing();
 
     if (syncingStatus) {
-      // Ensure the gauge is visible
       if (!screen.children.includes(rethStageGauge)) {
         screen.append(rethStageGauge);
+      }
+      if (screen.children.includes(chainInfoBox)) {
+        screen.remove(chainInfoBox);
       }
     } else {
       if (screen.children.includes(rethStageGauge)) {
         screen.remove(rethStageGauge);
       }
+      if (!screen.children.includes(chainInfoBox)) {
+        screen.append(chainInfoBox);
+      }
     }
   } catch (error) {
-    debugToFile(`showHideRethStageGauge(): ${error}`, () => {});
+    debugToFile(`showHideRethWidgets(): ${error}`, () => {});
   }
 }
 
