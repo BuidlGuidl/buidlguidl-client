@@ -16,7 +16,7 @@ let layoutHeightThresh;
 if (os.platform() == "darwin") {
   layoutHeightThresh = 55;
 } else if (os.platform() == "linux") {
-  layoutHeightThresh = 75;
+  layoutHeightThresh = 73;
 }
 export { layoutHeightThresh };
 
