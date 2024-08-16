@@ -11,7 +11,14 @@ const progressFilePath = path.join(
 );
 
 // The cutoff (in terminal lines) for switching the widget layout style
-export const layoutHeightThresh = 55;
+// If screen is < thesh, layout is compact
+let layoutHeightThresh;
+if (os.platform() == "darwin") {
+  layoutHeightThresh = 55;
+} else if (os.platform() == "linux") {
+  layoutHeightThresh = 75;
+}
+export { layoutHeightThresh };
 
 export function getLatestLogFile(dir, client) {
   const files = fs.readdirSync(dir);
