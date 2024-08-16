@@ -52,8 +52,11 @@ export function initializeMonitoring(
   try {
     executionClientGlobal = executionClient;
     consensusClientGlobal = consensusClient;
+    let progress;
 
-    const progress = loadProgress();
+    if (executionClient == "geth") {
+      progress = loadProgress();
+    }
 
     // setupDebugLogging(CONFIG.debugLogPath);
 

@@ -60,7 +60,6 @@ export function loadProgress() {
     const data = fs.readFileSync(progressFilePath, "utf-8");
     return JSON.parse(data);
   }
-  console.log("progress not loaded");
   return {
     headerDlProgress: 0,
     chainDlProgress: 0,

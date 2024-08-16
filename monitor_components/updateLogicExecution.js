@@ -138,11 +138,10 @@ export function setupLogStreaming(
 }
 
 let statusMessage = "INITIALIZING...";
-let syncingStatus = true;
 
 async function createGethMessage() {
   try {
-    // const syncingStatus = await isSyncing();
+    const syncingStatus = await isSyncing();
 
     if (syncingStatus) {
       const currentBlock = parseInt(syncingStatus.currentBlock, 16);
@@ -193,7 +192,7 @@ let headersPercent = 0;
 
 async function createRethMessage() {
   try {
-    // const syncingStatus = await isSyncing();
+    const syncingStatus = await isSyncing();
 
     if (syncingStatus) {
       const rethSyncMetrics = await getRethSyncMetrics();
@@ -502,7 +501,7 @@ async function createRethMessage() {
 
 export async function showHideRethStageGauge(screen, rethStageGauge) {
   try {
-    // const syncingStatus = await isSyncing();
+    const syncingStatus = await isSyncing();
 
     if (syncingStatus) {
       // Ensure the gauge is visible
