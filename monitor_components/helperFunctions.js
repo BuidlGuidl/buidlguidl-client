@@ -68,29 +68,29 @@ export function loadProgress() {
   };
 }
 
-export function highlightWords(line) {
+export function formatLogLines(line) {
   // Define words which should be highlighted in exec and consensus logs
   const highlightRules = [
     { word: "INFO", style: "{bold}{green-fg}" },
     { word: "WARN", style: "{bold}{yellow-fg}" },
     { word: "ERROR", style: "{bold}{red-fg}" },
     { word: "updated", style: "{bold}{yellow-fg}" },
-    { word: " backfill:", style: "{bold}{blue-fg}" },
-    { word: " blockchain:", style: "{bold}{blue-fg}" },
-    { word: " db:", style: "{bold}{blue-fg}" },
-    { word: " execution:", style: "{bold}{blue-fg}" },
-    { word: " flags:", style: "{bold}{blue-fg}" },
-    { word: " filesystem:", style: "{bold}{blue-fg}" },
-    { word: " gateway:", style: "{bold}{blue-fg}" },
-    { word: " genesis:", style: "{bold}{blue-fg}" },
-    { word: " initial-sync:", style: "{bold}{blue-fg}" },
-    { word: " node:", style: "{bold}{blue-fg}" },
-    { word: " p2p:", style: "{bold}{blue-fg}" },
-    { word: " rpc:", style: "{bold}{blue-fg}" },
-    { word: " state-gen:", style: "{bold}{blue-fg}" },
-    { word: " sync:", style: "{bold}{blue-fg}" },
-    { word: " Syncing:", style: "{bold}{blue-fg}" },
     { word: "latestProcessedSlot", style: "{bold}{green-fg}" },
+    // { word: " backfill:", style: "{bold}{blue-fg}" },
+    // { word: " blockchain:", style: "{bold}{blue-fg}" },
+    // { word: " db:", style: "{bold}{blue-fg}" },
+    // { word: " execution:", style: "{bold}{blue-fg}" },
+    // { word: " flags:", style: "{bold}{blue-fg}" },
+    // { word: " filesystem:", style: "{bold}{blue-fg}" },
+    // { word: " gateway:", style: "{bold}{blue-fg}" },
+    // { word: " genesis:", style: "{bold}{blue-fg}" },
+    // { word: " initial-sync:", style: "{bold}{blue-fg}" },
+    // { word: " node:", style: "{bold}{blue-fg}" },
+    // { word: " p2p:", style: "{bold}{blue-fg}" },
+    // { word: " rpc:", style: "{bold}{blue-fg}" },
+    // { word: " state-gen:", style: "{bold}{blue-fg}" },
+    // { word: " sync:", style: "{bold}{blue-fg}" },
+    // { word: " Syncing:", style: "{bold}{blue-fg}" },
   ];
 
   // Apply styles to the words
@@ -101,6 +101,12 @@ export function highlightWords(line) {
 
   // Highlight words followed by "=" in green
   line = line.replace(/\b(\w+)(?==)/g, "{bold}{green-fg}$1{/}");
+
+  // Highlight words followed by ":" and surrounded by spaces in bold blue
+  line = line.replace(/\s(\w+):\s/g, " {bold}{blue-fg}$1:{/} ");
+
+  // Replace three or more consecutive spaces with two spaces
+  line = line.replace(/\s{3,}/g, "  ");
 
   return line;
 }

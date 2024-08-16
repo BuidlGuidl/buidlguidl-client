@@ -3,7 +3,7 @@ import readline from "readline";
 import {
   loadProgress,
   saveProgress,
-  highlightWords,
+  formatLogLines,
 } from "./helperFunctions.js";
 import { debugToFile } from "../helpers.js";
 import { executionClient } from "../index.js";
@@ -97,7 +97,7 @@ export function setupLogStreaming(
 
       newRl.on("line", (line) => {
         globalLine = line;
-        logBuffer.push(highlightWords(line));
+        logBuffer.push(formatLogLines(line));
 
         if (logBuffer.length > executionLog.height - 2) {
           logBuffer.shift();

@@ -1,7 +1,7 @@
 import fs from "fs";
 import readline from "readline";
 import blessed from "blessed";
-import { highlightWords, layoutHeightThresh } from "./helperFunctions.js";
+import { formatLogLines, layoutHeightThresh } from "./helperFunctions.js";
 import { debugToFile } from "../helpers.js";
 
 export function createConsensusLog(grid, screen, consensusClientLabel) {
@@ -37,7 +37,7 @@ export function updateConsensusClientInfo(logFilePath, log, screen) {
       });
 
       newRl.on("line", (line) => {
-        logBuffer.push(highlightWords(line));
+        logBuffer.push(formatLogLines(line));
 
         if (logBuffer.length > log.height - 2) {
           logBuffer.shift();
