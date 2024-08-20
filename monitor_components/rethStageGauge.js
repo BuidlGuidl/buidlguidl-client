@@ -35,8 +35,8 @@ export function populateRethStageGauge(stagePercentages) {
     "STORAGE HASHING",
     "MERKLE EXECUTE",
     "TRANSACTION LOOKUP",
-    "INDEX STORAGE HISTORY",
-    "INDEX ACCOUNT HISTORY",
+    "INDEX STORAGE HIST",
+    "INDEX ACCOUNT HIST",
     "FINISH",
   ];
 

@@ -10,6 +10,7 @@ import {
 } from "./monitor_components/helperFunctions.js";
 
 import { createSystemStatsGauge } from "./monitor_components/systemStatsGauge.js";
+import { createPeerCountGauge } from "./monitor_components/peerCountGauge.js";
 import { createCpuLine } from "./monitor_components/cpuLine.js";
 import { createNetworkLine } from "./monitor_components/networkLine.js";
 import { createGethStateDlGauge } from "./monitor_components/gethStateDlGauge.js";
@@ -164,6 +165,7 @@ function setupUI(
   const executionLog = createExecutionLog(grid, screen, executionClientLabel);
   const consensusLog = createConsensusLog(grid, screen, consensusClientLabel);
   const systemStatsGauge = createSystemStatsGauge(grid, screen);
+  const peerCountGauge = createPeerCountGauge(grid, screen);
   const cpuLine = createCpuLine(grid, screen);
   const networkLine = createNetworkLine(grid, screen);
   const statusBox = createStatusBox(grid, screen);
@@ -192,6 +194,7 @@ function setupUI(
   screen.append(cpuLine);
   screen.append(networkLine);
   screen.append(systemStatsGauge);
+  screen.append(peerCountGauge);
   screen.append(statusBox);
   screen.append(bandwidthBox);
   if (executionClientGlobal == "geth") {
