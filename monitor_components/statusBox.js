@@ -21,6 +21,7 @@ export function createStatusBox(grid, screen) {
 
   const statusBox = grid.set(row, 7, rowSpan, 2, blessed.box, {
     label: `Status`,
+    content: "Initializing...",
     border: {
       type: "line",
       fg: "cyan",

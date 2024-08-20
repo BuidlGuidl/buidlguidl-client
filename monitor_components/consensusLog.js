@@ -9,6 +9,7 @@ export function createConsensusLog(grid, screen, consensusClientLabel) {
 
   const consensusLog = grid.set(3, 0, 2, colSpan, blessed.box, {
     label: `${consensusClientLabel}`,
+    content: `Initializing ${consensusClientLabel} logs`,
     border: {
       type: "line",
       fg: "cyan",

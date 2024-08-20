@@ -6,6 +6,7 @@ export function createExecutionLog(grid, screen, executionClientLabel) {
 
   const executionLog = grid.set(1, 0, 2, colSpan, blessed.box, {
     label: `${executionClientLabel}`,
+    content: `Initializing ${executionClientLabel} logs`,
     border: {
       type: "line",
       fg: "cyan",
