@@ -43,6 +43,10 @@ const consensus = pty.spawn(
     "--accept-terms-of-use=true",
     "--jwt-secret",
     jwtPath,
+    "--monitoring-host",
+    "127.0.0.1",
+    "--monitoring-port",
+    "5054",
   ],
   {
     name: "xterm-color",

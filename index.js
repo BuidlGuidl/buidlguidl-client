@@ -353,4 +353,4 @@ initializeMonitoring(
   runsClient
 );
 
-export { executionClient };
+export { executionClient, consensusClient };

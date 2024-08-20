@@ -161,7 +161,7 @@ async function createGethMessage() {
         statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber}\nMainnet Block: ${latestBlock}`;
       }
     }
-    statusMessage += await peerCountMessage();
+    // statusMessage += await peerCountMessage();
   } catch (error) {
     debugToFile(`createGethMessage(): ${error}`, () => {});
   }
@@ -491,7 +491,7 @@ async function createRethMessage() {
         statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber}\nMainnet Block: ${latestBlock}`;
       }
     }
-    statusMessage += await peerCountMessage();
+    // statusMessage += await peerCountMessage();
   } catch (error) {
     debugToFile(`createRethMessage(): ${error}`, () => {});
   }
@@ -525,19 +525,19 @@ export async function showHideRethWidgets(
   }
 }
 
-async function peerCountMessage() {
-  try {
-    const peerCountHex = await localClient.request({
-      method: "net_peerCount",
-    });
-    // Convert the result from hexadecimal to a decimal number
-    const peerCount = parseInt(peerCountHex, 16);
+// async function peerCountMessage() {
+//   try {
+//     const peerCountHex = await localClient.request({
+//       method: "net_peerCount",
+//     });
+//     // Convert the result from hexadecimal to a decimal number
+//     const peerCount = parseInt(peerCountHex, 16);
 
-    return `\nPEER COUNT: ${peerCount}`;
-  } catch (error) {
-    debugToFile(`peerCountMessage(): ${error}`, () => {});
-  }
-}
+//     return `\nPEER COUNT: ${peerCount}`;
+//   } catch (error) {
+//     debugToFile(`peerCountMessage(): ${error}`, () => {});
+//   }
+// }
 
 export async function passStatusMessage() {
   try {

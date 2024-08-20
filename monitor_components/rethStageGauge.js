@@ -11,6 +11,7 @@ export function createRethStageGauge(grid, screen) {
 
   rethStageGauge = grid.set(row, 8, rowSpan, 1, blessed.box, {
     label: "Stage Progress",
+    content: `Initializing...`,
     stroke: "cyan",
     fill: "white",
     border: {

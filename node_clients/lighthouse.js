@@ -54,6 +54,11 @@ const consensus = pty.spawn(
     path.join(os.homedir(), "bgnode", "lighthouse", "database"),
     "--execution-jwt",
     `${jwtPath}`,
+    "--metrics",
+    "--metrics-address",
+    "127.0.0.1",
+    "--metrics-port",
+    "5054",
   ],
   {
     name: "xterm-color",

@@ -1,13 +1,16 @@
 import blessed from "blessed";
-
+import { exec } from "child_process";
 import { debugToFile } from "../helpers.js";
 import { layoutHeightThresh } from "./helperFunctions.js";
 import { localClient } from "./viemClients.js";
+import { executionClient, consensusClient } from "../index.js";
+
 let peerCountGauge;
 
 export function createPeerCountGauge(grid, screen) {
   peerCountGauge = grid.set(2, 9, 1.05, 1, blessed.box, {
     label: "Peer Count",
+    content: `Initializing...`,
     stroke: "green",
     fill: "white",
     border: {
@@ -18,11 +21,16 @@ export function createPeerCountGauge(grid, screen) {
     tags: true,
   });
 
-  populatePeerCountGauge();
-  setInterval(() => populatePeerCountGauge(), 5000);
+  populatePeerCountGauge(executionClient, consensusClient);
+  setInterval(
+    () => populatePeerCountGauge(executionClient, consensusClient),
+    5000
+  );
 
   return peerCountGauge;
 }
+
+//
 
 async function getExecutionPeers() {
   try {
@@ -38,24 +46,73 @@ async function getExecutionPeers() {
   }
 }
 
+async function getConsensusPeers(consensusClient) {
+  // debugToFile(
+  //   `getConsensusPeers() consensusClient: ${consensusClient}`,
+  //   () => {}
+  // );
+
+  let searchString;
+  if (consensusClient == "prysm") {
+    searchString = 'p2p_peer_count{state="Connected"}';
+  } else if (consensusClient == "lighthouse") {
+    searchString = "libp2p_peers";
+  }
+  return new Promise((resolve, reject) => {
+    exec(
+      `curl -s http://localhost:5054/metrics | grep -E '^${searchString} '`,
+      (error, stdout, stderr) => {
+        if (error) {
+          debugToFile(`getConsensusPeers(): ${error.message}`, () => {});
+          return reject(error);
+        }
+        if (stderr) {
+          debugToFile(`getConsensusPeers(): ${stderr}`, () => {});
+          return reject(new Error(stderr));
+        }
+
+        const parts = stdout.trim().split(" ");
+        if (parts.length === 2 && parts[0] === searchString) {
+          const peerCount = parseInt(parts[1], 10);
+          resolve(peerCount);
+        } else {
+          resolve(null);
+        }
+      }
+    );
+  });
+}
+
 let peerCounts = [0, 0];
 
-async function populatePeerCountGauge() {
+async function populatePeerCountGauge(executionClient, consensusClient) {
   try {
-    const gaugeNames = ["EXECUTION", "CONSENSUS"];
+    const gaugeNames = [
+      executionClient.toUpperCase(),
+      consensusClient.toUpperCase(),
+    ];
     const gaugeColors = ["{cyan-fg}", "{green-fg}"];
-    const maxPeers = [150, 2];
+    const maxPeers = [150, 150];
 
+    // Get the execution peers count
     peerCounts[0] = await getExecutionPeers();
-    peerCounts[1] = await getExecutionPeers();
 
-    const boxWidth = peerCountGauge.width - 8; // Subtracting 9 for padding/border
+    // Try to get the consensus peers count, but handle the failure case
+    try {
+      peerCounts[1] = await getConsensusPeers(consensusClient);
+    } catch {
+      peerCounts[1] = null; // If there's an error, set it to null
+    }
+
+    const boxWidth = peerCountGauge.width - 8; // Subtracting 8 for padding/border
     let content = "";
 
-    // Iterate over each stage's percentage and name
+    // Only display the first gauge (Execution) if the second one (Consensus) is null
     peerCounts.forEach((peerCount, index) => {
-      // Create the percentage string
-      const peerCountString = `${peerCount}`;
+      if (index === 1 && peerCounts[1] === null) return; // Skip Consensus if it's null
+
+      // Create the peer count string
+      const peerCountString = `${peerCount !== null ? peerCount : "N/A"}`;
 
       if (peerCount > maxPeers[index]) {
         peerCount = maxPeers[index];
@@ -67,7 +124,7 @@ async function populatePeerCountGauge() {
       // Create the bar string
       const bar = "█".repeat(filledBars) + " ".repeat(boxWidth - filledBars);
 
-      // Append the custom stage title, progress bar, and percentage to the content
+      // Append the custom stage title, progress bar, and peer count to the content
       content += `${gaugeColors[index]}${gaugeNames[index]}\n[${bar}] ${peerCountString}{/}\n`;
     });
 
