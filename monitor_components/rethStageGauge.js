@@ -4,10 +4,12 @@ import { layoutHeightThresh } from "./helperFunctions.js";
 let rethStageGauge;
 
 export function createRethStageGauge(grid, screen) {
-  const row = screen.height < layoutHeightThresh ? 3 : 6;
-  const rowSpan = screen.height < layoutHeightThresh ? 6 : 3;
+  // const row = screen.height < layoutHeightThresh ? 3 : 6;
+  // const rowSpan = screen.height < layoutHeightThresh ? 6 : 3;
+  const row = 2;
+  const rowSpan = 5;
 
-  rethStageGauge = grid.set(row, 7, rowSpan, 1, blessed.box, {
+  rethStageGauge = grid.set(row, 8, rowSpan, 1, blessed.box, {
     label: "Stage Progress",
     stroke: "cyan",
     fill: "white",

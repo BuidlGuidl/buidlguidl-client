@@ -143,7 +143,8 @@ function setupUI(
 ) {
   const screen = blessed.screen();
   suppressMouseOutput(screen);
-  const grid = new contrib.grid({ rows: 9, cols: 9, screen: screen });
+  // const grid = new contrib.grid({ rows: 9, cols: 9, screen: screen });
+  const grid = new contrib.grid({ rows: 9, cols: 10, screen: screen });
 
   let executionClientLabel;
   let consensusClientLabel;

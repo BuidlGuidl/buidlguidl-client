@@ -10,10 +10,12 @@ import { layoutHeightThresh } from "./helperFunctions.js";
 let systemStatsGauge;
 
 export function createSystemStatsGauge(grid, screen) {
-  const row = screen.height < layoutHeightThresh ? 5 : 7;
-  const rowSpan = screen.height < layoutHeightThresh ? 2 : 2;
+  // const row = screen.height < layoutHeightThresh ? 5 : 7;
+  // const rowSpan = screen.height < layoutHeightThresh ? 2 : 2;
+  const row = 5;
+  const rowSpan = 2;
 
-  systemStatsGauge = grid.set(row, 8, rowSpan, 1, blessed.box, {
+  systemStatsGauge = grid.set(row, 9, rowSpan, 1, blessed.box, {
     label: "System Stats",
     stroke: "green",
     fill: "white",

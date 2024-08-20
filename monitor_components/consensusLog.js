@@ -5,11 +5,12 @@ import { formatLogLines, layoutHeightThresh } from "./helperFunctions.js";
 import { debugToFile } from "../helpers.js";
 
 export function createConsensusLog(grid, screen, consensusClientLabel) {
-  const colSpan = screen.height < layoutHeightThresh ? 7 : 9;
+  // const colSpan = screen.height < layoutHeightThresh ? 7 : 9;
+  const colSpan = 8;
 
-  const consensusLog = grid.set(3, 0, 2, colSpan, blessed.box, {
+  const consensusLog = grid.set(4, 0, 3, colSpan, blessed.box, {
     label: `${consensusClientLabel}`,
-    content: `Initializing ${consensusClientLabel} logs`,
+    content: `Loading ${consensusClientLabel} logs`,
     border: {
       type: "line",
       fg: "cyan",
