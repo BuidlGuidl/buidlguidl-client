@@ -526,7 +526,7 @@ export async function showHideRethWidgets(
   }
 }
 
-function updateChainInfoBox() {
+function updateChainInfoBox(screen) {
   try {
     if (screen.children.includes(chainInfoBox)) {
       populateChainInfoBox();
@@ -537,7 +537,7 @@ function updateChainInfoBox() {
   }
 }
 
-setInterval(() => updateChainInfoBox(), 5000);
+setInterval(() => updateChainInfoBox(screen), 5000);
 
 // async function peerCountMessage() {
 //   try {
