@@ -73,9 +73,9 @@ async function getEthPrice() {
     const ratio = formatBalance(daiBalance) / formatBalance(wethBalance);
     const roundedRatio = ratio.toFixed(2);
 
-    debugToFile(`DAI Balance: ${formatBalance(daiBalance)} DAI`, () => {});
-    debugToFile(`WETH Balance: ${formatBalance(wethBalance)} WETH`, () => {});
-    debugToFile(`Ratio: ${ratio}`, () => {});
+    // debugToFile(`DAI Balance: ${formatBalance(daiBalance)} DAI`, () => {});
+    // debugToFile(`WETH Balance: ${formatBalance(wethBalance)} WETH`, () => {});
+    // debugToFile(`Ratio: ${ratio}`, () => {});
 
     return roundedRatio;
   } catch (error) {
