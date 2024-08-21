@@ -1,5 +1,5 @@
 import blessed from "blessed";
-import { mainnetClient } from "./viemClients.js";
+import { localClient } from "./viemClients.js";
 import { parseUnits } from "viem/utils";
 import { debugToFile } from "../helpers.js";
 import { layoutHeightThresh } from "./helperFunctions.js";
@@ -46,7 +46,7 @@ const addressToCheck = "0xA478c2975Ab1Ea89e8196811F51A7B7Ade33eB11";
 
 // Function to get the balance of a token
 async function getTokenBalance(tokenAddress, accountAddress) {
-  const balance = await mainnetClient.readContract({
+  const balance = await localClient.readContract({
     address: tokenAddress,
     abi: ERC20_ABI,
     functionName: "balanceOf",
