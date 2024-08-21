@@ -83,12 +83,12 @@ async function getEthPrice() {
   }
 }
 
-export async function updateChainInfoBox() {
+export async function populateChainInfoBox() {
   try {
     const ethPrice = await getEthPrice();
+
+    chainInfoBox.setContent(`ETH PRICE ($)\n${ethPrice}`);
   } catch (error) {
-    debugToFile(`updateChainInfoBox(): ${error}`, () => {});
+    debugToFile(`populateChainInfoBox(): ${error}`, () => {});
   }
 }
-
-getEthPrice();
