@@ -205,7 +205,7 @@ function setupUI(
   } else if (executionClientGlobal == "reth") {
     screen.append(rethStageGauge);
 
-    setInterval(() => updateChainInfoBox(screen, chainInfoBox), 5000);
+    setInterval(() => updateChainInfoBox(chainInfoBox, screen), 5000);
   }
 
   setBandwidthBox(bandwidthBox);
@@ -253,7 +253,7 @@ function setupUI(
   };
 }
 
-function updateChainInfoBox(screen, chainInfoBox) {
+function updateChainInfoBox(chainInfoBox, screen) {
   try {
     if (screen.children.includes(chainInfoBox)) {
       populateChainInfoBox();

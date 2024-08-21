@@ -103,7 +103,7 @@ export async function populateChainInfoBox() {
     const transactionCount = await getTransactionCount();
 
     chainInfoBox.setContent(
-      `ETH PRICE ($)\n${ethPrice}\nTRANSACTION COUNT\n${transactionCount}`
+      `ETH PRICE ($)\n${ethPrice}\n\nTRANSACTION COUNT\n${transactionCount}`
     );
   } catch (error) {
     debugToFile(`populateChainInfoBox(): ${error}`, () => {});
