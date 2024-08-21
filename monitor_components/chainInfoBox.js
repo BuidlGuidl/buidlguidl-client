@@ -97,27 +97,37 @@ async function getTransactionCount() {
   }
 }
 
-async function getAverageGasPrice() {
+// async function getGasPrice() {
+//   try {
+//     const blockNumber = await localClient.getBlockNumber();
+//     const block = await localClient.getBlock({ blockNumber: blockNumber });
+
+//     // Check if the block contains transactions
+//     if (block.transactions.length > 0) {
+//       let totalGasPrice = BigInt(0);
+
+//       // Loop through each transaction in the block
+//       for (const txHash of block.transactions) {
+//         const transaction = await localClient.getTransaction({ hash: txHash });
+//         totalGasPrice += transaction.gasPrice;
+//       }
+
+//       const averageGasPrice = totalGasPrice / BigInt(block.transactions.length);
+
+//       return averageGasPrice;
+//     } else {
+//       return null;
+//     }
+//   } catch (error) {
+//     debugToFile(`getAverageGasPrice(): ${error}`, () => {});
+//   }
+// }
+
+async function getGasPrice() {
   try {
-    const blockNumber = await localClient.getBlockNumber();
-    const block = await localClient.getBlock({ blockNumber: blockNumber });
+    const gasPrice = await localClient.getGasPrice();
 
-    // Check if the block contains transactions
-    if (block.transactions.length > 0) {
-      let totalGasPrice = BigInt(0);
-
-      // Loop through each transaction in the block
-      for (const txHash of block.transactions) {
-        const transaction = await localClient.getTransaction({ hash: txHash });
-        totalGasPrice += transaction.gasPrice;
-      }
-
-      const averageGasPrice = totalGasPrice / BigInt(block.transactions.length);
-
-      return averageGasPrice;
-    } else {
-      return null;
-    }
+    return gasPrice;
   } catch (error) {
     debugToFile(`getAverageGasPrice(): ${error}`, () => {});
   }
@@ -127,10 +137,11 @@ export async function populateChainInfoBox() {
   try {
     const ethPrice = await getEthPrice();
     const transactionCount = await getTransactionCount();
-    const averageGasPrice = await getAverageGasPrice();
+    // const gasPrice = await getGasPrice();
+    const gasPrice = await localClient.getGasPrice();
 
     chainInfoBox.setContent(
-      `ETH PRICE ($)\n${ethPrice}\n\nTRANSACTION COUNT\n${transactionCount}\n\nAVE GAS PRICE (gwei)\n${averageGasPrice}`
+      `ETH PRICE ($)\n${ethPrice}\n\nTRANSACTION COUNT\n${transactionCount}\n\nGAS PRICE (gwei)\n${gasPrice}`
     );
   } catch (error) {
     debugToFile(`populateChainInfoBox(): ${error}`, () => {});
