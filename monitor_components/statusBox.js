@@ -30,7 +30,7 @@ export function createStatusBox(grid, screen) {
     },
   });
 
-  setInterval(() => updateStatusBox(statusBox, screen), 5000);
+  // setInterval(() => updateStatusBox(statusBox, screen), 5000);
 
   return statusBox;
 }

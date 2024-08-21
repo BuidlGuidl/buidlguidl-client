@@ -4,6 +4,7 @@ import blessed from "blessed";
 import contrib from "blessed-contrib";
 import { debugToFile } from "./helpers.js";
 import { populateChainInfoBox } from "./monitor_components/chainInfoBox.js";
+import { updateStatusBox } from "./monitor_components/statusBox.js";
 
 import {
   loadProgress,
@@ -212,6 +213,7 @@ function setupUI(
   startBandwidthMonitoring(screen);
 
   setInterval(() => updateBandwidthBox(screen), 2000);
+  setInterval(() => updateStatusBox(statusBox, screen), 5000);
 
   if (executionClientGlobal == "geth" && progress) {
     gethHeaderDlGauge.setPercent(progress.headerDlProgress);
