@@ -38,11 +38,13 @@ export function debugToFile(data, callback) {
   const now = new Date();
   const timestamp = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
 
-  // Convert the data to a string, handling objects separately
-  const content =
-    typeof data === "object"
-      ? `${timestamp} - ${JSON.stringify(data, null, 2)}\n`
-      : `${timestamp} - ${data}\n`;
+  // Check if data is an object, and if it is, convert it to a JSON string
+  let content;
+  if (typeof data === "object" && data !== null) {
+    content = `${timestamp} - ${JSON.stringify(data, null, 2)}\n`;
+  } else {
+    content = `${timestamp} - ${data}\n`;
+  }
 
   // Append the content to the log file
   fs.writeFile(filePath, content, { flag: "a" }, (err) => {

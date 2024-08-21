@@ -11,6 +11,7 @@ export const mainnetClient = createPublicClient({
   name: "mainnetClient",
   chain: mainnet,
   transport: http(),
+  // transport: http("https://rpc.scaffoldeth.io:48544"),
 });
 
 export async function isSyncing() {

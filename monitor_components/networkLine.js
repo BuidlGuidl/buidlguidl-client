@@ -41,11 +41,11 @@ function getNetworkStats() {
           timestamp: currentTime,
         };
 
-        if (sentPerSecond < 0) {
+        if (sentPerSecond < 0 || sentPerSecond > 1000000000) {
           sentPerSecond = 0;
         }
 
-        if (receivedPerSecond < 0) {
+        if (receivedPerSecond < 0 || receivedPerSecond > 1000000000) {
           receivedPerSecond = 0;
         }
 
@@ -128,3 +128,9 @@ export function createNetworkLine(grid, screen) {
 
   return networkLine;
 }
+
+// setInterval(function () {
+//   si.networkStats().then((data) => {
+//     debugToFile(`networkStats(): ${JSON.stringify(data, null, 2)}`, () => {});
+//   });
+// }, 1000);

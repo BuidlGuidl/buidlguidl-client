@@ -11,16 +11,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 export function createHeader(grid, screen, messageForHeader) {
-  const picOptions = {
-    file: path.join(__dirname, "pixelBgLogo.png"),
-    cols: 12,
-    onReady: ready,
-  };
-
-  function ready() {
-    // screen.render();
-  }
-
   // Function to get the local IP address
   function getIPAddress() {
     const interfaces = os.networkInterfaces();
@@ -41,11 +31,66 @@ export function createHeader(grid, screen, messageForHeader) {
       return response.data.ip;
     } catch (error) {
       debugToFile(`Error fetching public IP address: ${error}`, () => {});
-      return "Public IP not found";
+      return "IP not found";
     }
   }
 
-  const pic = grid.set(0, 0, 1, 2, contrib.picture, picOptions);
+  // const picOptions = {
+  //   file: path.join(__dirname, "pixelBgLogo.png"),
+  //   cols: 12,
+  //   onReady: ready,
+  // };
+
+  // function ready() {
+  //   // screen.render();
+  // }
+
+  // const pic = grid.set(0, 0, 1, 2, contrib.picture, picOptions);
+  // debugToFile(`pic.height: ${pic.height}`, () => {});
+
+  let pic, logo;
+  try {
+    pic = grid.set(0, 0, 1, 2, blessed.box, {
+      border: false,
+      valign: "top",
+      padding: { top: 0, bottom: 0, left: 0, right: 0 },
+      align: "center",
+    });
+
+    const renderLogo = () => {
+      const logoHeight = pic.height * 1.1; // Use the height of the pic box
+      const logoWidth = logoHeight + logoHeight * 1.5; // Adjust width as needed
+      const leftPosition = Math.floor((pic.width - logoWidth) / 2);
+
+      // If logo already exists, remove it before adding a new one
+      if (logo) {
+        pic.remove(logo);
+      }
+
+      // Render the image within the picBox
+      logo = blessed.image({
+        parent: pic,
+        file: path.join(__dirname, "pixelBgLogo.png"),
+        type: "ansi", // or "overlay" depending on your terminal capabilities
+        width: logoWidth,
+        height: logoHeight,
+        left: leftPosition,
+        top: -1,
+      });
+
+      pic.screen.render(); // Rerender the screen after updating the logo
+    };
+
+    // Initial render
+    renderLogo();
+
+    // Listen for resize events and rerender the logo
+    pic.screen.on("resize", () => {
+      renderLogo();
+    });
+  } catch (err) {
+    debugToFile(`pic: ${err}`, () => {});
+  }
 
   const bigText = grid.set(0, 2, 1, 4, blessed.box, {
     content: `{center}{bold}B u i d l G u i d l  C l i e n t {/bold}{/center}\n{center}{red-fg}${messageForHeader}{/red-fg}{/center}`,
