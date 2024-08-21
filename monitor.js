@@ -3,6 +3,7 @@ import os from "os";
 import blessed from "blessed";
 import contrib from "blessed-contrib";
 import { debugToFile } from "./helpers.js";
+import { populateChainInfoBox } from "./monitor_components/chainInfoBox.js";
 
 import {
   loadProgress,
@@ -203,6 +204,8 @@ function setupUI(
     screen.append(gethChainDlGauge);
   } else if (executionClientGlobal == "reth") {
     screen.append(rethStageGauge);
+
+    setInterval(() => updateChainInfoBox(screen, chainInfoBox), 5000);
   }
 
   setBandwidthBox(bandwidthBox);
@@ -248,6 +251,17 @@ function setupUI(
       chainInfoBox,
     },
   };
+}
+
+function updateChainInfoBox(screen, chainInfoBox) {
+  try {
+    if (screen.children.includes(chainInfoBox)) {
+      populateChainInfoBox();
+      screen.render();
+    }
+  } catch (error) {
+    debugToFile(`updateChainInfoBox(): ${error}`, () => {});
+  }
 }
 
 function suppressMouseOutput(screen) {

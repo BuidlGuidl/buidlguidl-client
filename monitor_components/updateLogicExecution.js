@@ -10,7 +10,6 @@ import { executionClient } from "../index.js";
 import { mainnetClient, localClient, isSyncing } from "./viemClients.js";
 import { exec } from "child_process";
 import { populateRethStageGauge } from "./rethStageGauge.js";
-import { populateChainInfoBox } from "./chainInfoBox.js";
 
 const progress = loadProgress();
 
@@ -525,19 +524,6 @@ export async function showHideRethWidgets(
     debugToFile(`showHideRethWidgets(): ${error}`, () => {});
   }
 }
-
-function updateChainInfoBox(screen) {
-  try {
-    if (screen.children.includes(chainInfoBox)) {
-      populateChainInfoBox();
-      screen.render();
-    }
-  } catch (error) {
-    debugToFile(`updateChainInfoBox(): ${error}`, () => {});
-  }
-}
-
-setInterval(() => updateChainInfoBox(screen), 5000);
 
 // async function peerCountMessage() {
 //   try {
