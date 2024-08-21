@@ -19,7 +19,7 @@ export function createStatusBox(grid, screen) {
   const row = 1;
   const rowSpan = 1;
 
-  debugToFile(`screen.height: ${screen.height}`, () => {});
+  // debugToFile(`screen.height: ${screen.height}`, () => {});
 
   const statusBox = grid.set(row, 8, rowSpan, 2, blessed.box, {
     label: `Status`,

@@ -83,11 +83,28 @@ async function getEthPrice() {
   }
 }
 
+async function getTransactionCount() {
+  try {
+    const blockNumber = await localClient.getBlockNumber();
+    const block = await localClient.getBlock({
+      blockNumber: blockNumber,
+    });
+    const transactionCount = block.transactions.length;
+
+    return transactionCount;
+  } catch (error) {
+    debugToFile(`getTransactionCount(): ${error}`, () => {});
+  }
+}
+
 export async function populateChainInfoBox() {
   try {
     const ethPrice = await getEthPrice();
+    const transactionCount = await getTransactionCount();
 
-    chainInfoBox.setContent(`ETH PRICE ($)\n${ethPrice}`);
+    chainInfoBox.setContent(
+      `ETH PRICE ($)\n${ethPrice}\nTRANSACTION COUNT\n${transactionCount}`
+    );
   } catch (error) {
     debugToFile(`populateChainInfoBox(): ${error}`, () => {});
   }
