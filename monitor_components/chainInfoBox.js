@@ -85,9 +85,9 @@ async function getEthPrice() {
 
 async function getTransactionCount() {
   try {
-    const blockNumber = await localClient.getBlockNumber();
+    // const blockNumber = await localClient.getBlockNumber();
     const block = await localClient.getBlock({
-      blockNumber: blockNumber,
+      blockNumber: "latest",
     });
     const transactionCount = block.transactions.length;
 
