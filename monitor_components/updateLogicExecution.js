@@ -10,8 +10,14 @@ import { executionClient } from "../index.js";
 import { mainnetClient, localClient, isSyncing } from "./viemClients.js";
 import { exec } from "child_process";
 import { populateRethStageGauge } from "./rethStageGauge.js";
+import { populateGethStageGauge } from "./gethStageGauge.js";
 
 const progress = loadProgress();
+let gethStageProgress = [
+  progress.headerDlProgress,
+  progress.stateDlProgress,
+  progress.chainDlProgress,
+];
 
 function stripAnsiCodes(input) {
   return input.replace(
@@ -29,20 +35,15 @@ function saveHeaderDlProgress(line) {
       /downloaded=([\d,]+)\s+left=([\d,]+)\s+eta=([^\s]+)/
     );
 
-    debugToFile(`HEADER DL updated!!!!!!!!!!`, () => {});
-    debugToFile(`headerDlMatch: ${headerDlMatch}`, () => {});
-
     const headerDlDownloaded = parseInt(headerDlMatch[1].replace(/,/g, ""), 10);
-    debugToFile(`headerDlDownloaded: ${headerDlDownloaded}`, () => {});
     const headerDlLeft = parseInt(headerDlMatch[2].replace(/,/g, ""), 10);
-    debugToFile(`headerDlLeft: ${headerDlLeft}`, () => {});
     const headerDlProgress =
       headerDlDownloaded / (headerDlDownloaded + headerDlLeft);
 
-    debugToFile(`headerDlProgress: ${headerDlProgress}`, () => {});
+    gethStageProgress[0] = headerDlProgress;
+
     progress.headerDlProgress = headerDlProgress;
     saveProgress(progress);
-    debugToFile(`Progress from getHeaderDlProgress: ${progress}`, () => {});
   }
 }
 
@@ -51,6 +52,9 @@ function saveStateDlProgress(line) {
   if (line.includes("Syncing: chain download in progress")) {
     const chainSyncMatch = line.match(/synced=([\d.]+)%/);
     const chainDlProgress = parseFloat(chainSyncMatch[1]) / 100;
+
+    gethStageProgress[1] = chainDlProgress;
+
     progress.chainDlProgress = chainDlProgress;
     saveProgress(progress);
   }
@@ -61,6 +65,9 @@ function saveChainDlProgress(line) {
   if (line.includes("Syncing: state download in progress")) {
     const stateSyncMatch = line.match(/synced=([\d.]+)%/);
     const stateDlProgress = parseFloat(stateSyncMatch[1]) / 100;
+
+    gethStageProgress[2] = stateDlProgress;
+
     progress.stateDlProgress = stateDlProgress;
     saveProgress(progress);
   }
@@ -72,10 +79,12 @@ export function setupLogStreaming(
   logFilePath,
   executionLog,
   screen,
-  gethHeaderDlGauge,
-  gethStateDlGauge,
-  gethChainDlGauge,
-  rethStageGauge
+  rethStageGauge,
+  gethStageGauge,
+  chainInfoBox
+  // gethHeaderDlGauge,
+  // gethStateDlGauge,
+  // gethChainDlGauge,
   // rethOverallSyncGauge
   // peerCountGauge
 ) {
@@ -108,19 +117,23 @@ export function setupLogStreaming(
         if (executionClient == "geth") {
           // createGethMessage();
 
+          if (gethStageGauge) {
+            populateGethStageGauge(gethStageProgress);
+          }
+
           saveHeaderDlProgress(line);
           saveStateDlProgress(line);
           saveChainDlProgress(line);
 
-          if (gethHeaderDlGauge) {
-            gethHeaderDlGauge.setPercent(progress.headerDlProgress);
-          }
-          if (gethStateDlGauge) {
-            gethStateDlGauge.setPercent(progress.stateDlProgress);
-          }
-          if (gethChainDlGauge) {
-            gethChainDlGauge.setPercent(progress.chainDlProgress);
-          }
+          // if (gethHeaderDlGauge) {
+          //   gethHeaderDlGauge.setPercent(progress.headerDlProgress);
+          // }
+          // if (gethStateDlGauge) {
+          //   gethStateDlGauge.setPercent(progress.stateDlProgress);
+          // }
+          // if (gethChainDlGauge) {
+          //   gethChainDlGauge.setPercent(progress.chainDlProgress);
+          // }
         }
 
         screen.render();
@@ -522,6 +535,34 @@ export async function showHideRethWidgets(
     }
   } catch (error) {
     debugToFile(`showHideRethWidgets(): ${error}`, () => {});
+  }
+}
+
+export async function showHideGethWidgets(
+  screen,
+  gethStageGauge,
+  chainInfoBox
+) {
+  try {
+    const syncingStatus = await isSyncing();
+
+    if (syncingStatus) {
+      if (!screen.children.includes(gethStageGauge)) {
+        screen.append(gethStageGauge);
+      }
+      if (screen.children.includes(chainInfoBox)) {
+        screen.remove(chainInfoBox);
+      }
+    } else {
+      if (screen.children.includes(gethStageGauge)) {
+        screen.remove(gethStageGauge);
+      }
+      if (!screen.children.includes(chainInfoBox)) {
+        screen.append(chainInfoBox);
+      }
+    }
+  } catch (error) {
+    debugToFile(`showHideGethWidgets(): ${error}`, () => {});
   }
 }
 

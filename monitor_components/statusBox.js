@@ -21,7 +21,7 @@ export function createStatusBox(grid, screen) {
 
   // debugToFile(`screen.height: ${screen.height}`, () => {});
 
-  const statusBox = grid.set(row, 8, rowSpan, 2, blessed.box, {
+  const statusBox = grid.set(row, 8, rowSpan, 2.05, blessed.box, {
     label: `Status`,
     content: "Initializing...",
     border: {
