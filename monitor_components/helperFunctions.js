@@ -71,7 +71,6 @@ export function loadProgress() {
     headerDlProgress: 0,
     chainDlProgress: 0,
     stateDlProgress: 0,
-    peerCount: 0,
   };
 }
 
