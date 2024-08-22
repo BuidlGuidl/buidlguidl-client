@@ -1,12 +1,9 @@
 import si from "systeminformation";
 import blessed from "blessed";
 import { debugToFile } from "../helpers.js";
-import { layoutHeightThresh } from "./helperFunctions.js";
 
 let bandwidthBox;
 const interval = 60 * 1000; // 1 minute in milliseconds
-const hours24 = 24 * 60; // 24 hours in minutes
-const days7 = 7 * 24 * 60 * 60; // 7 days in minutes
 
 let history24 = [];
 let history7 = [];
@@ -88,11 +85,11 @@ async function updateBandwidthBox(screen) {
 
     const formattedText = `{red-fg}▲ 1D: ${formatBytes(
       dailyStats.sent
-    )}\n{blue-fg}▽ 1D: ${formatBytes(
+    )}\n{blue-fg}▼ 1D: ${formatBytes(
       dailyStats.received
-    )}\n{red-fg}▲ 7D: ${formatBytes(
+    )}\n\n{red-fg}▲ 7D: ${formatBytes(
       weeklyStats.sent
-    )}\n{blue-fg}▽ 7D: ${formatBytes(weeklyStats.received)}`;
+    )}\n{blue-fg}▼ 7D: ${formatBytes(weeklyStats.received)}`;
 
     bandwidthBox.setContent(formattedText);
     screen.render();
@@ -121,10 +118,8 @@ export function startBandwidthMonitoring(screen) {
 export function createBandwidthBox(grid, screen) {
   // const row = screen.height < layoutHeightThresh ? 3 : 6;
   // const rowSpan = screen.height < layoutHeightThresh ? 2 : 1;
-  const row = 3;
-  const rowSpan = 2;
 
-  const box = grid.set(row, 9, rowSpan, 1, blessed.box, {
+  const box = grid.set(3, 9, 2, 1, blessed.box, {
     label: "Bandwidth Usage",
     style: {
       fg: "blue",

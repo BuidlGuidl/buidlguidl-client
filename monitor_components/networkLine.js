@@ -128,9 +128,3 @@ export function createNetworkLine(grid, screen) {
 
   return networkLine;
 }
-
-// setInterval(function () {
-//   si.networkStats().then((data) => {
-//     debugToFile(`networkStats(): ${JSON.stringify(data, null, 2)}`, () => {});
-//   });
-// }, 1000);

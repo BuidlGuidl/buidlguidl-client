@@ -1,14 +1,13 @@
 import blessed from "blessed";
 import { exec } from "child_process";
 import { debugToFile } from "../helpers.js";
-import { layoutHeightThresh } from "./helperFunctions.js";
 import { localClient } from "./viemClients.js";
 import { executionClient, consensusClient } from "../index.js";
 
 let peerCountGauge;
 
 export function createPeerCountGauge(grid, screen) {
-  peerCountGauge = grid.set(2, 9, 1.05, 1, blessed.box, {
+  peerCountGauge = grid.set(2, 9, 1, 1, blessed.box, {
     label: "Peer Count",
     content: `INITIALIZING...`,
     stroke: "green",

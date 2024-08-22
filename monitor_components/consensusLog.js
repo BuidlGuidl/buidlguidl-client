@@ -1,14 +1,13 @@
 import fs from "fs";
 import readline from "readline";
 import blessed from "blessed";
-import { formatLogLines, layoutHeightThresh } from "./helperFunctions.js";
+import { formatLogLines } from "./helperFunctions.js";
 import { debugToFile } from "../helpers.js";
 
 export function createConsensusLog(grid, screen, consensusClientLabel) {
   // const colSpan = screen.height < layoutHeightThresh ? 7 : 9;
-  const colSpan = 8;
 
-  const consensusLog = grid.set(4, 0, 3, colSpan, blessed.box, {
+  const consensusLog = grid.set(4, 0, 3, 8, blessed.box, {
     label: `${consensusClientLabel}`,
     content: `Loading ${consensusClientLabel} logs`,
     border: {

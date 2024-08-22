@@ -1,18 +1,14 @@
 import blessed from "blessed";
 import { localClient } from "./viemClients.js";
-import { parseUnits } from "viem/utils";
 import { debugToFile } from "../helpers.js";
-import { layoutHeightThresh } from "./helperFunctions.js";
 
 let chainInfoBox;
 
 export function createChainInfoBox(grid, screen) {
   // const row = screen.height < layoutHeightThresh ? 3 : 6;
   // const rowSpan = screen.height < layoutHeightThresh ? 6 : 3;
-  const row = 2;
-  const rowSpan = 5;
 
-  chainInfoBox = grid.set(row, 8, rowSpan, 1, blessed.box, {
+  chainInfoBox = grid.set(2, 8, 5, 1, blessed.box, {
     label: "Chain Info",
     stroke: "cyan",
     fill: "white",

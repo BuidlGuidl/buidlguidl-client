@@ -1,5 +1,4 @@
 import blessed from "blessed";
-import contrib from "blessed-contrib";
 import os from "os";
 import axios from "axios";
 import path from "path";

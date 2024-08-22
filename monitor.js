@@ -16,10 +16,7 @@ import { createPeerCountGauge } from "./monitor_components/peerCountGauge.js";
 import { createCpuLine } from "./monitor_components/cpuLine.js";
 import { createNetworkLine } from "./monitor_components/networkLine.js";
 import { createRethStageGauge } from "./monitor_components/rethStageGauge.js";
-import {
-  createGethStageGauge,
-  populateGethStageGauge,
-} from "./monitor_components/gethStageGauge.js";
+import { createGethStageGauge } from "./monitor_components/gethStageGauge.js";
 import { createChainInfoBox } from "./monitor_components/chainInfoBox.js";
 import { createExecutionLog } from "./monitor_components/executionLog.js";
 import { createStatusBox } from "./monitor_components/statusBox.js";
@@ -221,6 +218,28 @@ function setupUI(
 
     screen.render();
   });
+
+  // screen.on("resize", () => {
+  //   // debugToFile(`screen.height: ${screen.height}`, () => {});
+
+  //   // debugToFile(`executionLog.height: ${executionLog.height}`, () => {});
+  //   // debugToFile(`executionLog.top: ${executionLog.top}`, () => {});
+  //   // debugToFile(`executionLog.bottom: ${executionLog.bottom}`, () => {});
+
+  //   // debugToFile(
+  //   //   `consensusLog.top - executionLog.bottom: ${
+  //   //     consensusLog.top - executionLog.bottom
+  //   //   }`,
+  //   //   () => {}
+  //   // );
+
+  //   debugToFile(
+  //     `executionLog.bottom - consensusLog.top: ${
+  //       executionLog.bottom - consensusLog.top
+  //     }`,
+  //     () => {}
+  //   );
+  // });
 
   screen.key(["escape", "q", "C-c"], function (ch, key) {
     if (runsClient) {
