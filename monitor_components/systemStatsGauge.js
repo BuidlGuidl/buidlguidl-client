@@ -46,32 +46,34 @@ async function populateSystemStatsGauge() {
     const units = ["%", "%", "C"];
 
     const boxWidth = systemStatsGauge.width - 9; // Subtracting 9 for padding/border
-    let content = "";
+    if (boxWidth > 0) {
+      let content = "";
 
-    // Iterate over each stage's percentage and name
-    gaugePercentages.forEach((percentComplete, index) => {
-      // Create the percentage string
-      const percentString = `${Math.floor(percentComplete * 100)}${
-        units[index]
-      }`;
+      // Iterate over each stage's percentage and name
+      gaugePercentages.forEach((percentComplete, index) => {
+        // Create the percentage string
+        const percentString = `${Math.floor(percentComplete * 100)}${
+          units[index]
+        }`;
 
-      if (percentComplete > 1) {
-        percentComplete = 1;
-      }
+        if (percentComplete > 1) {
+          percentComplete = 1;
+        }
 
-      // Calculate the number of filled bars for this stage
-      const filledBars = Math.floor(boxWidth * percentComplete);
+        // Calculate the number of filled bars for this stage
+        const filledBars = Math.floor(boxWidth * percentComplete);
 
-      // Create the bar string
-      const bar = "█".repeat(filledBars) + " ".repeat(boxWidth - filledBars);
+        // Create the bar string
+        const bar = "█".repeat(filledBars) + " ".repeat(boxWidth - filledBars);
 
-      // Append the custom stage title, progress bar, and percentage to the content
-      content += `${gaugeColors[index]}${gaugeNames[index]}\n[${bar}] ${percentString}{/}\n`;
-    });
+        // Append the custom stage title, progress bar, and percentage to the content
+        content += `${gaugeColors[index]}${gaugeNames[index]}\n[${bar}] ${percentString}{/}\n`;
+      });
 
-    systemStatsGauge.setContent(content.trim());
+      systemStatsGauge.setContent(content.trim());
 
-    systemStatsGauge.screen.render();
+      systemStatsGauge.screen.render();
+    }
   } catch (error) {
     debugToFile(`populateSystemStatsGauge(): ${error}`, () => {});
   }

@@ -105,32 +105,34 @@ async function populatePeerCountGauge(executionClient, consensusClient) {
     }
 
     const boxWidth = peerCountGauge.width - 8; // Subtracting 8 for padding/border
-    let content = "";
+    if (boxWidth > 0) {
+      let content = "";
 
-    // Only display the first gauge (Execution) if the second one (Consensus) is null
-    peerCounts.forEach((peerCount, index) => {
-      if (index === 1 && peerCounts[1] === null) return; // Skip Consensus if it's null
+      // Only display the first gauge (Execution) if the second one (Consensus) is null
+      peerCounts.forEach((peerCount, index) => {
+        if (index === 1 && peerCounts[1] === null) return; // Skip Consensus if it's null
 
-      // Create the peer count string
-      const peerCountString = `${peerCount !== null ? peerCount : "N/A"}`;
+        // Create the peer count string
+        const peerCountString = `${peerCount !== null ? peerCount : "N/A"}`;
 
-      if (peerCount > maxPeers[index]) {
-        peerCount = maxPeers[index];
-      }
+        if (peerCount > maxPeers[index]) {
+          peerCount = maxPeers[index];
+        }
 
-      // Calculate the number of filled bars for this stage
-      const filledBars = Math.floor(boxWidth * (peerCount / maxPeers[index]));
+        // Calculate the number of filled bars for this stage
+        const filledBars = Math.floor(boxWidth * (peerCount / maxPeers[index]));
 
-      // Create the bar string
-      const bar = "█".repeat(filledBars) + " ".repeat(boxWidth - filledBars);
+        // Create the bar string
+        const bar = "█".repeat(filledBars) + " ".repeat(boxWidth - filledBars);
 
-      // Append the custom stage title, progress bar, and peer count to the content
-      content += `${gaugeColors[index]}${gaugeNames[index]}\n[${bar}] ${peerCountString}{/}\n`;
-    });
+        // Append the custom stage title, progress bar, and peer count to the content
+        content += `${gaugeColors[index]}${gaugeNames[index]}\n[${bar}] ${peerCountString}{/}\n`;
+      });
 
-    peerCountGauge.setContent(content.trim());
+      peerCountGauge.setContent(content.trim());
 
-    peerCountGauge.screen.render();
+      peerCountGauge.screen.render();
+    }
   } catch (error) {
     debugToFile(`populatePeerCountGauge(): ${error}`, () => {});
   }
