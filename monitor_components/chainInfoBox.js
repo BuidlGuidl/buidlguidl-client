@@ -104,11 +104,9 @@ export async function populateChainInfoBox() {
     const gasPrice = await localClient.getGasPrice();
 
     let gasPriceGwei = gasPrice / BigInt(10 ** 9);
-    let gasPriceGweiString = Number(gasPriceGwei.toString());
-    let roundedGasPrice = Math.round(gasPriceGweiString * 10000) / 10000;
 
     chainInfoBox.setContent(
-      `ETH PRICE ($)\n${ethPrice}\n\nTRANSACTION COUNT\n${transactionCount}\n\nGAS PRICE (gwei)\n${roundedGasPrice}`
+      `ETH PRICE ($)\n${ethPrice}\n\nTRANSACTION COUNT\n${transactionCount}\n\nGAS PRICE (gwei)\n${gasPriceGwei}`
     );
   } catch (error) {
     debugToFile(`populateChainInfoBox(): ${error}`, () => {});
