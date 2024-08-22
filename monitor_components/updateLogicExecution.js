@@ -117,7 +117,7 @@ export function setupLogStreaming(
         if (executionClient == "geth") {
           // createGethMessage();
 
-          if (gethStageGauge) {
+          if (screen.children.includes(gethStageGauge)) {
             populateGethStageGauge(gethStageProgress);
           }
 
