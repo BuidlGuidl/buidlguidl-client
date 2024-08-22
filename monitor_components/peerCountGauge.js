@@ -10,7 +10,7 @@ let peerCountGauge;
 export function createPeerCountGauge(grid, screen) {
   peerCountGauge = grid.set(2, 9, 1.05, 1, blessed.box, {
     label: "Peer Count",
-    content: `Initializing...`,
+    content: `INITIALIZING...`,
     stroke: "green",
     fill: "white",
     border: {
