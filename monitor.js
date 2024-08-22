@@ -224,8 +224,6 @@ function setupUI(
     screen.append(gethStageGauge);
   } else if (executionClientGlobal == "reth") {
     screen.append(rethStageGauge);
-
-    setInterval(() => updateChainInfoBox(chainInfoBox, screen), 5000);
   }
 
   setBandwidthBox(bandwidthBox);
@@ -233,6 +231,7 @@ function setupUI(
 
   setInterval(() => updateBandwidthBox(screen), 2000);
   setInterval(() => updateStatusBox(statusBox, screen), 5000);
+  setInterval(() => updateChainInfoBox(chainInfoBox, screen), 5000);
 
   if (executionClientGlobal == "geth" && progress) {
     // gethHeaderDlGauge.setPercent(progress.headerDlProgress);
