@@ -1,5 +1,6 @@
 import blessed from "blessed";
 import { layoutHeightThresh } from "./helperFunctions.js";
+import { debugToFile } from "../helpers.js";
 
 let gethStageGauge;
 
@@ -25,33 +26,43 @@ export function createGethStageGauge(grid, screen) {
 }
 
 export function populateGethStageGauge(stagePercentages) {
-  // Define the custom stage names inside the function
-  const stageNames = ["HEADERS", "STATE", "CHAIN"];
+  try {
+    if (
+      stagePercentages[0] >= 0 &&
+      stagePercentages[1] >= 0 &&
+      stagePercentages[2] >= 0
+    ) {
+      // Define the custom stage names inside the function
+      const stageNames = ["HEADERS", "STATE", "CHAIN"];
 
-  // Get the width of the gethStageGauge box
-  const boxWidth = gethStageGauge.width - 9; // Subtracting 9 for padding/border
+      // Get the width of the gethStageGauge box
+      const boxWidth = gethStageGauge.width - 9; // Subtracting 9 for padding/border
 
-  // Initialize the content string
-  let content = "";
+      // Initialize the content string
+      let content = "";
 
-  // Iterate over each stage's percentage and name
-  stagePercentages.forEach((percentComplete, index) => {
-    // Calculate the number of filled bars for this stage
-    const filledBars = Math.floor(boxWidth * percentComplete);
+      // Iterate over each stage's percentage and name
+      stagePercentages.forEach((percentComplete, index) => {
+        // Calculate the number of filled bars for this stage
+        const filledBars = Math.floor(boxWidth * percentComplete);
 
-    // Create the bar string
-    const bar = "█".repeat(filledBars) + " ".repeat(boxWidth - filledBars);
+        // Create the bar string
+        const bar = "█".repeat(filledBars) + " ".repeat(boxWidth - filledBars);
 
-    // Create the percentage string
-    const percentString = `${Math.floor(percentComplete * 100)}%`;
+        // Create the percentage string
+        const percentString = `${Math.floor(percentComplete * 100)}%`;
 
-    // Append the custom stage title, progress bar, and percentage to the content
-    content += `${stageNames[index]}\n[${bar}] ${percentString}\n`;
-  });
+        // Append the custom stage title, progress bar, and percentage to the content
+        content += `${stageNames[index]}\n[${bar}] ${percentString}\n`;
+      });
 
-  // Set the content of the gethStageGauge box
-  gethStageGauge.setContent(content.trim());
+      // Set the content of the gethStageGauge box
+      gethStageGauge.setContent(content.trim());
 
-  // Render the screen to reflect the changes
-  gethStageGauge.screen.render();
+      // Render the screen to reflect the changes
+      gethStageGauge.screen.render();
+    }
+  } catch (error) {
+    debugToFile(`populateGethStageGauge(): ${error}`, () => {});
+  }
 }
