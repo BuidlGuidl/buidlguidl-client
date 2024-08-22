@@ -103,7 +103,7 @@ export async function populateChainInfoBox() {
     const transactionCount = await getTransactionCount();
     const gasPrice = await localClient.getGasPrice();
 
-    let gasPriceGwei = gasPrice / BigInt(10 ** 9);
+    let gasPriceGwei = Number(gasPrice) / BigInt(10 ** 9);
 
     chainInfoBox.setContent(
       `ETH PRICE ($)\n${ethPrice}\n\nTRANSACTION COUNT\n${transactionCount}\n\nGAS PRICE (gwei)\n${gasPriceGwei}`
