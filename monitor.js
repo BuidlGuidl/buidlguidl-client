@@ -15,9 +15,6 @@ import { createSystemStatsGauge } from "./monitor_components/systemStatsGauge.js
 import { createPeerCountGauge } from "./monitor_components/peerCountGauge.js";
 import { createCpuLine } from "./monitor_components/cpuLine.js";
 import { createNetworkLine } from "./monitor_components/networkLine.js";
-import { createGethStateDlGauge } from "./monitor_components/gethStateDlGauge.js";
-import { createGethHeaderDlGauge } from "./monitor_components/gethHeaderDlGauge.js";
-import { createGethChainDlGauge } from "./monitor_components/gethChainDlGauge.js";
 import { createRethStageGauge } from "./monitor_components/rethStageGauge.js";
 import {
   createGethStageGauge,
@@ -66,8 +63,6 @@ export function initializeMonitoring(
     if (executionClient == "geth") {
       progress = loadProgress();
     }
-
-    // setupDebugLogging(CONFIG.debugLogPath);
 
     const { screen, components } = setupUI(
       progress,
@@ -124,9 +119,6 @@ export function initializeMonitoring(
       components.rethStageGauge,
       components.gethStageGauge,
       components.chainInfoBox
-      // components.gethHeaderDlGauge,
-      // components.gethStateDlGauge,
-      // components.gethChainDlGauge,
     );
 
     if (executionClient == "reth") {
@@ -190,18 +182,9 @@ function setupUI(
   const bandwidthBox = createBandwidthBox(grid, screen);
   const chainInfoBox = createChainInfoBox(grid, screen);
 
-  let gethStageGauge,
-    // gethHeaderDlGauge,
-    // gethStateDlGauge,
-    // gethChainDlGauge,
-    rethStageGauge;
-  // chainInfoBox;
-  // rethOverallSyncGauge;
+  let gethStageGauge, rethStageGauge;
 
   if (executionClientGlobal == "geth") {
-    // gethHeaderDlGauge = createGethHeaderDlGauge(grid, screen);
-    // gethStateDlGauge = createGethStateDlGauge(grid, screen);
-    // gethChainDlGauge = createGethChainDlGauge(grid, screen);
     gethStageGauge = createGethStageGauge(grid, screen);
   } else if (executionClientGlobal == "reth") {
     rethStageGauge = createRethStageGauge(grid, screen);
@@ -218,9 +201,6 @@ function setupUI(
   screen.append(statusBox);
   screen.append(bandwidthBox);
   if (executionClientGlobal == "geth") {
-    // screen.append(gethHeaderDlGauge);
-    // screen.append(gethStateDlGauge);
-    // screen.append(gethChainDlGauge);
     screen.append(gethStageGauge);
   } else if (executionClientGlobal == "reth") {
     screen.append(rethStageGauge);
@@ -232,17 +212,6 @@ function setupUI(
   setInterval(() => updateBandwidthBox(screen), 2000);
   setInterval(() => updateStatusBox(statusBox, screen), 5000);
   setInterval(() => updateChainInfoBox(chainInfoBox, screen), 5000);
-
-  if (executionClientGlobal == "geth" && progress) {
-    // gethHeaderDlGauge.setPercent(progress.headerDlProgress);
-    // gethStateDlGauge.setPercent(progress.stateDlProgress);
-    // gethChainDlGauge.setPercent(progress.chainDlProgress);
-    // populateGethStageGauge([
-    //   progress.headerDlProgress,
-    //   progress.stateDlProgress,
-    //   progress.chainDlProgress,
-    // ]);
-  }
 
   screen.render();
 
@@ -269,9 +238,6 @@ function setupUI(
     components: {
       executionLog,
       consensusLog,
-      // gethHeaderDlGauge,
-      // gethStateDlGauge,
-      // gethChainDlGauge,
       gethStageGauge,
       rethStageGauge,
       chainInfoBox,

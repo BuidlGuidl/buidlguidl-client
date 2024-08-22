@@ -26,7 +26,6 @@ function stripAnsiCodes(input) {
   );
 }
 
-/// Header Download Progress
 function saveHeaderDlProgress(line) {
   line = stripAnsiCodes(line);
 
@@ -47,7 +46,6 @@ function saveHeaderDlProgress(line) {
   }
 }
 
-/// State Download Progress
 function saveStateDlProgress(line) {
   if (line.includes("Syncing: chain download in progress")) {
     const chainSyncMatch = line.match(/synced=([\d.]+)%/);
@@ -60,7 +58,6 @@ function saveStateDlProgress(line) {
   }
 }
 
-/// Chain Download Progress
 function saveChainDlProgress(line) {
   if (line.includes("Syncing: state download in progress")) {
     const stateSyncMatch = line.match(/synced=([\d.]+)%/);
@@ -82,11 +79,6 @@ export function setupLogStreaming(
   rethStageGauge,
   gethStageGauge,
   chainInfoBox
-  // gethHeaderDlGauge,
-  // gethStateDlGauge,
-  // gethChainDlGauge,
-  // rethOverallSyncGauge
-  // peerCountGauge
 ) {
   // const progress = loadProgress();
   let logBuffer = [];
@@ -115,8 +107,6 @@ export function setupLogStreaming(
         executionLog.setContent(logBuffer.join("\n"));
 
         if (executionClient == "geth") {
-          // createGethMessage();
-
           if (screen.children.includes(gethStageGauge)) {
             populateGethStageGauge(gethStageProgress);
           }
@@ -124,16 +114,6 @@ export function setupLogStreaming(
           saveHeaderDlProgress(line);
           saveStateDlProgress(line);
           saveChainDlProgress(line);
-
-          // if (gethHeaderDlGauge) {
-          //   gethHeaderDlGauge.setPercent(progress.headerDlProgress);
-          // }
-          // if (gethStateDlGauge) {
-          //   gethStateDlGauge.setPercent(progress.stateDlProgress);
-          // }
-          // if (gethChainDlGauge) {
-          //   gethChainDlGauge.setPercent(progress.chainDlProgress);
-          // }
         }
 
         screen.render();
@@ -174,7 +154,6 @@ async function createGethMessage() {
         statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber}\nMainnet Block: ${latestBlock}`;
       }
     }
-    // statusMessage += await peerCountMessage();
   } catch (error) {
     debugToFile(`createGethMessage(): ${error}`, () => {});
   }
@@ -504,7 +483,6 @@ async function createRethMessage() {
         statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber}\nMainnet Block: ${latestBlock}`;
       }
     }
-    // statusMessage += await peerCountMessage();
   } catch (error) {
     debugToFile(`createRethMessage(): ${error}`, () => {});
   }
@@ -565,20 +543,6 @@ export async function showHideGethWidgets(
     debugToFile(`showHideGethWidgets(): ${error}`, () => {});
   }
 }
-
-// async function peerCountMessage() {
-//   try {
-//     const peerCountHex = await localClient.request({
-//       method: "net_peerCount",
-//     });
-//     // Convert the result from hexadecimal to a decimal number
-//     const peerCount = parseInt(peerCountHex, 16);
-
-//     return `\nPEER COUNT: ${peerCount}`;
-//   } catch (error) {
-//     debugToFile(`peerCountMessage(): ${error}`, () => {});
-//   }
-// }
 
 export async function passStatusMessage() {
   try {

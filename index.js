@@ -1,4 +1,4 @@
-import { exec, execSync, spawn } from "child_process";
+import { execSync, spawn } from "child_process";
 import os from "os";
 import fs from "fs";
 import path from "path";
