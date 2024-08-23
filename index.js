@@ -53,12 +53,12 @@ let executionExited = false;
 let consensusExited = false;
 
 function handleExit() {
-  console.log("\n\nReceived exit signal");
+  console.log("\n\n🛰️ Received exit signal\n");
   try {
     // Check if both child processes have exited
     const checkExit = () => {
       if (executionExited && consensusExited) {
-        console.log("Both clients exited!");
+        console.log("\n👍 Both clients exited!");
         removeLockFile();
         process.exit(0);
       }
@@ -68,7 +68,7 @@ function handleExit() {
     const handleExecutionExit = (code) => {
       if (!executionExited) {
         executionExited = true;
-        console.log(`Execution client exited with code ${code}`);
+        console.log(`🫡 Execution client exited with code ${code}`);
         checkExit();
       }
     };
@@ -77,7 +77,7 @@ function handleExit() {
     const handleConsensusExit = (code) => {
       if (!consensusExited) {
         consensusExited = true;
-        console.log(`Consensus client exited with code ${code}`);
+        console.log(`🫡 Consensus client exited with code ${code}`);
         checkExit();
       }
     };
@@ -86,7 +86,7 @@ function handleExit() {
     const handleExecutionClose = (code) => {
       if (!executionExited) {
         executionExited = true;
-        console.log(`Execution client closed with code ${code}`);
+        console.log(`🫡 Execution client closed with code ${code}`);
         checkExit();
       }
     };
@@ -95,7 +95,7 @@ function handleExit() {
     const handleConsensusClose = (code) => {
       if (!consensusExited) {
         consensusExited = true;
-        console.log(`Consensus client closed with code ${code}`);
+        console.log(`🫡 Consensus client closed with code ${code}`);
         checkExit();
       }
     };
@@ -117,14 +117,14 @@ function handleExit() {
 
     // Send the kill signals after setting the event listeners
     if (executionChild && !executionExited) {
-      console.log("Exiting execution client...");
+      console.log("⌛️ Exiting execution client...");
       setTimeout(() => {
         executionChild.kill("SIGINT");
       }, 750);
     }
 
     if (consensusChild && !consensusExited) {
-      console.log("Exiting consensus client...");
+      console.log("⌛️ Exiting consensus client...");
       setTimeout(() => {
         consensusChild.kill("SIGINT");
       }, 750);
@@ -190,7 +190,7 @@ function startClient(clientName, installDir) {
   }
 
   child.on("exit", (code) => {
-    console.log(`${clientName} process exited with code ${code}`);
+    console.log(`🫡 ${clientName} process exited with code ${code}`);
     if (clientName === "geth" || clientName === "reth") {
       executionExited = true;
     } else if (clientName === "prysm" || clientName === "lighthouse") {
