@@ -52,27 +52,27 @@ const argv = minimist(process.argv.slice(2));
 
 if (argv.e) {
   executionClient = argv.e;
-  if (executionClient !== "geth" && executionClient !== "reth") {
-    console.log("Invalid option for -e. Use 'geth' or 'reth'.");
+  if (executionClient !== "reth" && executionClient !== "geth") {
+    console.log("Invalid option for -e. Use 'reth' or 'geth'.");
     process.exit(1);
   }
 }
 
 if (argv.c) {
   consensusClient = argv.c;
-  if (consensusClient !== "prysm" && consensusClient !== "lighthouse") {
-    console.log("Invalid option for -c. Use 'prysm' or 'lighthouse'.");
+  if (consensusClient !== "lighthouse" && consensusClient !== "prysm") {
+    console.log("Invalid option for -c. Use 'lighthouse' or 'prysm'.");
     process.exit(1);
   }
 }
 
-// if (argv.d) {
-//   installDir = argv.d;
-//   if (!isValidPath(installDir)) {
-//     console.log(`Invalid option for -d. '${installDir}' is not a valid path.`);
-//     process.exit(1);
-//   }
-// }
+if (argv.d) {
+  installDir = argv.d;
+  if (!isValidPath(installDir)) {
+    console.log(`Invalid option for -d. '${installDir}' is not a valid path.`);
+    process.exit(1);
+  }
+}
 
 if (argv.h) {
   showHelp();
@@ -353,4 +353,4 @@ initializeMonitoring(
   runsClient
 );
 
-export { executionClient, consensusClient };
+export { executionClient, consensusClient, installDir };

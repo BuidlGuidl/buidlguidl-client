@@ -66,7 +66,6 @@ export function createHeader(grid, screen, messageForHeader) {
         pic.remove(logo);
       }
 
-      // Render the image within the picBox
       logo = blessed.image({
         parent: pic,
         file: path.join(__dirname, "pixelBgLogo.png"),
