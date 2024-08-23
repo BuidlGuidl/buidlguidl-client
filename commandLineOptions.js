@@ -9,13 +9,18 @@ let installDir = os.homedir();
 
 function showHelp() {
   console.log("");
-  console.log("Options:");
-  console.log("  -e <client>  Specify the execution client ('reth' or 'geth')");
   console.log(
-    "  -c <client>  Specify the consensus client ('lighthouse or 'prysm')"
+    "  -e, --executionclient <client>  Specify the execution client ('reth' or 'geth')"
   );
-  // console.log("  -d <path>    Specify the install directory (defaults to ~)");
-  console.log("  -h           Display this help message and exit");
+  console.log(
+    "  -c, --consensusclient <client>  Specify the consensus client ('lighthouse' or 'prysm')"
+  );
+  console.log(
+    "  -d, --directory <path>          Specify the install directory (defaults to ~)"
+  );
+  console.log(
+    "  -h, --help                      Display this help message and exit"
+  );
   console.log("");
 }
 
@@ -28,33 +33,51 @@ function isValidPath(p) {
 }
 
 // Process command-line arguments
-const argv = minimist(process.argv.slice(2));
+const argv = minimist(process.argv.slice(2), {
+  string: ["e", "executionclient", "c", "consensusclient", "d", "directory"],
+  boolean: ["h", "help"],
+  alias: {
+    e: "executionclient",
+    c: "consensusclient",
+    d: "directory",
+    h: "help",
+  },
+  unknown: (option) => {
+    console.log(`Invalid option: ${option}`);
+    showHelp();
+    process.exit(1);
+  },
+});
 
-if (argv.e) {
-  executionClient = argv.e;
+if (argv.executionclient) {
+  executionClient = argv.executionclient;
   if (executionClient !== "reth" && executionClient !== "geth") {
-    console.log("Invalid option for -e. Use 'reth' or 'geth'.");
+    console.log("Invalid option for --executionclient. Use 'reth' or 'geth'.");
     process.exit(1);
   }
 }
 
-if (argv.c) {
-  consensusClient = argv.c;
+if (argv.consensusclient) {
+  consensusClient = argv.consensusclient;
   if (consensusClient !== "lighthouse" && consensusClient !== "prysm") {
-    console.log("Invalid option for -c. Use 'lighthouse' or 'prysm'.");
+    console.log(
+      "Invalid option for --consensusclient. Use 'lighthouse' or 'prysm'."
+    );
     process.exit(1);
   }
 }
 
-if (argv.d) {
-  installDir = argv.d;
+if (argv.directory) {
+  installDir = argv.directory;
   if (!isValidPath(installDir)) {
-    console.log(`Invalid option for -d. '${installDir}' is not a valid path.`);
+    console.log(
+      `Invalid option for --directory. '${installDir}' is not a valid path.`
+    );
     process.exit(1);
   }
 }
 
-if (argv.h) {
+if (argv.help) {
   showHelp();
   process.exit(0);
 }
