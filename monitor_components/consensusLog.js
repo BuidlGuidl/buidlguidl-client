@@ -25,6 +25,21 @@ export function updateConsensusClientInfo(logFilePath, log, screen) {
   let logBuffer = [];
   let lastSize = 0;
 
+  const ensureBufferFillsWidget = () => {
+    const visibleHeight = log.height - 2; // Account for border
+
+    // Only pad if the buffer is already full, otherwise, just ensure it doesn't exceed the height
+    if (logBuffer.length >= visibleHeight) {
+      while (logBuffer.length < visibleHeight) {
+        logBuffer.unshift(""); // Add empty lines at the start if needed
+      }
+    }
+
+    if (logBuffer.length > visibleHeight) {
+      logBuffer = logBuffer.slice(-visibleHeight); // Trim buffer to fit
+    }
+  };
+
   const updateLogContent = () => {
     try {
       const stats = fs.statSync(logFilePath);
@@ -46,9 +61,7 @@ export function updateConsensusClientInfo(logFilePath, log, screen) {
         newRl.on("line", (line) => {
           logBuffer.push(formatLogLines(line));
 
-          if (logBuffer.length > log.height - 2) {
-            logBuffer.shift();
-          }
+          ensureBufferFillsWidget(); // Make sure the buffer fills the widget only if necessary
 
           log.setContent(logBuffer.join("\n"));
           screen.render();
@@ -80,38 +93,57 @@ export function updateConsensusClientInfo(logFilePath, log, screen) {
 
 // export function updateConsensusClientInfo(logFilePath, log, screen) {
 //   let logBuffer = [];
+//   let lastSize = 0;
 
+//   const updateLogContent = () => {
+//     try {
+//       const stats = fs.statSync(logFilePath);
+//       const newSize = stats.size;
+
+//       if (newSize > lastSize) {
+//         const newStream = fs.createReadStream(logFilePath, {
+//           encoding: "utf8",
+//           start: lastSize,
+//           end: newSize,
+//         });
+
+//         const newRl = readline.createInterface({
+//           input: newStream,
+//           output: process.stdout,
+//           terminal: false,
+//         });
+
+//         newRl.on("line", (line) => {
+//           logBuffer.push(formatLogLines(line));
+
+//           if (logBuffer.length > log.height - 2) {
+//             logBuffer.shift();
+//           }
+
+//           log.setContent(logBuffer.join("\n"));
+//           screen.render();
+//         });
+
+//         newRl.on("close", () => {
+//           lastSize = newSize;
+//         });
+
+//         newRl.on("error", (err) => {
+//           debugToFile(`Error reading log file: ${err}`, () => {});
+//         });
+//       }
+//     } catch (error) {
+//       debugToFile(`Error accessing log file: ${error}`, () => {});
+//     }
+//   };
+
+//   // Initial read to load existing content
+//   updateLogContent();
+
+//   // Watch for file changes
 //   fs.watchFile(logFilePath, (curr, prev) => {
 //     if (curr.mtime > prev.mtime) {
-//       const newStream = fs.createReadStream(logFilePath, {
-//         encoding: "utf8",
-//         start: prev.size,
-//       });
-
-//       const newRl = readline.createInterface({
-//         input: newStream,
-//         output: process.stdout,
-//         terminal: false,
-//       });
-
-//       newRl.on("line", (line) => {
-//         logBuffer.push(formatLogLines(line));
-
-//         if (logBuffer.length > log.height - 2) {
-//           logBuffer.shift();
-//         }
-
-//         log.setContent(logBuffer.join("\n"));
-//         screen.render();
-//       });
-
-//       newRl.on("close", () => {
-//         // debugToFile(`New log file stream ended`, () => {});
-//       });
-
-//       newRl.on("error", (err) => {
-//         debugToFile(`Error reading new log file stream: ${err}`, () => {});
-//       });
+//       updateLogContent();
 //     }
 //   });
 // }
