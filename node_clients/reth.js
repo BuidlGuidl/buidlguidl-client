@@ -15,8 +15,6 @@ if (argv.d) {
   installDir = argv.d;
 }
 
-debugToFile(`reth.js installDir: ${installDir}`, () => {});
-
 const jwtPath = path.join(installDir, "bgnode", "jwt", "jwt.hex");
 
 let rethCommand;

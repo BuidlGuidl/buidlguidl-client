@@ -80,55 +80,131 @@ export function setupLogStreaming(
   gethStageGauge,
   chainInfoBox
 ) {
-  // const progress = loadProgress();
   let logBuffer = [];
+  let lastSize = 0;
 
-  fs.watchFile(logFilePath, (curr, prev) => {
-    if (curr.mtime > prev.mtime) {
-      const newStream = fs.createReadStream(logFilePath, {
-        encoding: "utf8",
-        start: prev.size,
-      });
+  const updateLogContent = () => {
+    try {
+      const stats = fs.statSync(logFilePath);
+      const newSize = stats.size;
 
-      const newRl = readline.createInterface({
-        input: newStream,
-        output: process.stdout,
-        terminal: false,
-      });
+      if (newSize > lastSize) {
+        const newStream = fs.createReadStream(logFilePath, {
+          encoding: "utf8",
+          start: lastSize,
+          end: newSize,
+        });
 
-      newRl.on("line", (line) => {
-        globalLine = line;
-        logBuffer.push(formatLogLines(line));
+        const newRl = readline.createInterface({
+          input: newStream,
+          output: process.stdout,
+          terminal: false,
+        });
 
-        if (logBuffer.length > executionLog.height - 2) {
-          logBuffer.shift();
-        }
+        newRl.on("line", (line) => {
+          globalLine = line;
+          logBuffer.push(formatLogLines(line));
 
-        executionLog.setContent(logBuffer.join("\n"));
-
-        if (executionClient == "geth") {
-          if (screen.children.includes(gethStageGauge)) {
-            populateGethStageGauge(gethStageProgress);
+          if (logBuffer.length > executionLog.height - 2) {
+            logBuffer.shift();
           }
 
-          saveHeaderDlProgress(line);
-          saveStateDlProgress(line);
-          saveChainDlProgress(line);
-        }
+          executionLog.setContent(logBuffer.join("\n"));
 
-        screen.render();
-      });
+          if (executionClient == "geth") {
+            if (screen.children.includes(gethStageGauge)) {
+              populateGethStageGauge(gethStageProgress);
+            }
 
-      newRl.on("close", () => {
-        // debugToFile(`New log file stream ended`, () => {});
-      });
+            saveHeaderDlProgress(line);
+            saveStateDlProgress(line);
+            saveChainDlProgress(line);
+          }
 
-      newRl.on("error", (err) => {
-        debugToFile(`Error reading new log file stream: ${err}`, () => {});
-      });
+          screen.render();
+        });
+
+        newRl.on("close", () => {
+          lastSize = newSize;
+        });
+
+        newRl.on("error", (err) => {
+          debugToFile(`Error reading log file: ${err}`, () => {});
+        });
+      }
+    } catch (error) {
+      debugToFile(`Error accessing log file: ${error}`, () => {});
+    }
+  };
+
+  // Initial read to load existing content
+  updateLogContent();
+
+  // Watch for file changes
+  fs.watchFile(logFilePath, (curr, prev) => {
+    if (curr.mtime > prev.mtime) {
+      updateLogContent();
     }
   });
 }
+
+// export function setupLogStreaming(
+//   logFilePath,
+//   executionLog,
+//   screen,
+//   rethStageGauge,
+//   gethStageGauge,
+//   chainInfoBox
+// ) {
+//   // const progress = loadProgress();
+//   let logBuffer = [];
+
+//   fs.watchFile(logFilePath, (curr, prev) => {
+//     if (curr.mtime > prev.mtime) {
+//       const newStream = fs.createReadStream(logFilePath, {
+//         encoding: "utf8",
+//         start: prev.size,
+//       });
+
+//       const newRl = readline.createInterface({
+//         input: newStream,
+//         output: process.stdout,
+//         terminal: false,
+//       });
+
+//       newRl.on("line", (line) => {
+//         globalLine = line;
+//         logBuffer.push(formatLogLines(line));
+
+//         if (logBuffer.length > executionLog.height - 2) {
+//           logBuffer.shift();
+//         }
+
+//         executionLog.setContent(logBuffer.join("\n"));
+
+//         if (executionClient == "geth") {
+//           if (screen.children.includes(gethStageGauge)) {
+//             populateGethStageGauge(gethStageProgress);
+//           }
+
+//           saveHeaderDlProgress(line);
+//           saveStateDlProgress(line);
+//           saveChainDlProgress(line);
+//         }
+
+//         screen.render();
+//       });
+
+//       newRl.on("close", () => {
+//         // debugToFile(`New log file stream ended`, () => {});
+//       });
+
+//       newRl.on("error", (err) => {
+//         debugToFile(`Error reading new log file stream: ${err}`, () => {});
+//       });
+//     }
+//   });
+// }
 
 let statusMessage = "INITIALIZING...";
 
