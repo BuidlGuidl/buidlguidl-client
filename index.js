@@ -12,72 +12,77 @@ import {
   installWindowsExecutionClient,
 } from "./node_clients/install.js";
 import { initializeWSConnection } from "./ws_connection/wsConnection.js";
-import minimist from "minimist";
+// import minimist from "minimist";
+import {
+  executionClient,
+  consensusClient,
+  installDir,
+} from "./commandLineOptions.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-/// Set default command line option values
-let executionClient = "reth";
-let consensusClient = "lighthouse";
-let installDir = os.homedir();
+// /// Set default command line option values
+// let executionClient = "reth";
+// let consensusClient = "lighthouse";
+// let installDir = os.homedir();
 
 const gethVer = "1.14.3";
 const rethVer = "1.0.0";
 const prysmVer = "5.1.0";
 const lighthouseVer = "5.2.0";
 
-function showHelp() {
-  console.log("");
-  console.log("Options:");
-  console.log("  -e <client>  Specify the execution client ('reth' or 'geth')");
-  console.log(
-    "  -c <client>  Specify the consensus client ('lighthouse or 'prysm')"
-  );
-  // console.log("  -d <path>    Specify the install directory (defaults to ~)");
-  console.log("  -h           Display this help message and exit");
-  console.log("");
-}
+// function showHelp() {
+//   console.log("");
+//   console.log("Options:");
+//   console.log("  -e <client>  Specify the execution client ('reth' or 'geth')");
+//   console.log(
+//     "  -c <client>  Specify the consensus client ('lighthouse or 'prysm')"
+//   );
+//   // console.log("  -d <path>    Specify the install directory (defaults to ~)");
+//   console.log("  -h           Display this help message and exit");
+//   console.log("");
+// }
 
-function isValidPath(p) {
-  try {
-    return fs.existsSync(p) && fs.statSync(p).isDirectory();
-  } catch (err) {
-    return false;
-  }
-}
+// function isValidPath(p) {
+//   try {
+//     return fs.existsSync(p) && fs.statSync(p).isDirectory();
+//   } catch (err) {
+//     return false;
+//   }
+// }
 
-// Process command-line arguments
-const argv = minimist(process.argv.slice(2));
+// // Process command-line arguments
+// const argv = minimist(process.argv.slice(2));
 
-if (argv.e) {
-  executionClient = argv.e;
-  if (executionClient !== "reth" && executionClient !== "geth") {
-    console.log("Invalid option for -e. Use 'reth' or 'geth'.");
-    process.exit(1);
-  }
-}
+// if (argv.e) {
+//   executionClient = argv.e;
+//   if (executionClient !== "reth" && executionClient !== "geth") {
+//     console.log("Invalid option for -e. Use 'reth' or 'geth'.");
+//     process.exit(1);
+//   }
+// }
 
-if (argv.c) {
-  consensusClient = argv.c;
-  if (consensusClient !== "lighthouse" && consensusClient !== "prysm") {
-    console.log("Invalid option for -c. Use 'lighthouse' or 'prysm'.");
-    process.exit(1);
-  }
-}
+// if (argv.c) {
+//   consensusClient = argv.c;
+//   if (consensusClient !== "lighthouse" && consensusClient !== "prysm") {
+//     console.log("Invalid option for -c. Use 'lighthouse' or 'prysm'.");
+//     process.exit(1);
+//   }
+// }
 
-if (argv.d) {
-  installDir = argv.d;
-  if (!isValidPath(installDir)) {
-    console.log(`Invalid option for -d. '${installDir}' is not a valid path.`);
-    process.exit(1);
-  }
-}
+// if (argv.d) {
+//   installDir = argv.d;
+//   if (!isValidPath(installDir)) {
+//     console.log(`Invalid option for -d. '${installDir}' is not a valid path.`);
+//     process.exit(1);
+//   }
+// }
 
-if (argv.h) {
-  showHelp();
-  process.exit(0);
-}
+// if (argv.h) {
+//   showHelp();
+//   process.exit(0);
+// }
 
 const lockFilePath = path.join(os.homedir(), "bgnode", "script.lock");
 
@@ -353,4 +358,4 @@ initializeMonitoring(
   runsClient
 );
 
-export { executionClient, consensusClient, installDir };
+// export { executionClient, consensusClient };

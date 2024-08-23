@@ -6,7 +6,7 @@ import {
   formatLogLines,
 } from "./helperFunctions.js";
 import { debugToFile } from "../helpers.js";
-import { executionClient } from "../index.js";
+import { executionClient } from "../commandLineOptions.js";
 import { mainnetClient, localClient, isSyncing } from "./viemClients.js";
 import { exec } from "child_process";
 import { populateRethStageGauge } from "./rethStageGauge.js";

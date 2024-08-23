@@ -2,7 +2,7 @@ import blessed from "blessed";
 import { exec } from "child_process";
 import { debugToFile } from "../helpers.js";
 import { localClient } from "./viemClients.js";
-import { executionClient, consensusClient } from "../index.js";
+import { executionClient, consensusClient } from "../commandLineOptions.js";
 
 let peerCountGauge;
 
