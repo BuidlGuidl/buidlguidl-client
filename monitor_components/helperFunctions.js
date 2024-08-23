@@ -2,8 +2,8 @@ import fs from "fs";
 import path from "path";
 import os from "os";
 import { debugToFile } from "../helpers.js";
+import { installDir } from "../commandLineOptions.js";
 
-const installDir = os.homedir();
 const progressFilePath = path.join(
   installDir,
   "bgnode",

@@ -1,24 +1,35 @@
 import pty from "node-pty";
 import fs from "fs";
-import path from "path";
 import os from "os";
+import path from "path";
 import { debugToFile } from "../helpers.js";
 import { stripAnsiCodes, getFormattedDateTime } from "../helpers.js";
+import minimist from "minimist";
 
-const installDir = process.env.INSTALL_DIR || os.homedir();
+let installDir = os.homedir();
 
-const jwtPath = path.join(os.homedir(), "bgnode", "jwt", "jwt.hex");
+const argv = minimist(process.argv.slice(2));
+
+// Check if a different install directory was provided via the `-d` option
+if (argv.d) {
+  installDir = argv.d;
+}
+
+debugToFile(`reth.js installDir: ${installDir}`, () => {});
+
+const jwtPath = path.join(installDir, "bgnode", "jwt", "jwt.hex");
 
 let rethCommand;
+
 const platform = os.platform();
 if (["darwin", "linux"].includes(platform)) {
-  rethCommand = path.join(os.homedir(), "bgnode", "reth", "reth");
+  rethCommand = path.join(installDir, "bgnode", "reth", "reth");
 } else if (platform === "win32") {
-  rethCommand = path.join(os.homedir(), "bgnode", "reth", "reth.exe");
+  rethCommand = path.join(installDir, "bgnode", "reth", "reth.exe");
 }
 
 const logFilePath = path.join(
-  os.homedir(),
+  installDir,
   "bgnode",
   "reth",
   "logs",
@@ -47,7 +58,7 @@ const execution = pty.spawn(
     "--authrpc.port",
     "8551",
     "--datadir",
-    path.join(os.homedir(), "bgnode", "reth", "database"),
+    path.join(installDir, "bgnode", "reth", "database"),
     "--authrpc.jwtsecret",
     `${jwtPath}`,
     "--metrics",

@@ -1,4 +1,5 @@
 import os from "os";
+import fs from "fs";
 import minimist from "minimist";
 
 /// Set default command line option values

@@ -1,26 +1,34 @@
 import pty from "node-pty";
 import fs from "fs";
-import path from "path";
 import os from "os";
+import path from "path";
 import { debugToFile } from "../helpers.js";
 import { stripAnsiCodes, getFormattedDateTime } from "../helpers.js";
+import minimist from "minimist";
 
-const installDir = process.env.INSTALL_DIR || os.homedir();
+let installDir = os.homedir();
 
-const jwtPath = path.join(os.homedir(), "bgnode", "jwt", "jwt.hex");
+const argv = minimist(process.argv.slice(2));
+
+// Check if a different install directory was provided via the `-d` option
+if (argv.d) {
+  installDir = argv.d;
+}
+
+const jwtPath = path.join(installDir, "bgnode", "jwt", "jwt.hex");
 
 let lighthouseCommand;
 const platform = os.platform();
 if (["darwin", "linux"].includes(platform)) {
   lighthouseCommand = path.join(
-    os.homedir(),
+    installDir,
     "bgnode",
     "lighthouse",
     "lighthouse"
   );
 } else if (platform === "win32") {
   lighthouseCommand = path.join(
-    os.homedir(),
+    installDir,
     "bgnode",
     "lighthouse",
     "lighthouse.exe"
@@ -28,7 +36,7 @@ if (["darwin", "linux"].includes(platform)) {
 }
 
 const logFilePath = path.join(
-  os.homedir(),
+  installDir,
   "bgnode",
   "lighthouse",
   "logs",
@@ -51,7 +59,7 @@ const consensus = pty.spawn(
     "600",
     "--disable-deposit-contract-sync",
     "--datadir",
-    path.join(os.homedir(), "bgnode", "lighthouse", "database"),
+    path.join(installDir, "bgnode", "lighthouse", "database"),
     "--execution-jwt",
     `${jwtPath}`,
     "--metrics",

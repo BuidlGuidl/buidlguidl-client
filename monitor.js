@@ -1,16 +1,9 @@
 import path from "path";
-import os from "os";
 import blessed from "blessed";
 import contrib from "blessed-contrib";
 import { debugToFile } from "./helpers.js";
 import { populateChainInfoBox } from "./monitor_components/chainInfoBox.js";
 import { updateStatusBox } from "./monitor_components/statusBox.js";
-
-import {
-  loadProgress,
-  getLatestLogFile,
-} from "./monitor_components/helperFunctions.js";
-
 import { createSystemStatsGauge } from "./monitor_components/systemStatsGauge.js";
 import { createPeerCountGauge } from "./monitor_components/peerCountGauge.js";
 import { createCpuLine } from "./monitor_components/cpuLine.js";
@@ -20,6 +13,13 @@ import { createGethStageGauge } from "./monitor_components/gethStageGauge.js";
 import { createChainInfoBox } from "./monitor_components/chainInfoBox.js";
 import { createExecutionLog } from "./monitor_components/executionLog.js";
 import { createStatusBox } from "./monitor_components/statusBox.js";
+import { installDir } from "./commandLineOptions.js";
+
+import {
+  loadProgress,
+  getLatestLogFile,
+} from "./monitor_components/helperFunctions.js";
+
 import {
   createBandwidthBox,
   setBandwidthBox,
@@ -72,14 +72,14 @@ export function initializeMonitoring(
     );
 
     const executionLogsPath = path.join(
-      os.homedir(),
+      installDir,
       "bgnode",
       executionClient,
       "logs"
     );
 
     const consensusLogsPath = path.join(
-      os.homedir(),
+      installDir,
       "bgnode",
       consensusClient,
       "logs"

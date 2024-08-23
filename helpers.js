@@ -1,9 +1,6 @@
 import fs from "fs";
-import os from "os";
 import path from "path";
 import { installDir } from "./commandLineOptions.js";
-
-// let installDir = os.homedir();
 
 export function setupDebugLogging(debugLogPath) {
   if (fs.existsSync(debugLogPath)) {
