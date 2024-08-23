@@ -295,5 +295,3 @@ function suppressMouseOutput(screen) {
     }
   });
 }
-
-// initializeMonitoring();
