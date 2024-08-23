@@ -53,7 +53,7 @@ let executionExited = false;
 let consensusExited = false;
 
 function handleExit() {
-  console.log("\n\n🛰️ Received exit signal\n");
+  console.log("\n\n🛰️  Received exit signal\n");
   try {
     // Check if both child processes have exited
     const checkExit = () => {
