@@ -281,12 +281,10 @@ if (!isAlreadyRunning()) {
 
   initializeWSConnection(wsConfig);
 
-  messageForHeader = "Node execution";
   runsClient = true;
   createLockFile();
 } else {
-  console.log("Node already started. Initializing monitoring only.");
-  messageForHeader = "Only dashboard, client already running";
+  messageForHeader = "Dashboard View (client already running)";
   runsClient = false;
 }
 
