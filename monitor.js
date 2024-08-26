@@ -171,7 +171,7 @@ function setupUI(
 
   const executionLog = createExecutionLog(grid, screen, executionClientLabel);
   const consensusLog = createConsensusLog(grid, screen, consensusClientLabel);
-  const systemStatsGauge = createSystemStatsGauge(grid, screen);
+  const systemStatsGauge = createSystemStatsGauge(grid, screen, installDir);
   const peerCountGauge = createPeerCountGauge(grid, screen);
   const cpuLine = createCpuLine(grid, screen);
   const networkLine = createNetworkLine(grid, screen);

@@ -18,7 +18,7 @@ By default, client executables, databases, and logs will be established within /
 
 If you want to specify a non-standard location for the ethereum_clients directory, pass a --directory (-d) option to index.js:
   ```bash
-  node index.js --directory path/for/bgnode
+  node index.js --directory path/for/ethereum_clients
   ```
 
 If you want to use a Geth + Prysm client pair, pass those as --executionclient (-e) and --consensusclient (-c) options to index.js:

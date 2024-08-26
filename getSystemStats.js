@@ -1,4 +1,5 @@
 import si from "systeminformation";
+import path from "path";
 import { debugToFile } from "./helpers.js";
 
 export function getMemoryUsage() {
@@ -31,20 +32,53 @@ export function getCpuUsage() {
   });
 }
 
-export function getDiskUsage() {
+// export function getDiskUsage(installDir) {
+//   return new Promise((resolve, reject) => {
+//     si.fsSize()
+//       .then((drives) => {
+//         let diskUsagePercent = 0;
+
+//         const osDrive = drives.find((drive) => {
+//           return drive.mount === "/" || drive.mount === "C:/";
+//         });
+
+//         if (osDrive) {
+//           diskUsagePercent = 100 - (osDrive.available / osDrive.size) * 100;
+//         } else {
+//           debugToFile(`getDiskUsage(): OS Drive not found.`, () => {});
+//         }
+
+//         resolve(diskUsagePercent.toFixed(1));
+//       })
+//       .catch((error) => {
+//         debugToFile(`getDiskUsage(): ${error}`, () => {});
+//         reject(error);
+//       });
+//   });
+// }
+
+export function getDiskUsage(installDir) {
   return new Promise((resolve, reject) => {
     si.fsSize()
       .then((drives) => {
         let diskUsagePercent = 0;
 
-        const osDrive = drives.find((drive) => {
-          return drive.mount === "/" || drive.mount === "C:/";
+        // Sort drives by the length of their mount point, descending
+        drives.sort((a, b) => b.mount.length - a.mount.length);
+
+        // Find the drive with the longest mount point that is a prefix of installDir
+        const installDrive = drives.find((drive) => {
+          return installDir.startsWith(drive.mount);
         });
 
-        if (osDrive) {
-          diskUsagePercent = 100 - (osDrive.available / osDrive.size) * 100;
+        if (installDrive) {
+          diskUsagePercent =
+            100 - (installDrive.available / installDrive.size) * 100;
         } else {
-          debugToFile(`getDiskUsage(): OS Drive not found.`, () => {});
+          debugToFile(
+            `getDiskUsage(): Drive for ${installDir} not found.`,
+            () => {}
+          );
         }
 
         resolve(diskUsagePercent.toFixed(1));

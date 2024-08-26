@@ -8,7 +8,7 @@ import { debugToFile } from "../helpers.js";
 
 let systemStatsGauge;
 
-export function createSystemStatsGauge(grid, screen) {
+export function createSystemStatsGauge(grid, screen, installDir) {
   // const row = screen.height < layoutHeightThresh ? 5 : 7;
   // const rowSpan = screen.height < layoutHeightThresh ? 2 : 2;
 
@@ -24,18 +24,18 @@ export function createSystemStatsGauge(grid, screen) {
     tags: true,
   });
 
-  populateSystemStatsGauge();
-  setInterval(() => populateSystemStatsGauge(), 5000);
+  populateSystemStatsGauge(installDir);
+  setInterval(() => populateSystemStatsGauge(installDir), 5000);
 
   return systemStatsGauge;
 }
 
 let gaugePercentages = [0, 0, 0];
 
-async function populateSystemStatsGauge() {
+async function populateSystemStatsGauge(installDir) {
   try {
     gaugePercentages[0] = (await getMemoryUsage()) / 100;
-    gaugePercentages[1] = (await getDiskUsage()) / 100;
+    gaugePercentages[1] = (await getDiskUsage(installDir)) / 100;
     gaugePercentages[2] = (await getCpuTemperature()) / 100;
 
     const gaugeNames = ["MEMORY", "STORAGE", "CPU TEMP"];
