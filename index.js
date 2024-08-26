@@ -10,7 +10,7 @@ import {
   installMacLinuxExecutionClient,
   installWindowsConsensusClient,
   installWindowsExecutionClient,
-} from "./node_clients/install.js";
+} from "./ethereum_client_scripts/install.js";
 import { initializeWSConnection } from "./ws_connection/wsConnection.js";
 import {
   executionClient,
@@ -160,13 +160,16 @@ function startClient(clientName, installDir) {
     clientArgs = [];
 
   if (clientName === "geth") {
-    clientCommand = path.join(__dirname, "node_clients/geth.js");
+    clientCommand = path.join(__dirname, "ethereum_client_scripts/geth.js");
   } else if (clientName === "reth") {
-    clientCommand = path.join(__dirname, "node_clients/reth.js");
+    clientCommand = path.join(__dirname, "ethereum_client_scripts/reth.js");
   } else if (clientName === "prysm") {
-    clientCommand = path.join(__dirname, "node_clients/prysm.js");
+    clientCommand = path.join(__dirname, "ethereum_client_scripts/prysm.js");
   } else if (clientName === "lighthouse") {
-    clientCommand = path.join(__dirname, "node_clients/lighthouse.js");
+    clientCommand = path.join(
+      __dirname,
+      "ethereum_client_scripts/lighthouse.js"
+    );
   } else {
     clientCommand = path.join(
       installDir,
