@@ -1,36 +1,44 @@
-const pty = require("node-pty");
-const fs = require("fs");
-const path = require("path");
-const os = require("os");
+import pty from "node-pty";
+import fs from "fs";
+import os from "os";
+import path from "path";
+import { debugToFile } from "../helpers.js";
+import { stripAnsiCodes, getFormattedDateTime } from "../helpers.js";
+import minimist from "minimist";
 
-const installDir = process.env.INSTALL_DIR || os.homedir();
+let installDir = os.homedir();
 
-const jwtPath = path.join(installDir, "bgnode", "jwt", "jwt.hex");
+const argv = minimist(process.argv.slice(2));
+
+// Check if a different install directory was provided via the `-d` option
+if (argv.d) {
+  installDir = argv.d;
+}
+
+const jwtPath = path.join(installDir, "ethereum_clients", "jwt", "jwt.hex");
 
 let prysmCommand;
 const platform = os.platform();
 if (["darwin", "linux"].includes(platform)) {
-  prysmCommand = path.join(installDir, "bgnode", "prysm", "prysm.sh");
+  prysmCommand = path.join(installDir, "ethereum_clients", "prysm", "prysm.sh");
 } else if (platform === "win32") {
-  prysmCommand = path.join(installDir, "bgnode", "prysm", "prysm.exe");
+  prysmCommand = path.join(
+    installDir,
+    "ethereum_clients",
+    "prysm",
+    "prysm.exe"
+  );
 }
 
 const logFilePath = path.join(
   installDir,
-  "bgnode",
+  "ethereum_clients",
   "prysm",
   "logs",
   `prysm_${getFormattedDateTime()}.log`
 );
 
 const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
-
-function stripAnsiCodes(input) {
-  return input.replace(
-    /[\u001b\u009b][[()#;?]*(?:(?:[a-zA-Z\d]*(?:;[a-zA-Z\d]*)*)?\u0007|(?:\d{1,4}(?:;\d{0,4})*)?[0-9A-ORZcf-nq-uy=><~])/g,
-    ""
-  );
-}
 
 const consensus = pty.spawn(
   prysmCommand,
@@ -44,10 +52,14 @@ const consensus = pty.spawn(
     "--checkpoint-sync-url=https://mainnet-checkpoint-sync.attestant.io/",
     "--genesis-beacon-api-url=https://mainnet-checkpoint-sync.attestant.io/",
     "--datadir",
-    path.join(installDir, "bgnode", "prysm", "database"),
+    path.join(installDir, "ethereum_clients", "prysm", "database"),
     "--accept-terms-of-use=true",
     "--jwt-secret",
     jwtPath,
+    "--monitoring-host",
+    "127.0.0.1",
+    "--monitoring-port",
+    "5054",
   ],
   {
     name: "xterm-color",
@@ -64,12 +76,11 @@ consensus.on("data", (data) => {
   if (process.send) {
     process.send({ log: data }); // No need for .toString(), pty preserves colors
   }
-  process.stdout.write(data); // Also log to console for real-time feedback
 });
 
 consensus.on("exit", (code) => {
-  const exitMessage = `prysm process exited with code ${code}`;
-  logStream.write(exitMessage);
+  // const exitMessage = `prysm process exited with code ${code}`;
+  // logStream.write(exitMessage);
   logStream.end();
 });
 
@@ -79,13 +90,8 @@ consensus.on("error", (err) => {
   if (process.send) {
     process.send({ log: errorMessage }); // Send error message to parent process
   }
-  console.error("From Prysm client:",errorMessage); // Log error message to console
+  debugToFile(`From prysm.js: ${errorMessage}`, () => {});
 });
-
-function getFormattedDateTime() {
-  const now = new Date();
-  return now.toISOString().replace(/T/, "_").replace(/\..+/, "");
-}
 
 process.on("SIGINT", () => {
   consensus.kill("SIGINT");

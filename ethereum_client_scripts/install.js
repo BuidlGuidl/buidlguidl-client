@@ -1,11 +1,10 @@
-const fs = require("fs");
-const path = require("path");
-const { execSync } = require("child_process");
-const os = require("os");
+import fs from "fs";
+import path from "path";
+import { execSync } from "child_process";
+import os from "os";
+import { installDir } from "../commandLineOptions.js";
 
-let installDir = os.homedir();
-
-function installMacLinuxExecutionClient(
+export function installMacLinuxExecutionClient(
   executionClient,
   platform,
   gethVer,
@@ -17,21 +16,21 @@ function installMacLinuxExecutionClient(
     darwin: {
       x64: {
         gethFileName: `geth-darwin-amd64-${gethVer}-ab48ba42`,
-        rethFileName: `reth-v${rethVer}-rc.2-x86_64-apple-darwin`,
+        rethFileName: `reth-v${rethVer}-x86_64-apple-darwin`,
       },
       arm64: {
         gethFileName: `geth-darwin-arm64-${gethVer}-ab48ba42`,
-        rethFileName: `reth-v${rethVer}-rc.2-aarch64-apple-darwin`,
+        rethFileName: `reth-v${rethVer}-aarch64-apple-darwin`,
       },
     },
     linux: {
       x64: {
         gethFileName: `geth-linux-amd64-${gethVer}-ab48ba42`,
-        rethFileName: `reth-v${rethVer}-rc.2-x86_64-unknown-linux-gnu`,
+        rethFileName: `reth-v${rethVer}-x86_64-unknown-linux-gnu`,
       },
       arm64: {
         gethFileName: `geth-linux-arm64-${gethVer}-ab48ba42`,
-        rethFileName: `reth-v${rethVer}-rc.2-aarch64-unknown-linux-gnu`,
+        rethFileName: `reth-v${rethVer}-aarch64-unknown-linux-gnu`,
       },
     },
   };
@@ -39,7 +38,7 @@ function installMacLinuxExecutionClient(
   const { gethFileName, rethFileName } = configs[platform][arch];
 
   if (executionClient === "geth") {
-    const gethDir = path.join(installDir, "bgnode", "geth");
+    const gethDir = path.join(installDir, "ethereum_clients", "geth");
     const gethScript = path.join(gethDir, "geth");
     if (!fs.existsSync(gethScript)) {
       console.log("\nInstalling Geth.");
@@ -69,7 +68,7 @@ function installMacLinuxExecutionClient(
       console.log("Geth is already installed.");
     }
   } else if (executionClient === "reth") {
-    const rethDir = path.join(installDir, "bgnode", "reth");
+    const rethDir = path.join(installDir, "ethereum_clients", "reth");
     const rethScript = path.join(rethDir, "reth");
     if (!fs.existsSync(rethScript)) {
       console.log("\nInstalling Reth.");
@@ -80,7 +79,7 @@ function installMacLinuxExecutionClient(
       }
       console.log("Downloading Reth.");
       execSync(
-        `cd "${rethDir}" && curl -L -O -# https://github.com/paradigmxyz/reth/releases/download/v${rethVer}-rc.2/${rethFileName}.tar.gz`,
+        `cd "${rethDir}" && curl -L -O -# https://github.com/paradigmxyz/reth/releases/download/v${rethVer}/${rethFileName}.tar.gz`,
         { stdio: "inherit" }
       );
       console.log("Uncompressing Reth.");
@@ -99,9 +98,10 @@ function installMacLinuxExecutionClient(
   }
 }
 
-function installMacLinuxConsensusClient(
+export function installMacLinuxConsensusClient(
   consensusClient,
   platform,
+  // prysmVer,
   lighthouseVer
 ) {
   const arch = os.arch();
@@ -129,7 +129,7 @@ function installMacLinuxConsensusClient(
   const { lighthouseFileName } = configs[platform][arch];
 
   if (consensusClient === "prysm") {
-    const prysmDir = path.join(installDir, "bgnode", "prysm");
+    const prysmDir = path.join(installDir, "ethereum_clients", "prysm");
     const prysmScript = path.join(prysmDir, "prysm.sh");
     if (!fs.existsSync(prysmScript)) {
       console.log("\nInstalling Prysm.");
@@ -147,7 +147,11 @@ function installMacLinuxConsensusClient(
       console.log("Prysm is already installed.");
     }
   } else if (consensusClient === "lighthouse") {
-    const lighthouseDir = path.join(installDir, "bgnode", "lighthouse");
+    const lighthouseDir = path.join(
+      installDir,
+      "ethereum_clients",
+      "lighthouse"
+    );
     const lighthouseScript = path.join(lighthouseDir, "lighthouse");
     if (!fs.existsSync(lighthouseScript)) {
       console.log("\nInstalling Lighthouse.");
@@ -178,9 +182,9 @@ function installMacLinuxConsensusClient(
   }
 }
 
-function installWindowsExecutionClient(executionClient) {
+export function installWindowsExecutionClient(executionClient) {
   if (executionClient === "geth") {
-    const gethDir = path.join(installDir, "bgnode", "geth");
+    const gethDir = path.join(installDir, "ethereum_clients", "geth");
     const gethScript = path.join(gethDir, "geth.exe");
     if (!fs.existsSync(gethScript)) {
       console.log("\nInstalling Geth.");
@@ -210,7 +214,7 @@ function installWindowsExecutionClient(executionClient) {
       console.log("Geth is already installed.");
     }
   } else if (executionClient === "reth") {
-    const rethDir = path.join(installDir, "bgnode", "reth");
+    const rethDir = path.join(installDir, "ethereum_clients", "reth");
     const rethScript = path.join(rethDir, "reth.exe");
     if (!fs.existsSync(rethScript)) {
       console.log("\nInstalling Reth.");
@@ -241,9 +245,9 @@ function installWindowsExecutionClient(executionClient) {
   }
 }
 
-function installWindowsConsensusClient(consensusClient) {
+export function installWindowsConsensusClient(consensusClient) {
   if (consensusClient === "prysm") {
-    const prysmDir = path.join(installDir, "bgnode", "prysm");
+    const prysmDir = path.join(installDir, "ethereum_clients", "prysm");
     const prysmScript = path.join(prysmDir, "prysm.bat");
     if (!fs.existsSync(prysmScript)) {
       console.log("Installing Prysm.");
@@ -264,7 +268,11 @@ function installWindowsConsensusClient(consensusClient) {
       console.log("Prysm is already installed.");
     }
   } else if (consensusClient === "lighthouse") {
-    const lighthouseDir = path.join(installDir, "bgnode", "lighthouse");
+    const lighthouseDir = path.join(
+      installDir,
+      "ethereum_clients",
+      "lighthouse"
+    );
     const lighthouseScript = path.join(lighthouseDir, "lighthouse.exe");
     if (!fs.existsSync(lighthouseScript)) {
       console.log("Installing Lighthouse.");
@@ -295,15 +303,22 @@ function installWindowsConsensusClient(consensusClient) {
   }
 }
 
-function downloadRethSnapshot(rethDir, platform) {
+export function downloadRethSnapshot(rethDir, platform) {
   const snapshotDate = "2024-05-14";
 
   if (
     !fs.existsSync(
-      path.join(installDir, "bgnode", "reth", "database", "db", "mdbx.dat")
+      path.join(
+        installDir,
+        "ethereum_clients",
+        "reth",
+        "database",
+        "db",
+        "mdbx.dat"
+      )
     ) ||
     !fs.existsSync(
-      path.join(installDir, "bgnode", "reth", "database", "blobstore")
+      path.join(installDir, "ethereum_clients", "reth", "database", "blobstore")
     )
   ) {
     console.log("\nDownloading Reth snapshot.");
@@ -324,11 +339,3 @@ function downloadRethSnapshot(rethDir, platform) {
     console.log("\nReth snapshot already downloaded.");
   }
 }
-
-module.exports = {
-  installWindowsConsensusClient,
-  installWindowsExecutionClient,
-  installMacLinuxConsensusClient,
-  installMacLinuxExecutionClient,
-  downloadRethSnapshot,
-};

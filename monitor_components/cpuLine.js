@@ -1,26 +1,11 @@
-const contrib = require("blessed-contrib");
-const si = require("systeminformation");
+import contrib from "blessed-contrib";
+import { debugToFile } from "../helpers.js";
+import { getCpuUsage } from "../getSystemStats.js";
 
-let cpuLine;
 let cpuDataX = [];
 let dataCpuUsage = [];
-let screen;
 
-function getCpuUsage() {
-  return new Promise((resolve, reject) => {
-    si.currentLoad()
-      .then((load) => {
-        const currentLoad = load.currentLoad;
-        resolve(currentLoad);
-      })
-      .catch((error) => {
-        console.error(`getCpuUsage() Error fetching CPU usage stats: ${error}`);
-        reject(error);
-      });
-  });
-}
-
-async function updateCpuLinePlot() {
+async function updateCpuLinePlot(cpuLine, screen) {
   try {
     const currentLoad = await getCpuUsage(); // Get the overall CPU load
 
@@ -60,19 +45,19 @@ async function updateCpuLinePlot() {
       dataCpuUsage.shift();
     }
   } catch (error) {
-    console.error(
-      `updateCpuLinePlot() Failed to update CPU usage line chart: ${error}`
+    debugToFile(
+      `updateCpuLinePlot() Failed to update CPU usage line chart: ${error}`,
+      () => {}
     );
   }
 }
 
-function createCpuLine(grid, blessedScreen) {
-  screen = blessedScreen;
-  cpuLine = grid.set(5, 0, 2, 7, contrib.line, {
+export function createCpuLine(grid, screen) {
+  const cpuLine = grid.set(7, 0, 2, 5, contrib.line, {
     style: { line: "blue", text: "green", baseline: "green" },
     xLabelPadding: 3,
     xPadding: 5,
-    showLegend: true,
+    showLegend: false,
     wholeNumbersOnly: false,
     label: "CPU Load (%)",
     border: {
@@ -81,9 +66,7 @@ function createCpuLine(grid, blessedScreen) {
     },
   });
 
-  setInterval(updateCpuLinePlot, 1000);
+  setInterval(() => updateCpuLinePlot(cpuLine, screen), 1000);
 
   return cpuLine;
 }
-
-module.exports = { createCpuLine };

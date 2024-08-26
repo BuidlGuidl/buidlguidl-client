@@ -1,7 +1,7 @@
-const contrib = require("blessed-contrib");
-const si = require("systeminformation");
+import contrib from "blessed-contrib";
+import si from "systeminformation";
+import { debugToFile } from "../helpers.js";
 
-let networkLine;
 let networkDataX = [];
 let dataSentY = [];
 let dataReceivedY = [];
@@ -10,7 +10,7 @@ let lastStats = {
   totalReceived: 0,
   timestamp: Date.now(),
 };
-let screen;
+let firstTime = true;
 
 function getNetworkStats() {
   return new Promise((resolve, reject) => {
@@ -41,21 +41,39 @@ function getNetworkStats() {
           timestamp: currentTime,
         };
 
-        resolve({
-          sentPerSecond: sentPerSecond / 1000000,
-          receivedPerSecond: receivedPerSecond / 1000000,
-        });
+        if (sentPerSecond < 0 || sentPerSecond > 1000000000) {
+          sentPerSecond = 0;
+        }
+
+        if (receivedPerSecond < 0 || receivedPerSecond > 1000000000) {
+          receivedPerSecond = 0;
+        }
+
+        if (firstTime) {
+          resolve({
+            sentPerSecond: 0,
+            receivedPerSecond: 0,
+          });
+
+          firstTime = false;
+        } else {
+          resolve({
+            sentPerSecond: sentPerSecond / 1000000,
+            receivedPerSecond: receivedPerSecond / 1000000,
+          });
+        }
       })
       .catch((error) => {
-        console.error(
-          `getNetworkStats() Error fetching network stats: ${error}`
+        debugToFile(
+          `getNetworkStats() Error fetching network stats: ${error}`,
+          () => {}
         );
         reject(error);
       });
   });
 }
 
-async function updateNetworkLinePlot() {
+async function updateNetworkLinePlot(networkLine, screen) {
   try {
     const stats = await getNetworkStats();
     const now = new Date();
@@ -88,13 +106,12 @@ async function updateNetworkLinePlot() {
       dataReceivedY.shift();
     }
   } catch (error) {
-    console.error(`updateNetworkPlot(): ${error}`);
+    debugToFile(`updateNetworkPlot(): ${error}`, () => {});
   }
 }
 
-function createNetworkLine(grid, blessedScreen) {
-  screen = blessedScreen;
-  networkLine = grid.set(7, 0, 2, 7, contrib.line, {
+export function createNetworkLine(grid, screen) {
+  const networkLine = grid.set(7, 5, 2, 5, contrib.line, {
     style: { line: "yellow", text: "green", baseline: "green" },
     xLabelPadding: 3,
     xPadding: 5,
@@ -107,9 +124,7 @@ function createNetworkLine(grid, blessedScreen) {
     },
   });
 
-  setInterval(updateNetworkLinePlot, 1000);
+  setInterval(() => updateNetworkLinePlot(networkLine, screen), 1000);
 
   return networkLine;
 }
-
-module.exports = { createNetworkLine };

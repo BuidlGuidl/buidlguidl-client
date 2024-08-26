@@ -1,100 +1,71 @@
-const fs = require("fs");
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 
-function setupDebugLogging(debugLogPath) {
-    if (fs.existsSync(debugLogPath)) {
-      fs.unlinkSync(debugLogPath);
-    }
-  
-    function logDebug(message) {
-      if (typeof message === "object") {
-        message = JSON.stringify(message, null, 2);
-      }
-      fs.appendFileSync(
-        debugLogPath,
-        `[${new Date().toISOString()}] ${message}\n`
-      );
-    }
-  
-    console.log = function (message, ...optionalParams) {
-      if (optionalParams.length > 0) {
-        message +=
-          " " +
-          optionalParams
-            .map((param) =>
-              typeof param === "object" ? JSON.stringify(param, null, 2) : param
-            )
-            .join(" ");
-      }
-      logDebug(message);
-    };
+export function setupDebugLogging(debugLogPath) {
+  if (fs.existsSync(debugLogPath)) {
+    fs.unlinkSync(debugLogPath);
   }
 
-  // function getFormattedDateTime() {
-    //   const now = new Date();
-    
-    //   const year = now.getFullYear();
-    //   const month = (now.getMonth() + 1).toString().padStart(2, "0");
-    //   const day = now.getDate().toString().padStart(2, "0");
-    //   const hour = now.getHours().toString().padStart(2, "0");
-    //   const minute = now.getMinutes().toString().padStart(2, "0");
-    //   const second = now.getSeconds().toString().padStart(2, "0");
-    
-    //   return `${year}_${month}_${day}_${hour}_${minute}_${second}`;
-    // }
-    
+  function logDebug(message) {
+    if (typeof message === "object") {
+      message = JSON.stringify(message, null, 2);
+    }
+    fs.appendFileSync(
+      debugLogPath,
+      `[${new Date().toISOString()}] ${message}\n`
+    );
+  }
 
+  console.log = function (message, ...optionalParams) {
+    if (optionalParams.length > 0) {
+      message +=
+        " " +
+        optionalParams
+          .map((param) =>
+            typeof param === "object" ? JSON.stringify(param, null, 2) : param
+          )
+          .join(" ");
+    }
+    logDebug(message);
+  };
+}
 
-  module.exports = { setupDebugLogging };
+export function debugToFile(data, callback) {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
 
+  const filePath = path.join(__dirname, "debug.log");
+  const now = new Date();
+  const timestamp = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
 
-  // let lastStats = {
-//   totalSent: 0,
-//   totalReceived: 0,
-//   timestamp: Date.now(),
-// };
+  // Check if data is an object, and if it is, convert it to a JSON string
+  let content;
+  if (typeof data === "object" && data !== null) {
+    content = `${timestamp} - ${JSON.stringify(data, null, 2)}\n`;
+  } else {
+    content = `${timestamp} - ${data}\n`;
+  }
 
-// function getNetworkStats() {
-//   return new Promise((resolve, reject) => {
-//     si.networkStats()
-//       .then((interfaces) => {
-//         let currentTotalSent = 0;
-//         let currentTotalReceived = 0;
+  // Append the content to the log file
+  fs.writeFile(filePath, content, { flag: "a" }, (err) => {
+    if (err) {
+      console.error("Error writing to log file:", err); // Handle the error, if any
+    } else {
+      if (callback) callback();
+    }
+  });
+}
 
-//         interfaces.forEach((iface) => {
-//           currentTotalSent += iface.tx_bytes;
-//           currentTotalReceived += iface.rx_bytes;
-//         });
+export function stripAnsiCodes(input) {
+  return input.replace(
+    /[\u001b\u009b][[()#;?]*(?:(?:[a-zA-Z\d]*(?:;[a-zA-Z\d]*)*)?\u0007|(?:\d{1,4}(?:;\d{0,4})*)?[0-9A-ORZcf-nq-uy=><~])/g,
+    ""
+  );
+}
 
-//         // Calculate time difference in seconds
-//         const currentTime = Date.now();
-//         const timeDiff = (currentTime - lastStats.timestamp) / 1000;
-
-//         // Calculate bytes per second
-//         const sentPerSecond =
-//           (currentTotalSent - lastStats.totalSent) / timeDiff;
-//         const receivedPerSecond =
-//           (currentTotalReceived - lastStats.totalReceived) / timeDiff;
-
-//         // Update last stats for next calculation
-//         lastStats = {
-//           totalSent: currentTotalSent,
-//           totalReceived: currentTotalReceived,
-//           timestamp: currentTime,
-//         };
-
-//         resolve({
-//           sentPerSecond: sentPerSecond / 1000000,
-//           receivedPerSecond: receivedPerSecond / 1000000,
-//         });
-//       })
-//       .catch((error) => {
-//         debugToFile(
-//           `getNetworkStats() Error fetching network stats: ${error}`,
-//           () => {}
-//         );
-//         reject(error);
-//       });
-//   });
-// }
-
-// getNetworkStats();
+export function getFormattedDateTime() {
+  const now = new Date();
+  return now.toISOString().replace(/T/, "_").replace(/\..+/, "");
+}

@@ -1,10 +1,12 @@
-const fs = require("fs");
-const path = require("path");
-const contrib = require("blessed-contrib");
+import blessed from "blessed";
+import { debugToFile } from "../helpers.js";
 
-function createExecutionLog(grid, gethVer, rethVer) {
-  const executionLog = grid.set(1, 0, 2, 9, contrib.log, {
-    label: `Geth v${gethVer}`,
+export function createExecutionLog(grid, screen, executionClientLabel) {
+  // const colSpan = screen.height < layoutHeightThresh ? 7 : 9;
+
+  const executionLog = grid.set(1, 0, 3, 8, blessed.box, {
+    label: `${executionClientLabel}`,
+    content: `Loading ${executionClientLabel} logs`,
     border: {
       type: "line",
       fg: "cyan",
@@ -13,18 +15,13 @@ function createExecutionLog(grid, gethVer, rethVer) {
     shrink: true,
   });
 
-  // executionLog.buffer = [];
+  // screen.on("resize", () => {
+  //   debugToFile(`screen.height: ${screen.height}`, () => {});
 
-  // executionLog.log = function (line) {
-  //   if (this.buffer.length >= 8) {
-  //     this.buffer.shift(); // Remove the oldest line if buffer is full
-  //   }
-  //   const highlightedLine = highlightWords(line);
-  //   this.buffer.push(highlightedLine); // Add the new line to the buffer
-  //   this.setContent(this.buffer.join("\n")); // Update the displayed content
-  // };
+  //   debugToFile(`executionLog.height: ${executionLog.height}`, () => {});
+  //   debugToFile(`executionLog.top: ${executionLog.top}`, () => {});
+  //   debugToFile(`executionLog.bottom: ${executionLog.bottom}`, () => {});
+  // });
 
   return executionLog;
 }
-
-module.exports = { createExecutionLog };

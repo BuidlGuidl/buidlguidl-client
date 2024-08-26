@@ -1,23 +1,33 @@
-const pty = require("node-pty");
-const fs = require("fs");
-const path = require("path");
-const os = require("os");
+import pty from "node-pty";
+import fs from "fs";
+import os from "os";
+import path from "path";
+import { debugToFile } from "../helpers.js";
+import { stripAnsiCodes, getFormattedDateTime } from "../helpers.js";
+import minimist from "minimist";
 
-const installDir = process.env.INSTALL_DIR || os.homedir();
+let installDir = os.homedir();
 
-const jwtPath = path.join(installDir, "bgnode", "jwt", "jwt.hex");
+const argv = minimist(process.argv.slice(2));
+
+// Check if a different install directory was provided via the `-d` option
+if (argv.d) {
+  installDir = argv.d;
+}
+
+const jwtPath = path.join(installDir, "ethereum_clients", "jwt", "jwt.hex");
 
 let gethCommand;
 const platform = os.platform();
 if (["darwin", "linux"].includes(platform)) {
-  gethCommand = path.join(installDir, "bgnode", "geth", "geth");
+  gethCommand = path.join(installDir, "ethereum_clients", "geth", "geth");
 } else if (platform === "win32") {
-  gethCommand = path.join(installDir, "bgnode", "geth", "geth.exe");
+  gethCommand = path.join(installDir, "ethereum_clients", "geth", "geth.exe");
 }
 
 const logFilePath = path.join(
   installDir,
-  "bgnode",
+  "ethereum_clients",
   "geth",
   "logs",
   `geth_${getFormattedDateTime()}.log`
@@ -25,14 +35,6 @@ const logFilePath = path.join(
 
 const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
 
-function stripAnsiCodes(input) {
-  return input.replace(
-    /[\u001b\u009b][[()#;?]*(?:(?:[a-zA-Z\d]*(?:;[a-zA-Z\d]*)*)?\u0007|(?:\d{1,4}(?:;\d{0,4})*)?[0-9A-ORZcf-nq-uy=><~])/g,
-    ""
-  );
-}
-
-// const execution = pty.spawn(
 const execution = pty.spawn(
   gethCommand,
   [
@@ -49,9 +51,12 @@ const execution = pty.spawn(
     "--http.corsdomain",
     "*",
     "--datadir",
-    path.join(installDir, "bgnode", "geth", "database"),
+    path.join(installDir, "ethereum_clients", "geth", "database"),
     "--authrpc.jwtsecret",
     jwtPath,
+    "--metrics",
+    "--metrics.addr",
+    "127.0.0.1",
   ],
   {
     name: "xterm-color",
@@ -68,12 +73,11 @@ execution.on("data", (data) => {
   if (process.send) {
     process.send({ log: data });
   }
-  process.stdout.write(data); // Also log to console for real-time feedback
 });
 
 execution.on("exit", (code) => {
-  const exitMessage = `geth process exited with code ${code}`;
-  logStream.write(exitMessage);
+  // const exitMessage = `geth process exited with code ${code}`;
+  // logStream.write(exitMessage);
   logStream.end();
 });
 
@@ -83,13 +87,8 @@ execution.on("error", (err) => {
   if (process.send) {
     process.send({ log: errorMessage }); // Send error message to parent process
   }
-  console.error(errorMessage); // Log error message to console
+  debugToFile(`From geth.js: ${errorMessage}`, () => {});
 });
-
-function getFormattedDateTime() {
-  const now = new Date();
-  return now.toISOString().replace(/T/, "_").replace(/\..+/, "");
-}
 
 process.on("SIGINT", () => {
   execution.kill("SIGINT");

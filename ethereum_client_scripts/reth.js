@@ -1,23 +1,34 @@
-const pty = require("node-pty");
-const fs = require("fs");
-const path = require("path");
-const os = require("os");
+import pty from "node-pty";
+import fs from "fs";
+import os from "os";
+import path from "path";
+import { debugToFile } from "../helpers.js";
+import { stripAnsiCodes, getFormattedDateTime } from "../helpers.js";
+import minimist from "minimist";
 
-const installDir = process.env.INSTALL_DIR || os.homedir();
+let installDir = os.homedir();
 
-const jwtPath = path.join(os.homedir(), "bgnode", "jwt", "jwt.hex");
+const argv = minimist(process.argv.slice(2));
+
+// Check if a different install directory was provided via the `-d` option
+if (argv.d) {
+  installDir = argv.d;
+}
+
+const jwtPath = path.join(installDir, "ethereum_clients", "jwt", "jwt.hex");
 
 let rethCommand;
+
 const platform = os.platform();
 if (["darwin", "linux"].includes(platform)) {
-  rethCommand = path.join(os.homedir(), "bgnode", "reth", "reth");
+  rethCommand = path.join(installDir, "ethereum_clients", "reth", "reth");
 } else if (platform === "win32") {
-  rethCommand = path.join(os.homedir(), "bgnode", "reth", "reth.exe");
+  rethCommand = path.join(installDir, "ethereum_clients", "reth", "reth.exe");
 }
 
 const logFilePath = path.join(
-  os.homedir(),
-  "bgnode",
+  installDir,
+  "ethereum_clients",
   "reth",
   "logs",
   `reth_${getFormattedDateTime()}.log`
@@ -25,17 +36,11 @@ const logFilePath = path.join(
 
 const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
 
-function stripAnsiCodes(input) {
-  return input.replace(
-    /[\u001b\u009b][[()#;?]*(?:(?:[a-zA-Z\d]*(?:;[a-zA-Z\d]*)*)?\u0007|(?:\d{1,4}(?:;\d{0,4})*)?[0-9A-ORZcf-nq-uy=><~])/g,
-    ""
-  );
-}
-
 const execution = pty.spawn(
   `${rethCommand}`,
   [
     "node",
+    "--full",
     "--http",
     "--http.addr",
     "0.0.0.0",
@@ -51,9 +56,11 @@ const execution = pty.spawn(
     "--authrpc.port",
     "8551",
     "--datadir",
-    path.join(os.homedir(), "bgnode", "reth", "database"),
+    path.join(installDir, "ethereum_clients", "reth", "database"),
     "--authrpc.jwtsecret",
     `${jwtPath}`,
+    "--metrics",
+    "127.0.0.1:9001",
   ],
   {
     name: "xterm-color",
@@ -70,12 +77,11 @@ execution.on("data", (data) => {
   if (process.send) {
     process.send({ log: data });
   }
-  process.stdout.write(data); // Also log to console for real-time feedback
 });
 
 execution.on("exit", (code) => {
-  const exitMessage = `geth process exited with code ${code}`;
-  logStream.write(exitMessage);
+  // const exitMessage = `geth process exited with code ${code}`;
+  // logStream.write(exitMessage);
   logStream.end();
 });
 
@@ -85,13 +91,8 @@ execution.on("error", (err) => {
   if (process.send) {
     process.send({ log: errorMessage }); // Send error message to parent process
   }
-  console.error(errorMessage); // Log error message to console
+  debugToFile(`From reth.js: ${errorMessage}`, () => {});
 });
-
-function getFormattedDateTime() {
-  const now = new Date();
-  return now.toISOString().replace(/T/, "_").replace(/\..+/, "");
-}
 
 process.on("SIGINT", () => {
   execution.kill("SIGINT");

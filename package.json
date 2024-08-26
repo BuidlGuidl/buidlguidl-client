@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "type": "module",
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -17,5 +18,8 @@
     "node-pty": "^1.0.0",
     "systeminformation": "^5.22.8",
     "viem": "^2.13.3"
+  },
+  "optionalDependencies": {
+    "osx-temperature-sensor": "^1.0.8"
   }
 }
