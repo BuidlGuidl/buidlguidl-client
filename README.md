@@ -1,5 +1,5 @@
 # 📡 buidlguidl client
-This project will download clients and start an ethereum node. Currently it uses a Geth + Prysm client pair (with other options available soon). The script runs Geth in snap sync mode and will require ~1.2 TB.
+This project will download clients executables and start a Reth + Lighthouse node pair. Syncing the client databases will require ~1.2 TB of free space.
 
 ## Requirements
 - node (https://nodejs.org/en)
@@ -14,22 +14,14 @@ To get a node started:
   node index.js
   ```
 
-By default, index.js will create ~/bgnode which will contain the client executables, databases, and client logs. The script then displays a terminal view with scrolling client logs and some plots showing some machine stats. Full client logs are located in bgnode/geth/logs and bgnode/prysm/logs. Exiting the terminal view (control-c or q) will also close your clients (will take 15 seconds or so).
+By default, client executables, databases, and logs will be established within /ethereum_clients. After initialization steps, the script displays a terminal view with scrolling client logs and some plots showing some machine and chain stats. Full client logs are located in ethereum_clients/reth/logs and ethereum_clients/lighthouse/logs. Exiting the terminal view (control-c or q) will also gracefully close your clients (can take 15 seconds or so).
 
-If you want to specify the location of the bgnode directory, pass a -d option to index.js:
+If you want to specify a non-standard location for the ethereum_clients directory, pass a --directory (-d) option to index.js:
   ```bash
-  node index.js -d path/for/bgnode
+  node index.js --directory path/for/bgnode
   ```
 
-## Known Issues
-- The disk usage gauge in the terminal view will display your space for the OS drive even if you specify a install path on a separate drive.
-- Macs running OS 14.x can throw an error looking something like this: "shasum is not available. Either install it or run with PRYSM_ALLOW_UNVERIFIED_BINARIES=1". If you have that issue you likely need to run the following using homebrew (https://brew.sh/):
+If you want to use a Geth + Prysm client pair, pass those as --executionclient (-e) and --consensusclient (-c) options to index.js:
   ```bash
-  brew reinstall gnupg
+  node index.js --executionclient geth --consensusclient prysm
   ```
-  If the error persists you might also need to install perl-Digest-SHA like:
-    ```bash
-    brew install perl
-    brew install cpanminus
-    cpanm Digest::SHA
-    ```
