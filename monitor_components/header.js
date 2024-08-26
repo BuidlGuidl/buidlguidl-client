@@ -90,7 +90,7 @@ export function createHeader(grid, screen, messageForHeader) {
     debugToFile(`pic: ${err}`, () => {});
   }
 
-  const bigText = grid.set(0, 2, 1, 4, blessed.box, {
+  const bigText = grid.set(0, 2, 1, 5, blessed.box, {
     content: `{center}{bold}B u i d l G u i d l  C l i e n t {/bold}{/center}\n{center}{red-fg}${messageForHeader}{/red-fg}{/center}`,
     tags: true,
     align: "center",
@@ -104,7 +104,7 @@ export function createHeader(grid, screen, messageForHeader) {
   });
 
   // Create the IP address box
-  const ipAddressBox = grid.set(0, 6, 1, 4, blessed.box, {
+  const ipAddressBox = grid.set(0, 7, 1, 3, blessed.box, {
     content: `{center}{bold}IP Address: ${getIPAddress()} {/bold}\n{center}{bold}Public IP: Fetching...{/bold}{/center}`,
     tags: true,
     align: "center",
