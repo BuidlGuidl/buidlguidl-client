@@ -29,9 +29,8 @@ function getNetworkStats() {
         const timeDiff = (currentTime - lastStats.timestamp) / 1000;
 
         // Calculate bytes per second
-        const sentPerSecond =
-          (currentTotalSent - lastStats.totalSent) / timeDiff;
-        const receivedPerSecond =
+        let sentPerSecond = (currentTotalSent - lastStats.totalSent) / timeDiff;
+        let receivedPerSecond =
           (currentTotalReceived - lastStats.totalReceived) / timeDiff;
 
         // Update last stats for next calculation
