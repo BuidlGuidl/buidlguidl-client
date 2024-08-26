@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
-import { installDir } from "./commandLineOptions.js";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 
 export function setupDebugLogging(debugLogPath) {
   if (fs.existsSync(debugLogPath)) {
@@ -32,7 +33,10 @@ export function setupDebugLogging(debugLogPath) {
 }
 
 export function debugToFile(data, callback) {
-  const filePath = path.join(installDir, "bgnode", "debug.log");
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
+
+  const filePath = path.join(__dirname, "debug.log");
   const now = new Date();
   const timestamp = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
 
@@ -53,23 +57,6 @@ export function debugToFile(data, callback) {
     }
   });
 }
-
-// export function debugToFile(data, callback) {
-//   const filePath = path.join(installDir, "bgnode", "debug.log");
-//   const now = new Date();
-//   const timestamp = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
-//   const content =
-//     typeof data === "object"
-//       ? `${timestamp} - ${JSON.stringify(data, null, 2)}\n`
-//       : `${timestamp} - ${data}\n`;
-
-//   fs.writeFile(filePath, content, { flag: "a" }, (err) => {
-//     if (err) {
-//     } else {
-//       if (callback) callback();
-//     }
-//   });
-// }
 
 export function stripAnsiCodes(input) {
   return input.replace(

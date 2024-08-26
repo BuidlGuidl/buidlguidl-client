@@ -15,21 +15,21 @@ if (argv.d) {
   installDir = argv.d;
 }
 
-const jwtPath = path.join(installDir, "bgnode", "jwt", "jwt.hex");
+const jwtPath = path.join(installDir, "ethereum_clients", "jwt", "jwt.hex");
 
 let lighthouseCommand;
 const platform = os.platform();
 if (["darwin", "linux"].includes(platform)) {
   lighthouseCommand = path.join(
     installDir,
-    "bgnode",
+    "ethereum_clients",
     "lighthouse",
     "lighthouse"
   );
 } else if (platform === "win32") {
   lighthouseCommand = path.join(
     installDir,
-    "bgnode",
+    "ethereum_clients",
     "lighthouse",
     "lighthouse.exe"
   );
@@ -37,7 +37,7 @@ if (["darwin", "linux"].includes(platform)) {
 
 const logFilePath = path.join(
   installDir,
-  "bgnode",
+  "ethereum_clients",
   "lighthouse",
   "logs",
   `lighthouse_${getFormattedDateTime()}.log`
@@ -59,7 +59,7 @@ const consensus = pty.spawn(
     "600",
     "--disable-deposit-contract-sync",
     "--datadir",
-    path.join(installDir, "bgnode", "lighthouse", "database"),
+    path.join(installDir, "ethereum_clients", "lighthouse", "database"),
     "--execution-jwt",
     `${jwtPath}`,
     "--metrics",

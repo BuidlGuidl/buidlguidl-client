@@ -38,7 +38,7 @@ export function installMacLinuxExecutionClient(
   const { gethFileName, rethFileName } = configs[platform][arch];
 
   if (executionClient === "geth") {
-    const gethDir = path.join(installDir, "bgnode", "geth");
+    const gethDir = path.join(installDir, "ethereum_clients", "geth");
     const gethScript = path.join(gethDir, "geth");
     if (!fs.existsSync(gethScript)) {
       console.log("\nInstalling Geth.");
@@ -68,7 +68,7 @@ export function installMacLinuxExecutionClient(
       console.log("Geth is already installed.");
     }
   } else if (executionClient === "reth") {
-    const rethDir = path.join(installDir, "bgnode", "reth");
+    const rethDir = path.join(installDir, "ethereum_clients", "reth");
     const rethScript = path.join(rethDir, "reth");
     if (!fs.existsSync(rethScript)) {
       console.log("\nInstalling Reth.");
@@ -129,7 +129,7 @@ export function installMacLinuxConsensusClient(
   const { lighthouseFileName } = configs[platform][arch];
 
   if (consensusClient === "prysm") {
-    const prysmDir = path.join(installDir, "bgnode", "prysm");
+    const prysmDir = path.join(installDir, "ethereum_clients", "prysm");
     const prysmScript = path.join(prysmDir, "prysm.sh");
     if (!fs.existsSync(prysmScript)) {
       console.log("\nInstalling Prysm.");
@@ -147,7 +147,11 @@ export function installMacLinuxConsensusClient(
       console.log("Prysm is already installed.");
     }
   } else if (consensusClient === "lighthouse") {
-    const lighthouseDir = path.join(installDir, "bgnode", "lighthouse");
+    const lighthouseDir = path.join(
+      installDir,
+      "ethereum_clients",
+      "lighthouse"
+    );
     const lighthouseScript = path.join(lighthouseDir, "lighthouse");
     if (!fs.existsSync(lighthouseScript)) {
       console.log("\nInstalling Lighthouse.");
@@ -180,7 +184,7 @@ export function installMacLinuxConsensusClient(
 
 export function installWindowsExecutionClient(executionClient) {
   if (executionClient === "geth") {
-    const gethDir = path.join(installDir, "bgnode", "geth");
+    const gethDir = path.join(installDir, "ethereum_clients", "geth");
     const gethScript = path.join(gethDir, "geth.exe");
     if (!fs.existsSync(gethScript)) {
       console.log("\nInstalling Geth.");
@@ -210,7 +214,7 @@ export function installWindowsExecutionClient(executionClient) {
       console.log("Geth is already installed.");
     }
   } else if (executionClient === "reth") {
-    const rethDir = path.join(installDir, "bgnode", "reth");
+    const rethDir = path.join(installDir, "ethereum_clients", "reth");
     const rethScript = path.join(rethDir, "reth.exe");
     if (!fs.existsSync(rethScript)) {
       console.log("\nInstalling Reth.");
@@ -243,7 +247,7 @@ export function installWindowsExecutionClient(executionClient) {
 
 export function installWindowsConsensusClient(consensusClient) {
   if (consensusClient === "prysm") {
-    const prysmDir = path.join(installDir, "bgnode", "prysm");
+    const prysmDir = path.join(installDir, "ethereum_clients", "prysm");
     const prysmScript = path.join(prysmDir, "prysm.bat");
     if (!fs.existsSync(prysmScript)) {
       console.log("Installing Prysm.");
@@ -264,7 +268,11 @@ export function installWindowsConsensusClient(consensusClient) {
       console.log("Prysm is already installed.");
     }
   } else if (consensusClient === "lighthouse") {
-    const lighthouseDir = path.join(installDir, "bgnode", "lighthouse");
+    const lighthouseDir = path.join(
+      installDir,
+      "ethereum_clients",
+      "lighthouse"
+    );
     const lighthouseScript = path.join(lighthouseDir, "lighthouse.exe");
     if (!fs.existsSync(lighthouseScript)) {
       console.log("Installing Lighthouse.");
@@ -300,10 +308,17 @@ export function downloadRethSnapshot(rethDir, platform) {
 
   if (
     !fs.existsSync(
-      path.join(installDir, "bgnode", "reth", "database", "db", "mdbx.dat")
+      path.join(
+        installDir,
+        "ethereum_clients",
+        "reth",
+        "database",
+        "db",
+        "mdbx.dat"
+      )
     ) ||
     !fs.existsSync(
-      path.join(installDir, "bgnode", "reth", "database", "blobstore")
+      path.join(installDir, "ethereum_clients", "reth", "database", "blobstore")
     )
   ) {
     console.log("\nDownloading Reth snapshot.");

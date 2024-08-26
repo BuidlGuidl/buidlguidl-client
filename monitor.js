@@ -73,14 +73,14 @@ export function initializeMonitoring(
 
     const executionLogsPath = path.join(
       installDir,
-      "bgnode",
+      "ethereum_clients",
       executionClient,
       "logs"
     );
 
     const consensusLogsPath = path.join(
       installDir,
-      "bgnode",
+      "ethereum_clients",
       consensusClient,
       "logs"
     );

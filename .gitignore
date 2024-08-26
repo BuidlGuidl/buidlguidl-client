@@ -128,3 +128,10 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Reth, Geth, Lighthouse, and Prysm executables, logs, and databases
+ethereum_clients/*
+!ethereum_clients/.gitkeep
+
+# Debug log
+debug.log

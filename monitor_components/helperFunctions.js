@@ -6,7 +6,7 @@ import { installDir } from "../commandLineOptions.js";
 
 const progressFilePath = path.join(
   installDir,
-  "bgnode",
+  "ethereum_clients",
   "progressMonitor.json"
 );
 

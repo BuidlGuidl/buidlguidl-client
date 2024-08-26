@@ -26,11 +26,11 @@ const rethVer = "1.0.0";
 const prysmVer = "5.1.0";
 const lighthouseVer = "5.2.0";
 
-const lockFilePath = path.join(installDir, "bgnode", "script.lock");
+const lockFilePath = path.join(installDir, "ethereum_clients", "script.lock");
 
-const CONFIG = {
-  debugLogPath: path.join(installDir, "bgnode", "debugIndex.log"),
-};
+// const CONFIG = {
+//   debugLogPath: path.join(installDir, "ethereum_clients", "debugIndex.log"),
+// };
 
 function createJwtSecret(jwtDir) {
   if (!fs.existsSync(jwtDir)) {
@@ -168,7 +168,12 @@ function startClient(clientName, installDir) {
   } else if (clientName === "lighthouse") {
     clientCommand = path.join(__dirname, "node_clients/lighthouse.js");
   } else {
-    clientCommand = path.join(installDir, "bgnode", clientName, clientName);
+    clientCommand = path.join(
+      installDir,
+      "ethereum_clients",
+      clientName,
+      clientName
+    );
   }
 
   clientArgs.push("-d", installDir);
@@ -242,7 +247,7 @@ function removeLockFile() {
   }
 }
 
-const jwtDir = path.join(installDir, "bgnode", "jwt");
+const jwtDir = path.join(installDir, "ethereum_clients", "jwt");
 const platform = os.platform();
 
 if (["darwin", "linux"].includes(platform)) {

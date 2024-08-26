@@ -15,19 +15,24 @@ if (argv.d) {
   installDir = argv.d;
 }
 
-const jwtPath = path.join(installDir, "bgnode", "jwt", "jwt.hex");
+const jwtPath = path.join(installDir, "ethereum_clients", "jwt", "jwt.hex");
 
 let prysmCommand;
 const platform = os.platform();
 if (["darwin", "linux"].includes(platform)) {
-  prysmCommand = path.join(installDir, "bgnode", "prysm", "prysm.sh");
+  prysmCommand = path.join(installDir, "ethereum_clients", "prysm", "prysm.sh");
 } else if (platform === "win32") {
-  prysmCommand = path.join(installDir, "bgnode", "prysm", "prysm.exe");
+  prysmCommand = path.join(
+    installDir,
+    "ethereum_clients",
+    "prysm",
+    "prysm.exe"
+  );
 }
 
 const logFilePath = path.join(
   installDir,
-  "bgnode",
+  "ethereum_clients",
   "prysm",
   "logs",
   `prysm_${getFormattedDateTime()}.log`
@@ -47,7 +52,7 @@ const consensus = pty.spawn(
     "--checkpoint-sync-url=https://mainnet-checkpoint-sync.attestant.io/",
     "--genesis-beacon-api-url=https://mainnet-checkpoint-sync.attestant.io/",
     "--datadir",
-    path.join(installDir, "bgnode", "prysm", "database"),
+    path.join(installDir, "ethereum_clients", "prysm", "database"),
     "--accept-terms-of-use=true",
     "--jwt-secret",
     jwtPath,

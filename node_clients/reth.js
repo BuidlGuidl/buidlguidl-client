@@ -15,20 +15,20 @@ if (argv.d) {
   installDir = argv.d;
 }
 
-const jwtPath = path.join(installDir, "bgnode", "jwt", "jwt.hex");
+const jwtPath = path.join(installDir, "ethereum_clients", "jwt", "jwt.hex");
 
 let rethCommand;
 
 const platform = os.platform();
 if (["darwin", "linux"].includes(platform)) {
-  rethCommand = path.join(installDir, "bgnode", "reth", "reth");
+  rethCommand = path.join(installDir, "ethereum_clients", "reth", "reth");
 } else if (platform === "win32") {
-  rethCommand = path.join(installDir, "bgnode", "reth", "reth.exe");
+  rethCommand = path.join(installDir, "ethereum_clients", "reth", "reth.exe");
 }
 
 const logFilePath = path.join(
   installDir,
-  "bgnode",
+  "ethereum_clients",
   "reth",
   "logs",
   `reth_${getFormattedDateTime()}.log`
@@ -56,7 +56,7 @@ const execution = pty.spawn(
     "--authrpc.port",
     "8551",
     "--datadir",
-    path.join(installDir, "bgnode", "reth", "database"),
+    path.join(installDir, "ethereum_clients", "reth", "database"),
     "--authrpc.jwtsecret",
     `${jwtPath}`,
     "--metrics",

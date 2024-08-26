@@ -1,11 +1,14 @@
-import os from "os";
 import fs from "fs";
 import minimist from "minimist";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 
 /// Set default command line option values
 let executionClient = "reth";
 let consensusClient = "lighthouse";
-let installDir = os.homedir();
+
+const filename = fileURLToPath(import.meta.url);
+let installDir = dirname(filename);
 
 function showHelp() {
   console.log("");
@@ -16,7 +19,7 @@ function showHelp() {
     "  -c, --consensusclient <client>  Specify the consensus client ('lighthouse' or 'prysm')"
   );
   console.log(
-    "  -d, --directory <path>          Specify the install directory (defaults to ~)"
+    "  -d, --directory <path>          Specify ethereum client executable, database, and logs directory (defaults to buidlguidl-client/ethereum_clients)"
   );
   console.log(
     "  -h, --help                      Display this help message and exit"

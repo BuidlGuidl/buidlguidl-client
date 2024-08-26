@@ -15,19 +15,19 @@ if (argv.d) {
   installDir = argv.d;
 }
 
-const jwtPath = path.join(installDir, "bgnode", "jwt", "jwt.hex");
+const jwtPath = path.join(installDir, "ethereum_clients", "jwt", "jwt.hex");
 
 let gethCommand;
 const platform = os.platform();
 if (["darwin", "linux"].includes(platform)) {
-  gethCommand = path.join(installDir, "bgnode", "geth", "geth");
+  gethCommand = path.join(installDir, "ethereum_clients", "geth", "geth");
 } else if (platform === "win32") {
-  gethCommand = path.join(installDir, "bgnode", "geth", "geth.exe");
+  gethCommand = path.join(installDir, "ethereum_clients", "geth", "geth.exe");
 }
 
 const logFilePath = path.join(
   installDir,
-  "bgnode",
+  "ethereum_clients",
   "geth",
   "logs",
   `geth_${getFormattedDateTime()}.log`
@@ -51,7 +51,7 @@ const execution = pty.spawn(
     "--http.corsdomain",
     "*",
     "--datadir",
-    path.join(installDir, "bgnode", "geth", "database"),
+    path.join(installDir, "ethereum_clients", "geth", "database"),
     "--authrpc.jwtsecret",
     jwtPath,
     "--metrics",

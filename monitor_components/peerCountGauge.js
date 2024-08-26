@@ -62,7 +62,6 @@ async function getConsensusPeers(consensusClient) {
       `curl -s http://localhost:5054/metrics | grep -E '^${searchString} '`,
       (error, stdout, stderr) => {
         if (error) {
-          debugToFile(`getConsensusPeers(): ${error.message}`, () => {});
           return reject(error);
         }
         if (stderr) {
