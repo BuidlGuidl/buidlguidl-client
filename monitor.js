@@ -42,7 +42,7 @@ import { createHeader } from "./monitor_components/header.js";
 let executionClientGlobal;
 let consensusClientGlobal;
 
-export function initializeMonitoring(
+export async function initializeMonitoring(
   messageForHeader,
   executionClient,
   consensusClient,
@@ -87,11 +87,11 @@ export function initializeMonitoring(
 
     const logFilePathExecution = path.join(
       executionLogsPath,
-      getLatestLogFile(executionLogsPath, executionClient)
+      await getLatestLogFile(executionLogsPath, executionClient)
     );
     const logFilePathConsensus = path.join(
       consensusLogsPath,
-      getLatestLogFile(consensusLogsPath, consensusClient)
+      await getLatestLogFile(consensusLogsPath, consensusClient)
     );
 
     debugToFile(

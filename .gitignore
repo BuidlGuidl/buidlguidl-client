@@ -135,3 +135,6 @@ ethereum_clients/*
 
 # Debug log
 debug.log
+
+# Mac-specific finder file
+.DS_Store

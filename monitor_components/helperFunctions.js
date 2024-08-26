@@ -20,37 +20,92 @@ if (os.platform() == "darwin") {
 }
 export { layoutHeightThresh };
 
+// export function getLatestLogFile(dir, client) {
+//   try {
+//     const files = fs.readdirSync(dir);
+//     let logFiles;
+//     if (client === "geth") {
+//       logFiles = files.filter(
+//         (file) => file.startsWith("geth_") && file.endsWith(".log")
+//       );
+//     } else if (client === "reth") {
+//       logFiles = files.filter(
+//         (file) => file.startsWith("reth_") && file.endsWith(".log")
+//       );
+//     } else if (client === "prysm") {
+//       logFiles = files.filter(
+//         (file) => file.startsWith("prysm_") && file.endsWith(".log")
+//       );
+//     } else if (client === "lighthouse") {
+//       logFiles = files.filter(
+//         (file) => file.startsWith("lighthouse_") && file.endsWith(".log")
+//       );
+//     } else {
+//       debugToFile(
+//         `getLatestLogFile(): Invalid client specified. Must be 'geth', 'reth', 'prysm', or 'lighthouse'.`,
+//         () => {}
+//       );
+//     }
+//     logFiles.sort(
+//       (a, b) =>
+//         fs.statSync(path.join(dir, b)).mtime -
+//         fs.statSync(path.join(dir, a)).mtime
+//     );
+//     return logFiles[0];
+//   } catch (error) {
+//     debugToFile(`getLatestLogFile(): ${error}`, () => {});
+//   }
+// }
+
 export function getLatestLogFile(dir, client) {
-  const files = fs.readdirSync(dir);
-  let logFiles;
-  if (client === "geth") {
-    logFiles = files.filter(
-      (file) => file.startsWith("geth_") && file.endsWith(".log")
+  try {
+    const files = fs.readdirSync(dir);
+    let logFiles;
+    if (client === "geth") {
+      logFiles = files.filter(
+        (file) => file.startsWith("geth_") && file.endsWith(".log")
+      );
+    } else if (client === "reth") {
+      logFiles = files.filter(
+        (file) => file.startsWith("reth_") && file.endsWith(".log")
+      );
+    } else if (client === "prysm") {
+      logFiles = files.filter(
+        (file) => file.startsWith("prysm_") && file.endsWith(".log")
+      );
+    } else if (client === "lighthouse") {
+      logFiles = files.filter(
+        (file) => file.startsWith("lighthouse_") && file.endsWith(".log")
+      );
+    } else {
+      debugToFile(
+        `getLatestLogFile(): Invalid client specified. Must be 'geth', 'reth', 'prysm', or 'lighthouse'.`,
+        () => {}
+      );
+    }
+    logFiles.sort(
+      (a, b) =>
+        fs.statSync(path.join(dir, b)).mtime -
+        fs.statSync(path.join(dir, a)).mtime
     );
-  } else if (client === "reth") {
-    logFiles = files.filter(
-      (file) => file.startsWith("reth_") && file.endsWith(".log")
-    );
-  } else if (client === "prysm") {
-    logFiles = files.filter(
-      (file) => file.startsWith("prysm_") && file.endsWith(".log")
-    );
-  } else if (client === "lighthouse") {
-    logFiles = files.filter(
-      (file) => file.startsWith("lighthouse_") && file.endsWith(".log")
-    );
-  } else {
-    debugToFile(
-      `getLatestLogFile(): Invalid client specified. Must be 'geth', 'reth', 'prysm', or 'lighthouse'.`,
-      () => {}
-    );
+
+    if (logFiles[0]) {
+      return logFiles[0];
+    } else {
+      debugToFile(
+        `getLatestLogFile(): No log file found, retrying in 1 second...`,
+        () => {}
+      );
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(getLatestLogFile(dir, client));
+        }, 1000);
+      });
+    }
+  } catch (error) {
+    debugToFile(`getLatestLogFile(): ${error}`, () => {});
+    return undefined;
   }
-  logFiles.sort(
-    (a, b) =>
-      fs.statSync(path.join(dir, b)).mtime -
-      fs.statSync(path.join(dir, a)).mtime
-  );
-  return logFiles[0];
 }
 
 export function saveProgress(progress) {
