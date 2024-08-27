@@ -314,6 +314,32 @@ function setupUI(
         statusBox.width = statusBox.width + statusBoxGap;
       }
 
+      if (screen.children.includes(rethStageGauge)) {
+        let rethStageGaugeRight =
+          rethStageGauge.left + rethStageGauge.width - 1;
+        let rethStageGaugeGap = peerCountGauge.left - rethStageGaugeRight - 1;
+        if (rethStageGaugeGap != 0) {
+          rethStageGauge.width = rethStageGauge.width + rethStageGaugeGap;
+        }
+      }
+
+      if (screen.children.includes(gethStageGauge)) {
+        let gethStageGaugeRight =
+          gethStageGauge.left + gethStageGauge.width - 1;
+        let gethStageGaugeGap = peerCountGauge.left - gethStageGaugeRight - 1;
+        if (gethStageGaugeGap != 0) {
+          gethStageGauge.width = gethStageGauge.width + gethStageGaugeGap;
+        }
+      }
+
+      if (screen.children.includes(chainInfoBox)) {
+        let chainInfoBoxRight = chainInfoBox.left + chainInfoBox.width - 1;
+        let chainInfoBoxGap = peerCountGauge.left - chainInfoBoxRight - 1;
+        if (chainInfoBoxGap != 0) {
+          chainInfoBox.width = chainInfoBox.width + chainInfoBoxGap;
+        }
+      }
+
       let peerCountGaugeRight = peerCountGauge.left + peerCountGauge.width - 1;
       let peerCountGaugeGap = screen.width - peerCountGaugeRight - 1;
       if (peerCountGaugeGap != 0) {
