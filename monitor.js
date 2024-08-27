@@ -209,32 +209,96 @@ function setupUI(
   setInterval(() => updateStatusBox(statusBox, screen), 5000);
   setInterval(() => updateChainInfoBox(chainInfoBox, screen), 5000);
 
-  function fixBottomMargins() {
-    let executionLogBottom = executionLog.top + executionLog.height - 1;
-    let executionLogGap = consensusLog.top - executionLogBottom - 1;
-    if (executionLogGap != 0) {
-      executionLog.height = executionLog.height + executionLogGap;
-    }
+  function fixBottomMargins(screen) {
+    try {
+      let executionLogBottom = executionLog.top + executionLog.height - 1;
+      let executionLogGap = consensusLog.top - executionLogBottom - 1;
+      if (executionLogGap != 0) {
+        executionLog.height = executionLog.height + executionLogGap;
+      }
 
-    let statusBoxBottom = statusBox.top + statusBox.height - 1;
-    let statusBoxGap = peerCountGauge.top - statusBoxBottom - 1;
-    if (statusBoxGap != 0) {
-      statusBox.height = statusBox.height + statusBoxGap;
-    }
+      let statusBoxBottom = statusBox.top + statusBox.height - 1;
+      let statusBoxGap = peerCountGauge.top - statusBoxBottom - 1;
+      if (statusBoxGap != 0) {
+        statusBox.height = statusBox.height + statusBoxGap;
+      }
 
-    // debugToFile(`executionLog.height: ${executionLog.height}`, () => {});
-    // debugToFile(`executionLogGap: ${executionLogGap}`, () => {});
-    // debugToFile(`\n`, () => {});
+      let peerCountGaugeBottom = peerCountGauge.top + peerCountGauge.height - 1;
+      let peerCountGaugeGap = bandwidthBox.top - peerCountGaugeBottom - 1;
+      if (peerCountGaugeGap != 0) {
+        peerCountGauge.height = peerCountGauge.height + peerCountGaugeGap;
+      }
+
+      let bandwidthBoxBottom = bandwidthBox.top + bandwidthBox.height - 1;
+      let bandwidthBoxGap = systemStatsGauge.top - bandwidthBoxBottom - 1;
+      if (bandwidthBoxGap != 0) {
+        bandwidthBox.height = bandwidthBox.height + bandwidthBoxGap;
+      }
+
+      let consensusLogBottom = consensusLog.top + consensusLog.height - 1;
+      let consensusLogGap = cpuLine.top - consensusLogBottom - 1;
+      if (consensusLogGap != 0) {
+        consensusLog.height = consensusLog.height + consensusLogGap;
+      }
+
+      if (screen.children.includes(rethStageGauge)) {
+        let rethStageGaugeBottom =
+          rethStageGauge.top + rethStageGauge.height - 1;
+        let rethStageGaugeGap = cpuLine.top - rethStageGaugeBottom - 1;
+        if (rethStageGaugeGap != 0) {
+          rethStageGauge.height = rethStageGauge.height + rethStageGaugeGap;
+        }
+      }
+
+      if (screen.children.includes(gethStageGauge)) {
+        let gethStageGaugeBottom =
+          gethStageGauge.top + gethStageGauge.height - 1;
+        let gethStageGaugeGap = cpuLine.top - gethStageGaugeBottom - 1;
+        if (gethStageGaugeGap != 0) {
+          gethStageGauge.height = gethStageGauge.height + gethStageGaugeGap;
+        }
+      }
+
+      if (screen.children.includes(chainInfoBox)) {
+        let chainInfoBoxBottom = chainInfoBox.top + chainInfoBox.height - 1;
+        let chainInfoBoxGap = cpuLine.top - chainInfoBoxBottom - 1;
+        if (chainInfoBoxGap != 0) {
+          chainInfoBox.height = chainInfoBox.height + chainInfoBoxGap;
+        }
+      }
+
+      let systemStatsGaugeBottom =
+        systemStatsGauge.top + systemStatsGauge.height - 1;
+      let systemStatsGaugeGap = cpuLine.top - systemStatsGaugeBottom - 1;
+      if (systemStatsGaugeGap != 0) {
+        systemStatsGauge.height = systemStatsGauge.height + systemStatsGaugeGap;
+      }
+
+      let cpuLineBottom = cpuLine.top + cpuLine.height - 1;
+      let cpuLineGap = screen.height - cpuLineBottom - 1;
+      if (cpuLineGap != 0) {
+        cpuLine.height = cpuLine.height + cpuLineGap;
+      }
+
+      let networkLineBottom = networkLine.top + networkLine.height - 1;
+      let networkLineGap = screen.height - networkLineBottom - 1;
+      if (networkLineGap != 0) {
+        networkLine.height = networkLine.height + networkLineGap;
+      }
+    } catch (error) {
+      debugToFile(`fixBottomMargins(): ${error}`, () => {});
+    }
   }
 
-  fixBottomMargins();
+  fixBottomMargins(screen);
 
   screen.render();
 
   screen.on("resize", () => {
+    fixBottomMargins(screen);
+
     cpuLine.emit("attach");
     networkLine.emit("attach");
-    fixBottomMargins();
 
     screen.render();
   });
