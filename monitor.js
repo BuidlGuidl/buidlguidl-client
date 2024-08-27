@@ -151,7 +151,6 @@ function setupUI(
 ) {
   const screen = blessed.screen();
   suppressMouseOutput(screen);
-  // const grid = new contrib.grid({ rows: 9, cols: 9, screen: screen });
   const grid = new contrib.grid({ rows: 9, cols: 10, screen: screen });
 
   let executionClientLabel;
@@ -210,36 +209,35 @@ function setupUI(
   setInterval(() => updateStatusBox(statusBox, screen), 5000);
   setInterval(() => updateChainInfoBox(chainInfoBox, screen), 5000);
 
+  function fixBottomMargins() {
+    let executionLogBottom = executionLog.top + executionLog.height - 1;
+    let executionLogGap = consensusLog.top - executionLogBottom - 1;
+    if (executionLogGap != 0) {
+      executionLog.height = executionLog.height + executionLogGap;
+    }
+
+    let statusBoxBottom = statusBox.top + statusBox.height - 1;
+    let statusBoxGap = peerCountGauge.top - statusBoxBottom - 1;
+    if (statusBoxGap != 0) {
+      statusBox.height = statusBox.height + statusBoxGap;
+    }
+
+    // debugToFile(`executionLog.height: ${executionLog.height}`, () => {});
+    // debugToFile(`executionLogGap: ${executionLogGap}`, () => {});
+    // debugToFile(`\n`, () => {});
+  }
+
+  fixBottomMargins();
+
   screen.render();
 
   screen.on("resize", () => {
     cpuLine.emit("attach");
     networkLine.emit("attach");
+    fixBottomMargins();
 
     screen.render();
   });
-
-  // screen.on("resize", () => {
-  //   // debugToFile(`screen.height: ${screen.height}`, () => {});
-
-  //   // debugToFile(`executionLog.height: ${executionLog.height}`, () => {});
-  //   // debugToFile(`executionLog.top: ${executionLog.top}`, () => {});
-  //   // debugToFile(`executionLog.bottom: ${executionLog.bottom}`, () => {});
-
-  //   // debugToFile(
-  //   //   `consensusLog.top - executionLog.bottom: ${
-  //   //     consensusLog.top - executionLog.bottom
-  //   //   }`,
-  //   //   () => {}
-  //   // );
-
-  //   debugToFile(
-  //     `executionLog.bottom - consensusLog.top: ${
-  //       executionLog.bottom - consensusLog.top
-  //     }`,
-  //     () => {}
-  //   );
-  // });
 
   screen.key(["escape", "q", "C-c"], function (ch, key) {
     if (runsClient) {

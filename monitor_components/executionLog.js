@@ -15,13 +15,5 @@ export function createExecutionLog(grid, screen, executionClientLabel) {
     shrink: true,
   });
 
-  // screen.on("resize", () => {
-  //   debugToFile(`screen.height: ${screen.height}`, () => {});
-
-  //   debugToFile(`executionLog.height: ${executionLog.height}`, () => {});
-  //   debugToFile(`executionLog.top: ${executionLog.top}`, () => {});
-  //   debugToFile(`executionLog.bottom: ${executionLog.bottom}`, () => {});
-  // });
-
   return executionLog;
 }
