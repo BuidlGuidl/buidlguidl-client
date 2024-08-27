@@ -186,7 +186,11 @@ function setupUI(
     rethStageGauge = createRethStageGauge(grid, screen);
   }
 
-  createHeader(grid, screen, messageForHeader);
+  const { pic, bigText, ipAddressBox } = createHeader(
+    grid,
+    screen,
+    messageForHeader
+  );
 
   screen.append(executionLog);
   screen.append(consensusLog);
@@ -290,12 +294,71 @@ function setupUI(
     }
   }
 
+  function fixRightMargins(screen) {
+    try {
+      // let bigTextRight = bigText.left + bigText.width - 1;
+      // let bigTextGap = ipAddressBox.left - bigTextRight - 1;
+      // if (bigTextGap != 0) {
+      //   bigTextGap.width = bigTextGap.width + bigTextGap;
+      // }
+
+      let ipAddressBoxRight = ipAddressBox.left + ipAddressBox.width - 1;
+      let ipAddressBoxGap = screen.width - ipAddressBoxRight - 1;
+      if (ipAddressBoxGap != 0) {
+        ipAddressBox.width = ipAddressBox.width + ipAddressBoxGap;
+      }
+
+      let statusBoxRight = statusBox.left + statusBox.width - 1;
+      let statusBoxGap = screen.width - statusBoxRight - 1;
+      if (statusBoxGap != 0) {
+        statusBox.width = statusBox.width + statusBoxGap;
+      }
+
+      let peerCountGaugeRight = peerCountGauge.left + peerCountGauge.width - 1;
+      let peerCountGaugeGap = screen.width - peerCountGaugeRight - 1;
+      if (peerCountGaugeGap != 0) {
+        peerCountGauge.width = peerCountGauge.width + peerCountGaugeGap;
+      }
+
+      let bandwidthBoxRight = bandwidthBox.left + bandwidthBox.width - 1;
+      let bandwidthBoxGap = screen.width - bandwidthBoxRight - 1;
+      if (bandwidthBoxGap != 0) {
+        bandwidthBox.width = bandwidthBox.width + bandwidthBoxGap;
+      }
+
+      let systemStatsGaugeRight =
+        systemStatsGauge.left + systemStatsGauge.width - 1;
+      let systemStatsGaugeGap = screen.width - systemStatsGaugeRight - 1;
+      if (systemStatsGaugeGap != 0) {
+        systemStatsGauge.width = systemStatsGauge.width + systemStatsGaugeGap;
+      }
+
+      let networkLineRight = networkLine.left + networkLine.width - 1;
+      let networkLineGap = screen.width - networkLineRight - 1;
+      if (networkLineGap != 0) {
+        networkLine.width = networkLine.width + networkLineGap;
+      }
+
+      // let networkLineRight = networkLine.left + networkLine.width - 1;
+      // let networkLineGap = screen.width - networkLineRight - 1;
+
+      // if (networkLineGap !== 1) {
+      //   // Adjust the width to ensure the right margin is exactly 1 character
+      //   networkLine.width = networkLine.width + (networkLineGap - 1);
+      // }
+    } catch (error) {
+      debugToFile(`fixRightMargins(): ${error}`, () => {});
+    }
+  }
+
   fixBottomMargins(screen);
+  fixRightMargins(screen);
 
   screen.render();
 
   screen.on("resize", () => {
     fixBottomMargins(screen);
+    fixRightMargins(screen);
 
     cpuLine.emit("attach");
     networkLine.emit("attach");
