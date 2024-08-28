@@ -8,6 +8,7 @@ import { debugToFile } from "./helpers.js";
 let executionClient = "reth";
 let consensusClient = "lighthouse";
 let executionPeerPort = null;
+let consensusPeerPorts = [null, null];
 
 const filename = fileURLToPath(import.meta.url);
 let installDir = dirname(filename);
@@ -17,19 +18,33 @@ const optionsFilePath = join(installDir, "options.json");
 function showHelp() {
   console.log("");
   console.log(
-    "  -e, --executionclient <client>  Specify the execution client ('reth' or 'geth')"
+    "  -e, --executionclient <client>            Specify the execution client ('reth' or 'geth')"
+  );
+  console.log("                                            Default: reth\n");
+  console.log(
+    "  -c, --consensusclient <client>            Specify the consensus client ('lighthouse' or 'prysm')"
   );
   console.log(
-    "  -c, --consensusclient <client>  Specify the consensus client ('lighthouse' or 'prysm')"
+    "                                            Default: lighthouse\n"
   );
   console.log(
-    "  -ep, --executionpeerport <port> Specify the execution peer port (must be a number)"
+    "  -ep, --executionpeerport <port>           Specify the execution peer port (must be a number)"
+  );
+  console.log("                                            Default: 30303\n");
+  console.log(
+    "  -cp, --consensuspeerports <port>,<port>   Specify the execution peer ports (must be two comma-separated numbers)"
   );
   console.log(
-    "  -d, --directory <path>          Specify ethereum client executable, database, and logs directory (defaults to buidlguidl-client/ethereum_clients)"
+    "                                            lighthouse defaults: 9000,9001. prysm defaults: 12000,13000\n"
   );
   console.log(
-    "  -h, --help                      Display this help message and exit"
+    "  -d, --directory <path>                    Specify ethereum client executable, database, and logs directory"
+  );
+  console.log(
+    "                                            Default: buidlguidl-client/ethereum_clients\n"
+  );
+  console.log(
+    "  -h, --help                                Display this help message and exit"
   );
   console.log("");
 }
@@ -48,6 +63,7 @@ function saveOptionsToFile() {
     executionClient,
     consensusClient,
     executionPeerPort,
+    consensusPeerPorts,
     installDir,
   };
   fs.writeFileSync(optionsFilePath, JSON.stringify(options), "utf8");
@@ -71,6 +87,7 @@ if (fs.existsSync(optionsFilePath)) {
     executionClient = options.executionClient;
     consensusClient = options.consensusClient;
     executionPeerPort = options.executionPeerPort;
+    consensusPeerPorts = options.consensusPeerPorts;
     installDir = options.installDir;
     optionsLoaded = true;
   } catch (error) {
@@ -88,10 +105,15 @@ function deleteOptionsFile() {
   }
 }
 
-// Preprocess arguments to handle "-ep" as an alias for "--executionpeerport"
-const args = process.argv
-  .slice(2)
-  .flatMap((arg) => (arg === "-ep" ? "--executionpeerport" : arg));
+// Preprocess arguments to handle "-ep" and "-cp" as aliases
+const args = process.argv.slice(2).flatMap((arg) => {
+  if (arg === "-ep") {
+    return "--executionpeerport";
+  } else if (arg === "-cp") {
+    return "--consensuspeerports";
+  }
+  return arg;
+});
 
 // If options were not loaded from the file, process command-line arguments
 if (!optionsLoaded) {
@@ -102,6 +124,7 @@ if (!optionsLoaded) {
       "c",
       "consensusclient",
       "executionpeerport",
+      "consensuspeerports",
       "d",
       "directory",
     ],
@@ -149,6 +172,25 @@ if (!optionsLoaded) {
     }
   }
 
+  if (argv.consensuspeerports) {
+    consensusPeerPorts = argv.consensuspeerports
+      .split(",")
+      .map((port) => parseInt(port.trim(), 10));
+
+    // Check if there are exactly two ports and if both are valid numbers
+    if (consensusPeerPorts.length !== 2 || consensusPeerPorts.some(isNaN)) {
+      console.log(
+        "Invalid option for --consensuspeerports (-cp). Must be two comma-separated numbers (e.g., 9000,9001)."
+      );
+      process.exit(1);
+    }
+  }
+
+  console.log(
+    `Consensus peer ports: ${consensusPeerPorts[0]}, ${consensusPeerPorts[1]}`
+  );
+  // process.exit(0);
+
   if (argv.directory) {
     installDir = argv.directory;
     if (!isValidPath(installDir)) {
@@ -163,15 +205,13 @@ if (!optionsLoaded) {
     showHelp();
     process.exit(0);
   }
-
-  // Save the options to a file after processing command-line arguments
-  // saveOptionsToFile();
 }
 
 export {
   executionClient,
   consensusClient,
   executionPeerPort,
+  consensusPeerPorts,
   installDir,
   saveOptionsToFile,
   deleteOptionsFile,

@@ -16,6 +16,7 @@ import {
   executionClient,
   consensusClient,
   executionPeerPort,
+  consensusPeerPorts,
   installDir,
   saveOptionsToFile,
   deleteOptionsFile,
@@ -178,11 +179,19 @@ function startClient(clientName, installDir) {
     }
   } else if (clientName === "prysm") {
     clientCommand = path.join(__dirname, "ethereum_client_scripts/prysm.js");
+
+    if (consensusPeerPorts[0] !== null || consensusPeerPorts[1] !== null) {
+      clientArgs.push("--consensuspeerports", consensusPeerPorts);
+    }
   } else if (clientName === "lighthouse") {
     clientCommand = path.join(
       __dirname,
       "ethereum_client_scripts/lighthouse.js"
     );
+
+    if (consensusPeerPorts[0] !== null || consensusPeerPorts[1] !== null) {
+      clientArgs.push("--consensuspeerports", consensusPeerPorts);
+    }
   } else {
     clientCommand = path.join(
       installDir,
