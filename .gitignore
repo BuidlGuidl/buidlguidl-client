@@ -136,5 +136,8 @@ ethereum_clients/*
 # Debug log
 debug.log
 
+# Command line options json (loaded for secondary dashboard views)
+options.json
+
 # Mac-specific finder file
 .DS_Store

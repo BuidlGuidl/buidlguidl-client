@@ -16,6 +16,8 @@ import {
   executionClient,
   consensusClient,
   installDir,
+  saveOptionsToFile,
+  deleteOptionsFile,
 } from "./commandLineOptions.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -54,6 +56,9 @@ let consensusExited = false;
 
 function handleExit() {
   console.log("\n\n🛰️  Received exit signal\n");
+
+  deleteOptionsFile();
+
   try {
     // Check if both child processes have exited
     const checkExit = () => {
@@ -151,7 +156,6 @@ process.on("SIGINT", handleExit);
 process.on("SIGTERM", handleExit);
 
 process.on("SIGUSR2", () => {
-  // console.log("SIGUSR2 received");
   handleExit();
 });
 
@@ -276,6 +280,8 @@ const wsConfig = {
 };
 
 if (!isAlreadyRunning()) {
+  deleteOptionsFile();
+
   startClient(executionClient, installDir);
   startClient(consensusClient, installDir);
 
@@ -283,6 +289,7 @@ if (!isAlreadyRunning()) {
 
   runsClient = true;
   createLockFile();
+  saveOptionsToFile();
 } else {
   messageForHeader = "Dashboard View (client already running)";
   runsClient = false;
