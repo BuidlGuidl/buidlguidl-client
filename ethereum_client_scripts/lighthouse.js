@@ -7,12 +7,19 @@ import { stripAnsiCodes, getFormattedDateTime } from "../helpers.js";
 import minimist from "minimist";
 
 let installDir = os.homedir();
+let consensusPeerPorts = [9000, 9001];
 
 const argv = minimist(process.argv.slice(2));
 
 // Check if a different install directory was provided via the `--directory` option
 if (argv.directory) {
   installDir = argv.directory;
+}
+
+if (argv.consensuspeerports) {
+  consensusPeerPorts = argv.consensuspeerports
+    .split(",")
+    .map((port) => parseInt(port.trim(), 10));
 }
 
 const jwtPath = path.join(installDir, "ethereum_clients", "jwt", "jwt.hex");
@@ -51,6 +58,10 @@ const consensus = pty.spawn(
     "bn",
     "--network",
     "mainnet",
+    "--port",
+    consensusPeerPorts[0],
+    "--quic-port",
+    consensusPeerPorts[1],
     "--execution-endpoint",
     "http://localhost:8551",
     "--checkpoint-sync-url",
