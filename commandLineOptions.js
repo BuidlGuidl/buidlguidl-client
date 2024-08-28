@@ -7,6 +7,7 @@ import { debugToFile } from "./helpers.js";
 /// Set default command line option values
 let executionClient = "reth";
 let consensusClient = "lighthouse";
+let executionPeerPort = null;
 
 const filename = fileURLToPath(import.meta.url);
 let installDir = dirname(filename);
@@ -20,6 +21,9 @@ function showHelp() {
   );
   console.log(
     "  -c, --consensusclient <client>  Specify the consensus client ('lighthouse' or 'prysm')"
+  );
+  console.log(
+    "  -ep, --executionpeerport <port> Specify the execution peer port (must be a number)"
   );
   console.log(
     "  -d, --directory <path>          Specify ethereum client executable, database, and logs directory (defaults to buidlguidl-client/ethereum_clients)"
@@ -43,6 +47,7 @@ function saveOptionsToFile() {
   const options = {
     executionClient,
     consensusClient,
+    executionPeerPort,
     installDir,
   };
   fs.writeFileSync(optionsFilePath, JSON.stringify(options), "utf8");
@@ -65,6 +70,7 @@ if (fs.existsSync(optionsFilePath)) {
     const options = loadOptionsFromFile();
     executionClient = options.executionClient;
     consensusClient = options.consensusClient;
+    executionPeerPort = options.executionPeerPort;
     installDir = options.installDir;
     optionsLoaded = true;
   } catch (error) {
@@ -82,17 +88,30 @@ function deleteOptionsFile() {
   }
 }
 
+// Preprocess arguments to handle "-ep" as an alias for "--executionpeerport"
+const args = process.argv
+  .slice(2)
+  .flatMap((arg) => (arg === "-ep" ? "--executionpeerport" : arg));
+
 // If options were not loaded from the file, process command-line arguments
 if (!optionsLoaded) {
-  const argv = minimist(process.argv.slice(2), {
-    string: ["e", "executionclient", "c", "consensusclient", "d", "directory"],
-    boolean: ["h", "help"],
+  const argv = minimist(args, {
+    string: [
+      "e",
+      "executionclient",
+      "c",
+      "consensusclient",
+      "executionpeerport",
+      "d",
+      "directory",
+    ],
     alias: {
       e: "executionclient",
       c: "consensusclient",
       d: "directory",
       h: "help",
     },
+    boolean: ["h", "help"],
     unknown: (option) => {
       console.log(`Invalid option: ${option}`);
       showHelp();
@@ -104,7 +123,7 @@ if (!optionsLoaded) {
     executionClient = argv.executionclient;
     if (executionClient !== "reth" && executionClient !== "geth") {
       console.log(
-        "Invalid option for --executionclient. Use 'reth' or 'geth'."
+        "Invalid option for --executionclient (-e). Use 'reth' or 'geth'."
       );
       process.exit(1);
     }
@@ -114,7 +133,17 @@ if (!optionsLoaded) {
     consensusClient = argv.consensusclient;
     if (consensusClient !== "lighthouse" && consensusClient !== "prysm") {
       console.log(
-        "Invalid option for --consensusclient. Use 'lighthouse' or 'prysm'."
+        "Invalid option for --consensusclient (-c). Use 'lighthouse' or 'prysm'."
+      );
+      process.exit(1);
+    }
+  }
+
+  if (argv.executionpeerport) {
+    executionPeerPort = parseInt(argv.executionpeerport, 10);
+    if (executionPeerPort === "number" && !isNaN(executionPeerPort)) {
+      console.log(
+        "Invalid option for --executionpeerport (-ep). Must be a number."
       );
       process.exit(1);
     }
@@ -124,7 +153,7 @@ if (!optionsLoaded) {
     installDir = argv.directory;
     if (!isValidPath(installDir)) {
       console.log(
-        `Invalid option for --directory. '${installDir}' is not a valid path.`
+        `Invalid option for --directory (-d). '${installDir}' is not a valid path.`
       );
       process.exit(1);
     }
@@ -142,6 +171,7 @@ if (!optionsLoaded) {
 export {
   executionClient,
   consensusClient,
+  executionPeerPort,
   installDir,
   saveOptionsToFile,
   deleteOptionsFile,

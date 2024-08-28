@@ -10,9 +10,9 @@ let installDir = os.homedir();
 
 const argv = minimist(process.argv.slice(2));
 
-// Check if a different install directory was provided via the `-d` option
-if (argv.d) {
-  installDir = argv.d;
+// Check if a different install directory was provided via the `--directory` option
+if (argv.directory) {
+  installDir = argv.directory;
 }
 
 const jwtPath = path.join(installDir, "ethereum_clients", "jwt", "jwt.hex");

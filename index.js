@@ -15,6 +15,7 @@ import { initializeWSConnection } from "./ws_connection/wsConnection.js";
 import {
   executionClient,
   consensusClient,
+  executionPeerPort,
   installDir,
   saveOptionsToFile,
   deleteOptionsFile,
@@ -165,8 +166,16 @@ function startClient(clientName, installDir) {
 
   if (clientName === "geth") {
     clientCommand = path.join(__dirname, "ethereum_client_scripts/geth.js");
+
+    if (executionPeerPort != null) {
+      clientArgs.push("--executionpeerport", executionPeerPort);
+    }
   } else if (clientName === "reth") {
     clientCommand = path.join(__dirname, "ethereum_client_scripts/reth.js");
+
+    if (executionPeerPort != null) {
+      clientArgs.push("--executionpeerport", executionPeerPort);
+    }
   } else if (clientName === "prysm") {
     clientCommand = path.join(__dirname, "ethereum_client_scripts/prysm.js");
   } else if (clientName === "lighthouse") {
@@ -183,7 +192,7 @@ function startClient(clientName, installDir) {
     );
   }
 
-  clientArgs.push("-d", installDir);
+  clientArgs.push("--directory", installDir);
 
   const child = spawn("node", [clientCommand, ...clientArgs], {
     stdio: ["inherit", "pipe", "inherit"],
