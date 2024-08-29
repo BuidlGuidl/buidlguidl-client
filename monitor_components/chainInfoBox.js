@@ -79,17 +79,50 @@ async function getEthPrice() {
   }
 }
 
+// async function getTransactionCount() {
+//   try {
+//     const blockNumber = await localClient.getBlockNumber();
+//     const block = await localClient.getBlock({
+//       blockNumber: blockNumber,
+//     });
+//     const transactionCount = block.transactions.length;
+
+//     return transactionCount;
+//   } catch (error) {
+//     debugToFile(`getTransactionCount(): ${error}`, () => {});
+//   }
+// }
+
 async function getTransactionCount() {
   try {
-    const blockNumber = await localClient.getBlockNumber();
-    const block = await localClient.getBlock({
-      blockNumber: blockNumber,
-    });
-    const transactionCount = block.transactions.length;
+    const currentBlockNumber = await localClient.getBlockNumber();
 
-    return transactionCount;
+    // Create an array of block numbers for the most current block and the previous 4 blocks
+    const blockNumbers = [];
+    for (let i = 0; i < 5; i++) {
+      blockNumbers.push(currentBlockNumber - BigInt(i));
+    }
+
+    // Prepare batch requests for fetching the blocks
+    const blockRequests = blockNumbers.map((blockNumber) => ({
+      method: "eth_getBlockByNumber",
+      params: [blockNumber.toString(16), false], // 'false' to exclude full transactions, only hashes
+    }));
+
+    // Perform the batch request
+    const blocks = await localClient.batch(blockRequests);
+
+    debugToFile(`blocks: ${blocks}`, () => {});
+
+    // Extract transaction counts from the blocks
+    const transactionCounts = blocks.map((block) => block.transactions.length);
+
+    debugToFile(`transactionCounts: ${transactionCounts}`, () => {});
+
+    return transactionCounts;
   } catch (error) {
     debugToFile(`getTransactionCount(): ${error}`, () => {});
+    return [];
   }
 }
 
@@ -100,6 +133,8 @@ export async function populateChainInfoBox() {
     const gasPrice = await localClient.getGasPrice();
 
     let gasPriceGwei = Number(gasPrice) / 10 ** 9;
+
+    transactionCount = transactionCount[0];
 
     chainInfoBox.setContent(
       `ETH PRICE ($)\n${ethPrice}\n\nTRANSACTION COUNT\n${transactionCount}\n\nGAS PRICE (gwei)\n${gasPriceGwei}`
