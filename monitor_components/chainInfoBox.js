@@ -112,14 +112,10 @@ async function getTransactionCount() {
       )
     );
 
-    debugToFile(`blocks: ${JSON.stringify(blocks, null, 2)}`, () => {});
-
     // Extract transaction counts from the blocks
     const transactionCounts = blocks.map((block) => block.transactions.length);
 
-    debugToFile(`transactionCounts: ${transactionCounts}`, () => {});
-
-    return transactionCounts;
+    return { blockNumbers, transactionCounts };
   } catch (error) {
     debugToFile(`getTransactionCount(): ${error}`, () => {});
     return [];
@@ -129,13 +125,15 @@ async function getTransactionCount() {
 export async function populateChainInfoBox() {
   try {
     const ethPrice = await getEthPrice();
-    const transactionCounts = await getTransactionCount();
+    const { blockNumbers, transactionCounts } = await getTransactionCount();
     const gasPrice = await localClient.getGasPrice();
 
     let gasPriceGwei = Number(gasPrice) / 10 ** 9;
 
     chainInfoBox.setContent(
-      `ETH PRICE ($)\n${ethPrice}\n\nTRANSACTION COUNTS\n${transactionCounts.join(
+      `ETH PRICE ($)\n${ethPrice}\n\nBLOCK NUMBERS\n${blockNumbers.join(
+        ", "
+      )}\n\nTRANSACTION COUNTS\n${transactionCounts.join(
         ", "
       )}\n\nGAS PRICE (gwei)\n${gasPriceGwei}`
     );
