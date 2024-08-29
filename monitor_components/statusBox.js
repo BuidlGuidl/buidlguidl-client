@@ -6,7 +6,7 @@ export async function updateStatusBox(statusBox, screen) {
   try {
     const statusMessage = await passStatusMessage();
     statusBox.setContent(statusMessage);
-    screen.render();
+    // screen.render();
   } catch (error) {
     debugToFile(`updateStatusBox(): ${error}`, () => {});
   }
