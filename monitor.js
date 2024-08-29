@@ -431,11 +431,10 @@ function setupUI(
   };
 }
 
-function updateChainInfoBox(chainInfoBox, screen) {
+async function updateChainInfoBox(chainInfoBox, screen) {
   try {
     if (screen.children.includes(chainInfoBox)) {
-      populateChainInfoBox();
-      // screen.render();
+      await populateChainInfoBox(); // Ensure this is awaited
     }
   } catch (error) {
     debugToFile(`updateChainInfoBox(): ${error}`, () => {});
