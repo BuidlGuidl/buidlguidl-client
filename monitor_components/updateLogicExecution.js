@@ -241,9 +241,9 @@ export function setupLogStreaming(
 
 let statusMessage = "INITIALIZING...";
 
-async function createGethMessage() {
+async function createGethMessage(syncingStatus, blockNumber, latestBlock) {
   try {
-    const syncingStatus = await isSyncing();
+    // const syncingStatus = await isSyncing();
 
     if (syncingStatus) {
       const currentBlock = parseInt(syncingStatus.currentBlock, 16);
@@ -251,8 +251,8 @@ async function createGethMessage() {
 
       statusMessage = `SYNC IN PROGRESS\nCurrent Block: ${currentBlock}\nHighest Block: ${highestBlock}`;
     } else {
-      const blockNumber = await localClient.getBlockNumber();
-      const latestBlock = await mainnetClient.getBlockNumber();
+      // const blockNumber = await localClient.getBlockNumber();
+      // const latestBlock = await mainnetClient.getBlockNumber();
 
       if (
         blockNumber >= latestBlock ||
@@ -565,14 +565,11 @@ async function parseAndPopulateRethMetrics(rethSyncMetrics) {
   ]);
 }
 
-async function createRethMessage(syncingStatus) {
+async function createRethMessage(syncingStatus, blockNumber, latestBlock) {
   try {
     if (syncingStatus) {
       statusMessage = `SYNC IN PROGRESS`;
     } else {
-      const blockNumber = await localClient.getBlockNumber();
-      const latestBlock = await mainnetClient.getBlockNumber();
-
       if (
         blockNumber >= latestBlock ||
         blockNumber === latestBlock - BigInt(1)
@@ -953,11 +950,13 @@ export async function showHideGethWidgets(
 export async function passStatusMessage() {
   try {
     const syncingStatus = await isSyncing();
+    const blockNumber = await localClient.getBlockNumber();
+    const latestBlock = await mainnetClient.getBlockNumber();
 
     if (executionClient == "geth") {
-      createGethMessage();
+      createGethMessage(syncingStatus, blockNumber, latestBlock);
     } else if (executionClient == "reth") {
-      createRethMessage(syncingStatus);
+      createRethMessage(syncingStatus, blockNumber, latestBlock);
     }
 
     return statusMessage;
