@@ -117,10 +117,7 @@ async function getTransactionCount() {
     // Extract transaction counts from the blocks
     const transactionCounts = blocks.map((block) => block.transactions.length);
 
-    debugToFile(
-      `transactionCounts: ${JSON.stringify(transactionCounts, null, 2)}`,
-      () => {}
-    );
+    debugToFile(`transactionCounts: ${transactionCounts}`, () => {});
 
     return transactionCounts;
   } catch (error) {
