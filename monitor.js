@@ -227,7 +227,7 @@ function setupUI(
   setInterval(() => updateBandwidthBox(screen), 2000);
   // setInterval(() => updateStatusBox(statusBox, screen), 5000);
   // setInterval(() => updateChainInfoBox(chainInfoBox, screen), 5000);
-  setInterval(() => updateWidgets(statusBox, chainInfoBox, screen), 5000);
+  setInterval(() => updateChainWidgets(statusBox, chainInfoBox, screen), 5000);
 
   function fixBottomMargins(screen) {
     try {
@@ -435,7 +435,7 @@ function updateChainInfoBox(chainInfoBox, screen) {
   try {
     if (screen.children.includes(chainInfoBox)) {
       populateChainInfoBox();
-      screen.render();
+      // screen.render();
     }
   } catch (error) {
     debugToFile(`updateChainInfoBox(): ${error}`, () => {});
