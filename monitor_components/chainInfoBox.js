@@ -17,6 +17,7 @@ export function createChainInfoBox(grid, screen) {
       fg: "cyan",
     },
     wrap: false,
+    tags: true,
   });
 
   return chainInfoBox;
@@ -101,7 +102,7 @@ async function getLastFiveBlockInfo() {
     // Extract transaction counts, gas prices, and ETH prices from the blocks
     const transactionCounts = blocks.map((block) => block.transactions.length);
     const gasPrices = blocks.map(
-      (block) => Number(block.baseFeePerGas) / 10 ** 9 // Convert gas prices to Gwei
+      (block) => (Number(block.baseFeePerGas) / 10 ** 9).toFixed(3) // Convert gas prices to Gwei
     );
 
     // Fetch ETH prices concurrently
@@ -161,12 +162,13 @@ export async function populateChainInfoBox() {
     const separator = "-".repeat(boxWidth);
 
     let content = "";
+    content += separator;
 
     for (let i = 0; i < blockNumbers.length; i++) {
-      content += `Block: ${blockNumbers[i]}\n`;
-      content += `ETH $: ${ethPrices[i]}\n`;
-      content += `GAS (gwei): ${gasPrices[i]}\n`;
-      content += `# Tx: ${transactionCounts[i]}\n`;
+      content += `{bold}{green-fg}BLOCK:{/green-fg} ${blockNumbers[i]}{/bold}\n`;
+      content += `{green-fg}ETH $:{/green-fg}  ${ethPrices[i]}\n`;
+      content += `{green-fg}GAS (gwei):{/green-fg}  ${gasPrices[i]}\n`;
+      content += `{green-fg}# TX:{/green-fg}  ${transactionCounts[i]}\n`;
       content += separator;
 
       // Add a newline after each block's info except the last one
