@@ -78,7 +78,7 @@ async function getEthPrice() {
 
 async function getBatchBlockInfo() {
   try {
-    const nBlocks = Math.floor(chainInfoBox.width / 5) + 2;
+    const nBlocks = Math.floor(chainInfoBox.height / 5);
 
     const currentBlockNumber = await localClient.getBlockNumber();
 
