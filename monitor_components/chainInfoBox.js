@@ -73,11 +73,26 @@ async function getEthPrice(blockNumber) {
   }
 }
 
+let lastBlockNumber = null; // Store the last block number between function calls
+
 async function getBatchBlockInfo() {
   try {
     const nBlocks = Math.floor((chainInfoBox.height - 3) / 5);
 
     const currentBlockNumber = await localClient.getBlockNumber();
+
+    // Check if the current block number is greater than the last one
+    if (lastBlockNumber !== null && currentBlockNumber <= lastBlockNumber) {
+      return {
+        blockNumbers: [],
+        transactionCounts: [],
+        gasPrices: [],
+        ethPrices: [],
+      };
+    }
+
+    // Update the last block number
+    lastBlockNumber = currentBlockNumber;
 
     // Create an array of block numbers for the most current block and the previous blocks
     const blockNumbers = [];
@@ -121,29 +136,31 @@ async function getBatchBlockInfo() {
 
 export async function populateChainInfoBox() {
   try {
-    const { blockNumbers, transactionCounts, gasPrices, ethPrices } =
-      await getBatchBlockInfo();
+    if (blockNumbers.length > 0) {
+      const { blockNumbers, transactionCounts, gasPrices, ethPrices } =
+        await getBatchBlockInfo();
 
-    // Get the width of the chainInfoBox to properly format the separator line
-    const boxWidth = chainInfoBox.width - 2; // Adjusting for border padding
-    const separator = "-".repeat(boxWidth);
+      // Get the width of the chainInfoBox to properly format the separator line
+      const boxWidth = chainInfoBox.width - 2; // Adjusting for border padding
+      const separator = "-".repeat(boxWidth);
 
-    let content = "";
-    content += separator + "\n";
+      let content = "";
+      content += separator + "\n";
 
-    for (let i = 0; i < blockNumbers.length; i++) {
-      content += `{center}{bold}{green-fg}${blockNumbers[i]}{/green-fg}{/bold}{/center}\n`;
-      content += `{bold}{blue-fg}ETH $:{/blue-fg}{/bold} ${ethPrices[i]}\n`;
-      content += `{bold}{blue-fg}GAS:{/blue-fg}{/bold}   ${gasPrices[i]}\n`;
-      content += `{bold}{blue-fg}# TX:{/blue-fg}{/bold}  ${transactionCounts[i]}\n`;
-      content += separator;
+      for (let i = 0; i < blockNumbers.length; i++) {
+        content += `{center}{bold}{green-fg}${blockNumbers[i]}{/green-fg}{/bold}{/center}\n`;
+        content += `{bold}{blue-fg}ETH $:{/blue-fg}{/bold} ${ethPrices[i]}\n`;
+        content += `{bold}{blue-fg}GAS:{/blue-fg}{/bold}   ${gasPrices[i]}\n`;
+        content += `{bold}{blue-fg}# TX:{/blue-fg}{/bold}  ${transactionCounts[i]}\n`;
+        content += separator;
 
-      if (i < blockNumbers.length - 1) {
-        content += "\n";
+        if (i < blockNumbers.length - 1) {
+          content += "\n";
+        }
       }
-    }
 
-    chainInfoBox.setContent(content);
+      chainInfoBox.setContent(content);
+    }
   } catch (error) {
     debugToFile(`populateChainInfoBox(): ${error}`, () => {});
   }

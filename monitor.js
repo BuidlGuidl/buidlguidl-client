@@ -434,7 +434,7 @@ function setupUI(
 async function updateChainInfoBox(chainInfoBox, screen) {
   try {
     if (screen.children.includes(chainInfoBox)) {
-      await populateChainInfoBox(); // Ensure this is awaited
+      await populateChainInfoBox();
     }
   } catch (error) {
     debugToFile(`updateChainInfoBox(): ${error}`, () => {});
