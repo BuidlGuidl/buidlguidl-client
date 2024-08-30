@@ -82,7 +82,9 @@ async function getBatchBlockInfo() {
     // Create an array of block numbers for the most current block and the previous blocks
     const blockNumbers = [];
     for (let i = 0; i < nBlocks; i++) {
-      blockNumbers.push(currentBlockNumber - BigInt(i));
+      const blockNumber = currentBlockNumber - BigInt(i);
+      if (blockNumber < 0n) break; // Stop if block number is out of range
+      blockNumbers.push(blockNumber);
     }
 
     // Fetch the blocks concurrently using Promise.all
