@@ -70,23 +70,21 @@ async function getEthPrice() {
     const ratio = formatBalance(daiBalance) / formatBalance(wethBalance);
     const roundedRatio = ratio.toFixed(2);
 
-    // debugToFile(`DAI Balance: ${formatBalance(daiBalance)} DAI`, () => {});
-    // debugToFile(`WETH Balance: ${formatBalance(wethBalance)} WETH`, () => {});
-    // debugToFile(`Ratio: ${ratio}`, () => {});
-
     return roundedRatio;
   } catch (error) {
     debugToFile(`Error fetching token balances: ${error}`, () => {});
   }
 }
 
-async function getLastFiveBlockInfo() {
+async function getBatchBlockInfo() {
   try {
+    const nBlocks = Math.floor(chainInfoBox.width / 5);
+
     const currentBlockNumber = await localClient.getBlockNumber();
 
     // Create an array of block numbers for the most current block and the previous 4 blocks
     const blockNumbers = [];
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < nBlocks; i++) {
       blockNumbers.push(currentBlockNumber - BigInt(i));
     }
 
@@ -110,7 +108,7 @@ async function getLastFiveBlockInfo() {
 
     return { blockNumbers, transactionCounts, gasPrices, ethPrices };
   } catch (error) {
-    debugToFile(`getLastFiveBlockInfo(): ${error}`, () => {});
+    debugToFile(`getBatchBlockInfo(): ${error}`, () => {});
     return {
       blockNumbers: [],
       transactionCounts: [],
@@ -120,42 +118,10 @@ async function getLastFiveBlockInfo() {
   }
 }
 
-// async function getLastFiveBlockInfo() {
-//   try {
-//     const currentBlockNumber = await localClient.getBlockNumber();
-
-//     // Create an array of block numbers for the most current block and the previous 4 blocks
-//     const blockNumbers = [];
-//     for (let i = 0; i < 5; i++) {
-//       blockNumbers.push(currentBlockNumber - BigInt(i));
-//     }
-
-//     // Fetch the blocks concurrently using Promise.all
-//     const blocks = await Promise.all(
-//       blockNumbers.map((blockNumber) =>
-//         localClient.getBlock({
-//           blockNumber: blockNumber,
-//         })
-//       )
-//     );
-
-//     // Extract transaction counts and gas prices from the blocks
-//     const transactionCounts = blocks.map((block) => block.transactions.length);
-//     const gasPrices = blocks.map(
-//       (block) => Number(block.baseFeePerGas) / 10 ** 9 // Convert gas prices to Gwei
-//     );
-
-//     return { blockNumbers, transactionCounts, gasPrices };
-//   } catch (error) {
-//     debugToFile(`getTransactionCountAndGasPrice(): ${error}`, () => {});
-//     return { blockNumbers: [], transactionCounts: [], gasPrices: [] };
-//   }
-// }
-
 export async function populateChainInfoBox() {
   try {
     const { blockNumbers, transactionCounts, gasPrices, ethPrices } =
-      await getLastFiveBlockInfo();
+      await getBatchBlockInfo();
 
     // Get the width of the chainInfoBox to properly format the separator line
     const boxWidth = chainInfoBox.width - 2; // Adjusting for border padding
@@ -165,13 +131,12 @@ export async function populateChainInfoBox() {
     content += separator + "\n";
 
     for (let i = 0; i < blockNumbers.length; i++) {
-      content += `{center}{bold}{blue-fg}${blockNumbers[i]}{/blue-fg}{/bold}{/center}\n`;
-      content += `{green-fg}ETH $:{/green-fg}  ${ethPrices[i]}\n`;
-      content += `{green-fg}GAS (gwei):{/green-fg}  ${gasPrices[i]}\n`;
-      content += `{green-fg}# TX:{/green-fg}  ${transactionCounts[i]}\n`;
+      content += `{center}{bold}{green-fg}${blockNumbers[i]}{/green-fg}{/bold}{/center}\n`;
+      content += `{blue-fg}ETH $:{/blue-fg} ${ethPrices[i]}\n`;
+      content += `{blue-fg}GAS:{/blue-fg} ${gasPrices[i]}\n`;
+      content += `{blue-fg}# TX:{/blue-fg} ${transactionCounts[i]}\n`;
       content += separator;
 
-      // Add a newline after each block's info except the last one
       if (i < blockNumbers.length - 1) {
         content += "\n";
       }
@@ -182,22 +147,3 @@ export async function populateChainInfoBox() {
     debugToFile(`populateChainInfoBox(): ${error}`, () => {});
   }
 }
-
-// export async function populateChainInfoBox() {
-//   try {
-//     const { blockNumbers, transactionCounts, gasPrices, ethPrices } =
-//       await getLastFiveBlockInfo();
-
-//     chainInfoBox.setContent(
-//       `ETH PRICE ($)\n${ethPrices.join(
-//         ", "
-//       )}\n\nBLOCK NUMBERS\n${blockNumbers.join(
-//         ", "
-//       )}\n\nTRANSACTION COUNTS\n${transactionCounts.join(
-//         ", "
-//       )}\n\nGAS PRICE (gwei)\n${gasPrices.join(", ")}`
-//     );
-//   } catch (error) {
-//     debugToFile(`populateChainInfoBox(): ${error}`, () => {});
-//   }
-// }
