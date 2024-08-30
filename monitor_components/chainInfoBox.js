@@ -41,17 +41,6 @@ const ERC20_ABI = [
 // Address to check
 const addressToCheck = "0xA478c2975Ab1Ea89e8196811F51A7B7Ade33eB11";
 
-// Function to get the balance of a token
-async function getTokenBalance(tokenAddress, accountAddress) {
-  const balance = await localClient.readContract({
-    address: tokenAddress,
-    abi: ERC20_ABI,
-    functionName: "balanceOf",
-    args: [accountAddress],
-  });
-  return balance;
-}
-
 function formatBalance(balance, decimals = 18) {
   return (BigInt(balance) / BigInt(10 ** decimals)).toString();
 }
@@ -86,7 +75,7 @@ async function getEthPrice(blockNumber) {
 
 async function getBatchBlockInfo() {
   try {
-    const nBlocks = Math.floor((chainInfoBox.height - 2) / 5);
+    const nBlocks = Math.floor((chainInfoBox.height - 3) / 5);
 
     const currentBlockNumber = await localClient.getBlockNumber();
 
