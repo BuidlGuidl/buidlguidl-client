@@ -166,7 +166,6 @@ export async function populateChainInfoBox() {
 
     for (let i = 0; i < blockNumbers.length; i++) {
       content += `{center}{bold}{blue-fg}${blockNumbers[i]}{/blue-fg}{/bold}{/center}\n`;
-      content += `{bold}{green-fg}BLOCK:{/green-fg} ${blockNumbers[i]}{/bold}\n`;
       content += `{green-fg}ETH $:{/green-fg}  ${ethPrices[i]}\n`;
       content += `{green-fg}GAS (gwei):{/green-fg}  ${gasPrices[i]}\n`;
       content += `{green-fg}# TX:{/green-fg}  ${transactionCounts[i]}\n`;
