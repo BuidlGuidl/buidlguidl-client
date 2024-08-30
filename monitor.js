@@ -209,9 +209,25 @@ function setupUI(
   setBandwidthBox(bandwidthBox);
   startBandwidthMonitoring(screen);
 
+  async function updateChainWidgets(statusBox, chainInfoBox, screen) {
+    try {
+      // Run both update functions concurrently
+      await Promise.all([
+        updateStatusBox(statusBox, screen),
+        updateChainInfoBox(chainInfoBox, screen),
+      ]);
+
+      // Render the screen after both updates are complete
+      screen.render();
+    } catch (error) {
+      debugToFile(`updateWidgets(): ${error}`, () => {});
+    }
+  }
+
   setInterval(() => updateBandwidthBox(screen), 2000);
-  setInterval(() => updateStatusBox(statusBox, screen), 5000);
-  setInterval(() => updateChainInfoBox(chainInfoBox, screen), 5000);
+  // setInterval(() => updateStatusBox(statusBox, screen), 5000);
+  // setInterval(() => updateChainInfoBox(chainInfoBox, screen), 5000);
+  setInterval(() => updateChainWidgets(statusBox, chainInfoBox, screen), 5000);
 
   function fixBottomMargins(screen) {
     try {
@@ -415,11 +431,10 @@ function setupUI(
   };
 }
 
-function updateChainInfoBox(chainInfoBox, screen) {
+async function updateChainInfoBox(chainInfoBox, screen) {
   try {
     if (screen.children.includes(chainInfoBox)) {
-      populateChainInfoBox();
-      screen.render();
+      await populateChainInfoBox();
     }
   } catch (error) {
     debugToFile(`updateChainInfoBox(): ${error}`, () => {});
