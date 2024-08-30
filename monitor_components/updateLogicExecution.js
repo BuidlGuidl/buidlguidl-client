@@ -290,9 +290,11 @@ async function getRethSyncMetrics() {
 let largestToBlock = 0;
 let headersPercent = 0;
 
-async function parseAndPopulateRethMetrics(rethSyncMetrics) {
-  let largestToBlock = 0;
-  let headersPercent = 0;
+async function parseAndPopulateRethMetrics() {
+  // let largestToBlock = 0;
+  // let headersPercent = 0;
+
+  const rethSyncMetrics = await getRethSyncMetrics();
 
   // Handle header progress [1/12]
   const headersProcessedMatch = rethSyncMetrics.match(
@@ -947,7 +949,7 @@ export async function showHideGethWidgets(
   }
 }
 
-export async function passStatusMessage() {
+export async function synchronizeAndUpdateWidgets() {
   try {
     const syncingStatus = await isSyncing();
     const blockNumber = await localClient.getBlockNumber();
@@ -957,6 +959,10 @@ export async function passStatusMessage() {
       createGethMessage(syncingStatus, blockNumber, latestBlock);
     } else if (executionClient == "reth") {
       createRethMessage(syncingStatus, blockNumber, latestBlock);
+
+      if (syncingStatus) {
+        parseAndPopulateRethMetrics();
+      }
     }
 
     return statusMessage;

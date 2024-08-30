@@ -1,10 +1,10 @@
 import blessed from "blessed";
 import { debugToFile } from "../helpers.js";
-import { passStatusMessage } from "./updateLogicExecution.js";
+import { synchronizeAndUpdateWidgets } from "./updateLogicExecution.js";
 
 export async function updateStatusBox(statusBox, screen) {
   try {
-    const statusMessage = await passStatusMessage();
+    const statusMessage = await synchronizeAndUpdateWidgets();
     statusBox.setContent(statusMessage);
     // screen.render();
   } catch (error) {
