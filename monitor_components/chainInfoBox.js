@@ -78,7 +78,7 @@ async function getEthPrice() {
 
 async function getBatchBlockInfo() {
   try {
-    const nBlocks = Math.floor(chainInfoBox.width / 5);
+    const nBlocks = Math.floor(chainInfoBox.width / 5) + 2;
 
     const currentBlockNumber = await localClient.getBlockNumber();
 
@@ -133,8 +133,8 @@ export async function populateChainInfoBox() {
     for (let i = 0; i < blockNumbers.length; i++) {
       content += `{center}{bold}{green-fg}${blockNumbers[i]}{/green-fg}{/bold}{/center}\n`;
       content += `{blue-fg}ETH $:{/blue-fg} ${ethPrices[i]}\n`;
-      content += `{blue-fg}GAS:{/blue-fg} ${gasPrices[i]}\n`;
-      content += `{blue-fg}# TX:{/blue-fg} ${transactionCounts[i]}\n`;
+      content += `{blue-fg}GAS:{/blue-fg}   ${gasPrices[i]}\n`;
+      content += `{blue-fg}# TX:{/blue-fg}  ${transactionCounts[i]}\n`;
       content += separator;
 
       if (i < blockNumbers.length - 1) {
