@@ -100,7 +100,7 @@ async function getBatchBlockInfo() {
     // Extract transaction counts, gas prices, and ETH prices from the blocks
     const transactionCounts = blocks.map((block) => block.transactions.length);
     const gasPrices = blocks.map(
-      (block) => (Number(block.baseFeePerGas) / 10 ** 9).toFixed(3) // Convert gas prices to Gwei
+      (block) => (Number(block.baseFeePerGas) / 10 ** 9).toFixed(4) // Convert gas prices to Gwei
     );
 
     // Fetch ETH prices concurrently
@@ -132,9 +132,9 @@ export async function populateChainInfoBox() {
 
     for (let i = 0; i < blockNumbers.length; i++) {
       content += `{center}{bold}{green-fg}${blockNumbers[i]}{/green-fg}{/bold}{/center}\n`;
-      content += `{blue-fg}ETH $:{/blue-fg} ${ethPrices[i]}\n`;
-      content += `{blue-fg}GAS:{/blue-fg}   ${gasPrices[i]}\n`;
-      content += `{blue-fg}# TX:{/blue-fg}  ${transactionCounts[i]}\n`;
+      content += `{blue-fg}{bold}ETH $:{/bold}{/blue-fg} ${ethPrices[i]}\n`;
+      content += `{blue-fg}{bold}GAS:{/bold}{/blue-fg}   ${gasPrices[i]}\n`;
+      content += `{bold}{blue-fg}# TX:{/}  ${transactionCounts[i]}\n`;
       content += separator;
 
       if (i < blockNumbers.length - 1) {
