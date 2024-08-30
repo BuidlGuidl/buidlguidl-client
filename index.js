@@ -17,6 +17,7 @@ import {
   consensusClient,
   executionPeerPort,
   consensusPeerPorts,
+  consensusCheckpoint,
   installDir,
   saveOptionsToFile,
   deleteOptionsFile,
@@ -183,6 +184,10 @@ function startClient(clientName, installDir) {
     if (consensusPeerPorts[0] !== null || consensusPeerPorts[1] !== null) {
       clientArgs.push("--consensuspeerports", consensusPeerPorts);
     }
+
+    if (consensusCheckpoint != null) {
+      clientArgs.push("--consensuscheckpoint", consensusCheckpoint);
+    }
   } else if (clientName === "lighthouse") {
     clientCommand = path.join(
       __dirname,
@@ -191,6 +196,10 @@ function startClient(clientName, installDir) {
 
     if (consensusPeerPorts[0] !== null || consensusPeerPorts[1] !== null) {
       clientArgs.push("--consensuspeerports", consensusPeerPorts);
+    }
+    
+    if (consensusCheckpoint != null) {
+      clientArgs.push("--consensuscheckpoint", consensusCheckpoint);
     }
   } else {
     clientCommand = path.join(

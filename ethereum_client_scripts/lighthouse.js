@@ -8,6 +8,7 @@ import minimist from "minimist";
 
 let installDir = os.homedir();
 let consensusPeerPorts = [9000, 9001];
+let consensusCheckpoint = "https://mainnet.checkpoint.sigp.io";
 
 const argv = minimist(process.argv.slice(2));
 
@@ -20,6 +21,10 @@ if (argv.consensuspeerports) {
   consensusPeerPorts = argv.consensuspeerports
     .split(",")
     .map((port) => parseInt(port.trim(), 10));
+}
+
+if (argv.consensuscheckpoint) {
+  consensusCheckpoint = argv.consensuscheckpoint;
 }
 
 const jwtPath = path.join(installDir, "ethereum_clients", "jwt", "jwt.hex");
@@ -65,7 +70,7 @@ const consensus = pty.spawn(
     "--execution-endpoint",
     "http://localhost:8551",
     "--checkpoint-sync-url",
-    "https://mainnet.checkpoint.sigp.io",
+    consensusCheckpoint,
     "--checkpoint-sync-url-timeout",
     "600",
     "--disable-deposit-contract-sync",
