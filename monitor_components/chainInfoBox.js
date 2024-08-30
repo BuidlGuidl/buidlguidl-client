@@ -156,16 +156,46 @@ export async function populateChainInfoBox() {
     const { blockNumbers, transactionCounts, gasPrices, ethPrices } =
       await getLastFiveBlockInfo();
 
-    chainInfoBox.setContent(
-      `ETH PRICE ($)\n${ethPrices.join(
-        ", "
-      )}\n\nBLOCK NUMBERS\n${blockNumbers.join(
-        ", "
-      )}\n\nTRANSACTION COUNTS\n${transactionCounts.join(
-        ", "
-      )}\n\nGAS PRICE (gwei)\n${gasPrices.join(", ")}`
-    );
+    // Get the width of the chainInfoBox to properly format the separator line
+    const boxWidth = chainInfoBox.width - 2; // Adjusting for border padding
+    const separator = "-".repeat(boxWidth);
+
+    let content = "";
+
+    for (let i = 0; i < blockNumbers.length; i++) {
+      content += `Block: ${blockNumbers[i]}\n`;
+      content += `ETH $: ${ethPrices[i]}\n`;
+      content += `GAS (gwei): ${gasPrices[i]}\n`;
+      content += `# Tx: ${transactionCounts[i]}\n`;
+      content += separator;
+
+      // Add a newline after each block's info except the last one
+      if (i < blockNumbers.length - 1) {
+        content += "\n";
+      }
+    }
+
+    chainInfoBox.setContent(content);
   } catch (error) {
     debugToFile(`populateChainInfoBox(): ${error}`, () => {});
   }
 }
+
+// export async function populateChainInfoBox() {
+//   try {
+//     const { blockNumbers, transactionCounts, gasPrices, ethPrices } =
+//       await getLastFiveBlockInfo();
+
+//     chainInfoBox.setContent(
+//       `ETH PRICE ($)\n${ethPrices.join(
+//         ", "
+//       )}\n\nBLOCK NUMBERS\n${blockNumbers.join(
+//         ", "
+//       )}\n\nTRANSACTION COUNTS\n${transactionCounts.join(
+//         ", "
+//       )}\n\nGAS PRICE (gwei)\n${gasPrices.join(", ")}`
+//     );
+//   } catch (error) {
+//     debugToFile(`populateChainInfoBox(): ${error}`, () => {});
+//   }
+// }
