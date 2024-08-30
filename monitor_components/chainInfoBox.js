@@ -79,35 +79,6 @@ async function getEthPrice() {
   }
 }
 
-// async function getTransactionCount() {
-//   try {
-//     const currentBlockNumber = await localClient.getBlockNumber();
-
-//     // Create an array of block numbers for the most current block and the previous 4 blocks
-//     const blockNumbers = [];
-//     for (let i = 0; i < 5; i++) {
-//       blockNumbers.push(currentBlockNumber - BigInt(i));
-//     }
-
-//     // Fetch the blocks concurrently using Promise.all
-//     const blocks = await Promise.all(
-//       blockNumbers.map((blockNumber) =>
-//         localClient.getBlock({
-//           blockNumber: blockNumber,
-//         })
-//       )
-//     );
-
-//     // Extract transaction counts from the blocks
-//     const transactionCounts = blocks.map((block) => block.transactions.length);
-
-//     return { blockNumbers, transactionCounts };
-//   } catch (error) {
-//     debugToFile(`getTransactionCount(): ${error}`, () => {});
-//     return [];
-//   }
-// }
-
 async function getLastFiveBlockInfo() {
   try {
     const currentBlockNumber = await localClient.getBlockNumber();
@@ -127,28 +98,68 @@ async function getLastFiveBlockInfo() {
       )
     );
 
-    // Extract transaction counts and gas prices from the blocks
+    // Extract transaction counts, gas prices, and ETH prices from the blocks
     const transactionCounts = blocks.map((block) => block.transactions.length);
     const gasPrices = blocks.map(
       (block) => Number(block.baseFeePerGas) / 10 ** 9 // Convert gas prices to Gwei
     );
 
-    return { blockNumbers, transactionCounts, gasPrices };
+    // Fetch ETH prices concurrently
+    const ethPrices = await Promise.all(blocks.map(() => getEthPrice()));
+
+    return { blockNumbers, transactionCounts, gasPrices, ethPrices };
   } catch (error) {
-    debugToFile(`getTransactionCountAndGasPrice(): ${error}`, () => {});
-    return { blockNumbers: [], transactionCounts: [], gasPrices: [] };
+    debugToFile(`getLastFiveBlockInfo(): ${error}`, () => {});
+    return {
+      blockNumbers: [],
+      transactionCounts: [],
+      gasPrices: [],
+      ethPrices: [],
+    };
   }
 }
 
+// async function getLastFiveBlockInfo() {
+//   try {
+//     const currentBlockNumber = await localClient.getBlockNumber();
+
+//     // Create an array of block numbers for the most current block and the previous 4 blocks
+//     const blockNumbers = [];
+//     for (let i = 0; i < 5; i++) {
+//       blockNumbers.push(currentBlockNumber - BigInt(i));
+//     }
+
+//     // Fetch the blocks concurrently using Promise.all
+//     const blocks = await Promise.all(
+//       blockNumbers.map((blockNumber) =>
+//         localClient.getBlock({
+//           blockNumber: blockNumber,
+//         })
+//       )
+//     );
+
+//     // Extract transaction counts and gas prices from the blocks
+//     const transactionCounts = blocks.map((block) => block.transactions.length);
+//     const gasPrices = blocks.map(
+//       (block) => Number(block.baseFeePerGas) / 10 ** 9 // Convert gas prices to Gwei
+//     );
+
+//     return { blockNumbers, transactionCounts, gasPrices };
+//   } catch (error) {
+//     debugToFile(`getTransactionCountAndGasPrice(): ${error}`, () => {});
+//     return { blockNumbers: [], transactionCounts: [], gasPrices: [] };
+//   }
+// }
+
 export async function populateChainInfoBox() {
   try {
-    const ethPrice = await getEthPrice();
-    const { blockNumbers, transactionCounts, gasPrices } =
+    const { blockNumbers, transactionCounts, gasPrices, ethPrices } =
       await getLastFiveBlockInfo();
-    const gasPrice = await localClient.getGasPrice();
 
     chainInfoBox.setContent(
-      `ETH PRICE ($)\n${ethPrice}\n\nBLOCK NUMBERS\n${blockNumbers.join(
+      `ETH PRICE ($)\n${ethPrices.join(
+        ", "
+      )}\n\nBLOCK NUMBERS\n${blockNumbers.join(
         ", "
       )}\n\nTRANSACTION COUNTS\n${transactionCounts.join(
         ", "
@@ -158,19 +169,3 @@ export async function populateChainInfoBox() {
     debugToFile(`populateChainInfoBox(): ${error}`, () => {});
   }
 }
-
-// export async function populateChainInfoBox() {
-//   try {
-//     const ethPrice = await getEthPrice();
-//     const transactionCount = await getTransactionCount();
-//     const gasPrice = await localClient.getGasPrice();
-
-//     let gasPriceGwei = Number(gasPrice) / 10 ** 9;
-
-//     chainInfoBox.setContent(
-//       `ETH PRICE ($)\n${ethPrice}\n\nTRANSACTION COUNT\n${transactionCount}\n\nGAS PRICE (gwei)\n${gasPriceGwei}`
-//     );
-//   } catch (error) {
-//     debugToFile(`populateChainInfoBox(): ${error}`, () => {});
-//   }
-// }
