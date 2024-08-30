@@ -56,16 +56,23 @@ function formatBalance(balance, decimals = 18) {
   return (BigInt(balance) / BigInt(10 ** decimals)).toString();
 }
 
-async function getEthPrice() {
+async function getEthPrice(blockNumber) {
   try {
-    const daiBalance = await getTokenBalance(
-      DAI_CONTRACT_ADDRESS,
-      addressToCheck
-    );
-    const wethBalance = await getTokenBalance(
-      WETH_CONTRACT_ADDRESS,
-      addressToCheck
-    );
+    const daiBalance = await localClient.readContract({
+      address: DAI_CONTRACT_ADDRESS,
+      abi: ERC20_ABI,
+      functionName: "balanceOf",
+      args: [addressToCheck],
+      blockNumber: blockNumber, // Specify the block number here
+    });
+
+    const wethBalance = await localClient.readContract({
+      address: WETH_CONTRACT_ADDRESS,
+      abi: ERC20_ABI,
+      functionName: "balanceOf",
+      args: [addressToCheck],
+      blockNumber: blockNumber, // Specify the block number here
+    });
 
     const ratio = formatBalance(daiBalance) / formatBalance(wethBalance);
     const roundedRatio = ratio.toFixed(2);
@@ -73,6 +80,7 @@ async function getEthPrice() {
     return roundedRatio;
   } catch (error) {
     debugToFile(`Error fetching token balances: ${error}`, () => {});
+    return null; // Return null or a default value in case of an error
   }
 }
 
@@ -82,7 +90,7 @@ async function getBatchBlockInfo() {
 
     const currentBlockNumber = await localClient.getBlockNumber();
 
-    // Create an array of block numbers for the most current block and the previous 4 blocks
+    // Create an array of block numbers for the most current block and the previous blocks
     const blockNumbers = [];
     for (let i = 0; i < nBlocks; i++) {
       blockNumbers.push(currentBlockNumber - BigInt(i));
@@ -103,8 +111,10 @@ async function getBatchBlockInfo() {
       (block) => (Number(block.baseFeePerGas) / 10 ** 9).toFixed(4) // Convert gas prices to Gwei
     );
 
-    // Fetch ETH prices concurrently
-    const ethPrices = await Promise.all(blocks.map(() => getEthPrice()));
+    // Fetch ETH prices concurrently for each block
+    const ethPrices = await Promise.all(
+      blockNumbers.map((blockNumber) => getEthPrice(blockNumber))
+    );
 
     return { blockNumbers, transactionCounts, gasPrices, ethPrices };
   } catch (error) {
@@ -132,9 +142,9 @@ export async function populateChainInfoBox() {
 
     for (let i = 0; i < blockNumbers.length; i++) {
       content += `{center}{bold}{green-fg}${blockNumbers[i]}{/green-fg}{/bold}{/center}\n`;
-      content += `{blue-fg}{bold}ETH $:{/bold}{/blue-fg} ${ethPrices[i]}\n`;
-      content += `{blue-fg}{bold}GAS:{/bold}{/blue-fg}   ${gasPrices[i]}\n`;
-      content += `{bold}{blue-fg}# TX:{/}  ${transactionCounts[i]}\n`;
+      content += `{bold}{blue-fg}ETH $:{/blue-fg}{/bold} ${ethPrices[i]}\n`;
+      content += `{bold}{blue-fg}GAS:{/blue-fg}{/bold}   ${gasPrices[i]}\n`;
+      content += `{bold}{blue-fg}# TX:{/blue-fg}{/bold}  ${transactionCounts[i]}\n`;
       content += separator;
 
       if (i < blockNumbers.length - 1) {
