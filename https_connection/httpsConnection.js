@@ -36,7 +36,34 @@ function getMacAddress() {
 }
 
 export function initializeHttpConnection(httpConfig) {
-  checkIn = async function () {
+  let lastCheckInTime = 0;
+  let lastCheckedBlockNumber = -1;
+  const minCheckInInterval = 60000; // Minimum 60 seconds between check-ins
+
+  checkIn = async function (force = false) {
+    const now = Date.now();
+    if (!force && now - lastCheckInTime < minCheckInInterval) {
+      return;
+    }
+
+    let currentBlockNumber;
+    try {
+      currentBlockNumber = await localClient.getBlockNumber();
+    } catch (error) {
+      debugToFile(`Failed to get block number: ${error}`, () => {});
+      return;
+    }
+
+    if (
+      currentBlockNumber === 0 ||
+      currentBlockNumber === lastCheckedBlockNumber
+    ) {
+      return;
+    }
+
+    lastCheckInTime = now;
+    lastCheckedBlockNumber = currentBlockNumber;
+
     let executionClientResponse = httpConfig.executionClient;
     let consensusClientResponse = httpConfig.consensusClient;
 
@@ -107,5 +134,20 @@ export function initializeHttpConnection(httpConfig) {
     }
   };
 
-  setInterval(checkIn, 60000); // Check in every 60 seconds
+  // Set up block listener
+  localClient.watchBlocks(
+    {
+      onBlock: (block) => {
+        if (block.number > 0) {
+          checkIn();
+        }
+      },
+    },
+    (error) => {
+      debugToFile(`Error in block watcher: ${error}`, () => {});
+    }
+  );
+
+  // Regular interval check-in
+  setInterval(() => checkIn(true), 60000); // Force check-in every 60 seconds
 }
