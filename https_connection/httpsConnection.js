@@ -54,10 +54,7 @@ export function initializeHttpConnection(httpConfig) {
       return;
     }
 
-    if (
-      currentBlockNumber === 0 ||
-      currentBlockNumber === lastCheckedBlockNumber
-    ) {
+    if (!force && currentBlockNumber === lastCheckedBlockNumber) {
       return;
     }
 
