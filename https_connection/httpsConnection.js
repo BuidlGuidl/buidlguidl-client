@@ -131,12 +131,15 @@ export function initializeHttpConnection(httpConfig) {
     }
   };
 
+  // Immediate check-in when monitoring starts
+  checkIn(true);
+
   // Set up block listener
   localClient.watchBlocks(
     {
       onBlock: (block) => {
         if (block.number > 0) {
-          checkIn();
+          checkIn(true); // Force check-in for each new block
         }
       },
     },
