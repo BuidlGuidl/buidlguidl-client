@@ -11,6 +11,7 @@ import { mainnetClient, localClient, isSyncing } from "./viemClients.js";
 import { exec } from "child_process";
 import { populateRethStageGauge } from "./rethStageGauge.js";
 import { populateGethStageGauge } from "./gethStageGauge.js";
+import { checkIn } from "../https_connection/httpsConnection.js";
 
 const progress = loadProgress();
 let gethStageProgress = [
@@ -82,6 +83,7 @@ export function setupLogStreaming(
 ) {
   let logBuffer = [];
   let lastSize = 0;
+  let lastKnownBlockNumber = 0;
 
   const ensureBufferFillsWidget = () => {
     const visibleHeight = executionLog.height - 2; // Account for border
@@ -98,7 +100,7 @@ export function setupLogStreaming(
     }
   };
 
-  const updateLogContent = () => {
+  const updateLogContent = async () => {
     try {
       const stats = fs.statSync(logFilePath);
       const newSize = stats.size;
@@ -116,7 +118,7 @@ export function setupLogStreaming(
           terminal: false,
         });
 
-        newRl.on("line", (line) => {
+        newRl.on("line", async (line) => {
           globalLine = line;
           logBuffer.push(formatLogLines(line));
 
@@ -132,6 +134,20 @@ export function setupLogStreaming(
             saveHeaderDlProgress(line);
             saveStateDlProgress(line);
             saveChainDlProgress(line);
+          }
+
+          // Check for new block
+          const blockNumberMatch = line.match(/block=(\d+)/);
+          if (blockNumberMatch) {
+            const currentBlockNumber = parseInt(blockNumberMatch[1], 10);
+            if (currentBlockNumber > lastKnownBlockNumber) {
+              lastKnownBlockNumber = currentBlockNumber;
+              try {
+                await checkIn(); // Call checkIn when a new block is found
+              } catch (error) {
+                debugToFile(`Error calling checkIn: ${error}`, () => {});
+              }
+            }
           }
 
           screen.render();
@@ -160,84 +176,6 @@ export function setupLogStreaming(
     }
   });
 }
-
-// export function setupLogStreaming(
-//   logFilePath,
-//   executionLog,
-//   screen,
-//   rethStageGauge,
-//   gethStageGauge,
-//   chainInfoBox
-// ) {
-//   let logBuffer = [];
-//   let lastSize = 0;
-
-//   const updateLogContent = () => {
-//     try {
-//       const stats = fs.statSync(logFilePath);
-//       const newSize = stats.size;
-
-//       if (newSize > lastSize) {
-//         const newStream = fs.createReadStream(logFilePath, {
-//           encoding: "utf8",
-//           start: lastSize,
-//           end: newSize,
-//         });
-
-//         const newRl = readline.createInterface({
-//           input: newStream,
-//           output: process.stdout,
-//           terminal: false,
-//         });
-
-//         newRl.on("line", (line) => {
-//           globalLine = line;
-//           logBuffer.push(formatLogLines(line));
-
-//           debugToFile(`logBuffer.length: ${logBuffer.length}`, () => {});
-
-//           if (logBuffer.length > executionLog.height - 2) {
-//             logBuffer.shift();
-//           }
-
-//           executionLog.setContent(logBuffer.join("\n"));
-
-//           if (executionClient == "geth") {
-//             if (screen.children.includes(gethStageGauge)) {
-//               populateGethStageGauge(gethStageProgress);
-//             }
-
-//             saveHeaderDlProgress(line);
-//             saveStateDlProgress(line);
-//             saveChainDlProgress(line);
-//           }
-
-//           screen.render();
-//         });
-
-//         newRl.on("close", () => {
-//           lastSize = newSize;
-//         });
-
-//         newRl.on("error", (err) => {
-//           debugToFile(`Error reading log file: ${err}`, () => {});
-//         });
-//       }
-//     } catch (error) {
-//       debugToFile(`Error accessing log file: ${error}`, () => {});
-//     }
-//   };
-
-//   // Initial read to load existing content
-//   updateLogContent();
-
-//   // Watch for file changes
-//   fs.watchFile(logFilePath, (curr, prev) => {
-//     if (curr.mtime > prev.mtime) {
-//       updateLogContent();
-//     }
-//   });
-// }
 
 let statusMessage = "INITIALIZING...";
 
