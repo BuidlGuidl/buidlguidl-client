@@ -48,6 +48,7 @@ function showHelp() {
     "  -i, --indexingpeerports <client>          Specify the indexing peer ports ('n/a')"
   );
   console.log("                                            Default: none\n");
+  console.log(
     "  -cc, --consensuscheckpoint <url>          Specify the consensus checkpoint server URL"
   );
   console.log(
