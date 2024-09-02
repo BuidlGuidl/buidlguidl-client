@@ -237,6 +237,11 @@ if (!optionsLoaded) {
     }
   }
 
+  console.log(
+    `Consensus peer ports: ${consensusPeerPorts[0]}, ${consensusPeerPorts[1]}`
+  );
+  // process.exit(0);
+
   if (argv.consensuscheckpoint) {
     consensusCheckpoint = argv.consensuscheckpoint;
   }
