@@ -1,7 +1,6 @@
-import { cp } from "fs/promises";
+import { exec } from "child_process";
 import fs from "fs";
 import path from "path";
-import os from "os";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 
@@ -48,20 +47,36 @@ function monitorBackupProgress() {
   return interval;
 }
 
-async function makeBackup() {
+function makeBackup() {
+  const rethDbPath = path.join(ethereumClientsDir, "reth", "database");
+  const lighthouseDbPath = path.join(
+    ethereumClientsDir,
+    "lighthouse",
+    "database"
+  );
+
+  const command =
+    `tar -cf "${backupPath}" -C "${ethereumClientsDir}" ` +
+    `"reth/database" "lighthouse/database"`;
+
   console.log("Starting backup...");
   const progressInterval = monitorBackupProgress();
 
-  try {
-    await cp(ethereumClientsDir, backupPath, { recursive: true });
+  exec(command, (error, stdout, stderr) => {
     clearInterval(progressInterval);
+
+    if (error) {
+      console.error(`Error creating backup: ${error.message}`);
+      return;
+    }
+    if (stderr) {
+      console.error(`Backup process encountered an issue: ${stderr}`);
+      return;
+    }
     const finalStats = fs.statSync(backupPath);
     console.log(`Backup completed successfully at: ${backupPath}`);
     console.log(`Final backup size: ${formatSize(finalStats.size)}`);
-  } catch (error) {
-    clearInterval(progressInterval);
-    console.error(`Error creating backup: ${error.message}`);
-  }
+  });
 }
 
 makeBackup();
