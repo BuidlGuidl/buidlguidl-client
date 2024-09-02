@@ -13,7 +13,7 @@ import {
   installWindowsExecutionClient,
   installWindowsIndexingClient,
 } from "./ethereum_client_scripts/install.js";
-import { initializeWSConnection } from "./ws_connection/wsConnection.js";
+import { initializeHttpConnection } from "./https_connection/httpsConnection.js";
 import {
   executionClient,
   consensusClient,
@@ -21,6 +21,7 @@ import {
   executionPeerPort,
   consensusPeerPorts,
   indexingPeerPorts,
+  consensusCheckpoint,
   installDir,
   saveOptionsToFile,
   deleteOptionsFile,
@@ -224,6 +225,10 @@ function startClient(clientName, installDir) {
     if (consensusPeerPorts[0] !== null || consensusPeerPorts[1] !== null) {
       clientArgs.push("--consensuspeerports", consensusPeerPorts);
     }
+
+    if (consensusCheckpoint != null) {
+      clientArgs.push("--consensuscheckpoint", consensusCheckpoint);
+    }
   } else if (clientName === "lighthouse") {
     clientCommand = path.join(
       __dirname,
@@ -243,6 +248,10 @@ function startClient(clientName, installDir) {
     // if (trueBlocksPeerPorts[0] !== null || trueBlocksPeerPorts[1] !== null) {
     //  trueBlocksArgs.push("--port", trueBlocksPeerPorts);
     // }
+    
+    if (consensusCheckpoint != null) {
+      clientArgs.push("--consensuscheckpoint", consensusCheckpoint);
+    }
   } else {
     clientCommand = path.join(
       installDir,
@@ -345,7 +354,7 @@ let runsClient = false;
 
 createJwtSecret(jwtDir);
 
-const wsConfig = {
+const httpConfig = {
   executionClient: executionClient,
   consensusClient: consensusClient,
   indexingClient: indexingClient,
@@ -363,7 +372,7 @@ if (!isAlreadyRunning()) {
   startClient(consensusClient, installDir);
   startClient(indexingClient, installDir);
 
-  initializeWSConnection(wsConfig);
+  initializeHttpConnection(httpConfig);
 
   runsClient = true;
   createLockFile();

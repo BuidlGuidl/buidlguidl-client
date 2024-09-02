@@ -8,6 +8,7 @@ import minimist from "minimist";
 
 let installDir = os.homedir();
 let consensusPeerPorts = [12000, 13000];
+let consensusCheckpoint = "https://mainnet-checkpoint-sync.attestant.io/";
 
 const argv = minimist(process.argv.slice(2));
 
@@ -20,6 +21,10 @@ if (argv.consensuspeerports) {
   consensusPeerPorts = argv.consensuspeerports
     .split(",")
     .map((port) => parseInt(port.trim(), 10));
+}
+
+if (argv.consensuscheckpoint) {
+  consensusCheckpoint = argv.consensuscheckpoint;
 }
 
 const jwtPath = path.join(installDir, "ethereum_clients", "jwt", "jwt.hex");
@@ -62,8 +67,8 @@ const consensus = pty.spawn(
     "http://localhost:8551",
     "--grpc-gateway-host=0.0.0.0",
     "--grpc-gateway-port=3500",
-    "--checkpoint-sync-url=https://mainnet-checkpoint-sync.attestant.io/",
-    "--genesis-beacon-api-url=https://mainnet-checkpoint-sync.attestant.io/",
+    `--checkpoint-sync-url=${consensusCheckpoint}`,
+    `--genesis-beacon-api-url=${consensusCheckpoint}`,
     "--datadir",
     path.join(installDir, "ethereum_clients", "prysm", "database"),
     "--accept-terms-of-use=true",
