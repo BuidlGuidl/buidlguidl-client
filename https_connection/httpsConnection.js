@@ -44,18 +44,20 @@ export function initializeHttpConnection(httpConfig) {
   let lastCheckedBlockNumber = -1;
   const minCheckInInterval = 60000; // Minimum 60 seconds between check-ins
 
-  checkIn = async function (force = false) {
+  checkIn = async function (force = false, blockNumber = null) {
     const now = Date.now();
     if (!force && now - lastCheckInTime < minCheckInInterval) {
       return;
     }
 
-    let currentBlockNumber;
-    try {
-      currentBlockNumber = await localClient.getBlockNumber();
-    } catch (error) {
-      debugToFile(`Failed to get block number: ${error}`, () => {});
-      return;
+    let currentBlockNumber = blockNumber;
+    if (!currentBlockNumber) {
+      try {
+        currentBlockNumber = await localClient.getBlockNumber();
+      } catch (error) {
+        debugToFile(`Failed to get block number: ${error}`, () => {});
+        return;
+      }
     }
 
     if (!force && currentBlockNumber === lastCheckedBlockNumber) {
@@ -80,14 +82,13 @@ export function initializeHttpConnection(httpConfig) {
       consensusClientResponse += " v" + httpConfig.lighthouseVer;
     }
 
-    let possibleBlockNumber;
+    let possibleBlockNumber = currentBlockNumber;
     let possibleBlockHash;
     try {
-      possibleBlockNumber = await localClient.getBlockNumber();
-      const block = await localClient.getBlock();
+      const block = await localClient.getBlock(possibleBlockNumber);
       possibleBlockHash = block.hash;
     } catch (error) {
-      debugToFile(`Failed to get block number: ${error}`, () => {});
+      debugToFile(`Failed to get block hash: ${error}`, () => {});
     }
 
     try {
@@ -152,7 +153,7 @@ export function initializeHttpConnection(httpConfig) {
     {
       onBlock: (block) => {
         if (block.number > 0) {
-          checkIn(true); // Force check-in for each new block
+          checkIn(true, block.number); // Pass block number to checkIn
         }
       },
     },
