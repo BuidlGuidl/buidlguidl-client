@@ -26,6 +26,7 @@ const platform = os.platform();
 if (["darwin", "linux"].includes(platform)) {
   indexingCommand = path.join(installDir, "ethereum_clients", "trueBlocks", "trueblocks-node");
 } else if (platform === "win32") {
+  // TODO: There is no windows support for trueblocks-node
   indexingCommand = path.join(installDir, "ethereum_clients", "trueBlocks", "trueblocks-node.exe");
 }
 

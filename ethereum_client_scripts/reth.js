@@ -48,7 +48,7 @@ const execution = pty.spawn(
   `${rethCommand}`,
   [
     "node",
-    ${enableArchive ? "" : "--full"},
+    enableArchive ? "" : "--full",
     "--discovery.port",
     executionPeerPort,
     "--http",

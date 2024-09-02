@@ -388,7 +388,7 @@ export function installMacLinuxIndexingClient(
 
     oneCommand(
       "Installing the TrueBlocks indexer...",
-      `go install github.com/TrueBlocks/trueblocks-node/v3@69c56f2a3c990aac8d4bdf047e91952f3419710f`,
+      `go install github.com/TrueBlocks/trueblocks-node/v3@v3.3.0`,
     );
 
     oneCommand(
