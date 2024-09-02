@@ -7,8 +7,10 @@ import { debugToFile } from "./helpers.js";
 /// Set default command line option values
 let executionClient = "reth";
 let consensusClient = "lighthouse";
+let indexingClient = "trueBlocks";
 let executionPeerPort = null;
 let consensusPeerPorts = [null, null];
+let indexingPeerPorts = null;
 
 const filename = fileURLToPath(import.meta.url);
 let installDir = dirname(filename);
@@ -28,6 +30,10 @@ function showHelp() {
     "                                            Default: lighthouse\n"
   );
   console.log(
+    "  -i, --indexingclient <client>             Specify the indexing client ('trueBlocks')"
+  );
+  console.log("                                            Default: trueBlocks\n");
+  console.log(
     "  -ep, --executionpeerport <port>           Specify the execution peer port (must be a number)"
   );
   console.log("                                            Default: 30303\n");
@@ -37,6 +43,10 @@ function showHelp() {
   console.log(
     "                                            lighthouse defaults: 9000,9001. prysm defaults: 12000,13000\n"
   );
+  console.log(
+    "  -i, --indexingpeerports <client>          Specify the indexing peer ports ('n/a')"
+  );
+  console.log("                                            Default: none\n");
   console.log(
     "  -d, --directory <path>                    Specify ethereum client executable, database, and logs directory"
   );
@@ -62,8 +72,10 @@ function saveOptionsToFile() {
   const options = {
     executionClient,
     consensusClient,
+    indexingClient,
     executionPeerPort,
     consensusPeerPorts,
+    indexingPeerPorts,
     installDir,
   };
   fs.writeFileSync(optionsFilePath, JSON.stringify(options), "utf8");
@@ -86,8 +98,10 @@ if (fs.existsSync(optionsFilePath)) {
     const options = loadOptionsFromFile();
     executionClient = options.executionClient;
     consensusClient = options.consensusClient;
+    indexingClient = options.indexingClient;
     executionPeerPort = options.executionPeerPort;
     consensusPeerPorts = options.consensusPeerPorts;
+    indexingPeerPorts = options.indexingPeerPorts;
     installDir = options.installDir;
     optionsLoaded = true;
   } catch (error) {
@@ -111,6 +125,8 @@ const args = process.argv.slice(2).flatMap((arg) => {
     return "--executionpeerport";
   } else if (arg === "-cp") {
     return "--consensuspeerports";
+  } else if (arg === "-ip") {
+    return "--indexingpeerports";
   }
   return arg;
 });
@@ -123,14 +139,18 @@ if (!optionsLoaded) {
       "executionclient",
       "c",
       "consensusclient",
+      "i",
+      "indexingclient",
       "executionpeerport",
       "consensuspeerports",
+      "indexingpeerports",
       "d",
       "directory",
     ],
     alias: {
       e: "executionclient",
       c: "consensusclient",
+      i: "indexingclient",
       d: "directory",
       h: "help",
     },
@@ -162,6 +182,16 @@ if (!optionsLoaded) {
     }
   }
 
+  if (argv.indexingclient) {
+    indexingClient = argv.indexingclient;
+    if (indexingClient !== "trueBlocks") {
+      console.log(
+        "Invalid option for --indexingclient (-i). Use 'trueBlocks'."
+      );
+      process.exit(1);
+    }
+  }
+
   if (argv.executionpeerport) {
     executionPeerPort = parseInt(argv.executionpeerport, 10);
     if (executionPeerPort === "number" && !isNaN(executionPeerPort)) {
@@ -181,6 +211,16 @@ if (!optionsLoaded) {
     if (consensusPeerPorts.length !== 2 || consensusPeerPorts.some(isNaN)) {
       console.log(
         "Invalid option for --consensuspeerports (-cp). Must be two comma-separated numbers (e.g., 9000,9001)."
+      );
+      process.exit(1);
+    }
+  }
+
+  if (argv.indexingpeerport) {
+    indexingPeerPort = parseInt(argv.indexingpeerport, 10);
+    if (indexingPeerPort === "number" && !isNaN(indexingPeerPort)) {
+      console.log(
+        "Invalid option for --indexingpeerport (-ip). Must be a number."
       );
       process.exit(1);
     }
@@ -210,8 +250,10 @@ if (!optionsLoaded) {
 export {
   executionClient,
   consensusClient,
+  indexingClient,
   executionPeerPort,
   consensusPeerPorts,
+  indexingPeerPorts,
   installDir,
   saveOptionsToFile,
   deleteOptionsFile,

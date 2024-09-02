@@ -25,3 +25,5 @@ If you want to use a Geth + Prysm client pair, pass those as --executionclient (
   ```bash
   node index.js --executionclient geth --consensusclient prysm
   ```
+
+  what about indexing?

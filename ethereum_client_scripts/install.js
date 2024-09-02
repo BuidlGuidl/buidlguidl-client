@@ -339,3 +339,64 @@ export function downloadRethSnapshot(rethDir, platform) {
     console.log("\nReth snapshot already downloaded.");
   }
 }
+
+export function installWindowsIndexingClient(executionClient) {
+  console.log("Indexing client installation is not supported on Windows.");
+}
+
+export function installMacLinuxIndexingClient(
+  indexingClient,
+  platform,
+  trueBlocksVer
+) {
+  // We don't need this since we use go install
+  // const arch = os.arch();
+  // const configs = {
+  //   darwin: {
+  //     x64: {
+  //       trueBlocksFileName: `trueBlocks-v${trueBlocksVer}-x86_64-apple-darwin`,
+  //     },
+  //     arm64: {
+  //       trueBlocksFileName: `trueBlocks-v${trueBlocksVer}-aarch64-apple-darwin`,
+  //     },
+  //   },
+  //   linux: {
+  //     x64: {
+  //       trueBlocksFileName: `trueBlocks-v${trueBlocksVer}-x86_64-unknown-linux-gnu`,
+  //     },
+  //     arm64: {
+  //       trueBlocksFileName: `trueBlocks-v${trueBlocksVer}-aarch64-unknown-linux-gnu`,
+  //     },
+  //   },
+  // };
+  // const { trueBlocksFileName } = configs[platform][arch];
+
+  const trueBlocksDir = path.join(installDir, "ethereum_clients", "trueBlocks");
+  const trueBlocksScript = path.join(trueBlocksDir, "trueblocks-node");
+  if (!fs.existsSync(trueBlocksScript)) {
+    console.log("\nInstalling trueBlocks.");
+    if (!fs.existsSync(trueBlocksDir)) {
+      console.log(`Creating '${trueBlocksDir}'`);
+      fs.mkdirSync(`${trueBlocksDir}/database`, { recursive: true });
+      fs.mkdirSync(`${trueBlocksDir}/logs`, { recursive: true });
+    }
+
+    const oneCommand = (msg, cmd) => {
+      console.log(msg);
+      execSync(cmd, { stdio: "inherit" });
+    }
+
+    oneCommand(
+      "Installing the TrueBlocks indexer...",
+      `go install github.com/TrueBlocks/trueblocks-node/v3@69c56f2a3c990aac8d4bdf047e91952f3419710f`,
+    );
+
+    oneCommand(
+      "Moving executable...",
+      `mv ~/go/bin/trueblocks-node "${trueBlocksDir}"`,
+    );
+
+  } else {
+    console.log("TrueBlocks is already installed.");
+  }
+}

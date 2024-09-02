@@ -8,15 +8,19 @@ import { initializeMonitoring } from "./monitor.js";
 import {
   installMacLinuxConsensusClient,
   installMacLinuxExecutionClient,
+  installMacLinuxIndexingClient,
   installWindowsConsensusClient,
   installWindowsExecutionClient,
+  installWindowsIndexingClient,
 } from "./ethereum_client_scripts/install.js";
 import { initializeWSConnection } from "./ws_connection/wsConnection.js";
 import {
   executionClient,
   consensusClient,
+  indexingClient,
   executionPeerPort,
   consensusPeerPorts,
+  indexingPeerPorts,
   installDir,
   saveOptionsToFile,
   deleteOptionsFile,
@@ -29,6 +33,7 @@ const gethVer = "1.14.3";
 const rethVer = "1.0.0";
 const prysmVer = "5.1.0";
 const lighthouseVer = "5.2.0";
+const trueBlocksVer = "3.1.1";
 
 const lockFilePath = path.join(installDir, "ethereum_clients", "script.lock");
 
@@ -52,9 +57,11 @@ function createJwtSecret(jwtDir) {
 
 let executionChild;
 let consensusChild;
+let indexingChild;
 
 let executionExited = false;
 let consensusExited = false;
+let indexingExited = false;
 
 function handleExit() {
   console.log("\n\n🛰️  Received exit signal\n");
@@ -62,10 +69,10 @@ function handleExit() {
   deleteOptionsFile();
 
   try {
-    // Check if both child processes have exited
+    // Check if all child processes have exited
     const checkExit = () => {
-      if (executionExited && consensusExited) {
-        console.log("\n👍 Both clients exited!");
+      if (executionExited && consensusExited && indexingExited) {
+        console.log("\n👍 All clients have exited!");
         removeLockFile();
         process.exit(0);
       }
@@ -89,6 +96,15 @@ function handleExit() {
       }
     };
 
+    // Handle indexing client exit
+    const handleIndexingExit = (code) => {
+      if (!indexingExited) {
+        indexingExited = true;
+        console.log(`🫡 Indexing client exited with code ${code}`);
+        checkExit();
+      }
+    };
+
     // Handle execution client close
     const handleExecutionClose = (code) => {
       if (!executionExited) {
@@ -103,6 +119,15 @@ function handleExit() {
       if (!consensusExited) {
         consensusExited = true;
         console.log(`🫡 Consensus client closed with code ${code}`);
+        checkExit();
+      }
+    };
+
+    // Handle indexing client close
+    const handleIndexingClose = (code) => {
+      if (!indexingExited) {
+        indexingExited = true;
+        console.log(`🫡 Indexing client closed with code ${code}`);
         checkExit();
       }
     };
@@ -122,6 +147,14 @@ function handleExit() {
       consensusExited = true;
     }
 
+    // Ensure event listeners are set before killing the processes
+    if (indexingChild && !indexingExited) {
+      indexingChild.on("exit", handleIndexingExit);
+      indexingChild.on("close", handleIndexingClose);
+    } else {
+      indexingExited = true;
+    }
+
     // Send the kill signals after setting the event listeners
     if (executionChild && !executionExited) {
       console.log("⌛️ Exiting execution client...");
@@ -137,14 +170,22 @@ function handleExit() {
       }, 750);
     }
 
+    // Send the kill signals after setting the event listeners
+    if (indexingChild && !indexingExited) {
+      console.log("⌛️ Exiting indexing client...");
+      setTimeout(() => {
+        indexingChild.kill("SIGINT");
+      }, 750);
+    }
+
     // Initial check in case both children are already not running
     checkExit();
 
-    // Periodically check if both child processes have exited
+    // Periodically check if the child processes have exited
     const intervalId = setInterval(() => {
       checkExit();
-      // Clear interval if both clients have exited
-      if (executionExited && consensusExited) {
+      // Clear interval if all of the clients have exited
+      if (executionExited && consensusExited && indexingExited) {
         clearInterval(intervalId);
       }
     }, 1000);
@@ -192,6 +233,16 @@ function startClient(clientName, installDir) {
     if (consensusPeerPorts[0] !== null || consensusPeerPorts[1] !== null) {
       clientArgs.push("--consensuspeerports", consensusPeerPorts);
     }
+  } else if (clientName === "trueBlocks") {
+    clientCommand = path.join(
+      __dirname,
+      "ethereum_client_scripts/trueBlocks.js"
+    );
+
+    // Do we need these?
+    // if (trueBlocksPeerPorts[0] !== null || trueBlocksPeerPorts[1] !== null) {
+    //  trueBlocksArgs.push("--port", trueBlocksPeerPorts);
+    // }
   } else {
     clientCommand = path.join(
       installDir,
@@ -217,6 +268,8 @@ function startClient(clientName, installDir) {
     consensusChild = child;
   } else if (clientName === "lighthouse") {
     consensusChild = child;
+  } else if (clientName === "trueBlocks") {
+    indexingChild = child;
   }
 
   child.on("exit", (code) => {
@@ -225,6 +278,8 @@ function startClient(clientName, installDir) {
       executionExited = true;
     } else if (clientName === "prysm" || clientName === "lighthouse") {
       consensusExited = true;
+    } else if (clientName === "trueBlocks") {
+      indexingExited = true;
     }
   });
 
@@ -278,9 +333,11 @@ const platform = os.platform();
 if (["darwin", "linux"].includes(platform)) {
   installMacLinuxExecutionClient(executionClient, platform, gethVer, rethVer);
   installMacLinuxConsensusClient(consensusClient, platform, lighthouseVer);
+  installMacLinuxIndexingClient(indexingClient, platform, trueBlocksVer);
 } else if (platform === "win32") {
   installWindowsExecutionClient(executionClient);
   installWindowsConsensusClient(consensusClient);
+  installWindowsIndexingClient(indexingClient);
 }
 
 let messageForHeader = "";
@@ -291,10 +348,12 @@ createJwtSecret(jwtDir);
 const wsConfig = {
   executionClient: executionClient,
   consensusClient: consensusClient,
+  indexingClient: indexingClient,
   gethVer: gethVer,
   rethVer: rethVer,
   prysmVer: prysmVer,
   lighthouseVer: lighthouseVer,
+  trueBlocksVer: trueBlocksVer,
 };
 
 if (!isAlreadyRunning()) {
@@ -302,6 +361,7 @@ if (!isAlreadyRunning()) {
 
   startClient(executionClient, installDir);
   startClient(consensusClient, installDir);
+  startClient(indexingClient, installDir);
 
   initializeWSConnection(wsConfig);
 
@@ -317,9 +377,11 @@ initializeMonitoring(
   messageForHeader,
   executionClient,
   consensusClient,
+  indexingClient,
   gethVer,
   rethVer,
   prysmVer,
   lighthouseVer,
+  trueBlocksVer,
   runsClient
 );

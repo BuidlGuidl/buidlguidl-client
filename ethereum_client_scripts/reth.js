@@ -41,11 +41,14 @@ const logFilePath = path.join(
 
 const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
 
+// TODO: Need an option to run an archive node or not
+let enableArchive = true
+
 const execution = pty.spawn(
   `${rethCommand}`,
   [
     "node",
-    "--full",
+    ${enableArchive ? "" : "--full"},
     "--discovery.port",
     executionPeerPort,
     "--http",

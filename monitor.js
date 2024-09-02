@@ -6,6 +6,7 @@ import { populateChainInfoBox } from "./monitor_components/chainInfoBox.js";
 import { updateStatusBox } from "./monitor_components/statusBox.js";
 import { createSystemStatsGauge } from "./monitor_components/systemStatsGauge.js";
 import { createPeerCountGauge } from "./monitor_components/peerCountGauge.js";
+import { createIndexingProgress } from "./monitor_components/indexingProgress.js";
 import { createCpuLine } from "./monitor_components/cpuLine.js";
 import { createNetworkLine } from "./monitor_components/networkLine.js";
 import { createRethStageGauge } from "./monitor_components/rethStageGauge.js";
@@ -46,10 +47,12 @@ export async function initializeMonitoring(
   messageForHeader,
   executionClient,
   consensusClient,
+  indexingClient,
   gethVer,
   rethVer,
   prysmVer,
   lighthouseVer,
+  trueBlocksVer,
   runsClient
 ) {
   try {
@@ -172,6 +175,7 @@ function setupUI(
   const consensusLog = createConsensusLog(grid, screen, consensusClientLabel);
   const systemStatsGauge = createSystemStatsGauge(grid, screen, installDir);
   const peerCountGauge = createPeerCountGauge(grid, screen);
+  const indexingProgress = createIndexingProgress(grid, screen);
   const cpuLine = createCpuLine(grid, screen);
   const networkLine = createNetworkLine(grid, screen);
   const statusBox = createStatusBox(grid, screen);
@@ -198,6 +202,7 @@ function setupUI(
   screen.append(networkLine);
   screen.append(systemStatsGauge);
   screen.append(peerCountGauge);
+  screen.append(indexingProgress);
   screen.append(statusBox);
   screen.append(bandwidthBox);
   if (executionClientGlobal == "geth") {
@@ -289,6 +294,12 @@ function setupUI(
       if (networkLineGap != 0) {
         networkLine.height = networkLine.height + networkLineGap;
       }
+
+      let indexingProgressBottom = indexingProgress.top + indexingProgress.height - 1;
+      let indexingProgressGap = screen.height - indexingProgressBottom - 1;
+      if (indexingProgressGap != 0) {
+        indexingProgress.height = indexingProgress.height + indexingProgressGap;
+      }
     } catch (error) {
       debugToFile(`fixBottomMargins(): ${error}`, () => {});
     }
@@ -359,10 +370,16 @@ function setupUI(
         systemStatsGauge.width = systemStatsGauge.width + systemStatsGaugeGap;
       }
 
-      let networkLineRight = networkLine.left + networkLine.width - 1;
-      let networkLineGap = screen.width - networkLineRight - 1;
-      if (networkLineGap != 0) {
-        networkLine.width = networkLine.width + networkLineGap;
+      // let networkLineRight = networkLine.left + networkLine.width - 1;
+      // let networkLineGap = screen.width - networkLineRight - 1;
+      // if (networkLineGap != 0) {
+      //   networkLine.width = networkLine.width + networkLineGap;
+      // }
+
+      let indexingProgressRight = indexingProgress.left + indexingProgress.width - 1;
+      let indexingProgressGap = screen.width - indexingProgressRight - 1;
+      if (indexingProgressGap != 0) {
+        indexingProgress.width = indexingProgress.width + indexingProgressGap;
       }
 
       // let networkLineRight = networkLine.left + networkLine.width - 1;
