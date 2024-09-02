@@ -11,6 +11,7 @@ let indexingClient = "trueBlocks";
 let executionPeerPort = null;
 let consensusPeerPorts = [null, null];
 let indexingPeerPorts = null;
+let consensusCheckpoint = null;
 
 const filename = fileURLToPath(import.meta.url);
 let installDir = dirname(filename);
@@ -47,6 +48,11 @@ function showHelp() {
     "  -i, --indexingpeerports <client>          Specify the indexing peer ports ('n/a')"
   );
   console.log("                                            Default: none\n");
+    "  -cc, --consensuscheckpoint <url>          Specify the consensus checkpoint server URL"
+  );
+  console.log(
+    "                                            lighthouse default: https://mainnet.checkpoint.sigp.io. prysm default: https://mainnet-checkpoint-sync.attestant.io/\n"
+  );
   console.log(
     "  -d, --directory <path>                    Specify ethereum client executable, database, and logs directory"
   );
@@ -76,6 +82,7 @@ function saveOptionsToFile() {
     executionPeerPort,
     consensusPeerPorts,
     indexingPeerPorts,
+    consensusCheckpoint,
     installDir,
   };
   fs.writeFileSync(optionsFilePath, JSON.stringify(options), "utf8");
@@ -102,6 +109,7 @@ if (fs.existsSync(optionsFilePath)) {
     executionPeerPort = options.executionPeerPort;
     consensusPeerPorts = options.consensusPeerPorts;
     indexingPeerPorts = options.indexingPeerPorts;
+    consensusCheckpoint = options.consensusCheckpoint;
     installDir = options.installDir;
     optionsLoaded = true;
   } catch (error) {
@@ -127,6 +135,8 @@ const args = process.argv.slice(2).flatMap((arg) => {
     return "--consensuspeerports";
   } else if (arg === "-ip") {
     return "--indexingpeerports";
+  } else if (arg === "-cc") {
+    return "--consensuscheckpoint";
   }
   return arg;
 });
@@ -144,6 +154,7 @@ if (!optionsLoaded) {
       "executionpeerport",
       "consensuspeerports",
       "indexingpeerports",
+      "consensuscheckpoint",
       "d",
       "directory",
     ],
@@ -230,6 +241,9 @@ if (!optionsLoaded) {
     `Consensus peer ports: ${consensusPeerPorts[0]}, ${consensusPeerPorts[1]}`
   );
   // process.exit(0);
+  if (argv.consensuscheckpoint) {
+    consensusCheckpoint = argv.consensuscheckpoint;
+  }
 
   if (argv.directory) {
     installDir = argv.directory;
@@ -254,6 +268,7 @@ export {
   executionPeerPort,
   consensusPeerPorts,
   indexingPeerPorts,
+  consensusCheckpoint,
   installDir,
   saveOptionsToFile,
   deleteOptionsFile,
