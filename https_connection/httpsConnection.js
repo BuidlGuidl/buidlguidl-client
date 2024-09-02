@@ -9,6 +9,10 @@ import {
 } from "../getSystemStats.js";
 import { localClient } from "../monitor_components/viemClients.js";
 import { installDir } from "../commandLineOptions.js";
+import {
+  getConsensusPeers,
+  getExecutionPeers,
+} from "../monitor_components/peerCountGauge.js";
 
 export let checkIn;
 
@@ -91,6 +95,12 @@ export function initializeHttpConnection(httpConfig) {
       const memoryUsage = await getMemoryUsage();
       const diskUsage = await getDiskUsage(installDir);
       const macAddress = await getMacAddress();
+      const executionPeers = await getExecutionPeers(
+        httpConfig.executionClient
+      );
+      const consensusPeers = await getConsensusPeers(
+        httpConfig.consensusClient
+      );
 
       const params = new URLSearchParams({
         id: `${os.hostname()}-${macAddress}-${os.platform()}-${os.arch()}`,
@@ -102,6 +112,8 @@ export function initializeHttpConnection(httpConfig) {
         storage_usage: `${diskUsage}`,
         block_number: possibleBlockNumber ? possibleBlockNumber.toString() : "",
         block_hash: possibleBlockHash ? possibleBlockHash : "",
+        execution_peers: executionPeers,
+        consensus_peers: consensusPeers,
       });
 
       const options = {
@@ -118,6 +130,7 @@ export function initializeHttpConnection(httpConfig) {
         });
         res.on("end", () => {
           debugToFile(`Checkin response: ${data}`, () => {});
+          debugToFile(`Response status: ${res.statusCode}`, () => {});
         });
       });
 

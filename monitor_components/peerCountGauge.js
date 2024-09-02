@@ -31,7 +31,7 @@ export function createPeerCountGauge(grid, screen) {
 
 //
 
-async function getExecutionPeers() {
+export async function getExecutionPeers() {
   try {
     const peerCountHex = await localClient.request({
       method: "net_peerCount",
@@ -45,28 +45,20 @@ async function getExecutionPeers() {
   }
 }
 
-async function getConsensusPeers(consensusClient) {
-  // debugToFile(
-  //   `getConsensusPeers() consensusClient: ${consensusClient}`,
-  //   () => {}
-  // );
-
+export async function getConsensusPeers(consensusClient) {
   let searchString;
   if (consensusClient == "prysm") {
     searchString = 'p2p_peer_count{state="Connected"}';
   } else if (consensusClient == "lighthouse") {
     searchString = "libp2p_peers";
   }
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     exec(
       `curl -s http://localhost:5054/metrics | grep -E '^${searchString} '`,
       (error, stdout, stderr) => {
-        if (error) {
-          return reject(error);
-        }
-        if (stderr) {
-          debugToFile(`getConsensusPeers(): ${stderr}`, () => {});
-          return reject(new Error(stderr));
+        if (error || stderr) {
+          // debugToFile(`getConsensusPeers(): ${error || stderr}`, () => {});
+          return resolve(null);
         }
 
         const parts = stdout.trim().split(" ");
