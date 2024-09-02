@@ -13,6 +13,7 @@
     "axios": "^1.7.2",
     "blessed": "^0.1.81",
     "blessed-contrib": "^4.11.0",
+    "express": "^4.19.2",
     "https": "^1.0.0",
     "macaddress": "^0.5.3",
     "minimist": "^1.2.8",
