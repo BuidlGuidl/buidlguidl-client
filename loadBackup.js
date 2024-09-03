@@ -36,18 +36,29 @@ async function downloadAndExtractBackup(url) {
     fs.mkdirSync(backupDir);
   }
 
-  try {
-    console.log(`Downloading backup from ${url}...`);
-    execSync(`curl -o ${backupPath} ${url}`, {
-      stdio: "inherit",
-    });
+  if (!fs.existsSync(backupPath)) {
+    try {
+      console.log(`Downloading backup from ${url}...`);
+      execSync(`curl -o ${backupPath} ${url}`, {
+        stdio: "inherit",
+      });
+    } catch (error) {
+      console.error(`Error downloading backup: ${error.message}`);
+      process.exit(1);
+    }
+  } else {
+    console.log(
+      `Backup file already exists at ${backupPath}. Skipping download.`
+    );
+  }
 
+  try {
     console.log("Extracting backup...");
     execSync(`tar -xf ${backupPath} -C ${installDir}`, { stdio: "inherit" });
 
     console.log("Backup loaded successfully.");
   } catch (error) {
-    console.error(`Error downloading or extracting backup: ${error.message}`);
+    console.error(`Error extracting backup: ${error.message}`);
     process.exit(1);
   }
 }
