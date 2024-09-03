@@ -54,24 +54,33 @@ export function initializeHttpConnection(httpConfig) {
       const lastCommit = await git.log(["--format=%cd", "--date=iso", "-1"]);
 
       debugToFile(`branch: ${branch}`, () => {});
+      debugToFile(`lastCommit: ${JSON.stringify(lastCommit)}`, () => {});
 
       let lastCommitDate = "unknown";
       if (lastCommit && lastCommit.latest && lastCommit.latest.hash) {
         const commitDateString = lastCommit.latest.hash;
         try {
-          // Parse the date string and convert to UTC
-          const date = new Date(commitDateString);
-          const utcDate = new Date(
-            date.getTime() + date.getTimezoneOffset() * 60000
-          );
-          lastCommitDate = utcDate
-            .toISOString()
-            .replace(/T/, " ")
-            .replace(/\..+/, "");
+          // Log the raw date string
+          debugToFile(`Raw commit date string: ${commitDateString}`, () => {});
 
-          debugToFile(`lastCommitDate: ${lastCommitDate}`, () => {});
+          // Directly create a date from the ISO string
+          const date = new Date(commitDateString);
+
+          if (!isNaN(date)) {
+            lastCommitDate = date
+              .toISOString()
+              .replace(/T/, " ")
+              .replace(/\..+/, "");
+            debugToFile(
+              `Converted lastCommitDate: ${lastCommitDate}`,
+              () => {}
+            );
+          } else {
+            throw new Error("Invalid date");
+          }
         } catch (error) {
           debugToFile(`Failed to parse commit date: ${error}`, () => {});
+          debugToFile(`Error stack: ${error.stack}`, () => {});
         }
       }
 
@@ -81,6 +90,7 @@ export function initializeHttpConnection(httpConfig) {
       };
     } catch (error) {
       debugToFile(`Failed to get git info: ${error}`, () => {});
+      debugToFile(`Error stack: ${error.stack}`, () => {});
       return { branch: "unknown", lastCommitDate: "unknown" };
     }
   }
