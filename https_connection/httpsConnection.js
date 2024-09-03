@@ -53,16 +53,10 @@ export function initializeHttpConnection(httpConfig) {
       const branch = await git.revparse(["--abbrev-ref", "HEAD"]);
       const lastCommit = await git.log(["--format=%cd", "--date=iso", "-1"]);
 
-      debugToFile(`branch: ${branch}`, () => {});
-      debugToFile(`lastCommit: ${JSON.stringify(lastCommit)}`, () => {});
-
       let lastCommitDate = "unknown";
       if (lastCommit && lastCommit.latest && lastCommit.latest.hash) {
         const commitDateString = lastCommit.latest.hash;
         try {
-          // Log the raw date string
-          debugToFile(`Raw commit date string: ${commitDateString}`, () => {});
-
           // Directly create a date from the ISO string
           const date = new Date(commitDateString);
 
