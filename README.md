@@ -1,5 +1,8 @@
 # 📡 buidlguidl client
-This project will download clients executables and start a Reth + Lighthouse node pair. Syncing the client databases will require ~1.2 TB of free space.
+
+> [full ethereum node in one command](https://client.buidlguidl.com)
+
+This project will download and start a Reth + Lighthouse node pair. Syncing the client databases will require ~1.2 TB of free space.
 
 ## Requirements
 - node (https://nodejs.org/en)
