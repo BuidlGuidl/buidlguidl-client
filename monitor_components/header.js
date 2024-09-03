@@ -38,18 +38,32 @@ export function createHeader(grid, screen, messageForHeader) {
     }
   }
 
-  // const picOptions = {
-  //   file: path.join(__dirname, "pixelBgLogo.png"),
-  //   cols: 12,
-  //   onReady: ready,
-  // };
+  // New function to fetch points
+  async function fetchPoints(publicIP) {
+    try {
+      const response = await axios.get(
+        `https://rpc.buidlguidl.com:48544/yourpoints?ipaddress=${publicIP}`
+      );
+      return response.data.points;
+    } catch (error) {
+      debugToFile(`Error fetching points: ${error}`, () => {});
+      return null;
+    }
+  }
 
-  // function ready() {
-  //   // screen.render();
-  // }
-
-  // const pic = grid.set(0, 0, 1, 2, contrib.picture, picOptions);
-  // debugToFile(`pic.height: ${pic.height}`, () => {});
+  // New function to update bigText with points
+  async function updatePointsDisplay() {
+    const publicIP = await getPublicIPAddress();
+    const points = await fetchPoints(publicIP);
+    if (points !== null) {
+      bigText.setContent(
+        `{center}{bold}B u i d l G u i d l  C l i e n t {/bold}{/center}\n` +
+          `{center}{green-fg}Unclaimed Points: ${points}{/green-fg}{/center}\n` +
+          `{center}{cyan-fg}${messageForHeader}{/cyan-fg}{/center}`
+      );
+      screen.render();
+    }
+  }
 
   let pic, logo;
   try {
@@ -130,6 +144,12 @@ export function createHeader(grid, screen, messageForHeader) {
       screen.render();
     }
   );
+
+  // Initial points update
+  updatePointsDisplay();
+
+  // Schedule points update every 5 minutes
+  setInterval(updatePointsDisplay, 5 * 60 * 1000);
 
   return { pic, bigText, ipAddressBox };
 }
