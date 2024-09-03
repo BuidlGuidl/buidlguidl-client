@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { debugToFile } from "../helpers.js";
+import { execSync } from "child_process";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -51,13 +52,25 @@ export function createHeader(grid, screen, messageForHeader) {
     }
   }
 
-  // New function to update bigText with points
-  async function updatePointsDisplay() {
+  // New function to get the current Git branch
+  function getCurrentBranch() {
+    try {
+      return execSync("git rev-parse --abbrev-ref HEAD").toString().trim();
+    } catch (error) {
+      debugToFile(`Error getting current branch: ${error}`, () => {});
+      return "unknown";
+    }
+  }
+
+  // New function to update bigText with points and branch name
+  async function updatePointsAndBranchDisplay() {
     const publicIP = await getPublicIPAddress();
     const points = await fetchPoints(publicIP);
+    const currentBranch = getCurrentBranch();
     if (points !== null) {
       bigText.setContent(
-        `{center}{bold}B u i d l G u i d l  C l i e n t {/bold}{/center}\n` +
+        `{center}{bold}B u i d l G u i d l  C l i e n t{/bold}{/center}\n` +
+          `{center}Branch: ${currentBranch}{/center}\n` +
           `{center}{green-fg}Unclaimed Points: ${points}{/green-fg}{/center}\n` +
           `{center}{cyan-fg}${messageForHeader}{/cyan-fg}{/center}`
       );
@@ -145,11 +158,11 @@ export function createHeader(grid, screen, messageForHeader) {
     }
   );
 
-  // Initial points update
-  updatePointsDisplay();
+  // Replace updatePointsDisplay with updatePointsAndBranchDisplay
+  updatePointsAndBranchDisplay();
 
-  // Schedule points update every 5 minutes
-  setInterval(updatePointsDisplay, 5 * 60 * 1000);
+  // Schedule points and branch update every 5 minutes
+  setInterval(updatePointsAndBranchDisplay, 5 * 60 * 1000);
 
   return { pic, bigText, ipAddressBox };
 }
