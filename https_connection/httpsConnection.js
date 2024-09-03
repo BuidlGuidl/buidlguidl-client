@@ -13,6 +13,8 @@ import {
   getConsensusPeers,
   getExecutionPeers,
 } from "../monitor_components/peerCountGauge.js";
+import simpleGit from "simple-git";
+import path from "path";
 
 export let checkIn;
 
@@ -43,6 +45,45 @@ export function initializeHttpConnection(httpConfig) {
   let lastCheckInTime = 0;
   let lastCheckedBlockNumber = -1;
   const minCheckInInterval = 60000; // Minimum 60 seconds between check-ins
+
+  const git = simpleGit();
+
+  async function getGitInfo() {
+    try {
+      const branch = await git.revparse(["--abbrev-ref", "HEAD"]);
+      const lastCommit = await git.log(["--format=%cd", "--date=iso", "-1"]);
+
+      debugToFile(`branch: ${branch}`, () => {});
+
+      let lastCommitDate = "unknown";
+      if (lastCommit && lastCommit.latest && lastCommit.latest.hash) {
+        const commitDateString = lastCommit.latest.hash;
+        try {
+          // Parse the date string and convert to UTC
+          const date = new Date(commitDateString);
+          const utcDate = new Date(
+            date.getTime() + date.getTimezoneOffset() * 60000
+          );
+          lastCommitDate = utcDate
+            .toISOString()
+            .replace(/T/, " ")
+            .replace(/\..+/, "");
+
+          debugToFile(`lastCommitDate: ${lastCommitDate}`, () => {});
+        } catch (error) {
+          debugToFile(`Failed to parse commit date: ${error}`, () => {});
+        }
+      }
+
+      return {
+        branch: branch.trim(),
+        lastCommitDate: lastCommitDate,
+      };
+    } catch (error) {
+      debugToFile(`Failed to get git info: ${error}`, () => {});
+      return { branch: "unknown", lastCommitDate: "unknown" };
+    }
+  }
 
   checkIn = async function (force = false, blockNumber = null) {
     const now = Date.now();
@@ -103,6 +144,8 @@ export function initializeHttpConnection(httpConfig) {
         httpConfig.consensusClient
       );
 
+      const gitInfo = await getGitInfo();
+
       const params = new URLSearchParams({
         id: `${os.hostname()}-${macAddress}-${os.platform()}-${os.arch()}`,
         node_version: `${process.version}`,
@@ -115,6 +158,8 @@ export function initializeHttpConnection(httpConfig) {
         block_hash: possibleBlockHash ? possibleBlockHash : "",
         execution_peers: executionPeers,
         consensus_peers: consensusPeers,
+        git_branch: gitInfo.branch,
+        last_commit: gitInfo.lastCommitDate,
       });
 
       const options = {
