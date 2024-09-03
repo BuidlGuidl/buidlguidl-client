@@ -393,10 +393,13 @@ function setupUI(
     }
   }
 
-  fixBottomMargins(screen);
-  fixRightMargins(screen);
-
   screen.render();
+
+  setTimeout(() => {
+    fixBottomMargins(screen);
+    fixRightMargins(screen);
+    screen.render(); // Re-render the screen after adjustments
+  }, 500);
 
   screen.on("resize", () => {
     fixBottomMargins(screen);
