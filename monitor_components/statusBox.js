@@ -25,6 +25,7 @@ export function createStatusBox(grid, screen) {
       type: "line",
       fg: "cyan",
     },
+    tags: true,
   });
 
   // setInterval(() => updateStatusBox(statusBox, screen), 5000);

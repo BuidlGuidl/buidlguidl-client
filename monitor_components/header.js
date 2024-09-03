@@ -11,26 +11,30 @@ const __dirname = dirname(__filename);
 
 export function createHeader(grid, screen, messageForHeader) {
   // Function to get the local IP address
-  function getIPAddress() {
-    const interfaces = os.networkInterfaces();
-    for (const iface in interfaces) {
-      for (const alias of interfaces[iface]) {
-        if (alias.family === "IPv4" && !alias.internal) {
-          return alias.address;
+  async function getIPAddress() {
+    while (true) {
+      const interfaces = os.networkInterfaces();
+      for (const iface in interfaces) {
+        for (const alias of interfaces[iface]) {
+          if (alias.family === "IPv4" && !alias.internal) {
+            return alias.address;
+          }
         }
       }
+      await new Promise((resolve) => setTimeout(resolve, 5000));
     }
-    return "IP not found";
   }
 
   // Function to get the public IP address
   async function getPublicIPAddress() {
-    try {
-      const response = await axios.get("https://api.ipify.org?format=json");
-      return response.data.ip;
-    } catch (error) {
-      debugToFile(`Error fetching public IP address: ${error}`, () => {});
-      return "IP not found";
+    while (true) {
+      try {
+        const response = await axios.get("https://api.ipify.org?format=json");
+        return response.data.ip;
+      } catch (error) {
+        debugToFile(`Error fetching public IP address: ${error}`, () => {});
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+      }
     }
   }
 
@@ -105,7 +109,7 @@ export function createHeader(grid, screen, messageForHeader) {
 
   // Create the IP address box
   const ipAddressBox = grid.set(0, 7, 1, 3, blessed.box, {
-    content: `{center}{bold}IP Address: ${getIPAddress()} {/bold}\n{center}{bold}Public IP: Fetching...{/bold}{/center}`,
+    content: `{center}{bold}IP Address: Fetching... {/bold}\n{center}{bold}Public IP: Fetching...{/bold}{/center}`,
     tags: true,
     align: "center",
     valign: "middle",
@@ -117,15 +121,15 @@ export function createHeader(grid, screen, messageForHeader) {
     },
   });
 
-  // screen.render();
-
-  // Fetch and display the public IP address
-  getPublicIPAddress().then((publicIP) => {
-    ipAddressBox.setContent(
-      `{center}{bold}Local IP: ${getIPAddress()}{/bold}\n{center}{bold}Public IP: ${publicIP}{/bold}{/center}`
-    );
-    screen.render();
-  });
+  // Fetch and display both IP addresses
+  Promise.all([getIPAddress(), getPublicIPAddress()]).then(
+    ([localIP, publicIP]) => {
+      ipAddressBox.setContent(
+        `{center}{bold}Local IP: ${localIP}{/bold}\n{center}{bold}Public IP: ${publicIP}{/bold}{/center}`
+      );
+      screen.render();
+    }
+  );
 
   return { pic, bigText, ipAddressBox };
 }
