@@ -607,7 +607,19 @@ export async function synchronizeAndUpdateWidgets() {
         const currentBlock = parseInt(syncingStatus.currentBlock, 16);
         const highestBlock = parseInt(syncingStatus.highestBlock, 16);
 
-        statusMessage = `SYNC IN PROGRESS\nCurrent Block: ${currentBlock}\nHighest Block: ${highestBlock}`;
+        debugToFile(
+          `syncingStatus: ${JSON.stringify(syncingStatus, null, 2)}`,
+          () => {}
+        );
+
+        debugToFile(`currentBlock: ${currentBlock}`, () => {});
+        debugToFile(`highestBlock: ${highestBlock}`, () => {});
+
+        if (currentBlock === 0 && highestBlock === 0) {
+          statusMessage = `SYNC IN PROGRESS`;
+        } else {
+          statusMessage = `SYNC IN PROGRESS\nCurrent Block: ${currentBlock}\nHighest Block: ${highestBlock}`;
+        }
       } else {
         if (
           blockNumber >= latestBlock ||
