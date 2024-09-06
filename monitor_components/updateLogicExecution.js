@@ -507,6 +507,9 @@ async function parseAndPopulateRethMetrics() {
 
 async function createRethMessage(syncingStatus, blockNumber, latestBlock) {
   try {
+    debugToFile(`syncingStatus: ${syncingStatus}`, () => {});
+    debugToFile(`blockNumber: ${blockNumber}`, () => {});
+    debugToFile(`latestBlock: ${latestBlock}`, () => {});
     if (syncingStatus) {
       statusMessage = `SYNC IN PROGRESS`;
     } else {

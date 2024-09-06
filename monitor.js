@@ -225,8 +225,6 @@ function setupUI(
   }
 
   setInterval(() => updateBandwidthBox(screen), 2000);
-  // setInterval(() => updateStatusBox(statusBox, screen), 5000);
-  // setInterval(() => updateChainInfoBox(chainInfoBox, screen), 5000);
   setInterval(() => updateChainWidgets(statusBox, chainInfoBox, screen), 5000);
 
   function fixBottomMargins(screen) {
