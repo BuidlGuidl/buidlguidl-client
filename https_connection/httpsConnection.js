@@ -48,6 +48,17 @@ export function initializeHttpConnection(httpConfig) {
 
   const git = simpleGit();
 
+  // Run getGitInfo() once and store the result
+  let gitInfo;
+  getGitInfo()
+    .then((info) => {
+      gitInfo = info;
+    })
+    .catch((error) => {
+      debugToFile(`Failed to get initial git info: ${error}`, () => {});
+      gitInfo = { branch: "unknown", lastCommitDate: "unknown" };
+    });
+
   async function getGitInfo() {
     try {
       const branch = await git.revparse(["--abbrev-ref", "HEAD"]);
@@ -148,8 +159,7 @@ export function initializeHttpConnection(httpConfig) {
         httpConfig.consensusClient
       );
 
-      const gitInfo = await getGitInfo();
-
+      // Use the stored gitInfo instead of calling getGitInfo()
       const params = new URLSearchParams({
         id: `${os.hostname()}-${macAddress}-${os.platform()}-${os.arch()}`,
         node_version: `${process.version}`,
@@ -179,7 +189,7 @@ export function initializeHttpConnection(httpConfig) {
           data += chunk;
         });
         res.on("end", () => {
-          debugToFile(`Checkin response: ${data}`, () => {});
+          // debugToFile(`Checkin response: ${data}`, () => {});
           debugToFile(`Response status: ${res.statusCode}`, () => {});
         });
       });

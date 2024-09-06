@@ -508,16 +508,11 @@ async function parseAndPopulateRethMetrics() {
 async function createRethMessage(syncingStatus, blockNumber, latestBlock) {
   try {
     debugToFile(
-      `---------------------- createRethMessage() ----------------------`,
+      `syncingStatus: ${JSON.stringify(syncingStatus, null, 2)}`,
       () => {}
     );
-    debugToFile(`syncingStatus: ${syncingStatus}`, () => {});
     debugToFile(`blockNumber: ${blockNumber}`, () => {});
     debugToFile(`latestBlock: ${latestBlock}`, () => {});
-    debugToFile(
-      `---------------------- createRethMessage() ----------------------`,
-      () => {}
-    );
     if (syncingStatus) {
       statusMessage = `SYNC IN PROGRESS`;
     } else {
