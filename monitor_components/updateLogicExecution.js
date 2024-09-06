@@ -598,11 +598,15 @@ export async function synchronizeAndUpdateWidgets() {
     } else if (executionClient == "reth") {
       const allStagesComplete = checkAllStagesComplete(stagePercentages);
 
-      debugToFile(`syncingStatus: ${syncingStatus}`, () => {});
+      debugToFile(
+        `syncingStatus: ${JSON.stringify(syncingStatus, null, 2)}`,
+        () => {}
+      );
       debugToFile(`allStagesComplete: ${allStagesComplete}`, () => {});
       Object.entries(stagePercentages).forEach(([key, value]) => {
         debugToFile(`stagePercentages[${key}]: ${value}`, () => {});
       });
+      debugToFile(`\n\n`, () => {});
 
       if (syncingStatus && !allStagesComplete) {
         statusMessage = `SYNC IN PROGRESS`;
