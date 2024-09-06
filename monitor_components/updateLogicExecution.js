@@ -588,16 +588,16 @@ export async function synchronizeAndUpdateWidgets() {
         if (currentBlock === 0 && highestBlock === 0) {
           statusMessage = `SYNC IN PROGRESS`;
         } else {
-          statusMessage = `SYNC IN PROGRESS\nCurrent Block: ${currentBlock}\nHighest Block: ${highestBlock}`;
+          statusMessage = `SYNC IN PROGRESS\nCurrent Block: ${currentBlock.toLocaleString()}\nHighest Block: ${highestBlock.toLocaleString()}`;
         }
       } else {
         if (
           blockNumber >= latestBlock ||
           blockNumber === latestBlock - BigInt(1)
         ) {
-          statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber}`;
+          statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
         } else {
-          statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber}\nMainnet Block: ${latestBlock}`;
+          statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${latestBlock.toLocaleString()}`;
         }
       }
     } else if (executionClient == "reth") {
@@ -623,9 +623,9 @@ export async function synchronizeAndUpdateWidgets() {
           blockNumber >= latestBlock ||
           blockNumber === latestBlock - BigInt(1)
         ) {
-          statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber}`;
+          statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
         } else {
-          statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber}\nMainnet Block: ${latestBlock}`;
+          statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${latestBlock.toLocaleString()}`;
         }
       }
     }
