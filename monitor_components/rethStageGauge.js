@@ -39,31 +39,33 @@ export function populateRethStageGauge(stagePercentages) {
       "FINISH",
     ];
 
-    // Get the width of the rethStageGauge box
-    const boxWidth = rethStageGauge.width - 9; // Subtracting 9 for padding/border
-    if (boxWidth > 0) {
-      // Initialize the content string
+    const boxWidth = rethStageGauge.width - 9;
+    const boxHeight = rethStageGauge.height - 2; // Subtracting 2 for border
+
+    if (boxWidth > 0 && boxHeight > 0) {
       let content = "";
+      const maxItems = Math.floor(boxHeight / 2);
 
-      // Iterate over each stage's percentage and name
-      stagePercentages.forEach((percentComplete, index) => {
-        // Calculate the number of filled bars for this stage
+      // Find the last completed stage
+      const lastCompletedIndex = stagePercentages.lastIndexOf(1);
+
+      let startIndex = lastCompletedIndex;
+      let endIndex = Math.min(stagePercentages.length, startIndex + maxItems);
+
+      if (boxHeight >= 24) {
+        startIndex = 0;
+        endIndex = stagePercentages.length;
+      }
+
+      for (let i = startIndex; i < endIndex; i++) {
+        const percentComplete = stagePercentages[i];
         const filledBars = Math.floor(boxWidth * percentComplete);
-
-        // Create the bar string
         const bar = "█".repeat(filledBars) + " ".repeat(boxWidth - filledBars);
-
-        // Create the percentage string
         const percentString = `${Math.floor(percentComplete * 100)}%`;
+        content += `${stageNames[i]}\n[${bar}] ${percentString}\n`;
+      }
 
-        // Append the custom stage title, progress bar, and percentage to the content
-        content += `${stageNames[index]}\n[${bar}] ${percentString}\n`;
-      });
-
-      // Set the content of the rethStageGauge box
       rethStageGauge.setContent(content.trim());
-
-      // Render the screen to reflect the changes
       rethStageGauge.screen.render();
     }
   } catch (error) {
