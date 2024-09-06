@@ -132,7 +132,9 @@ export async function populateChainInfoBox() {
     content += separator + "\n";
 
     for (let i = 0; i < blockNumbers.length; i++) {
-      content += `{center}{bold}{green-fg}${blockNumbers[i]}{/green-fg}{/bold}{/center}\n`;
+      content += `{center}{bold}{green-fg}${blockNumbers[
+        i
+      ].toLocaleString()}{/green-fg}{/bold}{/center}\n`;
       content += `{bold}{blue-fg}ETH $:{/blue-fg}{/bold} ${ethPrices[i]}\n`;
       content += `{bold}{blue-fg}GAS:{/blue-fg}{/bold}   ${gasPrices[i]}\n`;
       content += `{bold}{blue-fg}# TX:{/blue-fg}{/bold}  ${transactionCounts[i]}\n`;
