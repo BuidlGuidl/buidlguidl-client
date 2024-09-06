@@ -226,6 +226,21 @@ async function getRethSyncMetrics() {
 let largestToBlock = 0;
 let headersPercent = 0;
 
+let stagePercentages = {
+  headersPercent: 0,
+  bodiesPercent: 0,
+  senderRecoveryPercent: 0,
+  executionPercent: 0,
+  merkleUnwindPercent: 0,
+  accountHashingPercent: 0,
+  storageHashingPercent: 0,
+  merkleExecutePercent: 0,
+  transactionLookupPercent: 0,
+  indexStorageHistoryPercent: 0,
+  indexAccountHistoryPercent: 0,
+  finishPercent: 0,
+};
+
 async function parseAndPopulateRethMetrics() {
   const rethSyncMetrics = await getRethSyncMetrics();
 
@@ -489,7 +504,8 @@ async function parseAndPopulateRethMetrics() {
     }
   }
 
-  populateRethStageGauge([
+  // Update stagePercentages object
+  stagePercentages = {
     headersPercent,
     bodiesPercent,
     senderRecoveryPercent,
@@ -502,7 +518,9 @@ async function parseAndPopulateRethMetrics() {
     indexStorageHistoryPercent,
     indexAccountHistoryPercent,
     finishPercent,
-  ]);
+  };
+
+  populateRethStageGauge(Object.values(stagePercentages));
 }
 
 async function createRethMessage(syncingStatus, blockNumber, latestBlock) {
@@ -530,6 +548,10 @@ async function createRethMessage(syncingStatus, blockNumber, latestBlock) {
   }
 }
 
+function checkAllStagesComplete(percentages) {
+  return Object.values(percentages).every((percent) => percent === 1);
+}
+
 export async function showHideRethWidgets(
   screen,
   rethStageGauge,
@@ -537,8 +559,9 @@ export async function showHideRethWidgets(
 ) {
   try {
     const syncingStatus = await isSyncing();
+    const allStagesComplete = checkAllStagesComplete(stagePercentages);
 
-    if (syncingStatus) {
+    if (syncingStatus && !allStagesComplete) {
       if (!screen.children.includes(rethStageGauge)) {
         screen.append(rethStageGauge);
       }
@@ -598,10 +621,20 @@ export async function synchronizeAndUpdateWidgets() {
     if (executionClient == "geth") {
       createGethMessage(syncingStatus, blockNumber, latestBlock);
     } else if (executionClient == "reth") {
-      createRethMessage(syncingStatus, blockNumber, latestBlock);
+      const allStagesComplete = checkAllStagesComplete(stagePercentages);
 
-      if (syncingStatus) {
-        parseAndPopulateRethMetrics();
+      if (syncingStatus && !allStagesComplete) {
+        statusMessage = `SYNC IN PROGRESS`;
+        await parseAndPopulateRethMetrics();
+      } else {
+        if (
+          blockNumber >= latestBlock ||
+          blockNumber === latestBlock - BigInt(1)
+        ) {
+          statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber}`;
+        } else {
+          statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber}\nMainnet Block: ${latestBlock}`;
+        }
       }
     }
 
