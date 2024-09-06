@@ -25,7 +25,7 @@ export function createGethStageGauge(grid, screen) {
 export function populateGethStageGauge(stagePercentages) {
   try {
     // Define the custom stage names inside the function
-    const stageNames = ["HEADERS", "STATE", "CHAIN"];
+    const stageNames = ["HEADERS", "CHAIN", "STATE"];
 
     // Get the width of the gethStageGauge box
     const boxWidth = gethStageGauge.width - 9; // Subtracting 9 for padding/border

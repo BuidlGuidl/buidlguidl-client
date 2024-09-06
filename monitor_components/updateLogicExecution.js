@@ -17,8 +17,8 @@ import fetch from "node-fetch";
 const progress = loadProgress();
 let gethStageProgress = [
   progress.headerDlProgress,
-  progress.stateDlProgress,
   progress.chainDlProgress,
+  progress.stateDlProgress,
 ];
 
 function stripAnsiCodes(input) {
@@ -180,33 +180,6 @@ export function setupLogStreaming(
 
 let statusMessage = "INITIALIZING...";
 
-// async function createGethMessage(syncingStatus, blockNumber, latestBlock) {
-//   try {
-//     // const syncingStatus = await isSyncing();
-
-//     if (syncingStatus) {
-//       const currentBlock = parseInt(syncingStatus.currentBlock, 16);
-//       const highestBlock = parseInt(syncingStatus.highestBlock, 16);
-
-//       statusMessage = `SYNC IN PROGRESS\nCurrent Block: ${currentBlock}\nHighest Block: ${highestBlock}`;
-//     } else {
-//       // const blockNumber = await localClient.getBlockNumber();
-//       // const latestBlock = await mainnetClient.getBlockNumber();
-
-//       if (
-//         blockNumber >= latestBlock ||
-//         blockNumber === latestBlock - BigInt(1)
-//       ) {
-//         statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber}`;
-//       } else {
-//         statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber}\nMainnet Block: ${latestBlock}`;
-//       }
-//     }
-//   } catch (error) {
-//     debugToFile(`createGethMessage(): ${error}`, () => {});
-//   }
-// }
-
 async function getRethSyncMetrics() {
   return new Promise((resolve) => {
     exec(
@@ -244,8 +217,6 @@ let stagePercentages = {
 async function parseAndPopulateRethMetrics() {
   const rethSyncMetrics = await getRethSyncMetrics();
 
-  debugToFile(`rethSyncMetrics: ${rethSyncMetrics}`, () => {});
-
   // If metrics are empty (likely because Reth is shutting down), don't process further
   if (!rethSyncMetrics) {
     return;
@@ -270,13 +241,13 @@ async function parseAndPopulateRethMetrics() {
       ) {
         const toBlock = parseInt(globalLine.match(/to_block=(\d+)/)[1], 10);
 
-        debugToFile(`toBlock: ${toBlock}`, () => {});
+        // debugToFile(`toBlock: ${toBlock}`, () => {});
 
         if (toBlock > largestToBlock) {
           largestToBlock = toBlock;
         }
 
-        debugToFile(`largestToBlock: ${largestToBlock}`, () => {});
+        // debugToFile(`largestToBlock: ${largestToBlock}`, () => {});
 
         headersPercent = (largestToBlock - toBlock) / largestToBlock;
       }
@@ -607,13 +578,12 @@ export async function synchronizeAndUpdateWidgets() {
         const currentBlock = parseInt(syncingStatus.currentBlock, 16);
         const highestBlock = parseInt(syncingStatus.highestBlock, 16);
 
-        debugToFile(
-          `syncingStatus: ${JSON.stringify(syncingStatus, null, 2)}`,
-          () => {}
-        );
-
-        debugToFile(`currentBlock: ${currentBlock}`, () => {});
-        debugToFile(`highestBlock: ${highestBlock}`, () => {});
+        // debugToFile(
+        //   `syncingStatus: ${JSON.stringify(syncingStatus, null, 2)}`,
+        //   () => {}
+        // );
+        // debugToFile(`currentBlock: ${currentBlock}`, () => {});
+        // debugToFile(`highestBlock: ${highestBlock}`, () => {});
 
         if (currentBlock === 0 && highestBlock === 0) {
           statusMessage = `SYNC IN PROGRESS`;
@@ -636,14 +606,14 @@ export async function synchronizeAndUpdateWidgets() {
         (percent) => percent === 0
       );
 
-      debugToFile(
-        `syncingStatus: ${JSON.stringify(syncingStatus, null, 2)}`,
-        () => {}
-      );
-      debugToFile(`allStagesComplete: ${allStagesComplete}`, () => {});
-      Object.entries(stagePercentages).forEach(([key, value]) => {
-        debugToFile(`stagePercentages[${key}]: ${value}`, () => {});
-      });
+      // debugToFile(
+      //   `syncingStatus: ${JSON.stringify(syncingStatus, null, 2)}`,
+      //   () => {}
+      // );
+      // debugToFile(`allStagesComplete: ${allStagesComplete}`, () => {});
+      // Object.entries(stagePercentages).forEach(([key, value]) => {
+      //   debugToFile(`stagePercentages[${key}]: ${value}`, () => {});
+      // });
 
       if (syncingStatus || allStagesZero) {
         statusMessage = `SYNC IN PROGRESS`;
