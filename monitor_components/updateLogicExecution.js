@@ -523,8 +523,11 @@ async function parseAndPopulateRethMetrics() {
   populateRethStageGauge(Object.values(stagePercentages));
 }
 
-function checkAllStagesComplete(percentages) {
-  return Object.values(percentages).every((percent) => percent === 1);
+function checkAllStagesZeroOrOne(percentages) {
+  const values = Object.values(percentages);
+  const allOnes = values.every((percent) => percent === 1);
+  const allZeros = values.every((percent) => percent === 0);
+  return allOnes || allZeros;
 }
 
 export async function showHideRethWidgets(
@@ -534,7 +537,7 @@ export async function showHideRethWidgets(
 ) {
   try {
     const syncingStatus = await isSyncing();
-    const allStagesComplete = checkAllStagesComplete(stagePercentages);
+    const allStagesComplete = checkAllStagesZeroOrOne(stagePercentages);
 
     if (syncingStatus && !allStagesComplete) {
       if (!screen.children.includes(rethStageGauge)) {
@@ -596,7 +599,7 @@ export async function synchronizeAndUpdateWidgets() {
     if (executionClient == "geth") {
       createGethMessage(syncingStatus, blockNumber, latestBlock);
     } else if (executionClient == "reth") {
-      const allStagesComplete = checkAllStagesComplete(stagePercentages);
+      const allStagesComplete = checkAllStagesZeroOrOne(stagePercentages);
 
       debugToFile(
         `syncingStatus: ${JSON.stringify(syncingStatus, null, 2)}`,
