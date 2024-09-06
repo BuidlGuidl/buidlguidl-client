@@ -523,31 +523,6 @@ async function parseAndPopulateRethMetrics() {
   populateRethStageGauge(Object.values(stagePercentages));
 }
 
-async function createRethMessage(syncingStatus, blockNumber, latestBlock) {
-  try {
-    debugToFile(
-      `syncingStatus: ${JSON.stringify(syncingStatus, null, 2)}`,
-      () => {}
-    );
-    debugToFile(`blockNumber: ${blockNumber}`, () => {});
-    debugToFile(`latestBlock: ${latestBlock}`, () => {});
-    if (syncingStatus) {
-      statusMessage = `SYNC IN PROGRESS`;
-    } else {
-      if (
-        blockNumber >= latestBlock ||
-        blockNumber === latestBlock - BigInt(1)
-      ) {
-        statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber}`;
-      } else {
-        statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber}\nMainnet Block: ${latestBlock}`;
-      }
-    }
-  } catch (error) {
-    debugToFile(`handleRethStatusMessage(): ${error}`, () => {});
-  }
-}
-
 function checkAllStagesComplete(percentages) {
   return Object.values(percentages).every((percent) => percent === 1);
 }
@@ -622,6 +597,12 @@ export async function synchronizeAndUpdateWidgets() {
       createGethMessage(syncingStatus, blockNumber, latestBlock);
     } else if (executionClient == "reth") {
       const allStagesComplete = checkAllStagesComplete(stagePercentages);
+
+      debugToFile(`syncingStatus: ${syncingStatus}`, () => {});
+      debugToFile(`allStagesComplete: ${allStagesComplete}`, () => {});
+      Object.entries(stagePercentages).forEach(([key, value]) => {
+        debugToFile(`stagePercentages[${key}]: ${value}`, () => {});
+      });
 
       if (syncingStatus && !allStagesComplete) {
         statusMessage = `SYNC IN PROGRESS`;
