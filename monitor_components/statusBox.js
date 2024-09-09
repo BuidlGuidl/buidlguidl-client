@@ -2,7 +2,7 @@ import blessed from "blessed";
 import { debugToFile } from "../helpers.js";
 import { synchronizeAndUpdateWidgets } from "./updateLogicExecution.js";
 
-export async function updateStatusBox(statusBox, screen) {
+export async function updateStatusBox(statusBox) {
   try {
     const statusMessage = await synchronizeAndUpdateWidgets();
     statusBox.setContent(statusMessage);
@@ -12,7 +12,7 @@ export async function updateStatusBox(statusBox, screen) {
   }
 }
 
-export function createStatusBox(grid, screen) {
+export function createStatusBox(grid) {
   // const row = screen.height < layoutHeightThresh ? 1 : 5;
   // const rowSpan = screen.height < layoutHeightThresh ? 2 : 1;
 

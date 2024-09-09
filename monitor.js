@@ -113,9 +113,7 @@ export async function initializeMonitoring(
       logFilePathExecution,
       components.executionLog,
       screen,
-      components.rethStageGauge,
-      components.gethStageGauge,
-      components.chainInfoBox
+      components.gethStageGauge
     );
 
     if (executionClient == "reth") {
@@ -168,22 +166,22 @@ function setupUI(
     consensusClientLabel = `Lighthouse v${lighthouseVer}`;
   }
 
-  const executionLog = createExecutionLog(grid, screen, executionClientLabel);
-  const consensusLog = createConsensusLog(grid, screen, consensusClientLabel);
-  const systemStatsGauge = createSystemStatsGauge(grid, screen, installDir);
-  const peerCountGauge = createPeerCountGauge(grid, screen);
+  const executionLog = createExecutionLog(grid, executionClientLabel);
+  const consensusLog = createConsensusLog(grid, consensusClientLabel);
+  const systemStatsGauge = createSystemStatsGauge(grid, installDir);
+  const peerCountGauge = createPeerCountGauge(grid);
   const cpuLine = createCpuLine(grid, screen);
   const networkLine = createNetworkLine(grid, screen);
-  const statusBox = createStatusBox(grid, screen);
-  const bandwidthBox = createBandwidthBox(grid, screen);
-  const chainInfoBox = createChainInfoBox(grid, screen);
+  const statusBox = createStatusBox(grid);
+  const bandwidthBox = createBandwidthBox(grid);
+  const chainInfoBox = createChainInfoBox(grid);
 
   let gethStageGauge, rethStageGauge;
 
   if (executionClientGlobal == "geth") {
-    gethStageGauge = createGethStageGauge(grid, screen);
+    gethStageGauge = createGethStageGauge(grid);
   } else if (executionClientGlobal == "reth") {
-    rethStageGauge = createRethStageGauge(grid, screen);
+    rethStageGauge = createRethStageGauge(grid);
   }
 
   const { pic, bigText, ipAddressBox } = createHeader(
@@ -213,7 +211,7 @@ function setupUI(
     try {
       // Run both update functions concurrently
       await Promise.all([
-        updateStatusBox(statusBox, screen),
+        updateStatusBox(statusBox),
         updateChainInfoBox(chainInfoBox, screen),
       ]);
 
@@ -397,7 +395,7 @@ function setupUI(
     fixBottomMargins(screen);
     fixRightMargins(screen);
     screen.render(); // Re-render the screen after adjustments
-  }, 500);
+  }, 250);
 
   screen.on("resize", () => {
     fixBottomMargins(screen);

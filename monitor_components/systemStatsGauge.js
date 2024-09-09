@@ -8,7 +8,7 @@ import { debugToFile } from "../helpers.js";
 
 let systemStatsGauge;
 
-export function createSystemStatsGauge(grid, screen, installDir) {
+export function createSystemStatsGauge(grid, installDir) {
   // const row = screen.height < layoutHeightThresh ? 5 : 7;
   // const rowSpan = screen.height < layoutHeightThresh ? 2 : 2;
 

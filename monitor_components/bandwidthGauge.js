@@ -115,7 +115,7 @@ export function startBandwidthMonitoring(screen) {
   scheduleNextUpdate();
 }
 
-export function createBandwidthBox(grid, screen) {
+export function createBandwidthBox(grid) {
   // const row = screen.height < layoutHeightThresh ? 3 : 6;
   // const rowSpan = screen.height < layoutHeightThresh ? 2 : 1;
 

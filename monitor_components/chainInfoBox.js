@@ -4,7 +4,7 @@ import { debugToFile } from "../helpers.js";
 
 let chainInfoBox;
 
-export function createChainInfoBox(grid, screen) {
+export function createChainInfoBox(grid) {
   // const row = screen.height < layoutHeightThresh ? 3 : 6;
   // const rowSpan = screen.height < layoutHeightThresh ? 6 : 3;
 

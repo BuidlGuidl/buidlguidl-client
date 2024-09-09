@@ -3,7 +3,7 @@ import { debugToFile } from "../helpers.js";
 
 let rethStageGauge;
 
-export function createRethStageGauge(grid, screen) {
+export function createRethStageGauge(grid) {
   // const row = screen.height < layoutHeightThresh ? 3 : 6;
   // const rowSpan = screen.height < layoutHeightThresh ? 6 : 3;
 

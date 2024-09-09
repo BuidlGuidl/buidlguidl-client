@@ -4,7 +4,7 @@ import blessed from "blessed";
 import { formatLogLines } from "./helperFunctions.js";
 import { debugToFile } from "../helpers.js";
 
-export function createConsensusLog(grid, screen, consensusClientLabel) {
+export function createConsensusLog(grid, consensusClientLabel) {
   // const colSpan = screen.height < layoutHeightThresh ? 7 : 9;
 
   const consensusLog = grid.set(4, 0, 3, 8, blessed.box, {

@@ -78,9 +78,7 @@ export function setupLogStreaming(
   logFilePath,
   executionLog,
   screen,
-  rethStageGauge,
-  gethStageGauge,
-  chainInfoBox
+  gethStageGauge
 ) {
   let logBuffer = [];
   let lastSize = 0;
