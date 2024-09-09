@@ -22,6 +22,7 @@ import {
   saveOptionsToFile,
   deleteOptionsFile,
 } from "./commandLineOptions.js";
+import { debugToFile } from "./helpers.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -61,6 +62,7 @@ function handleExit() {
   console.log("\n\n🛰️  Received exit signal\n");
 
   deleteOptionsFile();
+  debugToFile(`handleExit(): deleteOptionsFile() has been called`, () => {});
 
   try {
     // Check if both child processes have exited
@@ -197,7 +199,7 @@ function startClient(clientName, installDir) {
     if (consensusPeerPorts[0] !== null || consensusPeerPorts[1] !== null) {
       clientArgs.push("--consensuspeerports", consensusPeerPorts);
     }
-    
+
     if (consensusCheckpoint != null) {
       clientArgs.push("--consensuscheckpoint", consensusCheckpoint);
     }

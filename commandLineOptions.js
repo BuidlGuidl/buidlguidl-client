@@ -106,8 +106,21 @@ if (fs.existsSync(optionsFilePath)) {
 
 function deleteOptionsFile() {
   try {
+    debugToFile(
+      `Attempting to delete options file at: ${optionsFilePath}`,
+      () => {}
+    );
     if (fs.existsSync(optionsFilePath)) {
       fs.unlinkSync(optionsFilePath);
+      debugToFile(`Options file successfully deleted`, () => {});
+    } else {
+      debugToFile(`Options file does not exist`, () => {});
+    }
+
+    if (fs.existsSync(optionsFilePath)) {
+      debugToFile(`Options file still exists after deletion attempt`, () => {});
+    } else {
+      debugToFile(`Options file has been successfully deleted`, () => {});
     }
   } catch (error) {
     debugToFile(`deleteOptionsFile(): ${error}`, () => {});
