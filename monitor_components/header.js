@@ -62,10 +62,10 @@ export function createHeader(grid, screen, messageForHeader) {
     }
   }
 
-  // New function to get the current Git commit hash
+  // Updated function to get the full Git commit hash
   function getCurrentCommitHash() {
     try {
-      return execSync("git rev-parse --short HEAD").toString().trim();
+      return execSync("git rev-parse HEAD").toString().trim();
     } catch (error) {
       debugToFile(`Error getting current commit hash: ${error}`, () => {});
       return "unknown";
