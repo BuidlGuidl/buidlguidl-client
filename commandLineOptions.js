@@ -116,12 +116,6 @@ function deleteOptionsFile() {
     } else {
       debugToFile(`Options file does not exist`, () => {});
     }
-
-    if (fs.existsSync(optionsFilePath)) {
-      debugToFile(`Options file still exists after deletion attempt`, () => {});
-    } else {
-      debugToFile(`Options file has been successfully deleted`, () => {});
-    }
   } catch (error) {
     debugToFile(`deleteOptionsFile(): ${error}`, () => {});
   }

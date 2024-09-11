@@ -32,31 +32,6 @@ export function getCpuUsage() {
   });
 }
 
-// export function getDiskUsage(installDir) {
-//   return new Promise((resolve, reject) => {
-//     si.fsSize()
-//       .then((drives) => {
-//         let diskUsagePercent = 0;
-
-//         const osDrive = drives.find((drive) => {
-//           return drive.mount === "/" || drive.mount === "C:/";
-//         });
-
-//         if (osDrive) {
-//           diskUsagePercent = 100 - (osDrive.available / osDrive.size) * 100;
-//         } else {
-//           debugToFile(`getDiskUsage(): OS Drive not found.`, () => {});
-//         }
-
-//         resolve(diskUsagePercent.toFixed(1));
-//       })
-//       .catch((error) => {
-//         debugToFile(`getDiskUsage(): ${error}`, () => {});
-//         reject(error);
-//       });
-//   });
-// }
-
 export function getDiskUsage(installDir) {
   return new Promise((resolve, reject) => {
     si.fsSize()
@@ -105,6 +80,66 @@ export function getCpuTemperature() {
       })
       .catch((error) => {
         debugToFile(`Error fetching CPU temperature: ${error}`, () => {});
+        reject(error);
+      });
+  });
+}
+
+const HISTORY_DURATION = 10000; // 10 seconds in milliseconds
+let diskWriteHistory = [];
+
+export function getDiskWriteSpeed(installDir) {
+  return new Promise((resolve, reject) => {
+    if (!installDir) {
+      debugToFile(`getDiskWriteSpeed(): installDir is undefined`, () => {});
+      resolve(0); // Return 0 if installDir is not provided
+      return;
+    }
+
+    Promise.all([si.fsStats(), si.fsSize()])
+      .then(([stats, drives]) => {
+        // Find the drive for installDir
+        const installDrive = drives
+          .sort((a, b) => b.mount.length - a.mount.length)
+          .find((drive) => drive.mount && installDir.startsWith(drive.mount));
+
+        if (!installDrive) {
+          debugToFile(
+            `getDiskWriteSpeed(): Drive for ${installDir} not found`,
+            () => {}
+          );
+          resolve(0);
+          return;
+        }
+
+        const currentTime = Date.now();
+        const currentWriteBytes = stats.wx;
+
+        // Add current data point to history
+        diskWriteHistory.push({ time: currentTime, bytes: currentWriteBytes });
+
+        // Remove data points older than HISTORY_DURATION
+        diskWriteHistory = diskWriteHistory.filter(
+          (point) => currentTime - point.time <= HISTORY_DURATION
+        );
+
+        if (diskWriteHistory.length < 2) {
+          resolve(0); // Not enough data points to calculate speed
+        } else {
+          const oldestPoint = diskWriteHistory[0];
+          const newestPoint = diskWriteHistory[diskWriteHistory.length - 1];
+
+          const timeDiff = (newestPoint.time - oldestPoint.time) / 1000; // Convert to seconds
+          const bytesDiff = newestPoint.bytes - oldestPoint.bytes;
+          const writeSpeedMBps = (bytesDiff / timeDiff / (1024 * 1024)).toFixed(
+            2
+          );
+
+          resolve(writeSpeedMBps);
+        }
+      })
+      .catch((error) => {
+        debugToFile(`getDiskWriteSpeed(): ${error}`, () => {});
         reject(error);
       });
   });

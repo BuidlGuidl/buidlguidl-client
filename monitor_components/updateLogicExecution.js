@@ -13,6 +13,7 @@ import { populateRethStageGauge } from "./rethStageGauge.js";
 import { populateGethStageGauge } from "./gethStageGauge.js";
 import { checkIn } from "../https_connection/httpsConnection.js";
 import fetch from "node-fetch";
+import { getDiskUsage } from "../getSystemStats.js";
 
 const progress = loadProgress();
 let gethStageProgress = [
@@ -72,7 +73,7 @@ function saveChainDlProgress(line) {
   }
 }
 
-let globalLine;
+let globalLine = "";
 
 export function setupLogStreaming(
   logFilePath,
@@ -562,10 +563,18 @@ export async function showHideGethWidgets(
   }
 }
 
-export async function synchronizeAndUpdateWidgets() {
+export async function synchronizeAndUpdateWidgets(installDir) {
   try {
     // Check for network connectivity
     await checkNetworkConnectivity();
+
+    // Get disk usage
+    const diskUsagePercent = await getDiskUsage(installDir);
+
+    // Check if disk usage is critical
+    if (diskUsagePercent >= 97) {
+      return "{red-fg}DISK SPACE LOW{/red-fg}";
+    }
 
     const syncingStatus = await isSyncing();
     const blockNumber = await localClient.getBlockNumber();
@@ -575,13 +584,6 @@ export async function synchronizeAndUpdateWidgets() {
       if (syncingStatus) {
         const currentBlock = parseInt(syncingStatus.currentBlock, 16);
         const highestBlock = parseInt(syncingStatus.highestBlock, 16);
-
-        // debugToFile(
-        //   `syncingStatus: ${JSON.stringify(syncingStatus, null, 2)}`,
-        //   () => {}
-        // );
-        // debugToFile(`currentBlock: ${currentBlock}`, () => {});
-        // debugToFile(`highestBlock: ${highestBlock}`, () => {});
 
         if (currentBlock === 0 && highestBlock === 0) {
           statusMessage = `SYNC IN PROGRESS`;
@@ -604,15 +606,6 @@ export async function synchronizeAndUpdateWidgets() {
         (percent) => percent === 0
       );
 
-      // debugToFile(
-      //   `syncingStatus: ${JSON.stringify(syncingStatus, null, 2)}`,
-      //   () => {}
-      // );
-      // debugToFile(`allStagesComplete: ${allStagesComplete}`, () => {});
-      // Object.entries(stagePercentages).forEach(([key, value]) => {
-      //   debugToFile(`stagePercentages[${key}]: ${value}`, () => {});
-      // });
-
       if (syncingStatus || allStagesZero) {
         statusMessage = `SYNC IN PROGRESS`;
         await parseAndPopulateRethMetrics();
@@ -630,10 +623,10 @@ export async function synchronizeAndUpdateWidgets() {
 
     return statusMessage;
   } catch (error) {
+    debugToFile(`synchronizeAndUpdateWidgets error: ${error}`, () => {});
     if (error.message === "No network connection") {
       return "{red-fg}NO NETWORK CONNECTION{/red-fg}";
     }
-    debugToFile(`synchronizeAndUpdateWidgets(): ${error}`, () => {});
     return "";
   }
 }

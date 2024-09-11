@@ -1,10 +1,11 @@
 import blessed from "blessed";
 import { debugToFile } from "../helpers.js";
 import { synchronizeAndUpdateWidgets } from "./updateLogicExecution.js";
+import { installDir } from "../commandLineOptions.js";
 
 export async function updateStatusBox(statusBox) {
   try {
-    const statusMessage = await synchronizeAndUpdateWidgets();
+    const statusMessage = await synchronizeAndUpdateWidgets(installDir);
     statusBox.setContent(statusMessage);
     // screen.render();
   } catch (error) {
