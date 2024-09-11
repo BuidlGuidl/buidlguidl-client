@@ -62,15 +62,26 @@ export function createHeader(grid, screen, messageForHeader) {
     }
   }
 
-  // New function to update bigText with points and branch name
+  // New function to get the current Git commit hash
+  function getCurrentCommitHash() {
+    try {
+      return execSync("git rev-parse --short HEAD").toString().trim();
+    } catch (error) {
+      debugToFile(`Error getting current commit hash: ${error}`, () => {});
+      return "unknown";
+    }
+  }
+
+  // Updated function to update bigText with points, branch name, and commit hash
   async function updatePointsAndBranchDisplay() {
     const publicIP = await getPublicIPAddress();
     const points = await fetchPoints(publicIP);
     const currentBranch = getCurrentBranch();
+    const commitHash = getCurrentCommitHash();
     if (points !== null) {
       bigText.setContent(
         `{center}{bold}B u i d l G u i d l  C l i e n t{/bold}{/center}\n` +
-          `{center}Branch: ${currentBranch}{/center}\n` +
+          `{center}Branch: ${currentBranch} (${commitHash}){/center}\n` +
           `{center}{green-fg}Unclaimed Points: ${points}{/green-fg}{/center}\n` +
           `{center}{cyan-fg}${messageForHeader}{/cyan-fg}{/center}`
       );

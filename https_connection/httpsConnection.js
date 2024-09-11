@@ -63,6 +63,7 @@ export function initializeHttpConnection(httpConfig) {
     try {
       const branch = await git.revparse(["--abbrev-ref", "HEAD"]);
       const lastCommit = await git.log(["--format=%cd", "--date=iso", "-1"]);
+      const commitHash = await git.revparse(["HEAD"]); // Add this line to get the commit hash
 
       let lastCommitDate = "unknown";
       if (lastCommit && lastCommit.latest && lastCommit.latest.hash) {
@@ -92,11 +93,16 @@ export function initializeHttpConnection(httpConfig) {
       return {
         branch: branch.trim(),
         lastCommitDate: lastCommitDate,
+        commitHash: commitHash.trim(), // Add this line
       };
     } catch (error) {
       debugToFile(`Failed to get git info: ${error}`, () => {});
       debugToFile(`Error stack: ${error.stack}`, () => {});
-      return { branch: "unknown", lastCommitDate: "unknown" };
+      return {
+        branch: "unknown",
+        lastCommitDate: "unknown",
+        commitHash: "unknown",
+      };
     }
   }
 
@@ -174,6 +180,7 @@ export function initializeHttpConnection(httpConfig) {
         consensus_peers: consensusPeers,
         git_branch: gitInfo.branch,
         last_commit: gitInfo.lastCommitDate,
+        commit_hash: gitInfo.commitHash,
       });
 
       const options = {
