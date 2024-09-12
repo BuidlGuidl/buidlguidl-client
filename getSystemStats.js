@@ -1,5 +1,4 @@
 import si from "systeminformation";
-import path from "path";
 import { debugToFile } from "./helpers.js";
 
 export function getMemoryUsage() {

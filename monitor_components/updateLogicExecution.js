@@ -81,24 +81,8 @@ export function setupLogStreaming(
   screen,
   gethStageGauge
 ) {
-  let logBuffer = [];
   let lastSize = 0;
   let lastKnownBlockNumber = 0;
-
-  const ensureBufferFillsWidget = () => {
-    const visibleHeight = executionLog.height - 2; // Account for border
-
-    // Only pad if the buffer is already full, otherwise, just ensure it doesn't exceed the height
-    if (logBuffer.length >= visibleHeight) {
-      while (logBuffer.length < visibleHeight) {
-        logBuffer.unshift(""); // Add empty lines at the start if needed
-      }
-    }
-
-    if (logBuffer.length > visibleHeight) {
-      logBuffer = logBuffer.slice(-visibleHeight); // Trim buffer to fit
-    }
-  };
 
   const updateLogContent = async () => {
     try {
@@ -120,11 +104,8 @@ export function setupLogStreaming(
 
         newRl.on("line", async (line) => {
           globalLine = line;
-          logBuffer.push(formatLogLines(line));
 
-          ensureBufferFillsWidget(); // Make sure the buffer fills the widget only if necessary
-
-          executionLog.setContent(logBuffer.join("\n"));
+          executionLog.log(formatLogLines(line));
 
           if (executionClient == "geth") {
             if (screen.children.includes(gethStageGauge)) {
