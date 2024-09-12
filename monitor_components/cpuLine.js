@@ -32,7 +32,7 @@ async function updateCpuLinePlot(cpuLine, screen) {
         title: "", // Use an empty string for the title
         x: cpuDataX,
         y: dataCpuUsage,
-        style: { line: "cyan" }, // Use the first color
+        style: { line: "yellow" },
       },
     ];
 
