@@ -4,7 +4,7 @@ import blessed from "blessed";
 import { formatLogLines } from "./helperFunctions.js";
 import { debugToFile } from "../helpers.js";
 
-export function createConsensusLog(grid, consensusClientLabel) {
+export function createConsensusLog(grid, consensusClientLabel, screen) {
   // const colSpan = screen.height < layoutHeightThresh ? 7 : 9;
 
   // const consensusLog = grid.set(4, 0, 3, 8, blessed.box, {
@@ -19,6 +19,10 @@ export function createConsensusLog(grid, consensusClientLabel) {
     shrink: true,
     wrap: true,
   });
+
+  // screen.on("resize", () => {
+  //   consensusLog.render(); // Re-render the log
+  // });
 
   return consensusLog;
 }
@@ -46,7 +50,7 @@ export function updateConsensusClientInfo(logFilePath, consensusLog, screen) {
 
         newRl.on("line", (line) => {
           consensusLog.log(formatLogLines(line));
-          // screen.render();
+          screen.render(); // Render after each line
         });
 
         newRl.on("close", () => {

@@ -168,8 +168,8 @@ function setupUI(
     consensusClientLabel = `Lighthouse v${lighthouseVer}`;
   }
 
-  const executionLog = createExecutionLog(grid, executionClientLabel);
-  const consensusLog = createConsensusLog(grid, consensusClientLabel);
+  const executionLog = createExecutionLog(grid, executionClientLabel, screen);
+  const consensusLog = createConsensusLog(grid, consensusClientLabel, screen);
   const systemStatsGauge = createSystemStatsGauge(grid, installDir);
   const peerCountGauge = createPeerCountGauge(grid);
   const cpuLine = createCpuLine(grid, screen);
@@ -423,6 +423,8 @@ function setupUI(
     cpuLine.emit("attach");
     networkLine.emit("attach");
     diskLine.emit("attach");
+    executionLog.emit("attach");
+    consensusLog.emit("attach");
 
     screen.render();
   });
