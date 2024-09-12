@@ -110,17 +110,20 @@ async function updateNetworkLinePlot(networkLine, screen) {
 }
 
 export function createNetworkLine(grid, screen) {
-  const networkLine = grid.set(7, 5, 2, 5, contrib.line, {
+  // const networkLine = grid.set(7, 5, 2, 5, contrib.line, {
+  const networkLine = grid.set(7, 3, 2, 3, contrib.line, {
     style: { line: "yellow", text: "green", baseline: "green" },
     xLabelPadding: 3,
     xPadding: 5,
-    showLegend: true,
+    showLegend: false,
     wholeNumbersOnly: false,
-    label: "Network Traffic (MB/sec)",
+    label:
+      "Network Traffic (MB/sec) [{red-fg}Tx{/red-fg} {blue-fg}Rx{/blue-fg}]",
     border: {
       type: "line",
       fg: "cyan",
     },
+    tags: true,
   });
 
   setInterval(() => updateNetworkLinePlot(networkLine, screen), 1000);

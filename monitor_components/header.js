@@ -146,7 +146,7 @@ export function createHeader(grid, screen, messageForHeader) {
   });
 
   // Create the IP address box
-  const ipAddressBox = grid.set(0, 7, 1, 3, blessed.box, {
+  const ipAddressBox = grid.set(0, 7, 1, 2, blessed.box, {
     content: `{center}{bold}IP Address: Fetching... {/bold}\n{center}{bold}Public IP: Fetching...{/bold}{/center}`,
     tags: true,
     align: "center",

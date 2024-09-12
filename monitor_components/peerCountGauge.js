@@ -7,7 +7,8 @@ import { executionClient, consensusClient } from "../commandLineOptions.js";
 let peerCountGauge;
 
 export function createPeerCountGauge(grid) {
-  peerCountGauge = grid.set(2, 9, 1, 1, blessed.box, {
+  // peerCountGauge = grid.set(2, 9, 1, 1, blessed.box, {
+  peerCountGauge = grid.set(2, 8, 1, 1, blessed.box, {
     label: "Peer Count",
     content: `INITIALIZING...`,
     stroke: "green",

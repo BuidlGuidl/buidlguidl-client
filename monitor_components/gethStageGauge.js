@@ -7,8 +7,9 @@ export function createGethStageGauge(grid) {
   // const row = screen.height < layoutHeightThresh ? 3 : 6;
   // const rowSpan = screen.height < layoutHeightThresh ? 6 : 3;
 
-  gethStageGauge = grid.set(2, 8, 5, 1, blessed.box, {
-    label: "Stage Progress",
+  // gethStageGauge = grid.set(2, 8, 5, 1, blessed.box, {
+  gethStageGauge = grid.set(2, 7, 5, 1, blessed.box, {
+    label: "Sync Progress",
     content: `INITIALIZING...`,
     stroke: "cyan",
     fill: "white",
