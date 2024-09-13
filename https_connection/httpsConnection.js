@@ -242,8 +242,17 @@ async function getEnodeWithRetry(maxRetries = 30) {
     try {
       const nodeInfo = await getNodeInfo();
       if (nodeInfo.enode) {
-        debugToFile(`nodeInfo.enode: ${nodeInfo.enode}`, () => {});
-        return nodeInfo.enode;
+        let enode = nodeInfo.enode;
+
+        // Check if the enode contains an IPv6 address
+        if (enode.includes("[") && enode.includes("]")) {
+          // Replace IPv6 with IPv4
+          const publicIPv4 = await getPublicIPAddress();
+          enode = enode.replace(/\[.*?\]/, publicIPv4);
+        }
+
+        debugToFile(`nodeInfo.enode: ${enode}`, () => {});
+        return enode;
       }
     } catch (error) {
       debugToFile(
@@ -255,6 +264,17 @@ async function getEnodeWithRetry(maxRetries = 30) {
     await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for 2 seconds
   }
   throw new Error("Failed to get enode after maximum retries");
+}
+
+async function getPublicIPAddress() {
+  try {
+    const response = await fetch("https://api.ipify.org?format=json");
+    const data = await response.json();
+    return data.ip;
+  } catch (error) {
+    debugToFile(`Error fetching public IP address: ${error}`, () => {});
+    throw error;
+  }
 }
 
 function getNodeInfo() {
