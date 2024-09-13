@@ -1,5 +1,6 @@
 import si from "systeminformation";
 import { debugToFile } from "./helpers.js";
+import axios from "axios";
 
 export function getMemoryUsage() {
   return new Promise((resolve, reject) => {
@@ -82,4 +83,16 @@ export function getCpuTemperature() {
         reject(error);
       });
   });
+}
+
+export async function getPublicIPAddress() {
+  while (true) {
+    try {
+      const response = await axios.get("https://api.ipify.org?format=json");
+      return response.data.ip;
+    } catch (error) {
+      debugToFile(`Error fetching public IP address: ${error}`, () => {});
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    }
+  }
 }

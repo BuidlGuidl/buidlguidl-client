@@ -16,6 +16,7 @@ import {
 import simpleGit from "simple-git";
 import path from "path";
 import { exec } from "child_process";
+import { getPublicIPAddress } from "../getSystemStats.js";
 
 export let checkIn;
 
@@ -268,17 +269,6 @@ async function getEnodeWithRetry(maxRetries = 30) {
     await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for 2 seconds
   }
   throw new Error("Failed to get enode after maximum retries");
-}
-
-async function getPublicIPAddress() {
-  try {
-    const response = await fetch("https://api.ipify.org?format=json");
-    const data = await response.json();
-    return data.ip;
-  } catch (error) {
-    debugToFile(`Error fetching public IP address: ${error}`, () => {});
-    throw error;
-  }
 }
 
 function getNodeInfo() {

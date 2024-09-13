@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { debugToFile } from "../helpers.js";
 import { execSync } from "child_process";
+import { getPublicIPAddress } from "../getSystemStats.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -23,19 +24,6 @@ export function createHeader(grid, screen, messageForHeader) {
         }
       }
       await new Promise((resolve) => setTimeout(resolve, 5000));
-    }
-  }
-
-  // Function to get the public IP address
-  async function getPublicIPAddress() {
-    while (true) {
-      try {
-        const response = await axios.get("https://api.ipify.org?format=json");
-        return response.data.ip;
-      } catch (error) {
-        debugToFile(`Error fetching public IP address: ${error}`, () => {});
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-      }
     }
   }
 
