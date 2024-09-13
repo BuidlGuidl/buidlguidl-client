@@ -54,7 +54,7 @@ const execution = pty.spawn(
     "--http.api",
     // "trace,web3,eth,debug",
     // "trace,web3,eth,debug,net",
-    "debug,eth,net,trace,txpool,web3,rpc",
+    "debug,eth,net,trace,txpool,web3,rpc,admin",
     "--ws",
     "--ws.api",
     "trace,web3,eth,debug",

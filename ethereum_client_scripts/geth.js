@@ -52,7 +52,7 @@ const execution = pty.spawn(
     executionPeerPort,
     "--http",
     "--http.api",
-    "eth,net,engine",
+    "eth,net,engine,admin",
     "--http.addr",
     "0.0.0.0",
     "--http.port",

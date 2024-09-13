@@ -15,6 +15,7 @@ import {
 } from "../monitor_components/peerCountGauge.js";
 import simpleGit from "simple-git";
 import path from "path";
+import { exec } from "child_process";
 
 export let checkIn;
 
@@ -153,6 +154,8 @@ export function initializeHttpConnection(httpConfig) {
       debugToFile(`Failed to get block hash: ${error}`, () => {});
     }
 
+    let enode = await getEnodeWithRetry();
+
     try {
       const cpuUsage = await getCpuUsage();
       const memoryUsage = await getMemoryUsage();
@@ -181,6 +184,7 @@ export function initializeHttpConnection(httpConfig) {
         git_branch: gitInfo.branch,
         last_commit: gitInfo.lastCommitDate,
         commit_hash: gitInfo.commitHash,
+        enode: enode,
       });
 
       const options = {
@@ -230,4 +234,48 @@ export function initializeHttpConnection(httpConfig) {
 
   // Regular interval check-in
   setInterval(() => checkIn(true), 60000); // Force check-in every 60 seconds
+}
+
+async function getEnodeWithRetry(maxRetries = 30) {
+  let retries = 0;
+  while (retries < maxRetries) {
+    try {
+      const nodeInfo = await getNodeInfo();
+      if (nodeInfo.enode) {
+        debugToFile(`nodeInfo.enode: ${nodeInfo.enode}`, () => {});
+        return nodeInfo.enode;
+      }
+    } catch (error) {
+      debugToFile(
+        `Failed to get enode (attempt ${retries + 1}): ${error}`,
+        () => {}
+      );
+    }
+    retries++;
+    await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for 2 seconds
+  }
+  throw new Error("Failed to get enode after maximum retries");
+}
+
+function getNodeInfo() {
+  return new Promise((resolve, reject) => {
+    const command = `curl -s -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"admin_nodeInfo","params":[],"id":1}' http://localhost:8545`;
+
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        reject(`Error executing curl command: ${error}`);
+        return;
+      }
+      if (stderr) {
+        reject(`Curl command stderr: ${stderr}`);
+        return;
+      }
+      try {
+        const response = JSON.parse(stdout);
+        resolve(response.result);
+      } catch (parseError) {
+        reject(`Error parsing JSON response: ${parseError}`);
+      }
+    });
+  });
 }
