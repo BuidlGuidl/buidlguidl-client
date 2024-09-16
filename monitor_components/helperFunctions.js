@@ -53,7 +53,7 @@ export { layoutHeightThresh };
 //     );
 //     return logFiles[0];
 //   } catch (error) {
-//     debugToFile(`getLatestLogFile(): ${error}`, () => {});
+//     debugToFile(`getLatestLogFile(): ${error}`);
 //   }
 // }
 
@@ -103,7 +103,7 @@ export function getLatestLogFile(dir, client) {
       });
     }
   } catch (error) {
-    debugToFile(`getLatestLogFile(): ${error}`, () => {});
+    debugToFile(`getLatestLogFile(): ${error}`);
     return undefined;
   }
 }

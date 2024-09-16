@@ -70,6 +70,6 @@ export function populateRethStageGauge(stagePercentages) {
       rethStageGauge.screen.render();
     }
   } catch (error) {
-    debugToFile(`populateRethStageGauge(): ${error}`, () => {});
+    debugToFile(`populateRethStageGauge(): ${error}`);
   }
 }

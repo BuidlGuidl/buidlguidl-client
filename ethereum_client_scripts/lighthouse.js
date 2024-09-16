@@ -113,7 +113,7 @@ consensus.on("error", (err) => {
   if (process.send) {
     process.send({ log: errorMessage }); // Send error message to parent process
   }
-  debugToFile(`From lighthouse.js: ${errorMessage}`, () => {});
+  debugToFile(`From lighthouse.js: ${errorMessage}`);
 });
 
 process.on("SIGINT", () => {

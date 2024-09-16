@@ -73,6 +73,6 @@ async function populateSystemStatsGauge(installDir) {
       systemStatsGauge.screen.render();
     }
   } catch (error) {
-    debugToFile(`populateSystemStatsGauge(): ${error}`, () => {});
+    debugToFile(`populateSystemStatsGauge(): ${error}`);
   }
 }

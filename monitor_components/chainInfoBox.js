@@ -69,7 +69,7 @@ async function getEthPrice(blockNumber) {
 
     return roundedRatio;
   } catch (error) {
-    debugToFile(`Error fetching token balances: ${error}`, () => {});
+    debugToFile(`Error fetching token balances: ${error}`);
     return null; // Return null or a default value in case of an error
   }
 }
@@ -110,7 +110,7 @@ async function getBatchBlockInfo() {
 
     return { blockNumbers, transactionCounts, gasPrices, ethPrices };
   } catch (error) {
-    debugToFile(`getBatchBlockInfo(): ${error}`, () => {});
+    debugToFile(`getBatchBlockInfo(): ${error}`);
     return {
       blockNumbers: [],
       transactionCounts: [],
@@ -148,6 +148,6 @@ export async function populateChainInfoBox() {
 
     chainInfoBox.setContent(content);
   } catch (error) {
-    debugToFile(`populateChainInfoBox(): ${error}`, () => {});
+    debugToFile(`populateChainInfoBox(): ${error}`);
   }
 }

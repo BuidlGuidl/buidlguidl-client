@@ -57,7 +57,7 @@ export function initializeHttpConnection(httpConfig) {
       gitInfo = info;
     })
     .catch((error) => {
-      debugToFile(`Failed to get initial git info: ${error}`, () => {});
+      debugToFile(`Failed to get initial git info: ${error}`);
       gitInfo = { branch: "unknown", lastCommitDate: "unknown" };
     });
 
@@ -87,8 +87,8 @@ export function initializeHttpConnection(httpConfig) {
             throw new Error("Invalid date");
           }
         } catch (error) {
-          debugToFile(`Failed to parse commit date: ${error}`, () => {});
-          debugToFile(`Error stack: ${error.stack}`, () => {});
+          debugToFile(`Failed to parse commit date: ${error}`);
+          debugToFile(`Error stack: ${error.stack}`);
         }
       }
 
@@ -98,8 +98,8 @@ export function initializeHttpConnection(httpConfig) {
         commitHash: commitHash.trim(), // Add this line
       };
     } catch (error) {
-      debugToFile(`Failed to get git info: ${error}`, () => {});
-      debugToFile(`Error stack: ${error.stack}`, () => {});
+      debugToFile(`Failed to get git info: ${error}`);
+      debugToFile(`Error stack: ${error.stack}`);
       return {
         branch: "unknown",
         lastCommitDate: "unknown",
@@ -119,7 +119,7 @@ export function initializeHttpConnection(httpConfig) {
       try {
         currentBlockNumber = await localClient.getBlockNumber();
       } catch (error) {
-        debugToFile(`Failed to get block number: ${error}`, () => {});
+        debugToFile(`Failed to get block number: ${error}`);
         return;
       }
     }
@@ -152,7 +152,7 @@ export function initializeHttpConnection(httpConfig) {
       const block = await localClient.getBlock(possibleBlockNumber);
       possibleBlockHash = block.hash;
     } catch (error) {
-      debugToFile(`Failed to get block hash: ${error}`, () => {});
+      debugToFile(`Failed to get block hash: ${error}`);
     }
 
     let enode = await getEnodeWithRetry();
@@ -201,18 +201,18 @@ export function initializeHttpConnection(httpConfig) {
           data += chunk;
         });
         res.on("end", () => {
-          // debugToFile(`Checkin response: ${data}`, () => {});
-          // debugToFile(`Response status: ${res.statusCode}`, () => {});
+          // debugToFile(`Checkin response: ${data}`);
+          // debugToFile(`Response status: ${res.statusCode}`);
         });
       });
 
       req.on("error", (error) => {
-        debugToFile(`Checkin error: ${error}`, () => {});
+        debugToFile(`Checkin error: ${error}`);
       });
 
       req.end();
     } catch (error) {
-      debugToFile(`checkIn() Error: ${error}`, () => {});
+      debugToFile(`checkIn() Error: ${error}`);
     }
   };
 
@@ -229,7 +229,7 @@ export function initializeHttpConnection(httpConfig) {
       },
     },
     (error) => {
-      debugToFile(`Error in block watcher: ${error}`, () => {});
+      debugToFile(`Error in block watcher: ${error}`);
     }
   );
 
@@ -256,7 +256,7 @@ async function getEnodeWithRetry(maxRetries = 30) {
           enode = enode.replace(/@127\.[0-9.]+/, `@${publicIPv4}`);
         }
 
-        debugToFile(`nodeInfo.enode: ${enode}`, () => {});
+        // debugToFile(`nodeInfo.enode: ${enode}`);
         return enode;
       }
     } catch (error) {

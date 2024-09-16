@@ -96,7 +96,7 @@ execution.on("error", (err) => {
   if (process.send) {
     process.send({ log: errorMessage }); // Send error message to parent process
   }
-  debugToFile(`From geth.js: ${errorMessage}`, () => {});
+  debugToFile(`From geth.js: ${errorMessage}`);
 });
 
 process.on("SIGINT", () => {

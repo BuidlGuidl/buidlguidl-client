@@ -42,7 +42,7 @@ function getDiskStats(installDir) {
             }
           })
           .catch((error) => {
-            debugToFile(`Error fetching drive information: ${error}`, () => {});
+            debugToFile(`Error fetching drive information: ${error}`);
             reject(error);
           });
       })
@@ -66,8 +66,8 @@ async function updateDiskLinePlot(diskLine, screen, installDir) {
     writeSpeedY.push(stats.writePerSecond);
     readSpeedY.push(stats.readPerSecond);
 
-    // debugToFile(`writeSpeedY: ${writeSpeedY}`, () => {});
-    // debugToFile(`readSpeedY: ${readSpeedY}`, () => {});
+    // debugToFile(`writeSpeedY: ${writeSpeedY}`);
+    // debugToFile(`readSpeedY: ${readSpeedY}`);
 
     var seriesDiskWrite = {
       title: "I",
@@ -92,7 +92,7 @@ async function updateDiskLinePlot(diskLine, screen, installDir) {
       readSpeedY.shift();
     }
   } catch (error) {
-    debugToFile(`updateDiskPlot(): ${error}`, () => {});
+    debugToFile(`updateDiskPlot(): ${error}`);
   }
 }
 

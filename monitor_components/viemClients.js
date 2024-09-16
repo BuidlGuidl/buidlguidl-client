@@ -23,6 +23,6 @@ export async function isSyncing() {
 
     return syncingStatus;
   } catch (error) {
-    debugToFile(`isSyncing(): ${error}`, () => {});
+    debugToFile(`isSyncing(): ${error}`);
   }
 }

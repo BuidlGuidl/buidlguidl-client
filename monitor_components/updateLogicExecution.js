@@ -126,7 +126,7 @@ export function setupLogStreaming(
               try {
                 await checkIn(); // Call checkIn when a new block is found
               } catch (error) {
-                debugToFile(`Error calling checkIn: ${error}`, () => {});
+                debugToFile(`Error calling checkIn: ${error}`);
               }
             }
           }
@@ -139,11 +139,11 @@ export function setupLogStreaming(
         });
 
         newRl.on("error", (err) => {
-          debugToFile(`Error reading log file: ${err}`, () => {});
+          debugToFile(`Error reading log file: ${err}`);
         });
       }
     } catch (error) {
-      debugToFile(`Error accessing log file: ${error}`, () => {});
+      debugToFile(`Error accessing log file: ${error}`);
     }
   };
 
@@ -221,13 +221,13 @@ async function parseAndPopulateRethMetrics() {
       ) {
         const toBlock = parseInt(globalLine.match(/to_block=(\d+)/)[1], 10);
 
-        // debugToFile(`toBlock: ${toBlock}`, () => {});
+        // debugToFile(`toBlock: ${toBlock}`);
 
         if (toBlock > largestToBlock) {
           largestToBlock = toBlock;
         }
 
-        // debugToFile(`largestToBlock: ${largestToBlock}`, () => {});
+        // debugToFile(`largestToBlock: ${largestToBlock}`);
 
         headersPercent = (largestToBlock - toBlock) / largestToBlock;
       }
@@ -512,7 +512,7 @@ export async function showHideRethWidgets(
       }
     }
   } catch (error) {
-    debugToFile(`showHideRethWidgets(): ${error}`, () => {});
+    debugToFile(`showHideRethWidgets(): ${error}`);
   }
 }
 
@@ -540,7 +540,7 @@ export async function showHideGethWidgets(
       }
     }
   } catch (error) {
-    debugToFile(`showHideGethWidgets(): ${error}`, () => {});
+    debugToFile(`showHideGethWidgets(): ${error}`);
   }
 }
 
@@ -604,7 +604,7 @@ export async function synchronizeAndUpdateWidgets(installDir) {
 
     return statusMessage;
   } catch (error) {
-    debugToFile(`synchronizeAndUpdateWidgets error: ${error}`, () => {});
+    debugToFile(`synchronizeAndUpdateWidgets error: ${error}`);
     if (error.message === "No network connection") {
       return "{red-fg}NO NETWORK CONNECTION{/red-fg}";
     }

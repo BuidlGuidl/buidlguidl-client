@@ -35,7 +35,7 @@ export function createHeader(grid, screen, messageForHeader) {
       );
       return response.data.points;
     } catch (error) {
-      debugToFile(`Error fetching points: ${error}`, () => {});
+      debugToFile(`Error fetching points: ${error}`);
       return null;
     }
   }
@@ -45,7 +45,7 @@ export function createHeader(grid, screen, messageForHeader) {
     try {
       return execSync("git rev-parse --abbrev-ref HEAD").toString().trim();
     } catch (error) {
-      debugToFile(`Error getting current branch: ${error}`, () => {});
+      debugToFile(`Error getting current branch: ${error}`);
       return "unknown";
     }
   }
@@ -55,7 +55,7 @@ export function createHeader(grid, screen, messageForHeader) {
     try {
       return execSync("git rev-parse HEAD").toString().trim();
     } catch (error) {
-      debugToFile(`Error getting current commit hash: ${error}`, () => {});
+      debugToFile(`Error getting current commit hash: ${error}`);
       return "unknown";
     }
   }
@@ -117,7 +117,7 @@ export function createHeader(grid, screen, messageForHeader) {
       renderLogo();
     });
   } catch (err) {
-    debugToFile(`pic: ${err}`, () => {});
+    debugToFile(`pic: ${err}`);
   }
 
   const bigText = grid.set(0, 2, 1, 5, blessed.box, {

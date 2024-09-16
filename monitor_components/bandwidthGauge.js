@@ -23,7 +23,7 @@ async function getNetworkStats() {
     );
     return { timestamp: Date.now(), sent: totalSent, received: totalReceived };
   } catch (error) {
-    debugToFile(`Failed to get network stats: ${error}`, () => {});
+    debugToFile(`Failed to get network stats: ${error}`);
     return { timestamp: Date.now(), sent: 0, received: 0 };
   }
 }
@@ -94,7 +94,7 @@ async function updateBandwidthBox(screen) {
     bandwidthBox.setContent(formattedText);
     screen.render();
   } catch (error) {
-    debugToFile(`Failed to update bandwidth box: ${error}`, () => {});
+    debugToFile(`Failed to update bandwidth box: ${error}`);
   }
 }
 
@@ -120,7 +120,7 @@ export function createBandwidthBox(grid) {
   // const rowSpan = screen.height < layoutHeightThresh ? 2 : 1;
 
   // const box = grid.set(3, 9, 2, 1, blessed.box, {
-  const box = grid.set(3, 8, 2, 1, blessed.box, {
+  const box = grid.set(4, 8, 1, 1, blessed.box, {
     label: "Bandwidth Usage",
     style: {
       fg: "blue",

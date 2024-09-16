@@ -12,7 +12,7 @@ export function getMemoryUsage() {
         resolve(memoryUsagePercent.toFixed(1)); // Return memory usage as a percentage
       })
       .catch((error) => {
-        debugToFile(`getMemoryUsage(): ${error}`, () => {});
+        debugToFile(`getMemoryUsage(): ${error}`);
         reject(error);
       });
   });
@@ -26,7 +26,7 @@ export function getCpuUsage() {
         resolve(currentLoad);
       })
       .catch((error) => {
-        debugToFile(`getCpuUsage(): ${error}`, () => {});
+        debugToFile(`getCpuUsage(): ${error}`);
         reject(error);
       });
   });
@@ -59,7 +59,7 @@ export function getDiskUsage(installDir) {
         resolve(diskUsagePercent.toFixed(1));
       })
       .catch((error) => {
-        debugToFile(`getDiskUsage(): ${error}`, () => {});
+        debugToFile(`getDiskUsage(): ${error}`);
         reject(error);
       });
   });
@@ -69,7 +69,7 @@ export function getCpuTemperature() {
   return new Promise((resolve, reject) => {
     si.cpuTemperature()
       .then((data) => {
-        // debugToFile(`CPU data: ${JSON.stringify(data, null, 2)}`, () => {});
+        // debugToFile(`CPU data: ${JSON.stringify(data, null, 2)}`);
 
         const cpuTemp = data.main;
         if (cpuTemp !== null && cpuTemp !== undefined) {
@@ -79,7 +79,7 @@ export function getCpuTemperature() {
         }
       })
       .catch((error) => {
-        debugToFile(`Error fetching CPU temperature: ${error}`, () => {});
+        debugToFile(`Error fetching CPU temperature: ${error}`);
         reject(error);
       });
   });
@@ -91,7 +91,7 @@ export async function getPublicIPAddress() {
       const response = await axios.get("https://api.ipify.org?format=json");
       return response.data.ip;
     } catch (error) {
-      debugToFile(`Error fetching public IP address: ${error}`, () => {});
+      debugToFile(`Error fetching public IP address: ${error}`);
       await new Promise((resolve) => setTimeout(resolve, 5000));
     }
   }

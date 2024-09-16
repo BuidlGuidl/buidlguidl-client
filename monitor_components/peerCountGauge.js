@@ -3,12 +3,13 @@ import { exec } from "child_process";
 import { debugToFile } from "../helpers.js";
 import { localClient } from "./viemClients.js";
 import { executionClient, consensusClient } from "../commandLineOptions.js";
+import { bgPeers } from "../index.js";
 
 let peerCountGauge;
 
 export function createPeerCountGauge(grid) {
   // peerCountGauge = grid.set(2, 9, 1, 1, blessed.box, {
-  peerCountGauge = grid.set(2, 8, 1, 1, blessed.box, {
+  peerCountGauge = grid.set(2, 8, 2, 1, blessed.box, {
     label: "Peer Count",
     content: `INITIALIZING...`,
     stroke: "green",
@@ -42,7 +43,7 @@ export async function getExecutionPeers() {
 
     return peerCount;
   } catch (error) {
-    debugToFile(`getExecutionPeers(): ${error}`, () => {});
+    debugToFile(`getExecutionPeers(): ${error}`);
   }
 }
 
@@ -58,7 +59,7 @@ export async function getConsensusPeers(consensusClient) {
       `curl -s http://localhost:5054/metrics | grep -E '^${searchString} '`,
       (error, stdout, stderr) => {
         if (error || stderr) {
-          // debugToFile(`getConsensusPeers(): ${error || stderr}`, () => {});
+          // debugToFile(`getConsensusPeers(): ${error || stderr}`);
           return resolve(null);
         }
 
@@ -74,25 +75,66 @@ export async function getConsensusPeers(consensusClient) {
   });
 }
 
-let peerCounts = [0, 0];
+export async function getBGConsensusPeers() {
+  try {
+    const curlCommand = `curl -s -X POST --data '{"jsonrpc":"2.0","method":"admin_peers","params":[],"id":1}' -H "Content-Type: application/json" http://localhost:8545`;
+
+    const response = await new Promise((resolve, reject) => {
+      exec(curlCommand, (error, stdout, stderr) => {
+        if (error) reject(error);
+        else resolve(stdout);
+      });
+    });
+
+    const parsedResponse = JSON.parse(response);
+    const peerIds = parsedResponse.result.map((peer) => peer.id);
+
+    // Parse bgPeerIds correctly
+    const bgPeerIds = bgPeers
+      .map((peer) => {
+        const match = peer.match(/^enode:\/\/([^@]+)@/);
+        return match ? match[1] : null;
+      })
+      .filter(Boolean);
+
+    // debugToFile(`getBGConsensusPeers(): bgPeers: ${bgPeers}`);
+    // debugToFile(`getBGConsensusPeers(): bgPeerIds: ${bgPeerIds}`);
+
+    const matchingPeers = peerIds.filter((id) => bgPeerIds.includes(id));
+
+    return matchingPeers.length;
+  } catch (error) {
+    debugToFile(`getBGConsensusPeers(): ${error}`);
+    return 0;
+  }
+}
+
+let peerCounts = [0, 0, 0];
 
 async function populatePeerCountGauge(executionClient, consensusClient) {
   try {
     const gaugeNames = [
-      executionClient.toUpperCase(),
-      consensusClient.toUpperCase(),
+      `${executionClient.toUpperCase()} All`,
+      `${executionClient.toUpperCase()} BG Peers`,
+      `${consensusClient.toUpperCase()} All`,
     ];
-    const gaugeColors = ["{cyan-fg}", "{green-fg}"];
-    const maxPeers = [150, 150];
+    const gaugeColors = ["{cyan-fg}", "{cyan-fg}", "{green-fg}"];
+    const maxPeers = [150, 20, 150];
 
     // Get the execution peers count
     peerCounts[0] = await getExecutionPeers();
 
     // Try to get the consensus peers count, but handle the failure case
     try {
-      peerCounts[1] = await getConsensusPeers(consensusClient);
+      peerCounts[1] = await getBGConsensusPeers();
     } catch {
       peerCounts[1] = null; // If there's an error, set it to null
+    }
+
+    try {
+      peerCounts[2] = await getConsensusPeers(consensusClient);
+    } catch {
+      peerCounts[2] = null; // If there's an error, set it to null
     }
 
     const boxWidth = peerCountGauge.width - 8; // Subtracting 8 for padding/border
@@ -101,7 +143,7 @@ async function populatePeerCountGauge(executionClient, consensusClient) {
 
       // Only display the first gauge (Execution) if the second one (Consensus) is null
       peerCounts.forEach((peerCount, index) => {
-        if (index === 1 && peerCounts[1] === null) return; // Skip Consensus if it's null
+        if (index === 2 && peerCounts[2] === null) return; // Skip Consensus if it's null
 
         // Create the peer count string
         const peerCountString = `${peerCount !== null ? peerCount : "N/A"}`;
@@ -125,6 +167,6 @@ async function populatePeerCountGauge(executionClient, consensusClient) {
       peerCountGauge.screen.render();
     }
   } catch (error) {
-    debugToFile(`populatePeerCountGauge(): ${error}`, () => {});
+    debugToFile(`populatePeerCountGauge(): ${error}`);
   }
 }

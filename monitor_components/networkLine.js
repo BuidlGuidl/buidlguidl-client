@@ -105,7 +105,7 @@ async function updateNetworkLinePlot(networkLine, screen) {
       dataReceivedY.shift();
     }
   } catch (error) {
-    debugToFile(`updateNetworkPlot(): ${error}`, () => {});
+    debugToFile(`updateNetworkPlot(): ${error}`);
   }
 }
 

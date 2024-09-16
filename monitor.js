@@ -135,7 +135,7 @@ export async function initializeMonitoring(
       }, 5000);
     }
   } catch (error) {
-    debugToFile(`Error initializing monitoring: ${error}`, () => {});
+    debugToFile(`Error initializing monitoring: ${error}`);
   }
 }
 
@@ -222,7 +222,7 @@ function setupUI(
       // Render the screen after both updates are complete
       screen.render();
     } catch (error) {
-      debugToFile(`updateWidgets(): ${error}`, () => {});
+      debugToFile(`updateWidgets(): ${error}`);
     }
   }
 
@@ -312,7 +312,7 @@ function setupUI(
         diskLine.height = diskLine.height + diskLineGap;
       }
     } catch (error) {
-      debugToFile(`fixBottomMargins(): ${error}`, () => {});
+      debugToFile(`fixBottomMargins(): ${error}`);
     }
   }
 
@@ -399,7 +399,7 @@ function setupUI(
         diskLine.width = diskLine.width + diskLineGap;
       }
     } catch (error) {
-      debugToFile(`fixRightMargins(): ${error}`, () => {});
+      debugToFile(`fixRightMargins(): ${error}`);
     }
   }
 
@@ -458,7 +458,7 @@ async function updateChainInfoBox(chainInfoBox, screen) {
       await populateChainInfoBox();
     }
   } catch (error) {
-    debugToFile(`updateChainInfoBox(): ${error}`, () => {});
+    debugToFile(`updateChainInfoBox(): ${error}`);
   }
 }
 

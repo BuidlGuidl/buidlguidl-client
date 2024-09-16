@@ -83,7 +83,7 @@ function loadOptionsFromFile() {
     const options = JSON.parse(fs.readFileSync(optionsFilePath, "utf8"));
     return options;
   } else {
-    debugToFile(`loadOptionsFromFile(): Options file not found`, () => {});
+    debugToFile(`loadOptionsFromFile(): Options file not found`);
   }
 }
 
@@ -100,7 +100,7 @@ if (fs.existsSync(optionsFilePath)) {
     installDir = options.installDir;
     optionsLoaded = true;
   } catch (error) {
-    debugToFile(`Failed to load options from file: ${error}`, () => {});
+    debugToFile(`Failed to load options from file: ${error}`);
   }
 }
 
@@ -112,12 +112,12 @@ function deleteOptionsFile() {
     );
     if (fs.existsSync(optionsFilePath)) {
       fs.unlinkSync(optionsFilePath);
-      debugToFile(`Options file successfully deleted`, () => {});
+      debugToFile(`Options file successfully deleted`);
     } else {
-      debugToFile(`Options file does not exist`, () => {});
+      debugToFile(`Options file does not exist`);
     }
   } catch (error) {
-    debugToFile(`deleteOptionsFile(): ${error}`, () => {});
+    debugToFile(`deleteOptionsFile(): ${error}`);
   }
 }
 

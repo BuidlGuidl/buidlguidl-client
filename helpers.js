@@ -32,15 +32,14 @@ export function setupDebugLogging(debugLogPath) {
   };
 }
 
-export function debugToFile(data, callback) {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = dirname(__filename);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const debugLogPath = path.join(__dirname, "debug.log");
 
-  const filePath = path.join(__dirname, "debug.log");
+export function debugToFile(data) {
   const now = new Date();
   const timestamp = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
 
-  // Check if data is an object, and if it is, convert it to a JSON string
   let content;
   if (typeof data === "object" && data !== null) {
     content = `${timestamp} - ${JSON.stringify(data, null, 2)}\n`;
@@ -48,12 +47,9 @@ export function debugToFile(data, callback) {
     content = `${timestamp} - ${data}\n`;
   }
 
-  // Append the content to the log file
-  fs.writeFile(filePath, content, { flag: "a" }, (err) => {
+  fs.appendFile(debugLogPath, content, (err) => {
     if (err) {
-      console.error("Error writing to log file:", err); // Handle the error, if any
-    } else {
-      if (callback) callback();
+      console.error("Error writing to log file:", err);
     }
   });
 }

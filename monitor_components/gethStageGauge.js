@@ -56,6 +56,6 @@ export function populateGethStageGauge(stagePercentages) {
       gethStageGauge.screen.render();
     }
   } catch (error) {
-    debugToFile(`populateGethStageGauge(): ${error}`, () => {});
+    debugToFile(`populateGethStageGauge(): ${error}`);
   }
 }

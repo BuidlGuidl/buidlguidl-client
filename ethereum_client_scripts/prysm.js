@@ -108,7 +108,7 @@ consensus.on("error", (err) => {
   if (process.send) {
     process.send({ log: errorMessage }); // Send error message to parent process
   }
-  debugToFile(`From prysm.js: ${errorMessage}`, () => {});
+  debugToFile(`From prysm.js: ${errorMessage}`);
 });
 
 process.on("SIGINT", () => {

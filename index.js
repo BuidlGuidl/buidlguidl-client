@@ -22,6 +22,10 @@ import {
   saveOptionsToFile,
   deleteOptionsFile,
 } from "./commandLineOptions.js";
+import {
+  fetchBGPeers,
+  configureBGPeers,
+} from "./ethereum_client_scripts/configureBGPeers.js";
 import { debugToFile } from "./helpers.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -62,7 +66,7 @@ function handleExit() {
   console.log("\n\n🛰️  Received exit signal\n");
 
   deleteOptionsFile();
-  debugToFile(`handleExit(): deleteOptionsFile() has been called`, () => {});
+  debugToFile(`handleExit(): deleteOptionsFile() has been called`);
 
   try {
     // Check if both child processes have exited
@@ -164,7 +168,7 @@ process.on("SIGUSR2", () => {
   handleExit();
 });
 
-function startClient(clientName, installDir) {
+async function startClient(clientName, installDir) {
   let clientCommand,
     clientArgs = [];
 
@@ -311,8 +315,8 @@ const httpConfig = {
 if (!isAlreadyRunning()) {
   deleteOptionsFile();
 
-  startClient(executionClient, installDir);
-  startClient(consensusClient, installDir);
+  await startClient(executionClient, installDir);
+  await startClient(consensusClient, installDir);
 
   initializeHttpConnection(httpConfig);
 
@@ -334,3 +338,12 @@ initializeMonitoring(
   lighthouseVer,
   runsClient
 );
+
+let bgPeers = [];
+
+setTimeout(async () => {
+  bgPeers = await fetchBGPeers(executionClient);
+  await configureBGPeers(bgPeers, executionClient);
+}, 10000);
+
+export { bgPeers };

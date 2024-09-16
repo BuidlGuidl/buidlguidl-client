@@ -58,11 +58,11 @@ export function updateConsensusClientInfo(logFilePath, consensusLog, screen) {
         });
 
         newRl.on("error", (err) => {
-          debugToFile(`Error reading log file: ${err}`, () => {});
+          debugToFile(`Error reading log file: ${err}`);
         });
       }
     } catch (error) {
-      debugToFile(`Error accessing log file: ${error}`, () => {});
+      debugToFile(`Error accessing log file: ${error}`);
     }
   };
 
