@@ -202,7 +202,7 @@ export function initializeHttpConnection(httpConfig) {
         });
         res.on("end", () => {
           // debugToFile(`Checkin response: ${data}`, () => {});
-          debugToFile(`Response status: ${res.statusCode}`, () => {});
+          // debugToFile(`Response status: ${res.statusCode}`, () => {});
         });
       });
 
