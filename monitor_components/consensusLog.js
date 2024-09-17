@@ -58,6 +58,12 @@ export function updateConsensusClientInfo(logFilePath, log, screen) {
           end: newSize,
         });
 
+        newStream.on("error", (err) => {
+          debugToFile(`Error creating read stream: ${err}`, () => {});
+          // Attempt to recover by resetting lastSize
+          lastSize = 0;
+        });
+
         const newRl = readline.createInterface({
           input: newStream,
           output: process.stdout,
@@ -66,9 +72,7 @@ export function updateConsensusClientInfo(logFilePath, log, screen) {
 
         newRl.on("line", (line) => {
           logBuffer.push(formatLogLines(line));
-
-          ensureBufferFillsWidget(); // Make sure the buffer fills the widget only if necessary
-
+          ensureBufferFillsWidget();
           log.setContent(logBuffer.join("\n"));
           screen.render();
         });
@@ -79,10 +83,14 @@ export function updateConsensusClientInfo(logFilePath, log, screen) {
 
         newRl.on("error", (err) => {
           debugToFile(`Error reading log file: ${err}`, () => {});
+          // Attempt to recover by resetting lastSize
+          lastSize = 0;
         });
       }
     } catch (error) {
       debugToFile(`Error accessing log file: ${error}`, () => {});
+      // Attempt to recover by resetting lastSize
+      lastSize = 0;
     }
   };
 

@@ -119,11 +119,11 @@ async function populatePeerCountGauge(executionClient, consensusClient) {
   try {
     const gaugeNames = [
       `${executionClient.toUpperCase()} All`,
-      `${executionClient.toUpperCase()} BG Peers`,
+      `${executionClient.toUpperCase()} BG PEERS`,
       `${consensusClient.toUpperCase()} All`,
     ];
     const gaugeColors = ["{cyan-fg}", "{cyan-fg}", "{green-fg}"];
-    const maxPeers = [150, 20, 150];
+    const maxPeers = [130, 130, 130];
 
     // Get the execution peers count
     peerCounts[0] = await getExecutionPeers();

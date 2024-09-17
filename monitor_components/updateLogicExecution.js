@@ -112,6 +112,12 @@ export function setupLogStreaming(
           end: newSize,
         });
 
+        newStream.on("error", (err) => {
+          debugToFile(`Error creating read stream: ${err}`);
+          // Attempt to recover by resetting lastSize
+          lastSize = 0;
+        });
+
         const newRl = readline.createInterface({
           input: newStream,
           output: process.stdout,
@@ -122,7 +128,7 @@ export function setupLogStreaming(
           globalLine = line;
           logBuffer.push(formatLogLines(line));
 
-          ensureBufferFillsWidget(); // Make sure the buffer fills the widget only if necessary
+          ensureBufferFillsWidget();
 
           executionLog.setContent(logBuffer.join("\n"));
 
@@ -159,10 +165,14 @@ export function setupLogStreaming(
 
         newRl.on("error", (err) => {
           debugToFile(`Error reading log file: ${err}`);
+          // Attempt to recover by resetting lastSize
+          lastSize = 0;
         });
       }
     } catch (error) {
       debugToFile(`Error accessing log file: ${error}`);
+      // Attempt to recover by resetting lastSize
+      lastSize = 0;
     }
   };
 
