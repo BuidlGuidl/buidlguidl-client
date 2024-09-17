@@ -309,7 +309,7 @@ async function getPeerIDWithRetry(maxRetries = 60) {
 
 function getLighthousePeerID() {
   return new Promise((resolve, reject) => {
-    const command = `curl -s http://localhost:5052/eth/v1/node/identity | jq -r '.data.peer_id'`;
+    const command = `curl -s http://localhost:5052/eth/v1/node/identity | grep -o '"peer_id":"[^"]*"' | sed 's/"peer_id":"//;s/"//g'`;
 
     exec(command, (error, stdout, stderr) => {
       if (error) {
