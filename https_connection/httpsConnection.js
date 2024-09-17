@@ -105,7 +105,7 @@ export function initializeHttpConnection(httpConfig) {
   }
 
   checkIn = async function (force = false, blockNumber = null) {
-    debugToFile(`checkIn() called`);
+    // debugToFile(`checkIn() called`);
     const now = Date.now();
     if (!force && now - lastCheckInTime < minCheckInInterval) {
       return;
@@ -187,7 +187,7 @@ export function initializeHttpConnection(httpConfig) {
         peerid: peerID ?? null,
       });
 
-      debugToFile(`Checkin params: ${params.toString()}`);
+      // debugToFile(`Checkin params: ${params.toString()}`);
 
       const options = {
         hostname: "rpc.buidlguidl.com",
