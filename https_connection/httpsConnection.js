@@ -244,16 +244,15 @@ async function getEnodeWithRetry(maxRetries = 30) {
       const nodeInfo = await getNodeInfo();
       if (nodeInfo.enode) {
         let enode = nodeInfo.enode;
+        const publicIPv4 = await getPublicIPAddress();
 
         // Check if the enode contains an IPv6 address
         if (enode.includes("[") && enode.includes("]")) {
           // Replace IPv6 with public IPv4
-          const publicIPv4 = await getPublicIPAddress();
           enode = enode.replace(/\[.*?\]/, publicIPv4);
-        } else if (enode.includes("@127.")) {
-          // Replace local IPv4 with public IPv4
-          const publicIPv4 = await getPublicIPAddress();
-          enode = enode.replace(/@127\.[0-9.]+/, `@${publicIPv4}`);
+        } else if (enode.includes("@127.") || enode.includes("@0.0.0.0")) {
+          // Replace local IPv4 or 0.0.0.0 with public IPv4
+          enode = enode.replace(/@(127\.[0-9.]+|0\.0\.0\.0)/, `@${publicIPv4}`);
         }
 
         // debugToFile(`nodeInfo.enode: ${enode}`);
