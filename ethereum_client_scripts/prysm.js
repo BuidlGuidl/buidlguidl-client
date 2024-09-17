@@ -66,7 +66,7 @@ const consensus = pty.spawn(
     "--execution-endpoint",
     "http://localhost:8551",
     "--grpc-gateway-host=0.0.0.0",
-    "--grpc-gateway-port=3500",
+    "--grpc-gateway-port=5052",
     `--checkpoint-sync-url=${consensusCheckpoint}`,
     `--genesis-beacon-api-url=${consensusCheckpoint}`,
     "--datadir",
