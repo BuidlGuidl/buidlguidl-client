@@ -87,7 +87,11 @@ export async function getBGConsensusPeers() {
     });
 
     const parsedResponse = JSON.parse(response);
-    const peerIds = parsedResponse.result.map((peer) => peer.id);
+    const peerIds = parsedResponse.result.map((peer) =>
+      peer.id.replace(/^0x/, "")
+    );
+
+    // debugToFile(`getBGConsensusPeers(): peerIds: ${peerIds}\n`);
 
     // Parse bgPeerIds correctly
     const bgPeerIds = bgPeers
@@ -97,8 +101,8 @@ export async function getBGConsensusPeers() {
       })
       .filter(Boolean);
 
-    // debugToFile(`getBGConsensusPeers(): bgPeers: ${bgPeers}`);
-    // debugToFile(`getBGConsensusPeers(): bgPeerIds: ${bgPeerIds}`);
+    // debugToFile(`getBGConsensusPeers(): bgPeers: ${bgPeers}\n`);
+    // debugToFile(`getBGConsensusPeers(): bgPeerIds: ${bgPeerIds}\n`);
 
     const matchingPeers = peerIds.filter((id) => bgPeerIds.includes(id));
 

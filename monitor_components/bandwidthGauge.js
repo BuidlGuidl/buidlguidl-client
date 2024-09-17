@@ -87,7 +87,7 @@ async function updateBandwidthBox(screen) {
       dailyStats.sent
     )}\n{blue-fg}▼ 1D: ${formatBytes(
       dailyStats.received
-    )}\n\n{red-fg}▲ 7D: ${formatBytes(
+    )}\n{red-fg}▲ 7D: ${formatBytes(
       weeklyStats.sent
     )}\n{blue-fg}▼ 7D: ${formatBytes(weeklyStats.received)}`;
 
