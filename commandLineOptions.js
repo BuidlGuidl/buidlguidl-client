@@ -106,13 +106,8 @@ if (fs.existsSync(optionsFilePath)) {
 
 function deleteOptionsFile() {
   try {
-    debugToFile(
-      `Attempting to delete options file at: ${optionsFilePath}`,
-      () => {}
-    );
     if (fs.existsSync(optionsFilePath)) {
       fs.unlinkSync(optionsFilePath);
-      debugToFile(`Options file successfully deleted`);
     } else {
       debugToFile(`Options file does not exist`);
     }

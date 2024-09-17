@@ -83,6 +83,7 @@ const consensus = pty.spawn(
     "127.0.0.1",
     "--metrics-port",
     "5054",
+    "--http",
   ],
   {
     name: "xterm-color",

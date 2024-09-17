@@ -79,10 +79,6 @@ export function initializeHttpConnection(httpConfig) {
               .toISOString()
               .replace(/T/, " ")
               .replace(/\..+/, "");
-            debugToFile(
-              `Converted lastCommitDate: ${lastCommitDate}`,
-              () => {}
-            );
           } else {
             throw new Error("Invalid date");
           }
@@ -109,6 +105,7 @@ export function initializeHttpConnection(httpConfig) {
   }
 
   checkIn = async function (force = false, blockNumber = null) {
+    debugToFile(`checkIn() called`);
     const now = Date.now();
     if (!force && now - lastCheckInTime < minCheckInInterval) {
       return;
@@ -156,6 +153,7 @@ export function initializeHttpConnection(httpConfig) {
     }
 
     let enode = await getEnodeWithRetry();
+    let peerID = await getPeerIDWithRetry();
 
     try {
       const cpuUsage = await getCpuUsage();
@@ -186,7 +184,10 @@ export function initializeHttpConnection(httpConfig) {
         last_commit: gitInfo.lastCommitDate,
         commit_hash: gitInfo.commitHash,
         enode: enode,
+        peerid: peerID ?? null,
       });
+
+      debugToFile(`Checkin params: ${params.toString()}`);
 
       const options = {
         hostname: "rpc.buidlguidl.com",
@@ -237,9 +238,15 @@ export function initializeHttpConnection(httpConfig) {
   setInterval(() => checkIn(true), 60000); // Force check-in every 60 seconds
 }
 
-async function getEnodeWithRetry(maxRetries = 30) {
-  let retries = 0;
-  while (retries < maxRetries) {
+let cachedEnode = null;
+let enodeRetries = 0;
+
+async function getEnodeWithRetry(maxRetries = 60) {
+  // If we already have a cached enode, return it immediately
+  if (cachedEnode) {
+    return cachedEnode;
+  }
+  if (enodeRetries < maxRetries) {
     try {
       const nodeInfo = await getNodeInfo();
       if (nodeInfo.enode) {
@@ -254,20 +261,73 @@ async function getEnodeWithRetry(maxRetries = 30) {
           // Replace local IPv4 or 0.0.0.0 with public IPv4
           enode = enode.replace(/@(127\.[0-9.]+|0\.0\.0\.0)/, `@${publicIPv4}`);
         }
-
-        // debugToFile(`nodeInfo.enode: ${enode}`);
+        // Cache the successful enode
+        cachedEnode = enode;
         return enode;
       }
     } catch (error) {
       debugToFile(
-        `Failed to get enode (attempt ${retries + 1}): ${error}`,
+        `Failed to get enode (attempt ${enodeRetries + 1}): ${error}`,
         () => {}
       );
     }
-    retries++;
-    await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for 2 seconds
+    enodeRetries++;
+  } else {
+    debugToFile(`Failed to get enode after ${maxRetries} attempts`);
+    return null;
   }
-  throw new Error("Failed to get enode after maximum retries");
+}
+
+let cachedPeerID = null;
+let peerIDRetries = 0;
+async function getPeerIDWithRetry(maxRetries = 60) {
+  // If we already have a cached peer ID, return it immediately
+  if (cachedPeerID) {
+    return cachedPeerID;
+  }
+
+  if (peerIDRetries < maxRetries) {
+    try {
+      const peerID = await getLighthousePeerID();
+      if (peerID) {
+        // Cache the successful peer ID
+        cachedPeerID = peerID;
+        return peerID;
+      }
+    } catch (error) {
+      debugToFile(
+        `Failed to get peer ID (attempt ${peerIDRetries + 1}): ${error}`,
+        () => {}
+      );
+    }
+    peerIDRetries++;
+  } else {
+    debugToFile(`Failed to get peer ID after ${maxRetries} attempts`);
+    return null;
+  }
+}
+
+function getLighthousePeerID() {
+  return new Promise((resolve, reject) => {
+    const command = `curl -s http://localhost:5052/eth/v1/node/identity | jq -r '.data.peer_id'`;
+
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        reject(`Error executing curl command: ${error}`);
+        return null;
+      }
+      if (stderr) {
+        reject(`Curl command stderr: ${stderr}`);
+        return null;
+      }
+      const peerID = stdout.trim();
+      if (peerID) {
+        resolve(peerID);
+      } else {
+        reject("Empty peer ID received");
+      }
+    });
+  });
 }
 
 function getNodeInfo() {
@@ -277,11 +337,11 @@ function getNodeInfo() {
     exec(command, (error, stdout, stderr) => {
       if (error) {
         reject(`Error executing curl command: ${error}`);
-        return;
+        return null;
       }
       if (stderr) {
         reject(`Curl command stderr: ${stderr}`);
-        return;
+        return null;
       }
       try {
         const response = JSON.parse(stdout);
