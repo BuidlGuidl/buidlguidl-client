@@ -335,8 +335,8 @@ initializeMonitoring(
 let bgPeers = [];
 
 setTimeout(async () => {
-  bgPeers = await fetchBGExecutionPeers(executionClient);
-  await configureBGExecutionPeers(bgPeers, executionClient);
+  bgPeers = await fetchBGExecutionPeers();
+  await configureBGExecutionPeers(bgPeers);
 }, 10000);
 
 export { bgPeers };
