@@ -75,7 +75,7 @@ export async function getConsensusPeers(consensusClient) {
   });
 }
 
-export async function getBGConsensusPeers() {
+export async function getBGExecutionPeers() {
   try {
     const curlCommand = `curl -s -X POST --data '{"jsonrpc":"2.0","method":"admin_peers","params":[],"id":1}' -H "Content-Type: application/json" http://localhost:8545`;
 
@@ -91,7 +91,7 @@ export async function getBGConsensusPeers() {
       peer.id.replace(/^0x/, "")
     );
 
-    // debugToFile(`getBGConsensusPeers(): peerIds: ${peerIds}\n`);
+    debugToFile(`getBGExecutionPeers(): peerIds: ${peerIds}\n`);
 
     // Parse bgPeerIds correctly
     const bgPeerIds = bgPeers
@@ -101,14 +101,14 @@ export async function getBGConsensusPeers() {
       })
       .filter(Boolean);
 
-    // debugToFile(`getBGConsensusPeers(): bgPeers: ${bgPeers}\n`);
-    // debugToFile(`getBGConsensusPeers(): bgPeerIds: ${bgPeerIds}\n`);
+    debugToFile(`getBGExecutionPeers(): bgPeers: ${bgPeers}\n`);
+    debugToFile(`getBGExecutionPeers(): bgPeerIds: ${bgPeerIds}\n`);
 
     const matchingPeers = peerIds.filter((id) => bgPeerIds.includes(id));
 
     return matchingPeers.length;
   } catch (error) {
-    debugToFile(`getBGConsensusPeers(): ${error}`);
+    debugToFile(`getBGExecutionPeers(): ${error}`);
     return 0;
   }
 }
@@ -130,7 +130,7 @@ async function populatePeerCountGauge(executionClient, consensusClient) {
 
     // Try to get the consensus peers count, but handle the failure case
     try {
-      peerCounts[1] = await getBGConsensusPeers();
+      peerCounts[1] = await getBGExecutionPeers();
     } catch {
       peerCounts[1] = null; // If there's an error, set it to null
     }

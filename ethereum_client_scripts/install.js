@@ -112,7 +112,8 @@ export function installMacLinuxConsensusClient(
         lighthouseFileName: `lighthouse-v${lighthouseVer}-x86_64-apple-darwin`,
       },
       arm64: {
-        lighthouseFileName: `lighthouse-v${lighthouseVer}-x86_64-apple-darwin-portable`,
+        // lighthouseFileName: `lighthouse-v${lighthouseVer}-x86_64-apple-darwin-portable`,
+        lighthouseFileName: `lighthouse-v${lighthouseVer}-x86_64-apple-darwin`,
       },
     },
     linux: {
