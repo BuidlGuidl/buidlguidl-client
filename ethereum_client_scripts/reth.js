@@ -43,6 +43,8 @@ const execution = pty.spawn(
   [
     "node",
     "--full",
+    "--port",
+    executionPeerPort,
     "--discovery.port",
     executionPeerPort,
     "--http",
