@@ -7,17 +7,14 @@ import { stripAnsiCodes, getFormattedDateTime } from "../helpers.js";
 import minimist from "minimist";
 
 let installDir = os.homedir();
-let executionPeerPort = 30303;
 
 const argv = minimist(process.argv.slice(2));
+
+const executionPeerPort = argv.executionpeerport;
 
 // Check if a different install directory was provided via the `--directory` option
 if (argv.directory) {
   installDir = argv.directory;
-}
-
-if (argv.executionpeerport) {
-  executionPeerPort = argv.executionpeerport;
 }
 
 const jwtPath = path.join(installDir, "ethereum_clients", "jwt", "jwt.hex");

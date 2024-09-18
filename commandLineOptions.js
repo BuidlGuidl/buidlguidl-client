@@ -7,7 +7,7 @@ import { debugToFile } from "./helpers.js";
 /// Set default command line option values
 let executionClient = "reth";
 let consensusClient = "lighthouse";
-let executionPeerPort = null;
+let executionPeerPort = 30303;
 let consensusPeerPorts = [null, null];
 let consensusCheckpoint = null;
 

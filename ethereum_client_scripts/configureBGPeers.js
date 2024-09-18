@@ -1,31 +1,28 @@
+import fetch from "node-fetch";
 import { getPublicIPAddress } from "../getSystemStats.js";
 import { debugToFile } from "../helpers.js";
-import fetch from "node-fetch";
-import path from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
-import fs from "fs";
+import { executionPeerPort } from "../commandLineOptions.js";
 
-export async function fetchBGPeers(executionClient) {
+export async function fetchBGExecutionPeers(executionClient) {
   try {
     const publicIP = await getPublicIPAddress();
     const response = await fetch("https://rpc.buidlguidl.com:48544/enodes");
     const data = await response.json();
 
+    const ipPortCombination = `${publicIP}:${executionPeerPort}`;
+
     const filteredEnodes = data.enodes.filter(
-      (node) =>
-        node.executionClient === executionClient &&
-        !node.enode.includes(publicIP)
+      (node) => !node.enode.includes(ipPortCombination)
     );
 
     return filteredEnodes.map((node) => node.enode);
   } catch (error) {
-    debugToFile("fetchBGPeers():", error);
+    debugToFile("fetchBGExecutionPeers():", error);
     return [];
   }
 }
 
-export async function configureBGPeers(bgPeers, executionClient) {
+export async function configureBGExecutionPeers(bgPeers, executionClient) {
   try {
     if (executionClient === "reth") {
       for (const enode of bgPeers) {
@@ -37,43 +34,43 @@ export async function configureBGPeers(bgPeers, executionClient) {
         exec(curlCommandAddPeer, (error, stdout, stderr) => {
           if (error) {
             debugToFile(
-              `configureBGPeers(): AddPeer: Error executing curl command: ${error}`
+              `configureBGExecutionPeers(): AddPeer: Error executing curl command: ${error}`
             );
             return;
           }
           if (stderr) {
             debugToFile(
-              `configureBGPeers(): AddPeer: Curl command stderr: ${stderr}`
+              `configureBGExecutionPeers(): AddPeer: Curl command stderr: ${stderr}`
             );
             return;
           }
           debugToFile(
-            `configureBGPeers(): AddPeer: Curl command stdout: ${stdout}`
+            `configureBGExecutionPeers(): AddPeer: Curl command stdout: ${stdout}`
           );
         });
 
         exec(curlCommandAddTrustedPeer, (error, stdout, stderr) => {
           if (error) {
             debugToFile(
-              `configureBGPeers(): AddTrustedPeer: Error executing curl command: ${error}`
+              `configureBGExecutionPeers(): AddTrustedPeer: Error executing curl command: ${error}`
             );
             return;
           }
           if (stderr) {
             debugToFile(
-              `configureBGPeers(): AddTrustedPeer: Curl command stderr: ${stderr}`
+              `configureBGExecutionPeers(): AddTrustedPeer: Curl command stderr: ${stderr}`
             );
             return;
           }
           debugToFile(
-            `configureBGPeers(): AddTrustedPeer: Curl command stdout: ${stdout}`
+            `configureBGExecutionPeers(): AddTrustedPeer: Curl command stdout: ${stdout}`
           );
         });
       }
     }
   } catch (error) {
     debugToFile(
-      `configureBGPeers() error: ${error.message}\nStack: ${error.stack}`
+      `configureBGExecutionPeers() error: ${error.message}\nStack: ${error.stack}`
     );
   }
 }

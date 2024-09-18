@@ -23,8 +23,8 @@ import {
   deleteOptionsFile,
 } from "./commandLineOptions.js";
 import {
-  fetchBGPeers,
-  configureBGPeers,
+  fetchBGExecutionPeers,
+  configureBGExecutionPeers,
 } from "./ethereum_client_scripts/configureBGPeers.js";
 import { debugToFile } from "./helpers.js";
 
@@ -174,16 +174,10 @@ async function startClient(clientName, installDir) {
 
   if (clientName === "geth") {
     clientCommand = path.join(__dirname, "ethereum_client_scripts/geth.js");
-
-    if (executionPeerPort != null) {
-      clientArgs.push("--executionpeerport", executionPeerPort);
-    }
+    clientArgs.push("--executionpeerport", executionPeerPort);
   } else if (clientName === "reth") {
     clientCommand = path.join(__dirname, "ethereum_client_scripts/reth.js");
-
-    if (executionPeerPort != null) {
-      clientArgs.push("--executionpeerport", executionPeerPort);
-    }
+    clientArgs.push("--executionpeerport", executionPeerPort);
   } else if (clientName === "prysm") {
     clientCommand = path.join(__dirname, "ethereum_client_scripts/prysm.js");
 
@@ -199,7 +193,6 @@ async function startClient(clientName, installDir) {
       __dirname,
       "ethereum_client_scripts/lighthouse.js"
     );
-
     if (consensusPeerPorts[0] !== null || consensusPeerPorts[1] !== null) {
       clientArgs.push("--consensuspeerports", consensusPeerPorts);
     }
@@ -342,8 +335,8 @@ initializeMonitoring(
 let bgPeers = [];
 
 setTimeout(async () => {
-  bgPeers = await fetchBGPeers(executionClient);
-  await configureBGPeers(bgPeers, executionClient);
+  bgPeers = await fetchBGExecutionPeers(executionClient);
+  await configureBGExecutionPeers(bgPeers, executionClient);
 }, 10000);
 
 export { bgPeers };
