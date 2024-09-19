@@ -7,21 +7,19 @@ import { stripAnsiCodes, getFormattedDateTime } from "../helpers.js";
 import minimist from "minimist";
 
 let installDir = os.homedir();
-let consensusPeerPorts = [9000, 9001];
 let consensusCheckpoint = "https://mainnet.checkpoint.sigp.io";
 let bgConsensusPeers;
+let bgConsensusAddrs;
 
 const argv = minimist(process.argv.slice(2));
+
+const consensusPeerPorts = argv.consensuspeerports
+  .split(",")
+  .map((port) => parseInt(port.trim(), 10));
 
 // Check if a different install directory was provided via the `--directory` option
 if (argv.directory) {
   installDir = argv.directory;
-}
-
-if (argv.consensuspeerports) {
-  consensusPeerPorts = argv.consensuspeerports
-    .split(",")
-    .map((port) => parseInt(port.trim(), 10));
 }
 
 if (argv.consensuscheckpoint) {
@@ -36,7 +34,9 @@ if (argv.bgconsensuspeers) {
     .join(",");
 }
 
-debugToFile(`Lighthouse: BG Consensus Peers: ${bgConsensusPeers}`);
+if (argv.bgconsensusaddrs) {
+  bgConsensusAddrs = argv.bgconsensusaddrs;
+}
 
 const jwtPath = path.join(installDir, "ethereum_clients", "jwt", "jwt.hex");
 
@@ -93,10 +93,18 @@ const consensusArgs = [
   "--metrics-port",
   "5054",
   "--http",
+  // "--libp2p-addresses",
+  // "/ip4/76.155.211.156/tcp/9000/p2p/16Uiu2HAkw5RWctJguL1CPRyvgwuF4GsqTKUBW7qXdNrX3t6k4CH9,/ip4/76.155.211.156/udp/9001/quic-v1/p2p/16Uiu2HAkw5RWctJguL1CPRyvgwuF4GsqTKUBW7qXdNrX3t6k4CH9,/ip4/76.155.211.156/tcp/10000/p2p/16Uiu2HAmT4mjLEPrwStrRvorexA3rH9FLJLS367N1KJYUCPWTSio,/ip4/76.155.211.156/udp/10001/quic-v1/p2p/16Uiu2HAmT4mjLEPrwStrRvorexA3rH9FLJLS367N1KJYUCPWTSio,/ip4/140.228.255.200/tcp/9000/p2p/16Uiu2HAmUxRVA7mHdJdt8QeauaiFU9ifHUuqANs6BAPcU3nWbyAu,/ip4/140.228.255.200/udp/9001/quic-v1/p2p/16Uiu2HAmUxRVA7mHdJdt8QeauaiFU9ifHUuqANs6BAPcU3nWbyAu",
 ];
 
-if (bgConsensusPeers) {
+if (argv.bgconsensuspeers) {
+  debugToFile(`Lighthouse: bgConsensusPeers: ${bgConsensusPeers}`);
   consensusArgs.push("--trusted-peers", bgConsensusPeers);
+}
+
+if (argv.bgconsensusaddrs) {
+  debugToFile(`Lighthouse: bgConsensusAddrs: ${bgConsensusAddrs}`);
+  consensusArgs.push("--libp2p-addresses", bgConsensusAddrs);
 }
 
 const consensus = pty.spawn(`${lighthouseCommand}`, consensusArgs, {

@@ -7,20 +7,17 @@ import { stripAnsiCodes, getFormattedDateTime } from "../helpers.js";
 import minimist from "minimist";
 
 let installDir = os.homedir();
-let consensusPeerPorts = [12000, 13000];
 let consensusCheckpoint = "https://mainnet-checkpoint-sync.attestant.io/";
 
 const argv = minimist(process.argv.slice(2));
 
+const consensusPeerPorts = argv.consensuspeerports
+  .split(",")
+  .map((port) => parseInt(port.trim(), 10));
+
 // Check if a different install directory was provided via the `--directory` option
 if (argv.directory) {
   installDir = argv.directory;
-}
-
-if (argv.consensuspeerports) {
-  consensusPeerPorts = argv.consensuspeerports
-    .split(",")
-    .map((port) => parseInt(port.trim(), 10));
 }
 
 if (argv.consensuscheckpoint) {
@@ -58,11 +55,11 @@ const consensus = pty.spawn(
     "beacon-chain",
     "--mainnet",
     "--p2p-udp-port",
-    consensusPeerPorts[0],
+    consensusPeerPorts[1],
     "--p2p-quic-port",
-    consensusPeerPorts[1],
+    consensusPeerPorts[0],
     "--p2p-tcp-port",
-    consensusPeerPorts[1],
+    consensusPeerPorts[0],
     "--execution-endpoint",
     "http://localhost:8551",
     "--grpc-gateway-host=0.0.0.0",

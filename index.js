@@ -26,6 +26,7 @@ import {
   fetchBGExecutionPeers,
   configureBGExecutionPeers,
   fetchBGConsensusPeers,
+  configureBGConsensusPeers,
 } from "./ethereum_client_scripts/configureBGPeers.js";
 import { debugToFile } from "./helpers.js";
 
@@ -169,6 +170,9 @@ process.on("SIGUSR2", () => {
   handleExit();
 });
 
+let bgConsensusPeers = [];
+let bgConsensusAddrs;
+
 async function startClient(clientName, installDir) {
   let clientCommand,
     clientArgs = [];
@@ -185,26 +189,28 @@ async function startClient(clientName, installDir) {
     if (bgConsensusPeers.length > 0) {
       clientArgs.push("--bgconsensuspeers", bgConsensusPeers);
     }
-    if (consensusPeerPorts[0] !== null || consensusPeerPorts[1] !== null) {
-      clientArgs.push("--consensuspeerports", consensusPeerPorts);
-    }
     if (consensusCheckpoint != null) {
       clientArgs.push("--consensuscheckpoint", consensusCheckpoint);
     }
+    clientArgs.push("--consensuspeerports", consensusPeerPorts);
 
     clientCommand = path.join(__dirname, "ethereum_client_scripts/prysm.js");
   } else if (clientName === "lighthouse") {
-    const bgConsensusPeers = await fetchBGConsensusPeers();
+    bgConsensusPeers = await fetchBGConsensusPeers();
+    bgConsensusAddrs = await configureBGConsensusPeers(consensusClient);
 
     if (bgConsensusPeers.length > 0) {
       clientArgs.push("--bgconsensuspeers", bgConsensusPeers);
     }
-    if (consensusPeerPorts[0] !== null || consensusPeerPorts[1] !== null) {
-      clientArgs.push("--consensuspeerports", consensusPeerPorts);
+
+    if (bgConsensusAddrs != null) {
+      clientArgs.push("--bgconsensusaddrs", bgConsensusAddrs);
     }
+
     if (consensusCheckpoint != null) {
       clientArgs.push("--consensuscheckpoint", consensusCheckpoint);
     }
+    clientArgs.push("--consensuspeerports", consensusPeerPorts);
 
     clientCommand = path.join(
       __dirname,
@@ -343,13 +349,10 @@ initializeMonitoring(
 );
 
 let bgExecutionPeers = [];
-let bgConsensusPeers = [];
 
 setTimeout(async () => {
   bgExecutionPeers = await fetchBGExecutionPeers();
   await configureBGExecutionPeers(bgExecutionPeers);
 }, 10000);
-
-bgConsensusPeers = await fetchBGConsensusPeers();
 
 export { bgExecutionPeers, bgConsensusPeers };

@@ -115,9 +115,9 @@ export async function getBGExecutionPeers() {
 
 export async function getBGConsensusPeers() {
   try {
-    debugToFile(
-      `getBGConsensusPeers(): bgConsensusPeers: ${bgConsensusPeers}\n`
-    );
+    // debugToFile(
+    //   `getBGConsensusPeers(): bgConsensusPeers: ${bgConsensusPeers}\n`
+    // );
 
     const curlCommand = `curl -s http://localhost:5052/eth/v1/node/peers`;
 
@@ -133,20 +133,20 @@ export async function getBGConsensusPeers() {
       .filter((peer) => peer.state === "connected")
       .map((peer) => peer.peer_id);
 
-    debugToFile(`getBGConsensusPeers(): connectedPeers: ${connectedPeers}\n`);
+    // debugToFile(`getBGConsensusPeers(): connectedPeers: ${connectedPeers}\n`);
 
     // Remove duplicates
     const uniqueConnectedPeers = [...new Set(connectedPeers)];
-    debugToFile(
-      `getBGConsensusPeers(): uniqueConnectedPeers: ${uniqueConnectedPeers}\n`
-    );
+    // debugToFile(
+    //   `getBGConsensusPeers(): uniqueConnectedPeers: ${uniqueConnectedPeers}\n`
+    // );
 
     // Compare with bgConsensusPeers
     const matchingPeers = uniqueConnectedPeers.filter((peerId) =>
       bgConsensusPeers.includes(peerId)
     );
 
-    debugToFile(`getBGConsensusPeers(): matchingPeers: ${matchingPeers}\n\n\n`);
+    // debugToFile(`getBGConsensusPeers(): matchingPeers: ${matchingPeers}\n\n\n`);
 
     return matchingPeers.length;
   } catch (error) {

@@ -2,6 +2,9 @@ import fetch from "node-fetch";
 import { getPublicIPAddress } from "../getSystemStats.js";
 import { debugToFile } from "../helpers.js";
 import { executionPeerPort } from "../commandLineOptions.js";
+import os from "os";
+import { getMacAddress } from "../getSystemStats.js";
+import { consensusClient } from "../commandLineOptions.js";
 
 export async function fetchBGExecutionPeers() {
   try {
@@ -95,5 +98,38 @@ export async function fetchBGConsensusPeers() {
   } catch (error) {
     debugToFile("fetchBGConsensusPeers() error:", error);
     return [];
+  }
+}
+
+export async function configureBGConsensusPeers() {
+  try {
+    const response = await fetch(
+      "https://rpc.buidlguidl.com:48544/consensusPeerAddr"
+    );
+    const data = await response.json();
+
+    const macAddress = await getMacAddress();
+    const thisMachineID = `${os.hostname()}-${macAddress}-${os.platform()}-${os.arch()}`;
+
+    const filteredPeers = data.consensusPeerAddrs.filter(
+      (peer) =>
+        peer.consensusClient === consensusClient &&
+        peer.machineID !== thisMachineID
+    );
+
+    const peerAddresses = filteredPeers.flatMap((peer) =>
+      peer.consensusPeerAddr.split(",")
+    );
+
+    const result = peerAddresses.join(",");
+
+    debugToFile(
+      `configureBGConsensusPeers(): Filtered peer addresses:\n${result}`
+    );
+
+    return result;
+  } catch (error) {
+    debugToFile("configureBGConsensusPeers() error:", error);
+    return "";
   }
 }

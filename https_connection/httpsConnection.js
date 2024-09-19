@@ -1,5 +1,4 @@
 import https from "https";
-import macaddress from "macaddress";
 import os from "os";
 import { debugToFile } from "../helpers.js";
 import {
@@ -8,7 +7,7 @@ import {
   getDiskUsage,
 } from "../getSystemStats.js";
 import { localClient } from "../monitor_components/viemClients.js";
-import { installDir } from "../commandLineOptions.js";
+import { installDir, consensusPeerPorts } from "../commandLineOptions.js";
 import {
   getConsensusPeers,
   getExecutionPeers,
@@ -16,32 +15,9 @@ import {
 import simpleGit from "simple-git";
 import path from "path";
 import { exec } from "child_process";
-import { getPublicIPAddress } from "../getSystemStats.js";
+import { getPublicIPAddress, getMacAddress } from "../getSystemStats.js";
 
 export let checkIn;
-
-function getMacAddress() {
-  return new Promise((resolve, reject) => {
-    macaddress.all((err, all) => {
-      if (err) {
-        reject(`Error getting MAC address: ${err}`);
-        return;
-      }
-
-      // Get the first non-internal MAC address
-      let macAddress = null;
-      for (const interfaceName in all) {
-        const mac = all[interfaceName].mac;
-        if (mac && mac !== "00:00:00:00:00:00") {
-          macAddress = mac;
-          break;
-        }
-      }
-
-      resolve(macAddress);
-    });
-  });
-}
 
 export function initializeHttpConnection(httpConfig) {
   let lastCheckInTime = 0;
@@ -185,7 +161,11 @@ export function initializeHttpConnection(httpConfig) {
         commit_hash: gitInfo.commitHash,
         enode: enode,
         peerid: peerID ?? null,
+        consensus_tcp_port: consensusPeerPorts[0],
+        consensus_udp_port: consensusPeerPorts[1],
       });
+
+      debugToFile(`Checkin params: ${params.toString()}`);
 
       // debugToFile(`Checkin params: ${params.toString()}`);
 

@@ -1,6 +1,7 @@
 import si from "systeminformation";
 import { debugToFile } from "./helpers.js";
 import axios from "axios";
+import macaddress from "macaddress";
 
 export function getMemoryUsage() {
   return new Promise((resolve, reject) => {
@@ -95,4 +96,27 @@ export async function getPublicIPAddress() {
       await new Promise((resolve) => setTimeout(resolve, 5000));
     }
   }
+}
+
+export function getMacAddress() {
+  return new Promise((resolve, reject) => {
+    macaddress.all((err, all) => {
+      if (err) {
+        reject(`Error getting MAC address: ${err}`);
+        return;
+      }
+
+      // Get the first non-internal MAC address
+      let macAddress = null;
+      for (const interfaceName in all) {
+        const mac = all[interfaceName].mac;
+        if (mac && mac !== "00:00:00:00:00:00") {
+          macAddress = mac;
+          break;
+        }
+      }
+
+      resolve(macAddress);
+    });
+  });
 }

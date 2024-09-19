@@ -216,6 +216,20 @@ if (!optionsLoaded) {
     showHelp();
     process.exit(0);
   }
+
+  if (
+    consensusPeerPorts.every((port) => port === null) &&
+    consensusClient === "lighthouse"
+  ) {
+    consensusPeerPorts = [9000, 9001];
+  }
+
+  if (
+    consensusPeerPorts.every((port) => port === null) &&
+    consensusClient === "prysm"
+  ) {
+    consensusPeerPorts = [12000, 13000];
+  }
 }
 
 export {
