@@ -288,7 +288,7 @@ async function getPeerIDWithRetry(maxRetries = 60) {
 
   if (peerIDRetries < maxRetries) {
     try {
-      const peerID = await getLighthousePeerID();
+      const peerID = await getConsensusPeerID();
       if (peerID) {
         // Cache the successful peer ID
         cachedPeerID = peerID;
@@ -307,7 +307,7 @@ async function getPeerIDWithRetry(maxRetries = 60) {
   }
 }
 
-function getLighthousePeerID() {
+function getConsensusPeerID() {
   return new Promise((resolve, reject) => {
     const command = `curl -s http://localhost:5052/eth/v1/node/identity | grep -o '"peer_id":"[^"]*"' | sed 's/"peer_id":"//;s/"//g'`;
 
