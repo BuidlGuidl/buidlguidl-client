@@ -9,6 +9,7 @@ import minimist from "minimist";
 let installDir = os.homedir();
 let consensusPeerPorts = [9000, 9001];
 let consensusCheckpoint = "https://mainnet.checkpoint.sigp.io";
+let bgConsensusPeers;
 
 const argv = minimist(process.argv.slice(2));
 
@@ -26,6 +27,16 @@ if (argv.consensuspeerports) {
 if (argv.consensuscheckpoint) {
   consensusCheckpoint = argv.consensuscheckpoint;
 }
+
+if (argv.bgconsensuspeers) {
+  bgConsensusPeers = argv.bgconsensuspeers
+    .split(",")
+    .map((peer) => peer.trim())
+    .filter((peer) => peer) // Filter out any empty strings
+    .join(",");
+}
+
+debugToFile(`Lighthouse: BG Consensus Peers: ${bgConsensusPeers}`);
 
 const jwtPath = path.join(installDir, "ethereum_clients", "jwt", "jwt.hex");
 
@@ -57,46 +68,44 @@ const logFilePath = path.join(
 
 const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
 
-const consensus = pty.spawn(
-  `${lighthouseCommand}`,
-  [
-    "bn",
-    "--network",
-    "mainnet",
-    "--port",
-    consensusPeerPorts[0],
-    "--quic-port",
-    consensusPeerPorts[1],
-    "--execution-endpoint",
-    "http://localhost:8551",
-    "--checkpoint-sync-url",
-    consensusCheckpoint,
-    "--checkpoint-sync-url-timeout",
-    "600",
-    "--disable-deposit-contract-sync",
-    "--datadir",
-    path.join(installDir, "ethereum_clients", "lighthouse", "database"),
-    "--execution-jwt",
-    `${jwtPath}`,
-    "--metrics",
-    "--metrics-address",
-    "127.0.0.1",
-    "--metrics-port",
-    "5054",
-    "--http",
-    "--http-address",
-    "127.0.0.1",
-    "--http-port",
-    "5052",
-  ],
-  {
-    name: "xterm-color",
-    cols: 80,
-    rows: 30,
-    cwd: process.env.HOME,
-    env: { ...process.env, INSTALL_DIR: installDir },
-  }
-);
+const consensusArgs = [
+  "bn",
+  "--network",
+  "mainnet",
+  "--port",
+  consensusPeerPorts[0],
+  "--quic-port",
+  consensusPeerPorts[1],
+  "--execution-endpoint",
+  "http://localhost:8551",
+  "--checkpoint-sync-url",
+  consensusCheckpoint,
+  "--checkpoint-sync-url-timeout",
+  "600",
+  "--disable-deposit-contract-sync",
+  "--datadir",
+  path.join(installDir, "ethereum_clients", "lighthouse", "database"),
+  "--execution-jwt",
+  `${jwtPath}`,
+  "--metrics",
+  "--metrics-address",
+  "127.0.0.1",
+  "--metrics-port",
+  "5054",
+  "--http",
+];
+
+if (bgConsensusPeers) {
+  consensusArgs.push("--trusted-peers", bgConsensusPeers);
+}
+
+const consensus = pty.spawn(`${lighthouseCommand}`, consensusArgs, {
+  name: "xterm-color",
+  cols: 80,
+  rows: 30,
+  cwd: process.env.HOME,
+  env: { ...process.env, INSTALL_DIR: installDir },
+});
 
 // Pipe stdout and stderr to the log file and to the parent process
 consensus.on("data", (data) => {

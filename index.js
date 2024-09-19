@@ -25,6 +25,7 @@ import {
 import {
   fetchBGExecutionPeers,
   configureBGExecutionPeers,
+  fetchBGConsensusPeers,
 } from "./ethereum_client_scripts/configureBGPeers.js";
 import { debugToFile } from "./helpers.js";
 
@@ -173,33 +174,42 @@ async function startClient(clientName, installDir) {
     clientArgs = [];
 
   if (clientName === "geth") {
+    clientArgs.push("--executionpeerport", executionPeerPort);
     clientCommand = path.join(__dirname, "ethereum_client_scripts/geth.js");
-    clientArgs.push("--executionpeerport", executionPeerPort);
   } else if (clientName === "reth") {
-    clientCommand = path.join(__dirname, "ethereum_client_scripts/reth.js");
     clientArgs.push("--executionpeerport", executionPeerPort);
+    clientCommand = path.join(__dirname, "ethereum_client_scripts/reth.js");
   } else if (clientName === "prysm") {
-    clientCommand = path.join(__dirname, "ethereum_client_scripts/prysm.js");
+    const bgConsensusPeers = await fetchBGConsensusPeers();
 
+    if (bgConsensusPeers.length > 0) {
+      clientArgs.push("--bgconsensuspeers", bgConsensusPeers);
+    }
     if (consensusPeerPorts[0] !== null || consensusPeerPorts[1] !== null) {
       clientArgs.push("--consensuspeerports", consensusPeerPorts);
     }
-
     if (consensusCheckpoint != null) {
       clientArgs.push("--consensuscheckpoint", consensusCheckpoint);
     }
+
+    clientCommand = path.join(__dirname, "ethereum_client_scripts/prysm.js");
   } else if (clientName === "lighthouse") {
+    const bgConsensusPeers = await fetchBGConsensusPeers();
+
+    if (bgConsensusPeers.length > 0) {
+      clientArgs.push("--bgconsensuspeers", bgConsensusPeers);
+    }
+    if (consensusPeerPorts[0] !== null || consensusPeerPorts[1] !== null) {
+      clientArgs.push("--consensuspeerports", consensusPeerPorts);
+    }
+    if (consensusCheckpoint != null) {
+      clientArgs.push("--consensuscheckpoint", consensusCheckpoint);
+    }
+
     clientCommand = path.join(
       __dirname,
       "ethereum_client_scripts/lighthouse.js"
     );
-    if (consensusPeerPorts[0] !== null || consensusPeerPorts[1] !== null) {
-      clientArgs.push("--consensuspeerports", consensusPeerPorts);
-    }
-
-    if (consensusCheckpoint != null) {
-      clientArgs.push("--consensuscheckpoint", consensusCheckpoint);
-    }
   } else {
     clientCommand = path.join(
       installDir,

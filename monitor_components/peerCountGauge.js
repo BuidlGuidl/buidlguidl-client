@@ -91,7 +91,7 @@ export async function getBGExecutionPeers() {
       peer.id.replace(/^0x/, "")
     );
 
-    debugToFile(`getBGExecutionPeers(): peerIds: ${peerIds}\n`);
+    // debugToFile(`getBGExecutionPeers(): peerIds: ${peerIds}\n`);
 
     // Parse bgPeerIds correctly
     const bgPeerIds = bgPeers
@@ -101,8 +101,8 @@ export async function getBGExecutionPeers() {
       })
       .filter(Boolean);
 
-    debugToFile(`getBGExecutionPeers(): bgPeers: ${bgPeers}\n`);
-    debugToFile(`getBGExecutionPeers(): bgPeerIds: ${bgPeerIds}\n`);
+    // debugToFile(`getBGExecutionPeers(): bgPeers: ${bgPeers}\n`);
+    // debugToFile(`getBGExecutionPeers(): bgPeerIds: ${bgPeerIds}\n`);
 
     const matchingPeers = peerIds.filter((id) => bgPeerIds.includes(id));
 

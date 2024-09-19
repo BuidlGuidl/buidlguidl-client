@@ -81,3 +81,19 @@ export async function configureBGExecutionPeers(bgPeers) {
     );
   }
 }
+
+export async function fetchBGConsensusPeers() {
+  try {
+    const response = await fetch("https://rpc.buidlguidl.com:48544/peerids");
+    const data = await response.json();
+
+    const peerIDValues = data.peerids
+      .map((peer) => peer.peerid)
+      .filter((peerid) => peerid && peerid !== "null"); // Filter out falsy values and "null" strings
+
+    return peerIDValues;
+  } catch (error) {
+    debugToFile("fetchBGConsensusPeers() error:", error);
+    return [];
+  }
+}
