@@ -342,11 +342,14 @@ initializeMonitoring(
   runsClient
 );
 
-let bgPeers = [];
+let bgExecutionPeers = [];
+let bgConsensusPeers = [];
 
 setTimeout(async () => {
-  bgPeers = await fetchBGExecutionPeers();
-  await configureBGExecutionPeers(bgPeers);
+  bgExecutionPeers = await fetchBGExecutionPeers();
+  await configureBGExecutionPeers(bgExecutionPeers);
 }, 10000);
 
-export { bgPeers };
+bgConsensusPeers = await fetchBGConsensusPeers();
+
+export { bgExecutionPeers, bgConsensusPeers };
