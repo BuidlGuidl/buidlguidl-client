@@ -90,25 +90,37 @@ export async function initializeMonitoring(
       executionLogsPath,
       await getLatestLogFile(executionLogsPath, executionClient)
     );
-    const logFilePathConsensus = path.join(
-      consensusLogsPath,
-      await getLatestLogFile(consensusLogsPath, consensusClient)
-    );
 
     debugToFile(
       `Monitoring ${executionClient} logs from: ${logFilePathExecution}`,
       () => {}
     );
-    debugToFile(
-      `Monitoring ${consensusClient} logs from: ${logFilePathConsensus}`,
-      () => {}
-    );
 
-    updateConsensusClientInfo(
-      logFilePathConsensus,
-      components.consensusLog,
-      screen
-    );
+    setTimeout(() => {
+      const logFilePathConsensus = path.join(
+        consensusLogsPath,
+        getLatestLogFile(consensusLogsPath, consensusClient)
+      );
+
+      updateConsensusClientInfo(
+        logFilePathConsensus,
+        components.consensusLog,
+        screen
+      );
+
+      debugToFile(
+        `Monitoring ${consensusClient} logs from: ${logFilePathConsensus}`,
+        () => {}
+      );
+    }, 3000);
+
+    setInterval(() => {
+      showHideRethWidgets(
+        screen,
+        components.rethStageGauge,
+        components.chainInfoBox
+      );
+    }, 5000);
 
     setupLogStreaming(
       logFilePathExecution,
