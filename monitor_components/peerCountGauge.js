@@ -197,7 +197,7 @@ async function populatePeerCountGauge(executionClient, consensusClient) {
       // Only display the first gauge (Execution) if the second one (Consensus) is null
       peerCounts.forEach((peerCount, index) => {
         // Create the peer count string
-        const peerCountString = `${peerCount !== null ? peerCount : "N/A"}`;
+        const peerCountString = `${peerCount !== null ? peerCount : "0"}`;
 
         if (peerCount > maxPeers[index]) {
           peerCount = maxPeers[index];
@@ -221,65 +221,3 @@ async function populatePeerCountGauge(executionClient, consensusClient) {
     debugToFile(`populatePeerCountGauge(): ${error}`);
   }
 }
-
-// let peerCounts = [0, 0, 0];
-
-// async function populatePeerCountGauge(executionClient, consensusClient) {
-//   try {
-//     const gaugeNames = [
-//       `${executionClient.toUpperCase()} All`,
-//       `${executionClient.toUpperCase()} BG PEERS`,
-//       `${consensusClient.toUpperCase()} All`,
-//     ];
-//     const gaugeColors = ["{cyan-fg}", "{cyan-fg}", "{green-fg}"];
-//     const maxPeers = [130, 130, 130];
-
-//     // Get the execution peers count
-//     peerCounts[0] = await getExecutionPeers();
-
-//     // Try to get the consensus peers count, but handle the failure case
-//     try {
-//       peerCounts[1] = await getBGExecutionPeers();
-//     } catch {
-//       peerCounts[1] = null; // If there's an error, set it to null
-//     }
-
-//     try {
-//       peerCounts[2] = await getConsensusPeers(consensusClient);
-//     } catch {
-//       peerCounts[2] = null; // If there's an error, set it to null
-//     }
-
-//     const boxWidth = peerCountGauge.width - 8; // Subtracting 8 for padding/border
-//     if (boxWidth > 0) {
-//       let content = "";
-
-//       // Only display the first gauge (Execution) if the second one (Consensus) is null
-//       peerCounts.forEach((peerCount, index) => {
-//         if (index === 2 && peerCounts[2] === null) return; // Skip Consensus if it's null
-
-//         // Create the peer count string
-//         const peerCountString = `${peerCount !== null ? peerCount : "N/A"}`;
-
-//         if (peerCount > maxPeers[index]) {
-//           peerCount = maxPeers[index];
-//         }
-
-//         // Calculate the number of filled bars for this stage
-//         const filledBars = Math.floor(boxWidth * (peerCount / maxPeers[index]));
-
-//         // Create the bar string
-//         const bar = "█".repeat(filledBars) + " ".repeat(boxWidth - filledBars);
-
-//         // Append the custom stage title, progress bar, and peer count to the content
-//         content += `${gaugeColors[index]}${gaugeNames[index]}\n[${bar}] ${peerCountString}{/}\n`;
-//       });
-
-//       peerCountGauge.setContent(content.trim());
-
-//       peerCountGauge.screen.render();
-//     }
-//   } catch (error) {
-//     debugToFile(`populatePeerCountGauge(): ${error}`);
-//   }
-// }
