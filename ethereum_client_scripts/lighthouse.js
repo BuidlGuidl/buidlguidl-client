@@ -99,12 +99,12 @@ const consensusArgs = [
 ];
 
 if (argv.bgconsensuspeers) {
-  debugToFile(`Lighthouse: bgConsensusPeers: ${bgConsensusPeers}`);
+  debugToFile(`Lighthouse: Added Trusted BG Peers: ${bgConsensusPeers}`);
   consensusArgs.push("--trusted-peers", bgConsensusPeers);
 }
 
 if (argv.bgconsensusaddrs) {
-  debugToFile(`Lighthouse: bgConsensusAddrs: ${bgConsensusAddrs}`);
+  debugToFile(`Lighthouse: Added BG Peer Addresses: ${bgConsensusAddrs}`);
   consensusArgs.push("--libp2p-addresses", bgConsensusAddrs);
 }
 

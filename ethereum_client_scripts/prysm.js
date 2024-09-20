@@ -91,8 +91,6 @@ if (argv.bgconsensusaddrs) {
   });
 }
 
-debugToFile(`Prysm: consensusArgs: ${JSON.stringify(consensusArgs)}`);
-
 const consensus = pty.spawn(`${prysmCommand}`, consensusArgs, {
   name: "xterm-color",
   cols: 80,
