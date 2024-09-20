@@ -8,6 +8,7 @@ import minimist from "minimist";
 
 let installDir = os.homedir();
 let consensusCheckpoint = "https://mainnet-checkpoint-sync.attestant.io/";
+let bgConsensusAddrs;
 
 const argv = minimist(process.argv.slice(2));
 
@@ -22,6 +23,12 @@ if (argv.directory) {
 
 if (argv.consensuscheckpoint) {
   consensusCheckpoint = argv.consensuscheckpoint;
+}
+
+if (argv.bgconsensusaddrs) {
+  bgConsensusAddrs = argv.bgconsensusaddrs
+    .split(",")
+    .map((addr) => addr.trim());
 }
 
 const jwtPath = path.join(installDir, "ethereum_clients", "jwt", "jwt.hex");
@@ -49,41 +56,50 @@ const logFilePath = path.join(
 
 const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
 
-const consensus = pty.spawn(
-  prysmCommand,
-  [
-    "beacon-chain",
-    "--mainnet",
-    "--p2p-udp-port",
-    consensusPeerPorts[1],
-    "--p2p-quic-port",
-    consensusPeerPorts[0],
-    "--p2p-tcp-port",
-    consensusPeerPorts[0],
-    "--execution-endpoint",
-    "http://localhost:8551",
-    "--grpc-gateway-host=0.0.0.0",
-    "--grpc-gateway-port=5052",
-    `--checkpoint-sync-url=${consensusCheckpoint}`,
-    `--genesis-beacon-api-url=${consensusCheckpoint}`,
-    "--datadir",
-    path.join(installDir, "ethereum_clients", "prysm", "database"),
-    "--accept-terms-of-use=true",
-    "--jwt-secret",
-    jwtPath,
-    "--monitoring-host",
-    "127.0.0.1",
-    "--monitoring-port",
-    "5054",
-  ],
-  {
-    name: "xterm-color",
-    cols: 80,
-    rows: 30,
-    cwd: process.env.HOME,
-    env: { ...process.env, INSTALL_DIR: installDir },
-  }
-);
+const consensusArgs = [
+  "beacon-chain",
+  "--mainnet",
+  "--p2p-udp-port",
+  consensusPeerPorts[1],
+  "--p2p-quic-port",
+  consensusPeerPorts[0],
+  "--p2p-tcp-port",
+  consensusPeerPorts[0],
+  "--execution-endpoint",
+  "http://localhost:8551",
+  "--grpc-gateway-host=0.0.0.0",
+  "--grpc-gateway-port=5052",
+  `--checkpoint-sync-url=${consensusCheckpoint}`,
+  `--genesis-beacon-api-url=${consensusCheckpoint}`,
+  "--datadir",
+  path.join(installDir, "ethereum_clients", "prysm", "database"),
+  "--accept-terms-of-use=true",
+  "--jwt-secret",
+  jwtPath,
+  "--monitoring-host",
+  "127.0.0.1",
+  "--monitoring-port",
+  "5054",
+  // "--peer",
+  // "enr:-MK4QFKbF8xjEtSUT8mGKGHujC-NrlgX_-FPF0PuMmeZYzuePneu7Kf78RMhY0XyDOMb9mfOd7GwS_XSeC1LeCM81tyGAZIRObQZh2F0dG5ldHOIABgAAAAAAACEZXRoMpBqlaGpBQAAAP__________gmlkgnY0gmlwhAoAAEiJc2VjcDI1NmsxoQIxBPPTLz6I7hjG94FZDpSfm4UzdJPKjs2zB7OmGCs2dIhzeW5jbmV0cwCDdGNwghueg3VkcIIbOQ",
+];
+
+if (argv.bgconsensusaddrs) {
+  bgConsensusAddrs.forEach((peer) => {
+    debugToFile(`Prysm: Adding BG peer: ${peer}`);
+    consensusArgs.push("--peer", peer);
+  });
+}
+
+debugToFile(`Prysm: consensusArgs: ${JSON.stringify(consensusArgs)}`);
+
+const consensus = pty.spawn(`${prysmCommand}`, consensusArgs, {
+  name: "xterm-color",
+  cols: 80,
+  rows: 30,
+  cwd: process.env.HOME,
+  env: { ...process.env, INSTALL_DIR: installDir },
+});
 
 // Pipe stdout and stderr to the log file and to the parent process
 consensus.on("data", (data) => {

@@ -10,6 +10,9 @@ let history7 = [];
 
 let previousStats = null;
 
+let displayMode = "daily";
+let lastSwitchTime = 0;
+
 async function getNetworkStats() {
   try {
     const networkStats = await si.networkStats();
@@ -83,13 +86,25 @@ async function updateBandwidthBox(screen) {
     const dailyStats = calculateStatsForPeriod(history24);
     const weeklyStats = calculateStatsForPeriod(history7);
 
-    const formattedText = `{red-fg}▲ 1D: ${formatBytes(
+    const dailyText = `{red-fg}▲ 1D: ${formatBytes(
       dailyStats.sent
-    )}\n{blue-fg}▼ 1D: ${formatBytes(
-      dailyStats.received
-    )}\n{red-fg}▲ 7D: ${formatBytes(
+    )}\n{blue-fg}▼ 1D: ${formatBytes(dailyStats.received)}`;
+    const weeklyText = `{red-fg}▲ 7D: ${formatBytes(
       weeklyStats.sent
     )}\n{blue-fg}▼ 7D: ${formatBytes(weeklyStats.received)}`;
+
+    const currentTime = Date.now();
+    if (currentTime - lastSwitchTime >= 10000) {
+      displayMode = displayMode === "daily" ? "weekly" : "daily";
+      lastSwitchTime = currentTime;
+    }
+
+    let formattedText;
+    if (bandwidthBox.height < 6) {
+      formattedText = displayMode === "daily" ? dailyText : weeklyText;
+    } else {
+      formattedText = `${dailyText}\n${weeklyText}`;
+    }
 
     bandwidthBox.setContent(formattedText);
     screen.render();

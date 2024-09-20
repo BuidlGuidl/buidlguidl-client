@@ -129,7 +129,18 @@ export function initializeHttpConnection(httpConfig) {
     }
 
     let enode = await getEnodeWithRetry();
-    let peerID = await getPeerIDWithRetry();
+    let peerInfo = await getPeerIDWithRetry();
+
+    let peer_id = null;
+    let enr = null;
+
+    if (peerInfo) {
+      peer_id = peerInfo.peer_id;
+      enr = peerInfo.enr;
+    }
+
+    debugToFile(`Checkin() enr: ${enr}`);
+    debugToFile(`Checkin() Peer ID: ${peer_id}`);
 
     try {
       const cpuUsage = await getCpuUsage();
@@ -160,12 +171,11 @@ export function initializeHttpConnection(httpConfig) {
         last_commit: gitInfo.lastCommitDate,
         commit_hash: gitInfo.commitHash,
         enode: enode,
-        peerid: peerID ?? null,
+        peerid: peer_id,
+        enr: enr,
         consensus_tcp_port: consensusPeerPorts[0],
         consensus_udp_port: consensusPeerPorts[1],
       });
-
-      debugToFile(`Checkin params: ${params.toString()}`);
 
       // debugToFile(`Checkin params: ${params.toString()}`);
 
@@ -259,32 +269,64 @@ async function getEnodeWithRetry(maxRetries = 60) {
 }
 
 let cachedPeerID = null;
-let peerIDRetries = 0;
+let cachedENR = null;
+let peerInfoRetries = 0;
+
 async function getPeerIDWithRetry(maxRetries = 60) {
-  // If we already have a cached peer ID, return it immediately
-  if (cachedPeerID) {
-    return cachedPeerID;
+  // If we already have a cached peer ID and ENR, return them immediately
+  if (cachedPeerID && cachedENR) {
+    return { peer_id: cachedPeerID, enr: cachedENR };
   }
 
-  if (peerIDRetries < maxRetries) {
+  if (peerInfoRetries < maxRetries) {
     try {
-      const peerID = await getConsensusPeerID();
-      if (peerID) {
-        // Cache the successful peer ID
-        cachedPeerID = peerID;
-        return peerID;
+      const { peer_id, enr } = await getConsensusPeerInfo();
+      if (peer_id && enr) {
+        // Cache the successful peer ID and ENR
+        cachedPeerID = peer_id;
+        cachedENR = enr;
+        return { peer_id, enr };
       }
     } catch (error) {
       debugToFile(
-        `Failed to get peer ID (attempt ${peerIDRetries + 1}): ${error}`,
+        `Failed to get peer info (attempt ${peerInfoRetries + 1}): ${error}`,
         () => {}
       );
     }
-    peerIDRetries++;
+    peerInfoRetries++;
   } else {
-    debugToFile(`Failed to get peer ID after ${maxRetries} attempts`);
-    return null;
+    debugToFile(`Failed to get peer info after ${maxRetries} attempts`);
+    return { peer_id: null, enr: null };
   }
+}
+
+function getConsensusPeerInfo() {
+  return new Promise((resolve, reject) => {
+    const command = `curl -s http://localhost:5052/eth/v1/node/identity`;
+
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        reject(`Error executing curl command: ${error}`);
+        return;
+      }
+      if (stderr) {
+        reject(`Curl command stderr: ${stderr}`);
+        return;
+      }
+      try {
+        const response = JSON.parse(stdout);
+        const peer_id = response.data.peer_id;
+        const enr = response.data.enr;
+        if (peer_id && enr) {
+          resolve({ peer_id, enr });
+        } else {
+          reject("Incomplete peer info received");
+        }
+      } catch (parseError) {
+        reject(`Error parsing JSON response: ${parseError}`);
+      }
+    });
+  });
 }
 
 function getConsensusPeerID() {

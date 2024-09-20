@@ -184,14 +184,21 @@ async function startClient(clientName, installDir) {
     clientArgs.push("--executionpeerport", executionPeerPort);
     clientCommand = path.join(__dirname, "ethereum_client_scripts/reth.js");
   } else if (clientName === "prysm") {
-    const bgConsensusPeers = await fetchBGConsensusPeers();
+    bgConsensusPeers = await fetchBGConsensusPeers();
+    bgConsensusAddrs = await configureBGConsensusPeers(consensusClient);
 
     if (bgConsensusPeers.length > 0) {
       clientArgs.push("--bgconsensuspeers", bgConsensusPeers);
     }
+
+    if (bgConsensusAddrs != null) {
+      clientArgs.push("--bgconsensusaddrs", bgConsensusAddrs);
+    }
+
     if (consensusCheckpoint != null) {
       clientArgs.push("--consensuscheckpoint", consensusCheckpoint);
     }
+
     clientArgs.push("--consensuspeerports", consensusPeerPorts);
 
     clientCommand = path.join(__dirname, "ethereum_client_scripts/prysm.js");
