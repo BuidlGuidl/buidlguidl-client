@@ -36,7 +36,7 @@ const __dirname = dirname(__filename);
 const gethVer = "1.14.3";
 const rethVer = "1.0.0";
 const prysmVer = "5.1.0";
-const lighthouseVer = "5.3.0";
+const lighthouseVer = "5.2.0";
 
 const lockFilePath = path.join(installDir, "ethereum_clients", "script.lock");
 
