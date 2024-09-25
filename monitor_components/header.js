@@ -7,6 +7,7 @@ import { dirname } from "path";
 import { debugToFile } from "../helpers.js";
 import { execSync } from "child_process";
 import { getPublicIPAddress } from "../getSystemStats.js";
+import { exec } from "child_process";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -131,6 +132,29 @@ export function createHeader(grid, screen, messageForHeader) {
         fg: "cyan",
       },
     },
+    mouse: true,
+    clickable: true,
+  });
+
+  // Add this click event listener
+  bigText.on("click", function () {
+    const url = "https://client.buidlguidl.com"; // Replace with your desired URL
+    let command;
+    switch (process.platform) {
+      case "darwin":
+        command = `open ${url}`;
+        break;
+      case "win32":
+        command = `start ${url}`;
+        break;
+      default:
+        command = `xdg-open ${url}`;
+    }
+    exec(command, (error) => {
+      if (error) {
+        debugToFile(`Error opening URL: ${error}`);
+      }
+    });
   });
 
   // Create the IP address box
