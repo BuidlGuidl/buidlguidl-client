@@ -381,7 +381,7 @@ function createWebSocketConnection() {
     const response = JSON.parse(data);
     debugToFile("Received response from server:", response);
 
-    if (!socketId) {
+    if (!socketId || socketId === null) {
       socketId = response.id;
       debugToFile(`Socket ID: ${socketId}`);
     } else {
@@ -419,6 +419,7 @@ function createWebSocketConnection() {
 
   // Connection closed
   socket.on("close", () => {
+    socketId = null;
     debugToFile("Disconnected from WebSocket server");
   });
 
@@ -433,6 +434,7 @@ createWebSocketConnection();
 // Check WebSocket connection every 30 seconds
 setInterval(() => {
   if (socket.readyState === WebSocket.CLOSED) {
+    socketId = null;
     debugToFile("WebSocket disconnected. Attempting to reconnect...");
     createWebSocketConnection();
   }
