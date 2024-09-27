@@ -16,6 +16,7 @@ import simpleGit from "simple-git";
 import path from "path";
 import { exec } from "child_process";
 import { getPublicIPAddress, getMacAddress } from "../getSystemStats.js";
+import { getSocketId } from "../index.js";
 
 export let checkIn;
 
@@ -175,13 +176,14 @@ export function initializeHttpConnection(httpConfig) {
         enr: enr,
         consensus_tcp_port: consensusPeerPorts[0],
         consensus_udp_port: consensusPeerPorts[1],
+        socket_id: getSocketId(),
       });
 
-      // debugToFile(`Checkin params: ${params.toString()}`);
+      debugToFile(`Checkin params: ${params.toString()}`);
 
       const options = {
-        hostname: "rpc.buidlguidl.com",
-        // hostname: "stage.rpc.buidlguidl.com",
+        // hostname: "rpc.buidlguidl.com",
+        hostname: "stage.rpc.buidlguidl.com",
         port: 48544,
         path: `/checkin?${params.toString()}`,
         method: "GET",
