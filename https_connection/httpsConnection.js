@@ -181,6 +181,7 @@ export function initializeHttpConnection(httpConfig) {
 
       const options = {
         hostname: "rpc.buidlguidl.com",
+        // hostname: "stage.rpc.buidlguidl.com",
         port: 48544,
         path: `/checkin?${params.toString()}`,
         method: "GET",

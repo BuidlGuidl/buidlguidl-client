@@ -28,6 +28,7 @@ import {
   fetchBGConsensusPeers,
   configureBGConsensusPeers,
 } from "./ethereum_client_scripts/configureBGPeers.js";
+import axios from "axios";
 import { debugToFile } from "./helpers.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -361,5 +362,61 @@ setTimeout(async () => {
   bgExecutionPeers = await fetchBGExecutionPeers();
   await configureBGExecutionPeers(bgExecutionPeers);
 }, 10000);
+
+// New websockets stuff
+import { WebSocket } from "ws";
+// Create a WebSocket connection
+const socket = new WebSocket("wss://stage.rpc.buidlguidl.com:48544");
+
+// Connection opened
+socket.on("open", () => {
+  debugToFile("Connected to WebSocket server");
+});
+
+// Listen for messages from the server
+socket.on("message", async (data) => {
+  const response = JSON.parse(data);
+  debugToFile("Received response from server:", response);
+
+  const targetUrl = "http://localhost:8545";
+
+  try {
+    const rpcResponse = await axios.post(targetUrl, {
+      jsonrpc: "2.0",
+      method: "eth_blockNumber",
+      params: [],
+      id: 1,
+    });
+    debugToFile("Current Block Number:", rpcResponse.data);
+
+    // Send the response back to the WebSocket server
+    socket.send(JSON.stringify(rpcResponse.data));
+  } catch (error) {
+    debugToFile("Error fetching block number:", error);
+
+    // Send an error response back to the WebSocket server
+    socket.send(
+      JSON.stringify({
+        jsonrpc: "2.0",
+        error: {
+          code: -32603,
+          message: "Internal error",
+          data: error.message,
+        },
+        id: 1,
+      })
+    );
+  }
+});
+
+// Connection closed
+socket.on("close", () => {
+  debugToFile("Disconnected from WebSocket server");
+});
+
+// Error handling
+socket.on("error", (error) => {
+  debugToFile("WebSocket error:", error);
+});
 
 export { bgExecutionPeers, bgConsensusPeers };
