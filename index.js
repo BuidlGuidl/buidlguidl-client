@@ -392,7 +392,8 @@ function createWebSocketConnection() {
           jsonrpc: "2.0",
           // method: "eth_blockNumber",
           method: response.method,
-          params: [],
+          // params: [],
+          params: response.params,
           id: 1,
         });
         debugToFile("Current Block Number:", rpcResponse.data);
