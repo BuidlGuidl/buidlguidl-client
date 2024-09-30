@@ -429,11 +429,25 @@ function createWebSocketConnection() {
   socket.on("error", (error) => {
     debugToFile("WebSocket error:", error);
   });
+
+  // Add a ping interval
+  const pingInterval = setInterval(() => {
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.ping();
+    }
+  }, 30000); // Send a ping every 30 seconds
+
+  // Clear the ping interval when the socket closes
+  socket.on("close", () => {
+    socketId = null;
+    debugToFile("Disconnected from WebSocket server");
+    clearInterval(pingInterval);
+  });
 }
 
 createWebSocketConnection();
 
-// Check WebSocket connection every 30 seconds
+// Check WebSocket connection every 15 seconds
 setInterval(() => {
   if (socket.readyState === WebSocket.CLOSED) {
     socketId = null;
