@@ -486,7 +486,8 @@ function suppressMouseOutput(screen) {
       key.name === "up" ||
       key.name === "down" ||
       key.name === "left" ||
-      key.name === "right"
+      key.name === "right" ||
+      (key.name === "r" && (key.meta || key.ctrl))
     ) {
       if (!key.ctrl && !key.meta && !key.shift) {
         return false;

@@ -31,8 +31,11 @@ export function createHeader(grid, screen, messageForHeader) {
   // New function to fetch points
   async function fetchPoints(publicIP) {
     try {
+      // const response = await axios.get(
+      //   `https://rpc.buidlguidl.com:48544/yourpoints?ipaddress=${publicIP}`
+      // );
       const response = await axios.get(
-        `https://rpc.buidlguidl.com:48544/yourpoints?ipaddress=${publicIP}`
+        `https://stage.rpc.buidlguidl.com:48544/yourpoints?ipaddress=${publicIP}`
       );
       return response.data.points;
     } catch (error) {

@@ -140,8 +140,8 @@ export function initializeHttpConnection(httpConfig) {
       enr = peerInfo.enr;
     }
 
-    debugToFile(`Checkin() enr: ${enr}`);
-    debugToFile(`Checkin() Peer ID: ${peer_id}`);
+    // debugToFile(`Checkin() enr: ${enr}`);
+    // debugToFile(`Checkin() Peer ID: ${peer_id}`);
 
     try {
       const cpuUsage = await getCpuUsage();
@@ -179,7 +179,7 @@ export function initializeHttpConnection(httpConfig) {
         socket_id: getSocketId(),
       });
 
-      debugToFile(`Checkin params: ${params.toString()}`);
+      // debugToFile(`Checkin params: ${params.toString()}`);
 
       const options = {
         // hostname: "rpc.buidlguidl.com",

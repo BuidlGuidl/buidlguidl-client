@@ -146,11 +146,11 @@ export async function getBGConsensusPeers() {
       bgConsensusPeers.includes(peerId)
     );
 
-    debugToFile(`getBGConsensusPeers(): matchingPeers: ${matchingPeers}\n\n\n`);
+    // debugToFile(`getBGConsensusPeers(): matchingPeers: ${matchingPeers}\n\n\n`);
 
     return matchingPeers.length;
   } catch (error) {
-    debugToFile(`getBGConsensusPeers(): ${error}`);
+    // debugToFile(`getBGConsensusPeers(): ${error}`);
     return 0;
   }
 }

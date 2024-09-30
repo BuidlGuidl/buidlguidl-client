@@ -379,7 +379,7 @@ function createWebSocketConnection() {
   // Listen for messages from the server
   socket.on("message", async (data) => {
     const response = JSON.parse(data);
-    debugToFile("Received response from server:", response);
+    debugToFile("Received response from server:", JSON.stringify({ response }));
 
     if (!socketId || socketId === null) {
       socketId = response.id;
@@ -399,7 +399,7 @@ function createWebSocketConnection() {
         // Send the response back to the WebSocket server
         socket.send(JSON.stringify(rpcResponse.data));
       } catch (error) {
-        debugToFile("Error fetching block number:", error);
+        debugToFile("Error fetching block number:", JSON.stringify({ error }));
 
         // Send an error response back to the WebSocket server
         socket.send(
