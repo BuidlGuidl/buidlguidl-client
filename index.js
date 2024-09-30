@@ -11,10 +11,7 @@ import {
   installWindowsConsensusClient,
   installWindowsExecutionClient,
 } from "./ethereum_client_scripts/install.js";
-import {
-  initializeHttpConnection,
-  // createWebSocketConnection,
-} from "./https_connection/httpsConnection.js";
+import { initializeWebSocketConnection } from "./web_socket_connection/webSocketConnection.js";
 import {
   executionClient,
   consensusClient,
@@ -322,7 +319,7 @@ let runsClient = false;
 
 createJwtSecret(jwtDir);
 
-const httpConfig = {
+const wsConfig = {
   executionClient: executionClient,
   consensusClient: consensusClient,
   gethVer: gethVer,
@@ -337,8 +334,7 @@ if (!isAlreadyRunning()) {
   await startClient(executionClient, installDir);
   await startClient(consensusClient, installDir);
 
-  initializeHttpConnection(httpConfig);
-  // createWebSocketConnection();
+  initializeWebSocketConnection(wsConfig);
 
   runsClient = true;
   createLockFile();

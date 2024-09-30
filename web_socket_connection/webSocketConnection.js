@@ -19,7 +19,7 @@ import { getPublicIPAddress, getMacAddress } from "../getSystemStats.js";
 import WebSocket from "ws";
 import axios from "axios";
 
-let socket;
+// let socket;
 let socketId;
 
 export let checkIn;
@@ -104,7 +104,7 @@ export let checkIn;
 //   }
 // }, 15000);
 
-export function initializeHttpConnection(httpConfig) {
+export function initializeWebSocketConnection(httpConfig) {
   let lastCheckInTime = 0;
   let lastCheckedBlockNumber = -1;
   const minCheckInInterval = 60000; // Minimum 60 seconds between check-ins
@@ -230,6 +230,7 @@ export function initializeHttpConnection(httpConfig) {
     // Clear the ping interval when the socket closes
     ws.on("close", () => {
       socketId = null;
+      isConnecting = false;
       debugToFile("Disconnected from WebSocket server");
       clearInterval(pingInterval);
     });
