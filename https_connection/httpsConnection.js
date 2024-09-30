@@ -16,8 +16,7 @@ import simpleGit from "simple-git";
 import path from "path";
 import { exec } from "child_process";
 import { getPublicIPAddress, getMacAddress } from "../getSystemStats.js";
-// import { getSocketId } from "../index.js";
-import { WebSocket } from "ws";
+import WebSocket from "ws";
 import axios from "axios";
 
 let socket;
@@ -25,95 +24,85 @@ let socketId;
 
 export let checkIn;
 
-export function createWebSocketConnection() {
-  socket = new WebSocket("wss://stage.rpc.buidlguidl.com:48544");
+// export function createWebSocketConnection() {
+//   socket = new WebSocket("wss://stage.rpc.buidlguidl.com:48544");
 
-  // Connection opened
-  socket.on("open", () => {
-    // debugToFile(`Connected to WebSocket server. ID: ${JSON.stringify(socket)}`);
-  });
+//   // Connection opened
+//   socket.on("open", () => {
+//     // debugToFile(`Connected to WebSocket server. ID: ${JSON.stringify(socket)}`);
+//   });
 
-  // Listen for messages from the server
-  socket.on("message", async (data) => {
-    const response = JSON.parse(data);
-    debugToFile(`Received response from server: ${JSON.stringify(response)}`);
+//   // Listen for messages from the server
+//   socket.on("message", async (data) => {
+//     const response = JSON.parse(data);
+//     debugToFile(`Received response from server: ${JSON.stringify(response)}`);
 
-    if (!socketId || socketId === null) {
-      socketId = response.id;
-      debugToFile(`Socket ID: ${socketId}`);
-    } else {
-      const targetUrl = "http://localhost:8545";
+//     if (!socketId || socketId === null) {
+//       socketId = response.id;
+//       debugToFile(`Socket ID: ${socketId}`);
+//     } else {
+//       const targetUrl = "http://localhost:8545";
 
-      try {
-        const rpcResponse = await axios.post(targetUrl, {
-          jsonrpc: "2.0",
-          // method: "eth_blockNumber",
-          method: response.method,
-          // params: [],
-          params: response.params,
-          id: 1,
-        });
-        debugToFile("Current Block Number:", rpcResponse.data);
+//       try {
+//         const rpcResponse = await axios.post(targetUrl, {
+//           jsonrpc: "2.0",
+//           // method: "eth_blockNumber",
+//           method: response.method,
+//           // params: [],
+//           params: response.params,
+//           id: 1,
+//         });
+//         debugToFile("Current Block Number:", rpcResponse.data);
 
-        // Send the response back to the WebSocket server
-        socket.send(JSON.stringify(rpcResponse.data));
-      } catch (error) {
-        debugToFile("Error fetching block number:", error);
+//         // Send the response back to the WebSocket server
+//         socket.send(JSON.stringify(rpcResponse.data));
+//       } catch (error) {
+//         debugToFile("Error fetching block number:", error);
 
-        // Send an error response back to the WebSocket server
-        socket.send(
-          JSON.stringify({
-            jsonrpc: "2.0",
-            error: {
-              code: -32603,
-              message: "Internal error",
-              data: error.message,
-            },
-            id: 1,
-          })
-        );
-      }
-    }
-  });
+//         // Send an error response back to the WebSocket server
+//         socket.send(
+//           JSON.stringify({
+//             jsonrpc: "2.0",
+//             error: {
+//               code: -32603,
+//               message: "Internal error",
+//               data: error.message,
+//             },
+//             id: 1,
+//           })
+//         );
+//       }
+//     }
+//   });
 
-  // Connection closed
-  socket.on("close", () => {
-    socketId = null;
-    debugToFile("Disconnected from WebSocket server");
-  });
+//   // Error handling
+//   socket.on("error", (error) => {
+//     debugToFile("WebSocket error:", error);
+//   });
 
-  // Error handling
-  socket.on("error", (error) => {
-    debugToFile("WebSocket error:", error);
-  });
+//   // Add a ping interval
+//   const pingInterval = setInterval(() => {
+//     if (socket.readyState === WebSocket.OPEN) {
+//       socket.ping();
+//     }
+//   }, 30000); // Send a ping every 30 seconds
 
-  // Add a ping interval
-  const pingInterval = setInterval(() => {
-    if (socket.readyState === WebSocket.OPEN) {
-      socket.ping();
-    }
-  }, 30000); // Send a ping every 30 seconds
-
-  // Clear the ping interval when the socket closes
-  socket.on("close", () => {
-    socketId = null;
-    debugToFile("Disconnected from WebSocket server");
-    clearInterval(pingInterval);
-  });
-}
+//   // Clear the ping interval when the socket closes
+//   socket.on("close", () => {
+//     socketId = null;
+//     debugToFile("Disconnected from WebSocket server");
+//     clearInterval(pingInterval);
+//   });
+// }
 
 // Check WebSocket connection every 15 seconds
-setInterval(() => {
-  if (socket.readyState === WebSocket.CLOSED) {
-    socketId = null;
-    debugToFile("WebSocket disconnected. Attempting to reconnect...");
-    createWebSocketConnection();
-  }
-}, 15000);
-
-function getSocketId() {
-  return socketId;
-}
+// setInterval(() => {
+//   if (socket.readyState === WebSocket.CLOSED) {
+//     socketId = null;
+//     debugToFile("WebSocket disconnected. Attempting to reconnect...");
+//     createWebSocketConnection();
+//   }
+// }, 15000);
 
 export function initializeHttpConnection(httpConfig) {
   let lastCheckInTime = 0;
@@ -175,6 +164,89 @@ export function initializeHttpConnection(httpConfig) {
       };
     }
   }
+
+  let ws;
+  let isConnecting = false;
+
+  function connectWebSocket() {
+    if (isConnecting) return;
+    isConnecting = true;
+
+    ws = new WebSocket("wss://stage.rpc.buidlguidl.com:48544");
+
+    ws.on("open", () => {
+      debugToFile("WebSocket connection established");
+      isConnecting = false;
+    });
+
+    ws.on("message", async (data) => {
+      const response = JSON.parse(data);
+      debugToFile(`Received response from server: ${JSON.stringify(response)}`);
+
+      if (!socketId || socketId === null) {
+        socketId = response.id;
+        debugToFile(`Socket ID: ${socketId}`);
+      } else {
+        const targetUrl = "http://localhost:8545";
+
+        try {
+          const rpcResponse = await axios.post(targetUrl, {
+            jsonrpc: "2.0",
+            // method: "eth_blockNumber",
+            method: response.method,
+            // params: [],
+            params: response.params,
+            id: 1,
+          });
+          debugToFile("Current Block Number:", rpcResponse.data);
+
+          // Send the response back to the WebSocket server
+          ws.send(JSON.stringify(rpcResponse.data));
+        } catch (error) {
+          debugToFile("Error fetching block number:", error);
+
+          // Send an error response back to the WebSocket server
+          ws.send(
+            JSON.stringify({
+              jsonrpc: "2.0",
+              error: {
+                code: -32603,
+                message: "Internal error",
+                data: error.message,
+              },
+              id: 1,
+            })
+          );
+        }
+      }
+    });
+
+    const pingInterval = setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.ping();
+      }
+    }, 30000); // Send a ping every 30 seconds
+
+    // Clear the ping interval when the socket closes
+    ws.on("close", () => {
+      socketId = null;
+      debugToFile("Disconnected from WebSocket server");
+      clearInterval(pingInterval);
+    });
+
+    // ws.on("close", () => {
+    //   debugToFile("WebSocket connection closed. Reconnecting...");
+    //   isConnecting = false;
+    //   setTimeout(connectWebSocket, 5000); // Reconnect after 5 seconds
+    // });
+
+    ws.on("error", (error) => {
+      debugToFile(`WebSocket error: ${error}`);
+      isConnecting = false;
+    });
+  }
+
+  connectWebSocket();
 
   checkIn = async function (force = false, blockNumber = null) {
     // debugToFile(`checkIn() called`);
@@ -251,7 +323,7 @@ export function initializeHttpConnection(httpConfig) {
       );
 
       // Use the stored gitInfo instead of calling getGitInfo()
-      const params = new URLSearchParams({
+      const params = {
         id: `${os.hostname()}-${macAddress}-${os.platform()}-${os.arch()}`,
         node_version: `${process.version}`,
         execution_client: executionClientResponse,
@@ -261,45 +333,32 @@ export function initializeHttpConnection(httpConfig) {
         storage_usage: `${diskUsage}`,
         block_number: possibleBlockNumber ? possibleBlockNumber.toString() : "",
         block_hash: possibleBlockHash ? possibleBlockHash : "",
-        execution_peers: executionPeers,
-        consensus_peers: consensusPeers,
+        execution_peers: executionPeers.toString(),
+        consensus_peers: consensusPeers.toString(),
         git_branch: gitInfo.branch,
         last_commit: gitInfo.lastCommitDate,
         commit_hash: gitInfo.commitHash,
-        enode: enode,
-        peerid: peer_id,
-        enr: enr,
-        consensus_tcp_port: consensusPeerPorts[0],
-        consensus_udp_port: consensusPeerPorts[1],
-        socket_id: socketId,
-      });
-
-      // debugToFile(`Checkin params: ${params.toString()}`);
-
-      const options = {
-        // hostname: "rpc.buidlguidl.com",
-        hostname: "stage.rpc.buidlguidl.com",
-        port: 48544,
-        path: `/checkin?${params.toString()}`,
-        method: "GET",
+        enode: enode || "",
+        peerid: peer_id || "",
+        enr: enr || "",
+        consensus_tcp_port: consensusPeerPorts[0].toString(),
+        consensus_udp_port: consensusPeerPorts[1].toString(),
+        socket_id: socketId || "",
       };
 
-      const req = https.request(options, (res) => {
-        let data = "";
-        res.on("data", (chunk) => {
-          data += chunk;
-        });
-        res.on("end", () => {
-          // debugToFile(`Checkin response: ${data}`);
-          // debugToFile(`Response status: ${res.statusCode}`);
-        });
-      });
+      debugToFile(`Checkin() params: ${JSON.stringify(params)}`);
 
-      req.on("error", (error) => {
-        debugToFile(`Checkin error: ${error}`);
-      });
-
-      req.end();
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        const message = JSON.stringify({
+          type: "checkin",
+          params: params,
+        });
+        debugToFile(`Sending WebSocket message: ${message}`);
+        ws.send(message);
+      } else {
+        debugToFile("WebSocket is not open. Queuing check-in data.");
+        // Optionally, you can implement a queue system here to send data when connection is restored
+      }
     } catch (error) {
       debugToFile(`checkIn() Error: ${error}`);
     }
