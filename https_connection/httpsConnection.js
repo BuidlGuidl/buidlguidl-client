@@ -16,9 +16,103 @@ import simpleGit from "simple-git";
 import path from "path";
 import { exec } from "child_process";
 import { getPublicIPAddress, getMacAddress } from "../getSystemStats.js";
-import { getSocketId } from "../index.js";
+// import { getSocketId } from "../index.js";
+import { WebSocket } from "ws";
+
+let socket;
+let socketId;
 
 export let checkIn;
+
+export function createWebSocketConnection() {
+  socket = new WebSocket("wss://stage.rpc.buidlguidl.com:48544");
+
+  // Connection opened
+  socket.on("open", () => {
+    // debugToFile(`Connected to WebSocket server. ID: ${JSON.stringify(socket)}`);
+  });
+
+  // Listen for messages from the server
+  socket.on("message", async (data) => {
+    const response = JSON.parse(data);
+    debugToFile(`Received response from server: ${JSON.stringify(response)}`);
+
+    if (!socketId || socketId === null) {
+      socketId = response.id;
+      debugToFile(`Socket ID: ${socketId}`);
+    } else {
+      const targetUrl = "http://localhost:8545";
+
+      try {
+        const rpcResponse = await axios.post(targetUrl, {
+          jsonrpc: "2.0",
+          // method: "eth_blockNumber",
+          method: response.method,
+          // params: [],
+          params: response.params,
+          id: 1,
+        });
+        debugToFile("Current Block Number:", rpcResponse.data);
+
+        // Send the response back to the WebSocket server
+        socket.send(JSON.stringify(rpcResponse.data));
+      } catch (error) {
+        debugToFile("Error fetching block number:", error);
+
+        // Send an error response back to the WebSocket server
+        socket.send(
+          JSON.stringify({
+            jsonrpc: "2.0",
+            error: {
+              code: -32603,
+              message: "Internal error",
+              data: error.message,
+            },
+            id: 1,
+          })
+        );
+      }
+    }
+  });
+
+  // Connection closed
+  socket.on("close", () => {
+    socketId = null;
+    debugToFile("Disconnected from WebSocket server");
+  });
+
+  // Error handling
+  socket.on("error", (error) => {
+    debugToFile("WebSocket error:", error);
+  });
+
+  // Add a ping interval
+  const pingInterval = setInterval(() => {
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.ping();
+    }
+  }, 30000); // Send a ping every 30 seconds
+
+  // Clear the ping interval when the socket closes
+  socket.on("close", () => {
+    socketId = null;
+    debugToFile("Disconnected from WebSocket server");
+    clearInterval(pingInterval);
+  });
+}
+
+// Check WebSocket connection every 15 seconds
+setInterval(() => {
+  if (socket.readyState === WebSocket.CLOSED) {
+    socketId = null;
+    debugToFile("WebSocket disconnected. Attempting to reconnect...");
+    createWebSocketConnection();
+  }
+}, 15000);
+
+function getSocketId() {
+  return socketId;
+}
 
 export function initializeHttpConnection(httpConfig) {
   let lastCheckInTime = 0;
@@ -176,7 +270,7 @@ export function initializeHttpConnection(httpConfig) {
         enr: enr,
         consensus_tcp_port: consensusPeerPorts[0],
         consensus_udp_port: consensusPeerPorts[1],
-        socket_id: getSocketId(),
+        socket_id: socketId,
       });
 
       // debugToFile(`Checkin params: ${params.toString()}`);

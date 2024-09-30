@@ -11,7 +11,10 @@ import {
   installWindowsConsensusClient,
   installWindowsExecutionClient,
 } from "./ethereum_client_scripts/install.js";
-import { initializeHttpConnection } from "./https_connection/httpsConnection.js";
+import {
+  initializeHttpConnection,
+  createWebSocketConnection,
+} from "./https_connection/httpsConnection.js";
 import {
   executionClient,
   consensusClient,
@@ -336,6 +339,7 @@ if (!isAlreadyRunning()) {
   await startClient(consensusClient, installDir);
 
   initializeHttpConnection(httpConfig);
+  createWebSocketConnection();
 
   runsClient = true;
   createLockFile();
@@ -363,101 +367,101 @@ setTimeout(async () => {
   await configureBGExecutionPeers(bgExecutionPeers);
 }, 10000);
 
-import { WebSocket } from "ws";
-// Create a WebSocket connection
-let socket;
-let socketId;
+// import { WebSocket } from "ws";
+// // Create a WebSocket connection
+// let socket;
+// let socketId;
 
-function createWebSocketConnection() {
-  socket = new WebSocket("wss://stage.rpc.buidlguidl.com:48544");
+// function createWebSocketConnection() {
+//   socket = new WebSocket("wss://stage.rpc.buidlguidl.com:48544");
 
-  // Connection opened
-  socket.on("open", () => {
-    // debugToFile(`Connected to WebSocket server. ID: ${JSON.stringify(socket)}`);
-  });
+//   // Connection opened
+//   socket.on("open", () => {
+//     // debugToFile(`Connected to WebSocket server. ID: ${JSON.stringify(socket)}`);
+//   });
 
-  // Listen for messages from the server
-  socket.on("message", async (data) => {
-    const response = JSON.parse(data);
-    debugToFile(`Received response from server: ${JSON.stringify(response)}`);
+//   // Listen for messages from the server
+//   socket.on("message", async (data) => {
+//     const response = JSON.parse(data);
+//     debugToFile(`Received response from server: ${JSON.stringify(response)}`);
 
-    if (!socketId || socketId === null) {
-      socketId = response.id;
-      debugToFile(`Socket ID: ${socketId}`);
-    } else {
-      const targetUrl = "http://localhost:8545";
+//     if (!socketId || socketId === null) {
+//       socketId = response.id;
+//       debugToFile(`Socket ID: ${socketId}`);
+//     } else {
+//       const targetUrl = "http://localhost:8545";
 
-      try {
-        const rpcResponse = await axios.post(targetUrl, {
-          jsonrpc: "2.0",
-          // method: "eth_blockNumber",
-          method: response.method,
-          // params: [],
-          params: response.params,
-          id: 1,
-        });
-        debugToFile("Current Block Number:", rpcResponse.data);
+//       try {
+//         const rpcResponse = await axios.post(targetUrl, {
+//           jsonrpc: "2.0",
+//           // method: "eth_blockNumber",
+//           method: response.method,
+//           // params: [],
+//           params: response.params,
+//           id: 1,
+//         });
+//         debugToFile("Current Block Number:", rpcResponse.data);
 
-        // Send the response back to the WebSocket server
-        socket.send(JSON.stringify(rpcResponse.data));
-      } catch (error) {
-        debugToFile("Error fetching block number:", error);
+//         // Send the response back to the WebSocket server
+//         socket.send(JSON.stringify(rpcResponse.data));
+//       } catch (error) {
+//         debugToFile("Error fetching block number:", error);
 
-        // Send an error response back to the WebSocket server
-        socket.send(
-          JSON.stringify({
-            jsonrpc: "2.0",
-            error: {
-              code: -32603,
-              message: "Internal error",
-              data: error.message,
-            },
-            id: 1,
-          })
-        );
-      }
-    }
-  });
+//         // Send an error response back to the WebSocket server
+//         socket.send(
+//           JSON.stringify({
+//             jsonrpc: "2.0",
+//             error: {
+//               code: -32603,
+//               message: "Internal error",
+//               data: error.message,
+//             },
+//             id: 1,
+//           })
+//         );
+//       }
+//     }
+//   });
 
-  // Connection closed
-  socket.on("close", () => {
-    socketId = null;
-    debugToFile("Disconnected from WebSocket server");
-  });
+//   // Connection closed
+//   socket.on("close", () => {
+//     socketId = null;
+//     debugToFile("Disconnected from WebSocket server");
+//   });
 
-  // Error handling
-  socket.on("error", (error) => {
-    debugToFile("WebSocket error:", error);
-  });
+//   // Error handling
+//   socket.on("error", (error) => {
+//     debugToFile("WebSocket error:", error);
+//   });
 
-  // Add a ping interval
-  const pingInterval = setInterval(() => {
-    if (socket.readyState === WebSocket.OPEN) {
-      socket.ping();
-    }
-  }, 30000); // Send a ping every 30 seconds
+//   // Add a ping interval
+//   const pingInterval = setInterval(() => {
+//     if (socket.readyState === WebSocket.OPEN) {
+//       socket.ping();
+//     }
+//   }, 30000); // Send a ping every 30 seconds
 
-  // Clear the ping interval when the socket closes
-  socket.on("close", () => {
-    socketId = null;
-    debugToFile("Disconnected from WebSocket server");
-    clearInterval(pingInterval);
-  });
-}
+//   // Clear the ping interval when the socket closes
+//   socket.on("close", () => {
+//     socketId = null;
+//     debugToFile("Disconnected from WebSocket server");
+//     clearInterval(pingInterval);
+//   });
+// }
 
-createWebSocketConnection();
+// createWebSocketConnection();
 
-// Check WebSocket connection every 15 seconds
-setInterval(() => {
-  if (socket.readyState === WebSocket.CLOSED) {
-    socketId = null;
-    debugToFile("WebSocket disconnected. Attempting to reconnect...");
-    createWebSocketConnection();
-  }
-}, 15000);
+// // Check WebSocket connection every 15 seconds
+// setInterval(() => {
+//   if (socket.readyState === WebSocket.CLOSED) {
+//     socketId = null;
+//     debugToFile("WebSocket disconnected. Attempting to reconnect...");
+//     createWebSocketConnection();
+//   }
+// }, 15000);
 
-function getSocketId() {
-  return socketId;
-}
+// function getSocketId() {
+//   return socketId;
+// }
 
-export { bgExecutionPeers, bgConsensusPeers, getSocketId };
+export { bgExecutionPeers, bgConsensusPeers };
