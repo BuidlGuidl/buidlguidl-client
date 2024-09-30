@@ -379,7 +379,7 @@ function createWebSocketConnection() {
   // Listen for messages from the server
   socket.on("message", async (data) => {
     const response = JSON.parse(data);
-    debugToFile("Received response from server:", response);
+    debugToFile(`Received response from server: ${JSON.stringify(response)}`);
 
     if (!socketId || socketId === null) {
       socketId = response.id;
