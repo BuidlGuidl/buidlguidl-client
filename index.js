@@ -31,7 +31,6 @@ import {
   fetchBGConsensusPeers,
   configureBGConsensusPeers,
 } from "./ethereum_client_scripts/configureBGPeers.js";
-import axios from "axios";
 import { debugToFile } from "./helpers.js";
 
 const __filename = fileURLToPath(import.meta.url);

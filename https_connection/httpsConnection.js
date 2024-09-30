@@ -18,6 +18,7 @@ import { exec } from "child_process";
 import { getPublicIPAddress, getMacAddress } from "../getSystemStats.js";
 // import { getSocketId } from "../index.js";
 import { WebSocket } from "ws";
+import axios from "axios";
 
 let socket;
 let socketId;
