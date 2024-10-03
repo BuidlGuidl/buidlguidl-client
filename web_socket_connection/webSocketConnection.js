@@ -24,86 +24,6 @@ let socketId;
 
 export let checkIn;
 
-// export function createWebSocketConnection() {
-//   socket = new WebSocket("wss://stage.rpc.buidlguidl.com:48544");
-
-//   // Connection opened
-//   socket.on("open", () => {
-//     // debugToFile(`Connected to WebSocket server. ID: ${JSON.stringify(socket)}`);
-//   });
-
-//   // Listen for messages from the server
-//   socket.on("message", async (data) => {
-//     const response = JSON.parse(data);
-//     debugToFile(`Received response from server: ${JSON.stringify(response)}`);
-
-//     if (!socketId || socketId === null) {
-//       socketId = response.id;
-//       debugToFile(`Socket ID: ${socketId}`);
-//     } else {
-//       const targetUrl = "http://localhost:8545";
-
-//       try {
-//         const rpcResponse = await axios.post(targetUrl, {
-//           jsonrpc: "2.0",
-//           // method: "eth_blockNumber",
-//           method: response.method,
-//           // params: [],
-//           params: response.params,
-//           id: 1,
-//         });
-//         debugToFile("Current Block Number:", rpcResponse.data);
-
-//         // Send the response back to the WebSocket server
-//         socket.send(JSON.stringify(rpcResponse.data));
-//       } catch (error) {
-//         debugToFile("Error fetching block number:", error);
-
-//         // Send an error response back to the WebSocket server
-//         socket.send(
-//           JSON.stringify({
-//             jsonrpc: "2.0",
-//             error: {
-//               code: -32603,
-//               message: "Internal error",
-//               data: error.message,
-//             },
-//             id: 1,
-//           })
-//         );
-//       }
-//     }
-//   });
-
-//   // Error handling
-//   socket.on("error", (error) => {
-//     debugToFile("WebSocket error:", error);
-//   });
-
-//   // Add a ping interval
-//   const pingInterval = setInterval(() => {
-//     if (socket.readyState === WebSocket.OPEN) {
-//       socket.ping();
-//     }
-//   }, 30000); // Send a ping every 30 seconds
-
-//   // Clear the ping interval when the socket closes
-//   socket.on("close", () => {
-//     socketId = null;
-//     debugToFile("Disconnected from WebSocket server");
-//     clearInterval(pingInterval);
-//   });
-// }
-
-// Check WebSocket connection every 15 seconds
-// setInterval(() => {
-//   if (socket.readyState === WebSocket.CLOSED) {
-//     socketId = null;
-//     debugToFile("WebSocket disconnected. Attempting to reconnect...");
-//     createWebSocketConnection();
-//   }
-// }, 15000);
-
 export function initializeWebSocketConnection(httpConfig) {
   let lastCheckInTime = 0;
   let lastCheckedBlockNumber = -1;
@@ -168,6 +88,9 @@ export function initializeWebSocketConnection(httpConfig) {
   let ws;
   let isConnecting = false;
 
+  let reconnectAttempts = 0;
+  const maxReconnectAttempts = 50;
+
   function connectWebSocket() {
     if (isConnecting) return;
     isConnecting = true;
@@ -177,6 +100,7 @@ export function initializeWebSocketConnection(httpConfig) {
     ws.on("open", () => {
       debugToFile("WebSocket connection established");
       isConnecting = false;
+      reconnectAttempts = 0; // Reset the reconnection attempts on successful connection
     });
 
     ws.on("message", async (data) => {
@@ -233,13 +157,21 @@ export function initializeWebSocketConnection(httpConfig) {
       isConnecting = false;
       debugToFile("Disconnected from WebSocket server");
       clearInterval(pingInterval);
-    });
 
-    // ws.on("close", () => {
-    //   debugToFile("WebSocket connection closed. Reconnecting...");
-    //   isConnecting = false;
-    //   setTimeout(connectWebSocket, 5000); // Reconnect after 5 seconds
-    // });
+      if (reconnectAttempts < maxReconnectAttempts) {
+        debugToFile(
+          `Attempting to reconnect (${
+            reconnectAttempts + 1
+          }/${maxReconnectAttempts})...`
+        );
+        setTimeout(() => {
+          reconnectAttempts++;
+          connectWebSocket();
+        }, 5000); // Reconnect after 5 seconds
+      } else {
+        debugToFile("Max reconnection attempts reached. Giving up.");
+      }
+    });
 
     ws.on("error", (error) => {
       debugToFile(`WebSocket error: ${error}`);
@@ -347,7 +279,7 @@ export function initializeWebSocketConnection(httpConfig) {
         socket_id: socketId || "",
       };
 
-      debugToFile(`Checkin() params: ${JSON.stringify(params)}`);
+      // debugToFile(`Checkin() params: ${JSON.stringify(params)}`);
 
       if (ws && ws.readyState === WebSocket.OPEN) {
         const message = JSON.stringify({
