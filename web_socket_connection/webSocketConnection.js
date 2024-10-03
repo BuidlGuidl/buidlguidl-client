@@ -125,7 +125,12 @@ export function initializeWebSocketConnection(httpConfig) {
           debugToFile("Current Block Number:", rpcResponse.data);
 
           // Send the response back to the WebSocket server
-          ws.send(JSON.stringify(rpcResponse.data));
+          ws.send(
+            JSON.stringify({
+              ...rpcResponse.data,
+              bgMessageId: response.bgMessageId,
+            })
+          );
         } catch (error) {
           debugToFile("Error fetching block number:", error);
 
