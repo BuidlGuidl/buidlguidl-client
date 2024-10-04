@@ -10,6 +10,7 @@ let consensusClient = "lighthouse";
 let executionPeerPort = 30303;
 let consensusPeerPorts = [null, null];
 let consensusCheckpoint = null;
+let owner = null;
 
 const filename = fileURLToPath(import.meta.url);
 let installDir = dirname(filename);
@@ -51,6 +52,9 @@ function showHelp() {
     "                                            Default: buidlguidl-client/ethereum_clients\n"
   );
   console.log(
+    "  -o, --owner <eth address>                 Specify a owner eth address to opt in to the points system and distributed RPC\n"
+  );
+  console.log(
     "  -h, --help                                Display this help message and exit"
   );
   console.log("");
@@ -73,6 +77,7 @@ function saveOptionsToFile() {
     consensusPeerPorts,
     consensusCheckpoint,
     installDir,
+    owner,
   };
   fs.writeFileSync(optionsFilePath, JSON.stringify(options), "utf8");
 }
@@ -98,6 +103,7 @@ if (fs.existsSync(optionsFilePath)) {
     consensusPeerPorts = options.consensusPeerPorts;
     consensusCheckpoint = options.consensusCheckpoint;
     installDir = options.installDir;
+    owner = options.owner;
     optionsLoaded = true;
   } catch (error) {
     debugToFile(`Failed to load options from file: ${error}`);
@@ -139,11 +145,14 @@ if (!optionsLoaded) {
       "consensuscheckpoint",
       "d",
       "directory",
+      "o",
+      "owner",
     ],
     alias: {
       e: "executionclient",
       c: "consensusclient",
       d: "directory",
+      o: "owner",
       h: "help",
     },
     boolean: ["h", "help"],
@@ -212,6 +221,10 @@ if (!optionsLoaded) {
     }
   }
 
+  if (argv.owner) {
+    owner = argv.owner;
+  }
+
   if (argv.help) {
     showHelp();
     process.exit(0);
@@ -239,6 +252,7 @@ export {
   consensusPeerPorts,
   consensusCheckpoint,
   installDir,
+  owner,
   saveOptionsToFile,
   deleteOptionsFile,
 };

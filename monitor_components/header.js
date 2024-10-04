@@ -8,6 +8,7 @@ import { debugToFile } from "../helpers.js";
 import { execSync } from "child_process";
 import { getPublicIPAddress } from "../getSystemStats.js";
 import { exec } from "child_process";
+import { owner } from "../commandLineOptions.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -70,15 +71,21 @@ export function createHeader(grid, screen, messageForHeader) {
     const points = await fetchPoints(publicIP);
     const currentBranch = getCurrentBranch();
     const commitHash = getCurrentCommitHash();
-    if (points !== null) {
+    if (owner !== null) {
       bigText.setContent(
         `{center}{bold}B u i d l G u i d l  C l i e n t{/bold}{/center}\n` +
           `{center}Branch: ${currentBranch} (${commitHash}){/center}\n` +
-          `{center}{green-fg}Unclaimed Points: ${points}{/green-fg}{/center}\n` +
+          `{center}{cyan-fg}Owner: ${owner}{/cyan-fg} | {green-fg}Unclaimed Points: ${points}{/green-fg}{/center}\n` +
           `{center}{cyan-fg}${messageForHeader}{/cyan-fg}{/center}`
       );
-      screen.render();
+    } else {
+      bigText.setContent(
+        `{center}{bold}B u i d l G u i d l  C l i e n t{/bold}{/center}\n` +
+          `{center}Branch: ${currentBranch} (${commitHash}){/center}\n` +
+          `{center}{cyan-fg}${messageForHeader}{/cyan-fg}{/center}`
+      );
     }
+    screen.render();
   }
 
   let pic, logo;

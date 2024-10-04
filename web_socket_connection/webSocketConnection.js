@@ -7,7 +7,11 @@ import {
   getDiskUsage,
 } from "../getSystemStats.js";
 import { localClient } from "../monitor_components/viemClients.js";
-import { installDir, consensusPeerPorts } from "../commandLineOptions.js";
+import {
+  installDir,
+  consensusPeerPorts,
+  owner,
+} from "../commandLineOptions.js";
 import {
   getConsensusPeers,
   getExecutionPeers,
@@ -282,6 +286,7 @@ export function initializeWebSocketConnection(httpConfig) {
         consensus_tcp_port: consensusPeerPorts[0].toString(),
         consensus_udp_port: consensusPeerPorts[1].toString(),
         socket_id: socketId || "",
+        owner: owner,
       };
 
       // debugToFile(`Checkin() params: ${JSON.stringify(params)}`);

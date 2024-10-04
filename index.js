@@ -19,6 +19,7 @@ import {
   consensusPeerPorts,
   consensusCheckpoint,
   installDir,
+  owner,
   saveOptionsToFile,
   deleteOptionsFile,
 } from "./commandLineOptions.js";
@@ -334,7 +335,9 @@ if (!isAlreadyRunning()) {
   await startClient(executionClient, installDir);
   await startClient(consensusClient, installDir);
 
-  initializeWebSocketConnection(wsConfig);
+  if (owner != null) {
+    initializeWebSocketConnection(wsConfig);
+  }
 
   runsClient = true;
   createLockFile();
