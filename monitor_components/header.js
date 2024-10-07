@@ -30,13 +30,10 @@ export function createHeader(grid, screen, messageForHeader) {
   }
 
   // New function to fetch points
-  async function fetchPoints(publicIP) {
+  async function fetchPoints(owner) {
     try {
-      // const response = await axios.get(
-      //   `https://rpc.buidlguidl.com:48544/yourpoints?ipaddress=${publicIP}`
-      // );
       const response = await axios.get(
-        `https://stage.rpc.buidlguidl.com:48544/yourpoints?ipaddress=${publicIP}`
+        `https://stage.rpc.buidlguidl.com:48544/yourpoints?owner=${owner}`
       );
       return response.data.points;
     } catch (error) {
@@ -67,8 +64,7 @@ export function createHeader(grid, screen, messageForHeader) {
 
   // Updated function to update bigText with points, branch name, and commit hash
   async function updatePointsAndBranchDisplay() {
-    const publicIP = await getPublicIPAddress();
-    const points = await fetchPoints(publicIP);
+    const points = await fetchPoints(owner);
     const currentBranch = getCurrentBranch();
     const commitHash = getCurrentCommitHash();
     if (owner !== null) {
@@ -197,8 +193,8 @@ export function createHeader(grid, screen, messageForHeader) {
   // Replace updatePointsDisplay with updatePointsAndBranchDisplay
   updatePointsAndBranchDisplay();
 
-  // Schedule points and branch update every 5 minutes
-  setInterval(updatePointsAndBranchDisplay, 5 * 60 * 1000);
+  // Schedule points and branch update every 1 minutes
+  setInterval(updatePointsAndBranchDisplay, 1 * 60 * 1000);
 
   return { pic, bigText, ipAddressBox };
 }
