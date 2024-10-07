@@ -9,10 +9,7 @@ import { consensusClient } from "../commandLineOptions.js";
 export async function fetchBGExecutionPeers() {
   try {
     const publicIP = await getPublicIPAddress();
-    // const response = await fetch("https://rpc.buidlguidl.com:48544/enodes");
-    const response = await fetch(
-      "https://stage.rpc.buidlguidl.com:48544/enodes"
-    );
+    const response = await fetch("https://rpc.buidlguidl.com:48544/enodes");
     const data = await response.json();
 
     const filteredEnodes = data.enodes.filter((node) => {
@@ -90,10 +87,7 @@ export async function configureBGExecutionPeers(bgPeers) {
 
 export async function fetchBGConsensusPeers() {
   try {
-    // const response = await fetch("https://rpc.buidlguidl.com:48544/peerids");
-    const response = await fetch(
-      "https://stage.rpc.buidlguidl.com:48544/peerids"
-    );
+    const response = await fetch("https://rpc.buidlguidl.com:48544/peerids");
     const data = await response.json();
 
     const peerIDValues = data.peerids
