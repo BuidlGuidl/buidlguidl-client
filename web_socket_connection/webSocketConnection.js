@@ -120,9 +120,7 @@ export function initializeWebSocketConnection(httpConfig) {
         try {
           const rpcResponse = await axios.post(targetUrl, {
             jsonrpc: "2.0",
-            // method: "eth_blockNumber",
             method: response.method,
-            // params: [],
             params: response.params,
             id: 1,
           });
