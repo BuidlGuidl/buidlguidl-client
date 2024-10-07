@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+// import { execSync } from "child_process";
 
 export function setupDebugLogging(debugLogPath) {
   if (fs.existsSync(debugLogPath)) {
@@ -70,3 +71,27 @@ export function getFormattedDateTime() {
     .replace(/\..+/, "")
     .replace(/:/g, "_");
 }
+
+// let proxyUrl = "";
+
+// function setProxyUrl() {
+//   try {
+//     const currentBranch = execSync("git rev-parse --abbrev-ref HEAD")
+//       .toString()
+//       .trim();
+//     proxyUrl =
+//       currentBranch === "main"
+//         ? "rpc.buidlguidl.com"
+//         : "stage.rpc.buidlguidl.com";
+//   } catch (error) {
+//     console.error("Error getting Git branch:", error);
+//     proxyUrl = "stage.rpc.buidlguidl.com"; // Default to stage if there's an error
+//   }
+// }
+
+// export function getProxyUrl() {
+//   return proxyUrl;
+// }
+
+// // Call setProxyUrl when the module is imported
+// setProxyUrl();

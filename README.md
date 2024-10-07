@@ -25,3 +25,9 @@ If you want to use a Geth + Prysm client pair, pass those as --executionclient (
   ```bash
   node index.js --executionclient geth --consensusclient prysm
   ```
+
+You can opt in to the BuidlGuidl distributed RPC points system and earn points for serving RPC requests to the BuidlGuidl network by passing your eth address to the --owner (-o) option:
+  ```bash
+  node index.js --owner <your ENS name or eth address>
+  ```
+
