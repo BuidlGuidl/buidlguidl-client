@@ -75,7 +75,7 @@ function handleExit(exitType) {
     const lockFilePid = fs.readFileSync(lockFilePath, "utf8");
     if (parseInt(lockFilePid) !== process.pid) {
       console.log(
-        `Current process (${process.pid}) does not match lockfile PID (${lockFilePid}). Exiting without cleanup.`
+        `This client process (${process.pid}) is not the first instance launched. Closing dashboard view without killing clients.`
       );
       process.exit(0);
     }
@@ -192,7 +192,6 @@ process.on("SIGUSR2", () => handleExit("SIGUSR2"));
 // Modify the exit listener
 process.on("exit", (code) => {
   if (!isExiting) {
-    console.log(`About to exit with code: ${code}`);
     handleExit("exit");
   }
 });
