@@ -65,8 +65,13 @@ let consensusChild;
 let executionExited = false;
 let consensusExited = false;
 
-function handleExit() {
-  console.log("\n\n🛰️  Received exit signal\n");
+let isExiting = false;
+
+function handleExit(exitType) {
+  if (isExiting) return; // Prevent multiple calls
+  isExiting = true;
+
+  console.log(`\n\n🛰️  Received exit signal: ${exitType}\n`);
 
   deleteOptionsFile();
   debugToFile(`handleExit(): deleteOptionsFile() has been called`);
@@ -163,12 +168,30 @@ function handleExit() {
   }
 }
 
-process.on("SIGINT", handleExit);
-/// SIGTERM for using kill command to shut down process
-process.on("SIGTERM", handleExit);
+// Modify existing listeners
+process.on("SIGINT", () => handleExit("SIGINT"));
+process.on("SIGTERM", () => handleExit("SIGTERM"));
+process.on("SIGHUP", () => handleExit("SIGHUP"));
+process.on("SIGUSR2", () => handleExit("SIGUSR2"));
 
-process.on("SIGUSR2", () => {
-  handleExit();
+// Modify the exit listener
+process.on("exit", (code) => {
+  if (!isExiting) {
+    console.log(`About to exit with code: ${code}`);
+    handleExit("exit");
+  }
+});
+
+// This helps catch uncaught exceptions
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught Exception:", error);
+  handleExit("uncaughtException");
+});
+
+// This helps catch unhandled promise rejections
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+  handleExit("unhandledRejection");
 });
 
 let bgConsensusPeers = [];
