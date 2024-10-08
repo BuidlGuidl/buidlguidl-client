@@ -69,6 +69,21 @@ let isExiting = false;
 
 function handleExit(exitType) {
   if (isExiting) return; // Prevent multiple calls
+
+  // Check if the current process PID matches the one in the lockfile
+  try {
+    const lockFilePid = fs.readFileSync(lockFilePath, "utf8");
+    if (parseInt(lockFilePid) !== process.pid) {
+      console.log(
+        `Current process (${process.pid}) does not match lockfile PID (${lockFilePid}). Exiting without cleanup.`
+      );
+      process.exit(0);
+    }
+  } catch (error) {
+    console.error("Error reading lockfile:", error);
+    process.exit(1);
+  }
+
   isExiting = true;
 
   console.log(`\n\n🛰️  Received exit signal: ${exitType}\n`);
