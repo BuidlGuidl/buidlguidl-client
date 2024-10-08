@@ -29,8 +29,6 @@ export function createHeader(grid, screen, messageForHeader) {
     }
   }
 
-  debugToFile(`monitor_components/header.js: owner: ${owner}`);
-
   // New function to fetch points
   async function fetchPoints(owner) {
     try {

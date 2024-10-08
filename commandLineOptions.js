@@ -245,11 +245,6 @@ if (!optionsLoaded) {
   }
 }
 
-debugToFile("commandLineOptions.js: options set");
-debugToFile(
-  `executionClient: ${executionClient}, consensusClient: ${consensusClient}, executionPeerPort: ${executionPeerPort}, consensusPeerPorts: ${consensusPeerPorts}, consensusCheckpoint: ${consensusCheckpoint}, installDir: ${installDir}, owner: ${owner}`
-);
-
 export {
   executionClient,
   consensusClient,
