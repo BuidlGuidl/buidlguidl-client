@@ -92,9 +92,6 @@ export function initializeWebSocketConnection(httpConfig) {
   let ws;
   let isConnecting = false;
 
-  let reconnectAttempts = 0;
-  const maxReconnectAttempts = 50;
-
   function connectWebSocket() {
     if (isConnecting) return;
     isConnecting = true;
@@ -104,7 +101,6 @@ export function initializeWebSocketConnection(httpConfig) {
     ws.on("open", () => {
       debugToFile("WebSocket connection established");
       isConnecting = false;
-      reconnectAttempts = 0; // Reset the reconnection attempts on successful connection
     });
 
     ws.on("message", async (data) => {
@@ -165,19 +161,11 @@ export function initializeWebSocketConnection(httpConfig) {
       debugToFile("Disconnected from WebSocket server");
       clearInterval(pingInterval);
 
-      if (reconnectAttempts < maxReconnectAttempts) {
-        debugToFile(
-          `Attempting to reconnect (${
-            reconnectAttempts + 1
-          }/${maxReconnectAttempts})...`
-        );
-        setTimeout(() => {
-          reconnectAttempts++;
-          connectWebSocket();
-        }, 5000); // Reconnect after 5 seconds
-      } else {
-        debugToFile("Max reconnection attempts reached. Giving up.");
-      }
+      // Remove the check for maxReconnectAttempts
+      debugToFile("Attempting to reconnect...");
+      setTimeout(() => {
+        connectWebSocket();
+      }, 10000); // Reconnect after 10 seconds
     });
 
     ws.on("error", (error) => {
