@@ -83,7 +83,7 @@ function handleExit(exitType) {
     console.error("Error reading lockfile:", error);
     process.exit(1);
   }
-
+  
   isExiting = true;
 
   console.log(`\n\n🛰️  Received exit signal: ${exitType}\n`);
