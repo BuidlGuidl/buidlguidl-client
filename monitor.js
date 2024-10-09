@@ -446,7 +446,6 @@ function setupUI(
       process.kill(process.pid, "SIGUSR2");
       console.log("Clients exited from monitor");
     } else {
-      console.log("not working", runsClient);
       process.exit(0);
     }
     screen.destroy();

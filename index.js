@@ -69,6 +69,21 @@ let isExiting = false;
 
 function handleExit(exitType) {
   if (isExiting) return; // Prevent multiple calls
+
+  // Check if the current process PID matches the one in the lockfile
+  try {
+    const lockFilePid = fs.readFileSync(lockFilePath, "utf8");
+    if (parseInt(lockFilePid) !== process.pid) {
+      console.log(
+        `This client process (${process.pid}) is not the first instance launched. Closing dashboard view without killing clients.`
+      );
+      process.exit(0);
+    }
+  } catch (error) {
+    console.error("Error reading lockfile:", error);
+    process.exit(1);
+  }
+  
   isExiting = true;
 
   console.log(`\n\n🛰️  Received exit signal: ${exitType}\n`);
@@ -177,7 +192,6 @@ process.on("SIGUSR2", () => handleExit("SIGUSR2"));
 // Modify the exit listener
 process.on("exit", (code) => {
   if (!isExiting) {
-    console.log(`About to exit with code: ${code}`);
     handleExit("exit");
   }
 });
