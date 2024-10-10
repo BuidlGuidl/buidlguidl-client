@@ -91,6 +91,7 @@ export function initializeWebSocketConnection(httpConfig) {
 
   let ws;
   let isConnecting = false;
+  let reconnectTimeout;
 
   function connectWebSocket() {
     if (isConnecting) return;
@@ -101,6 +102,7 @@ export function initializeWebSocketConnection(httpConfig) {
     ws.on("open", () => {
       debugToFile("WebSocket connection established");
       isConnecting = false;
+      clearTimeout(reconnectTimeout); // Clear any pending reconnect attempt
     });
 
     ws.on("message", async (data) => {
@@ -161,11 +163,10 @@ export function initializeWebSocketConnection(httpConfig) {
       debugToFile("Disconnected from WebSocket server");
       clearInterval(pingInterval);
 
-      // Remove the check for maxReconnectAttempts
       debugToFile("Attempting to reconnect...");
-      setTimeout(() => {
+      reconnectTimeout = setTimeout(() => {
         connectWebSocket();
-      }, 10000); // Reconnect after 10 seconds
+      }, 10000);
     });
 
     ws.on("error", (error) => {
@@ -285,8 +286,7 @@ export function initializeWebSocketConnection(httpConfig) {
         debugToFile(`Sending WebSocket message: ${message}`);
         ws.send(message);
       } else {
-        debugToFile("WebSocket is not open. Queuing check-in data.");
-        // Optionally, you can implement a queue system here to send data when connection is restored
+        debugToFile("WebSocket is not open.");
       }
     } catch (error) {
       debugToFile(`checkIn() Error: ${error}`);
