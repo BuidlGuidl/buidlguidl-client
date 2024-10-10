@@ -107,7 +107,11 @@ export function initializeWebSocketConnection(httpConfig) {
 
     ws.on("message", async (data) => {
       const response = JSON.parse(data);
-      debugToFile(`Received response from server: ${JSON.stringify(response)}`);
+      debugToFile(
+        `Received response from server. Checkin Success: ${JSON.stringify(
+          response.success
+        )}`
+      );
 
       if (!socketId || socketId === null) {
         socketId = response.id;
@@ -283,7 +287,7 @@ export function initializeWebSocketConnection(httpConfig) {
           type: "checkin",
           params: params,
         });
-        debugToFile(`Sending WebSocket message: ${message}`);
+        debugToFile(`Sending WebSocket checkin message`);
         ws.send(message);
       } else {
         debugToFile("WebSocket is not open.");
