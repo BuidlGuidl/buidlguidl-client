@@ -91,9 +91,7 @@ export function initializeWebSocketConnection(httpConfig) {
 
   let ws;
   let isConnecting = false;
-
-  let reconnectAttempts = 0;
-  const maxReconnectAttempts = 50;
+  let reconnectTimeout;
 
   function connectWebSocket() {
     if (isConnecting) return;
@@ -104,12 +102,16 @@ export function initializeWebSocketConnection(httpConfig) {
     ws.on("open", () => {
       debugToFile("WebSocket connection established");
       isConnecting = false;
-      reconnectAttempts = 0; // Reset the reconnection attempts on successful connection
+      clearTimeout(reconnectTimeout); // Clear any pending reconnect attempt
     });
 
     ws.on("message", async (data) => {
       const response = JSON.parse(data);
-      debugToFile(`Received response from server: ${JSON.stringify(response)}`);
+      debugToFile(
+        `Received response from server. Checkin Success: ${JSON.stringify(
+          response.success
+        )}`
+      );
 
       if (!socketId || socketId === null) {
         socketId = response.id;
@@ -165,19 +167,10 @@ export function initializeWebSocketConnection(httpConfig) {
       debugToFile("Disconnected from WebSocket server");
       clearInterval(pingInterval);
 
-      if (reconnectAttempts < maxReconnectAttempts) {
-        debugToFile(
-          `Attempting to reconnect (${
-            reconnectAttempts + 1
-          }/${maxReconnectAttempts})...`
-        );
-        setTimeout(() => {
-          reconnectAttempts++;
-          connectWebSocket();
-        }, 5000); // Reconnect after 5 seconds
-      } else {
-        debugToFile("Max reconnection attempts reached. Giving up.");
-      }
+      debugToFile("Attempting to reconnect...");
+      reconnectTimeout = setTimeout(() => {
+        connectWebSocket();
+      }, 10000);
     });
 
     ws.on("error", (error) => {
@@ -294,11 +287,10 @@ export function initializeWebSocketConnection(httpConfig) {
           type: "checkin",
           params: params,
         });
-        debugToFile(`Sending WebSocket message: ${message}`);
+        debugToFile(`Sending WebSocket checkin message`);
         ws.send(message);
       } else {
-        debugToFile("WebSocket is not open. Queuing check-in data.");
-        // Optionally, you can implement a queue system here to send data when connection is restored
+        debugToFile("WebSocket is not open.");
       }
     } catch (error) {
       debugToFile(`checkIn() Error: ${error}`);

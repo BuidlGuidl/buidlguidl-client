@@ -4,6 +4,11 @@ import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import { debugToFile } from "./helpers.js";
 
+debugToFile(
+  `\n\n\n\n--------------------------------------------------------------------------`
+);
+debugToFile(`----------  CLIENT STARTED  ----------`);
+
 /// Set default command line option values
 let executionClient = "reth";
 let consensusClient = "lighthouse";
@@ -244,11 +249,6 @@ if (!optionsLoaded) {
     consensusPeerPorts = [12000, 13000];
   }
 }
-
-debugToFile("commandLineOptions.js: options set");
-debugToFile(
-  `executionClient: ${executionClient}, consensusClient: ${consensusClient}, executionPeerPort: ${executionPeerPort}, consensusPeerPorts: ${consensusPeerPorts}, consensusCheckpoint: ${consensusCheckpoint}, installDir: ${installDir}, owner: ${owner}`
-);
 
 export {
   executionClient,
