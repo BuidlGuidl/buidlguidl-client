@@ -673,6 +673,18 @@ async function updateChainInfoBox(chainInfoBox, screen) {
 setInterval(() => updateChainWidgets(statusBox, chainInfoBox, screen), 5000);
 setInterval(() => updateBandwidthBox(screen), 2000);
 
+localClient.watchBlocks(
+  {
+    onBlock: (block) => {
+      debugToFile(`---- New Block ----`);
+      debugToFile(block.number);
+    },
+  },
+  (error) => {
+    debugToFile(`Error in block watcher: ${error}`);
+  }
+);
+
 async function checkNetworkConnectivity() {
   try {
     await fetch("https://www.google.com", { mode: "no-cors", timeout: 5000 });
