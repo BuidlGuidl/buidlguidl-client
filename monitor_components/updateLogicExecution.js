@@ -14,6 +14,10 @@ import { populateGethStageGauge } from "./gethStageGauge.js";
 import { checkIn } from "../web_socket_connection/webSocketConnection.js";
 import fetch from "node-fetch";
 import { getDiskUsage } from "../getSystemStats.js";
+import { populateChainInfoBox } from "./chainInfoBox.js";
+import { updateStatusBox } from "./statusBox.js";
+import { screen, statusBox, chainInfoBox } from "../monitor.js";
+import { updateBandwidthBox } from "./bandwidthGauge.js";
 
 const progress = loadProgress();
 let gethStageProgress = [
@@ -640,6 +644,34 @@ export async function synchronizeAndUpdateWidgets(installDir) {
     return "";
   }
 }
+
+async function updateChainWidgets(statusBox, chainInfoBox, screen) {
+  try {
+    // Run both update functions concurrently
+    await Promise.all([
+      updateStatusBox(statusBox),
+      updateChainInfoBox(chainInfoBox, screen),
+    ]);
+
+    // Render the screen after both updates are complete
+    screen.render();
+  } catch (error) {
+    debugToFile(`updateWidgets(): ${error}`);
+  }
+}
+
+async function updateChainInfoBox(chainInfoBox, screen) {
+  try {
+    if (screen.children.includes(chainInfoBox)) {
+      await populateChainInfoBox();
+    }
+  } catch (error) {
+    debugToFile(`updateChainInfoBox(): ${error}`);
+  }
+}
+
+setInterval(() => updateChainWidgets(statusBox, chainInfoBox, screen), 5000);
+setInterval(() => updateBandwidthBox(screen), 2000);
 
 async function checkNetworkConnectivity() {
   try {
