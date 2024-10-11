@@ -2,8 +2,6 @@ import path from "path";
 import blessed from "blessed";
 import contrib from "blessed-contrib";
 import { debugToFile } from "./helpers.js";
-// import { populateChainInfoBox } from "./monitor_components/chainInfoBox.js";
-// import { updateStatusBox } from "./monitor_components/statusBox.js";
 import { createSystemStatsGauge } from "./monitor_components/systemStatsGauge.js";
 import { createPeerCountGauge } from "./monitor_components/peerCountGauge.js";
 import { createCpuLine } from "./monitor_components/cpuLine.js";
@@ -465,16 +463,6 @@ function setupUI(
     },
   };
 }
-
-// async function updateChainInfoBox(chainInfoBox, screen) {
-//   try {
-//     if (screen.children.includes(chainInfoBox)) {
-//       await populateChainInfoBox();
-//     }
-//   } catch (error) {
-//     debugToFile(`updateChainInfoBox(): ${error}`);
-//   }
-// }
 
 function suppressMouseOutput(screen) {
   screen.on("element mouse", (el, data) => {
