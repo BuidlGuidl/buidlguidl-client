@@ -48,7 +48,10 @@ export function populateRethStageGauge(stagePercentages) {
       const maxItems = Math.floor(boxHeight / 2);
 
       // Find the last completed stage
-      const lastCompletedIndex = stagePercentages.lastIndexOf(1);
+      let lastCompletedIndex = stagePercentages.lastIndexOf(1);
+      if (lastCompletedIndex === -1) {
+        lastCompletedIndex = 0;
+      }
 
       let startIndex = lastCompletedIndex;
       let endIndex = Math.min(stagePercentages.length, startIndex + maxItems);

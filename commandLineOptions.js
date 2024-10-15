@@ -5,7 +5,7 @@ import { dirname, join } from "path";
 import { debugToFile } from "./helpers.js";
 
 debugToFile(
-  `\n\n\n\n--------------------------------------------------------------------------`
+  `\n\n\n\n\n\n--------------------------------------------------------------------------`
 );
 debugToFile(`----------  CLIENT STARTED  ----------`);
 

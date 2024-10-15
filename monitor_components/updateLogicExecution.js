@@ -647,13 +647,11 @@ export async function synchronizeAndUpdateWidgets(installDir) {
 
 async function updateChainWidgets(statusBox, chainInfoBox, screen) {
   try {
-    // Run both update functions concurrently
     await Promise.all([
       updateStatusBox(statusBox),
       updateChainInfoBox(chainInfoBox, screen),
     ]);
 
-    // Render the screen after both updates are complete
     screen.render();
   } catch (error) {
     debugToFile(`updateWidgets(): ${error}`);
@@ -672,18 +670,6 @@ async function updateChainInfoBox(chainInfoBox, screen) {
 
 setInterval(() => updateChainWidgets(statusBox, chainInfoBox, screen), 5000);
 setInterval(() => updateBandwidthBox(screen), 2000);
-
-localClient.watchBlocks(
-  {
-    onBlock: (block) => {
-      debugToFile(`---- New Block ----`);
-      debugToFile(block.number);
-    },
-  },
-  (error) => {
-    debugToFile(`Error in block watcher: ${error}`);
-  }
-);
 
 async function checkNetworkConnectivity() {
   try {
