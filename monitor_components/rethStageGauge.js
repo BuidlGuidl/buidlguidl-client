@@ -63,8 +63,9 @@ export function populateRethStageGauge(stagePercentages) {
 
       for (let i = startIndex; i < endIndex; i++) {
         const percentComplete = stagePercentages[i];
-        const filledBars = Math.floor(boxWidth * percentComplete);
-        const bar = "█".repeat(filledBars) + " ".repeat(boxWidth - filledBars);
+        const filledBars = Math.max(0, Math.floor(boxWidth * percentComplete));
+        const emptyBars = Math.max(0, boxWidth - filledBars);
+        const bar = "█".repeat(filledBars) + " ".repeat(emptyBars);
         const percentString = `${Math.floor(percentComplete * 100)}%`;
         content += `${stageNames[i]}\n[${bar}] ${percentString}\n`;
       }
