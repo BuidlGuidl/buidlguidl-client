@@ -9,6 +9,7 @@ import { execSync } from "child_process";
 import { getPublicIPAddress } from "../getSystemStats.js";
 import { exec } from "child_process";
 import { owner } from "../commandLineOptions.js";
+import { isConnected } from "../web_socket_connection/webSocketConnection.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -167,12 +168,14 @@ export function createHeader(grid, screen, messageForHeader) {
   //   });
   // });
 
+  let ipAddressBoxContent = `{center}{bold}Local IP: Fetching...{/bold}\n{center}{bold}Public IP: Fetching...{/bold}{/center}`;
+
   // Create the IP address box
   const ipAddressBox = grid.set(0, 7, 1, 2, blessed.box, {
-    content: `{center}{bold}IP Address: Fetching... {/bold}\n{center}{bold}Public IP: Fetching...{/bold}{/center}`,
+    content: ipAddressBoxContent,
     tags: true,
     align: "center",
-    valign: "middle",
+    valign: "top",
     style: {
       fg: "white",
       border: {
@@ -181,21 +184,64 @@ export function createHeader(grid, screen, messageForHeader) {
     },
   });
 
-  // Fetch and display both IP addresses
+  let rpcStatusMessage = "";
+  let showIPAddresses = true;
+  let lastToggleTime = Date.now();
+
+  function updateWSStatusMessage() {
+    // Update the RPC status message
+    if (isConnected) {
+      rpcStatusMessage =
+        "{center}{green-fg}RPC Server Connected{/green-fg}{/center}";
+    } else {
+      rpcStatusMessage =
+        "{center}{red-fg}RPC Server Disconnected{/red-fg}{/center}";
+    }
+
+    const ipAddressLines = ipAddressBoxContent
+      .split("\n")
+      .slice(0, 2)
+      .join("\n");
+    const currentTime = Date.now();
+
+    if (ipAddressBox.height < 5) {
+      if (currentTime - lastToggleTime >= 10000) {
+        showIPAddresses = !showIPAddresses;
+        lastToggleTime = currentTime;
+      }
+
+      const contentToShow = showIPAddresses ? ipAddressLines : rpcStatusMessage;
+      ipAddressBox.setContent(contentToShow);
+    } else {
+      // If height is 5 or more, show all information
+      ipAddressBox.setContent(`${ipAddressLines}\n${rpcStatusMessage}`);
+    }
+
+    screen.render();
+  }
+
+  // Update the IP address fetching part
   Promise.all([getIPAddress(), getPublicIPAddress()]).then(
     ([localIP, publicIP]) => {
-      ipAddressBox.setContent(
-        `{center}{bold}Local IP: ${localIP}{/bold}\n{center}{bold}Public IP: ${publicIP}{/bold}{/center}`
-      );
+      ipAddressBoxContent = `{center}{bold}Local IP: ${localIP}{/bold}\n{center}{bold}Public IP: ${publicIP}{/bold}{/center}`;
+      updateWSStatusMessage(); // Call this to add the initial RPC status
       screen.render();
     }
   );
 
-  // Replace updatePointsDisplay with updatePointsAndBranchDisplay
   updatePointsAndBranchDisplay();
+  setInterval(updatePointsAndBranchDisplay, 1 * 60 * 1000); // Every 1 minute
 
-  // Schedule points and branch update every 1 minutes
-  setInterval(updatePointsAndBranchDisplay, 1 * 60 * 1000);
+  if (owner !== null) {
+    setInterval(updateWSStatusMessage, 1000); // Check every second for smoother transitions
+  }
+
+  // Add resize event listener
+  screen.on("resize", () => {
+    // Force an immediate update after resize
+    lastToggleTime = Date.now() - 10000;
+    updateWSStatusMessage();
+  });
 
   return { pic, bigText, ipAddressBox };
 }

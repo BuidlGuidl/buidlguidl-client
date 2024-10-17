@@ -25,8 +25,11 @@ import axios from "axios";
 
 // let socket;
 let socketId;
-
 export let checkIn;
+let ws;
+export let isConnected = false;
+let isConnecting = false;
+let reconnectTimeout;
 
 export function initializeWebSocketConnection(httpConfig) {
   let lastCheckInTime = 0;
@@ -89,10 +92,6 @@ export function initializeWebSocketConnection(httpConfig) {
     }
   }
 
-  let ws;
-  let isConnecting = false;
-  let reconnectTimeout;
-
   function connectWebSocket() {
     if (isConnecting) return;
     isConnecting = true;
@@ -102,6 +101,7 @@ export function initializeWebSocketConnection(httpConfig) {
     ws.on("open", () => {
       debugToFile("WebSocket connection established");
       isConnecting = false;
+      isConnected = true;
       clearTimeout(reconnectTimeout); // Clear any pending reconnect attempt
     });
 
@@ -164,6 +164,7 @@ export function initializeWebSocketConnection(httpConfig) {
     ws.on("close", () => {
       socketId = null;
       isConnecting = false;
+      isConnected = false;
       debugToFile("Disconnected from WebSocket server");
       clearInterval(pingInterval);
 
@@ -176,6 +177,7 @@ export function initializeWebSocketConnection(httpConfig) {
     ws.on("error", (error) => {
       debugToFile(`WebSocket error: ${error}`);
       isConnecting = false;
+      isConnected = false;
     });
   }
 
