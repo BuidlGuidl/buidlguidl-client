@@ -190,12 +190,14 @@ export function createHeader(grid, screen, messageForHeader) {
 
   function updateWSStatusMessage() {
     // Update the RPC status message
-    if (isConnected) {
-      rpcStatusMessage =
-        "{center}{green-fg}RPC Server Connected{/green-fg}{/center}";
-    } else {
-      rpcStatusMessage =
-        "{center}{red-fg}RPC Server Disconnected{/red-fg}{/center}";
+    if (owner !== null) {
+      if (isConnected) {
+        rpcStatusMessage =
+          "{center}{green-fg}RPC Server Connected{/green-fg}{/center}";
+      } else {
+        rpcStatusMessage =
+          "{center}{red-fg}RPC Server Disconnected{/red-fg}{/center}";
+      }
     }
 
     const ipAddressLines = ipAddressBoxContent
@@ -204,7 +206,7 @@ export function createHeader(grid, screen, messageForHeader) {
       .join("\n");
     const currentTime = Date.now();
 
-    if (ipAddressBox.height < 5) {
+    if (owner !== null && ipAddressBox.height < 5) {
       if (currentTime - lastToggleTime >= 10000) {
         showIPAddresses = !showIPAddresses;
         lastToggleTime = currentTime;
@@ -231,10 +233,7 @@ export function createHeader(grid, screen, messageForHeader) {
 
   updatePointsAndBranchDisplay();
   setInterval(updatePointsAndBranchDisplay, 1 * 60 * 1000); // Every 1 minute
-
-  if (owner !== null) {
-    setInterval(updateWSStatusMessage, 1000); // Check every second for smoother transitions
-  }
+  setInterval(updateWSStatusMessage, 1000); // Check every second for smoother transitions
 
   // Add resize event listener
   screen.on("resize", () => {
