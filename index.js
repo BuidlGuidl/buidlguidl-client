@@ -29,10 +29,15 @@ import {
   fetchBGConsensusPeers,
   configureBGConsensusPeers,
 } from "./ethereum_client_scripts/configureBGPeers.js";
+import { getVersionNumber } from "./ethereum_client_scripts/versionControl.js";
 import { debugToFile } from "./helpers.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// const versionOutput = getVersionNumber("lighthouse");
+// console.log(versionOutput);
+// process.exit(0);
 
 const gethVer = "1.14.3";
 const rethVer = "1.0.0";
