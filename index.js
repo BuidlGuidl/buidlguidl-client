@@ -362,6 +362,9 @@ let runsClient = false;
 
 createJwtSecret(jwtDir);
 
+const executionClientVer = getVersionNumber(executionClient);
+const consensusClientVer = getVersionNumber(consensusClient);
+
 const wsConfig = {
   executionClient: executionClient,
   consensusClient: consensusClient,
@@ -393,10 +396,8 @@ initializeMonitoring(
   messageForHeader,
   executionClient,
   consensusClient,
-  gethVer,
-  rethVer,
-  prysmVer,
-  lighthouseVer,
+  executionClientVer,
+  consensusClientVer,
   runsClient
 );
 

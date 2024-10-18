@@ -48,10 +48,8 @@ export async function initializeMonitoring(
   messageForHeader,
   executionClient,
   consensusClient,
-  gethVer,
-  rethVer,
-  prysmVer,
-  lighthouseVer,
+  executionClientVer,
+  consensusClientVer,
   runsClient
 ) {
   try {
@@ -66,10 +64,8 @@ export async function initializeMonitoring(
     const { screen, components } = setupUI(
       progress,
       messageForHeader,
-      gethVer,
-      rethVer,
-      prysmVer,
-      lighthouseVer,
+      executionClientVer,
+      consensusClientVer,
       runsClient
     );
 
@@ -155,10 +151,8 @@ export async function initializeMonitoring(
 function setupUI(
   progress,
   messageForHeader,
-  gethVer,
-  rethVer,
-  prysmVer,
-  lighthouseVer,
+  executionClientVer,
+  consensusClientVer,
   runsClient
 ) {
   screen = blessed.screen();
@@ -170,15 +164,15 @@ function setupUI(
   let consensusClientLabel;
 
   if (executionClientGlobal == "geth") {
-    executionClientLabel = `Geth v${gethVer}`;
+    executionClientLabel = `Geth v${executionClientVer}`;
   } else if (executionClientGlobal == "reth") {
-    executionClientLabel = `Reth v${rethVer}`;
+    executionClientLabel = `Reth v${executionClientVer}`;
   }
 
   if (consensusClientGlobal == "prysm") {
-    consensusClientLabel = `Prysm v${prysmVer}`;
+    consensusClientLabel = `Prysm v${consensusClientVer}`;
   } else if (consensusClientGlobal == "lighthouse") {
-    consensusClientLabel = `Lighthouse v${lighthouseVer}`;
+    consensusClientLabel = `Lighthouse v${consensusClientVer}`;
   }
 
   const executionLog = createExecutionLog(grid, executionClientLabel, screen);

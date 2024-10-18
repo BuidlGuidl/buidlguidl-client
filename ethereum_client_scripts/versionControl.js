@@ -30,9 +30,13 @@ export function getVersionNumber(client) {
   }
 
   try {
-    const versionCommand = execSync(`${clientCommand} ${argument}`, {
-      encoding: "utf-8",
-    });
+    const versionCommand = execSync(
+      `${clientCommand} ${argument} 2>/dev/null`,
+      {
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "ignore"],
+      }
+    );
     versionOutput = versionCommand.trim();
 
     if (client === "reth") {
