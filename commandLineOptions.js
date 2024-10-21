@@ -1,13 +1,22 @@
 import fs from "fs";
 import minimist from "minimist";
+import readlineSync from "readline-sync";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import {
+  latestGethVer,
+  latestRethVer,
+  latestLighthouseVer,
+} from "./ethereum_client_scripts/install.js";
+import { getVersionNumber } from "./ethereum_client_scripts/install.js";
 import { debugToFile } from "./helpers.js";
 
 debugToFile(
   `\n\n\n\n\n\n--------------------------------------------------------------------------`
 );
-debugToFile(`----------  CLIENT STARTED  ----------`);
+debugToFile(
+  `----------------------------  CLIENT STARTED  ----------------------------`
+);
 
 /// Set default command line option values
 let executionClient = "reth";
@@ -160,7 +169,7 @@ if (!optionsLoaded) {
       o: "owner",
       h: "help",
     },
-    boolean: ["h", "help"],
+    boolean: ["h", "help", "update"],
     unknown: (option) => {
       console.log(`Invalid option: ${option}`);
       showHelp();
@@ -230,6 +239,38 @@ if (!optionsLoaded) {
     owner = argv.owner;
   }
 
+  if (argv.update) {
+    const clients = [executionClient, consensusClient];
+
+    for (const client of clients) {
+      if (client !== "prysm") {
+        const installedVersion = getVersionNumber(client);
+        const [isLatest, latestVersion] = compareClientVersions(
+          client,
+          installedVersion
+        );
+        if (isLatest) {
+          console.log(
+            `The currently installed ${client} version: ${installedVersion} is the latest available.`
+          );
+        } else {
+          console.log(
+            `An updated version of ${client} is available. ${installedVersion} is currently installed. Would you like to update to ${latestVersion}? (yes/y)`
+          );
+
+          const answer = readlineSync.question("");
+          if (answer.toLowerCase() === "y" || answer.toLowerCase() === "yes") {
+            console.log("Updating...");
+            // Add your update logic here
+          } else {
+            console.log("Update cancelled.");
+          }
+        }
+      }
+    }
+    process.exit(0);
+  }
+
   if (argv.help) {
     showHelp();
     process.exit(0);
@@ -248,6 +289,28 @@ if (!optionsLoaded) {
   ) {
     consensusPeerPorts = [12000, 13000];
   }
+}
+
+function compareClientVersions(client, installedVersion) {
+  let isLatest = true;
+  let latestVersion;
+  if (client === "reth") {
+    if (installedVersion !== latestRethVer) {
+      latestVersion = latestRethVer;
+      isLatest = false;
+    }
+  } else if (client === "geth") {
+    if (installedVersion !== latestGethVer) {
+      latestVersion = latestGethVer;
+      isLatest = false;
+    }
+  } else if (client === "lighthouse") {
+    latestVersion = latestLighthouseVer;
+    if (installedVersion !== latestLighthouseVer) {
+      isLatest = false;
+    }
+  }
+  return [isLatest, latestVersion];
 }
 
 export {

@@ -29,20 +29,16 @@ import {
   fetchBGConsensusPeers,
   configureBGConsensusPeers,
 } from "./ethereum_client_scripts/configureBGPeers.js";
-import { getVersionNumber } from "./ethereum_client_scripts/versionControl.js";
+import { getVersionNumber } from "./ethereum_client_scripts/install.js";
 import {
   latestGethVer,
   latestRethVer,
   latestLighthouseVer,
-} from "./ethereum_client_scripts/versionControl.js";
+} from "./ethereum_client_scripts/install.js";
 import { debugToFile } from "./helpers.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-// const versionOutput = getVersionNumber("lighthouse");
-// console.log(versionOutput);
-// process.exit(0);
 
 const lockFilePath = path.join(installDir, "ethereum_clients", "script.lock");
 
