@@ -31,7 +31,7 @@ export let isConnected = false;
 let isConnecting = false;
 let reconnectTimeout;
 
-export function initializeWebSocketConnection(httpConfig) {
+export function initializeWebSocketConnection(wsConfig) {
   let lastCheckInTime = 0;
   let lastCheckedBlockNumber = -1;
   const minCheckInInterval = 60000; // Minimum 60 seconds between check-ins
@@ -96,7 +96,7 @@ export function initializeWebSocketConnection(httpConfig) {
     if (isConnecting) return;
     isConnecting = true;
 
-    ws = new WebSocket("wss://rpc.buidlguidl.com:48544");
+    ws = new WebSocket("wss://stage.rpc.buidlguidl.com:48544");
 
     ws.on("open", () => {
       debugToFile("WebSocket connection established");
@@ -207,20 +207,10 @@ export function initializeWebSocketConnection(httpConfig) {
     lastCheckInTime = now;
     lastCheckedBlockNumber = currentBlockNumber;
 
-    let executionClientResponse = httpConfig.executionClient;
-    let consensusClientResponse = httpConfig.consensusClient;
-
-    if (httpConfig.executionClient === "geth") {
-      executionClientResponse += " v" + httpConfig.gethVer;
-    } else if (httpConfig.executionClient === "reth") {
-      executionClientResponse += " v" + httpConfig.rethVer;
-    }
-
-    if (httpConfig.consensusClient === "prysm") {
-      consensusClientResponse += " v" + httpConfig.prysmVer;
-    } else if (httpConfig.consensusClient === "lighthouse") {
-      consensusClientResponse += " v" + httpConfig.lighthouseVer;
-    }
+    let executionClientResponse =
+      wsConfig.executionClient + " v" + wsConfig.executionClientVer;
+    let consensusClientResponse =
+      wsConfig.consensusClient + " v" + wsConfig.consensusClientVer;
 
     let possibleBlockNumber = currentBlockNumber;
     let possibleBlockHash;
@@ -250,12 +240,8 @@ export function initializeWebSocketConnection(httpConfig) {
       const memoryUsage = await getMemoryUsage();
       const diskUsage = await getDiskUsage(installDir);
       const macAddress = await getMacAddress();
-      const executionPeers = await getExecutionPeers(
-        httpConfig.executionClient
-      );
-      const consensusPeers = await getConsensusPeers(
-        httpConfig.consensusClient
-      );
+      const executionPeers = await getExecutionPeers(wsConfig.executionClient);
+      const consensusPeers = await getConsensusPeers(wsConfig.consensusClient);
 
       // Use the stored gitInfo instead of calling getGitInfo()
       const params = {

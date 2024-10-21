@@ -368,10 +368,8 @@ const consensusClientVer = getVersionNumber(consensusClient);
 const wsConfig = {
   executionClient: executionClient,
   consensusClient: consensusClient,
-  gethVer: gethVer,
-  rethVer: rethVer,
-  prysmVer: prysmVer,
-  lighthouseVer: lighthouseVer,
+  executionClientVer: executionClientVer,
+  consensusClientVer: consensusClientVer,
 };
 
 if (!isAlreadyRunning()) {
