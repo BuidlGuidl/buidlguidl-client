@@ -96,7 +96,7 @@ export function initializeWebSocketConnection(wsConfig) {
     if (isConnecting) return;
     isConnecting = true;
 
-    ws = new WebSocket("wss://stage.rpc.buidlguidl.com:48544");
+    ws = new WebSocket("wss://rpc.buidlguidl.com:48544");
 
     ws.on("open", () => {
       debugToFile("WebSocket connection established");
