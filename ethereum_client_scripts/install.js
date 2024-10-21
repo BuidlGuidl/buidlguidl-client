@@ -6,8 +6,12 @@ import { installDir } from "../commandLineOptions.js";
 import { debugToFile } from "../helpers.js";
 
 export const latestGethVer = "1.14.3";
-export const latestRethVer = "1.0.0";
+export const latestRethVer = "1.1.0";
 export const latestLighthouseVer = "5.3.0";
+
+// export const latestGethVer = "1.14.3";
+// export const latestRethVer = "1.0.0";
+// export const latestLighthouseVer = "5.2.0";
 
 export function installMacLinuxExecutionClient(
   executionClient,
@@ -368,6 +372,30 @@ export function getVersionNumber(client) {
   }
 }
 
+export function compareClientVersions(client, installedVersion) {
+  let isLatest = true;
+  let latestVersion;
+
+  if (client === "reth") {
+    latestVersion = latestRethVer;
+  } else if (client === "geth") {
+    latestVersion = latestGethVer;
+  } else if (client === "lighthouse") {
+    latestVersion = latestLighthouseVer;
+  }
+  if (compareVersions(installedVersion, latestVersion) < 0) {
+    isLatest = false;
+  }
+  return [isLatest, latestVersion];
+}
+
+export function removeClient(client) {
+  const clientDir = path.join(installDir, "ethereum_clients", client, client);
+  if (fs.existsSync(clientDir)) {
+    fs.rmSync(clientDir, { recursive: true });
+  }
+}
+
 export function downloadRethSnapshot(rethDir, platform) {
   const snapshotDate = "2024-05-14";
 
@@ -403,4 +431,17 @@ export function downloadRethSnapshot(rethDir, platform) {
   } else {
     console.log("\nReth snapshot already downloaded.");
   }
+}
+
+// Add this helper function at the end of the file
+function compareVersions(v1, v2) {
+  const parts1 = v1.split(".").map(Number);
+  const parts2 = v2.split(".").map(Number);
+
+  for (let i = 0; i < 3; i++) {
+    if (parts1[i] > parts2[i]) return 1;
+    if (parts1[i] < parts2[i]) return -1;
+  }
+
+  return 0;
 }
