@@ -77,7 +77,7 @@ function showHelp() {
     "      --update                              Update the execution and consensus clients to the latest version. Updates Reth and Lighthouse by default."
   );
   console.log(
-    "                                            Add --executionclient and --consensusclient arguments to update other clients.\n"
+    "                                            Add --executionclient and/or --consensusclient arguments to update other clients.\n"
   );
   console.log(
     "  -h, --help                                Display this help message and exit"
