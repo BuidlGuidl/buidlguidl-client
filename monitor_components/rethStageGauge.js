@@ -44,7 +44,7 @@ export function populateRethStageGauge(stagePercentages) {
     const boxHeight = rethStageGauge.height - 2; // Subtracting 2 for border
 
     debugToFile(`
-      Raw widget width: ${rawWidth}
+      Raw widget width: ${boxWidth + 9}
       Adjusted box width: ${boxWidth}
       Box height: ${boxHeight}
     `);
