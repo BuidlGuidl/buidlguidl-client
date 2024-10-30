@@ -43,6 +43,12 @@ export function populateRethStageGauge(stagePercentages) {
     const boxWidth = rethStageGauge.width - 9;
     const boxHeight = rethStageGauge.height - 2; // Subtracting 2 for border
 
+    debugToFile(`
+      Raw widget width: ${rawWidth}
+      Adjusted box width: ${boxWidth}
+      Box height: ${boxHeight}
+    `);
+
     if (boxWidth > 0 && boxHeight > 0) {
       let content = "";
       const maxItems = Math.floor(boxHeight / 2);
@@ -67,6 +73,18 @@ export function populateRethStageGauge(stagePercentages) {
         const emptyBars = Math.max(0, boxWidth - filledBars);
         const bar = "█".repeat(filledBars) + " ".repeat(emptyBars);
         const percentString = `${Math.floor(percentComplete * 100)}%`;
+
+        debugToFile(`
+          Stage: ${stageNames[i]}
+          Percent Complete: ${percentComplete}
+          Filled Bars: ${filledBars}
+          Empty Bars: ${emptyBars}
+          Total Bar Length: ${filledBars + emptyBars}
+          Line Length: ${
+            stageNames[i].length + bar.length + percentString.length + 3
+          } // +3 for "[]" and space
+        `);
+
         content += `${stageNames[i]}\n[${bar}] ${percentString}\n`;
       }
 
