@@ -25,10 +25,13 @@ import axios from "axios";
 
 // let socket;
 let socketId;
-
 export let checkIn;
+let ws;
+export let isConnected = false;
+let isConnecting = false;
+let reconnectTimeout;
 
-export function initializeWebSocketConnection(httpConfig) {
+export function initializeWebSocketConnection(wsConfig) {
   let lastCheckInTime = 0;
   let lastCheckedBlockNumber = -1;
   const minCheckInInterval = 60000; // Minimum 60 seconds between check-ins
@@ -89,10 +92,6 @@ export function initializeWebSocketConnection(httpConfig) {
     }
   }
 
-  let ws;
-  let isConnecting = false;
-  let reconnectTimeout;
-
   function connectWebSocket() {
     if (isConnecting) return;
     isConnecting = true;
@@ -102,6 +101,7 @@ export function initializeWebSocketConnection(httpConfig) {
     ws.on("open", () => {
       debugToFile("WebSocket connection established");
       isConnecting = false;
+      isConnected = true;
       clearTimeout(reconnectTimeout); // Clear any pending reconnect attempt
     });
 
@@ -164,6 +164,7 @@ export function initializeWebSocketConnection(httpConfig) {
     ws.on("close", () => {
       socketId = null;
       isConnecting = false;
+      isConnected = false;
       debugToFile("Disconnected from WebSocket server");
       clearInterval(pingInterval);
 
@@ -176,6 +177,7 @@ export function initializeWebSocketConnection(httpConfig) {
     ws.on("error", (error) => {
       debugToFile(`WebSocket error: ${error}`);
       isConnecting = false;
+      isConnected = false;
     });
   }
 
@@ -205,20 +207,10 @@ export function initializeWebSocketConnection(httpConfig) {
     lastCheckInTime = now;
     lastCheckedBlockNumber = currentBlockNumber;
 
-    let executionClientResponse = httpConfig.executionClient;
-    let consensusClientResponse = httpConfig.consensusClient;
-
-    if (httpConfig.executionClient === "geth") {
-      executionClientResponse += " v" + httpConfig.gethVer;
-    } else if (httpConfig.executionClient === "reth") {
-      executionClientResponse += " v" + httpConfig.rethVer;
-    }
-
-    if (httpConfig.consensusClient === "prysm") {
-      consensusClientResponse += " v" + httpConfig.prysmVer;
-    } else if (httpConfig.consensusClient === "lighthouse") {
-      consensusClientResponse += " v" + httpConfig.lighthouseVer;
-    }
+    let executionClientResponse =
+      wsConfig.executionClient + " v" + wsConfig.executionClientVer;
+    let consensusClientResponse =
+      wsConfig.consensusClient + " v" + wsConfig.consensusClientVer;
 
     let possibleBlockNumber = currentBlockNumber;
     let possibleBlockHash;
@@ -248,12 +240,8 @@ export function initializeWebSocketConnection(httpConfig) {
       const memoryUsage = await getMemoryUsage();
       const diskUsage = await getDiskUsage(installDir);
       const macAddress = await getMacAddress();
-      const executionPeers = await getExecutionPeers(
-        httpConfig.executionClient
-      );
-      const consensusPeers = await getConsensusPeers(
-        httpConfig.consensusClient
-      );
+      const executionPeers = await getExecutionPeers(wsConfig.executionClient);
+      const consensusPeers = await getConsensusPeers(wsConfig.consensusClient);
 
       // Use the stored gitInfo instead of calling getGitInfo()
       const params = {
