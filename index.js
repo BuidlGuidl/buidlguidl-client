@@ -29,15 +29,16 @@ import {
   fetchBGConsensusPeers,
   configureBGConsensusPeers,
 } from "./ethereum_client_scripts/configureBGPeers.js";
+import { getVersionNumber } from "./ethereum_client_scripts/install.js";
+import {
+  latestGethVer,
+  latestRethVer,
+  latestLighthouseVer,
+} from "./ethereum_client_scripts/install.js";
 import { debugToFile } from "./helpers.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-const gethVer = "1.14.3";
-const rethVer = "1.0.0";
-const prysmVer = "5.1.0";
-const lighthouseVer = "5.2.0";
 
 const lockFilePath = path.join(installDir, "ethereum_clients", "script.lock");
 
@@ -345,8 +346,17 @@ const jwtDir = path.join(installDir, "ethereum_clients", "jwt");
 const platform = os.platform();
 
 if (["darwin", "linux"].includes(platform)) {
-  installMacLinuxExecutionClient(executionClient, platform, gethVer, rethVer);
-  installMacLinuxConsensusClient(consensusClient, platform, lighthouseVer);
+  installMacLinuxExecutionClient(
+    executionClient,
+    platform,
+    latestGethVer,
+    latestRethVer
+  );
+  installMacLinuxConsensusClient(
+    consensusClient,
+    platform,
+    latestLighthouseVer
+  );
 } else if (platform === "win32") {
   installWindowsExecutionClient(executionClient);
   installWindowsConsensusClient(consensusClient);
@@ -357,13 +367,14 @@ let runsClient = false;
 
 createJwtSecret(jwtDir);
 
+const executionClientVer = getVersionNumber(executionClient);
+const consensusClientVer = getVersionNumber(consensusClient);
+
 const wsConfig = {
   executionClient: executionClient,
   consensusClient: consensusClient,
-  gethVer: gethVer,
-  rethVer: rethVer,
-  prysmVer: prysmVer,
-  lighthouseVer: lighthouseVer,
+  executionClientVer: executionClientVer,
+  consensusClientVer: consensusClientVer,
 };
 
 if (!isAlreadyRunning()) {
@@ -388,10 +399,8 @@ initializeMonitoring(
   messageForHeader,
   executionClient,
   consensusClient,
-  gethVer,
-  rethVer,
-  prysmVer,
-  lighthouseVer,
+  executionClientVer,
+  consensusClientVer,
   runsClient
 );
 

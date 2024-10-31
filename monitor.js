@@ -2,8 +2,6 @@ import path from "path";
 import blessed from "blessed";
 import contrib from "blessed-contrib";
 import { debugToFile } from "./helpers.js";
-import { populateChainInfoBox } from "./monitor_components/chainInfoBox.js";
-import { updateStatusBox } from "./monitor_components/statusBox.js";
 import { createSystemStatsGauge } from "./monitor_components/systemStatsGauge.js";
 import { createPeerCountGauge } from "./monitor_components/peerCountGauge.js";
 import { createCpuLine } from "./monitor_components/cpuLine.js";
@@ -25,7 +23,6 @@ import {
   createBandwidthBox,
   setBandwidthBox,
   startBandwidthMonitoring,
-  updateBandwidthBox,
 } from "./monitor_components/bandwidthGauge.js";
 
 import {
@@ -43,14 +40,16 @@ import { createHeader } from "./monitor_components/header.js";
 let executionClientGlobal;
 let consensusClientGlobal;
 
+export let statusBox = null;
+export let chainInfoBox = null;
+export let screen = null;
+
 export async function initializeMonitoring(
   messageForHeader,
   executionClient,
   consensusClient,
-  gethVer,
-  rethVer,
-  prysmVer,
-  lighthouseVer,
+  executionClientVer,
+  consensusClientVer,
   runsClient
 ) {
   try {
@@ -65,10 +64,8 @@ export async function initializeMonitoring(
     const { screen, components } = setupUI(
       progress,
       messageForHeader,
-      gethVer,
-      rethVer,
-      prysmVer,
-      lighthouseVer,
+      executionClientVer,
+      consensusClientVer,
       runsClient
     );
 
@@ -154,13 +151,11 @@ export async function initializeMonitoring(
 function setupUI(
   progress,
   messageForHeader,
-  gethVer,
-  rethVer,
-  prysmVer,
-  lighthouseVer,
+  executionClientVer,
+  consensusClientVer,
   runsClient
 ) {
-  const screen = blessed.screen();
+  screen = blessed.screen();
   suppressMouseOutput(screen);
   // const grid = new contrib.grid({ rows: 9, cols: 10, screen: screen });
   const grid = new contrib.grid({ rows: 9, cols: 9, screen: screen });
@@ -169,15 +164,15 @@ function setupUI(
   let consensusClientLabel;
 
   if (executionClientGlobal == "geth") {
-    executionClientLabel = `Geth v${gethVer}`;
+    executionClientLabel = `Geth v${executionClientVer}`;
   } else if (executionClientGlobal == "reth") {
-    executionClientLabel = `Reth v${rethVer}`;
+    executionClientLabel = `Reth v${executionClientVer}`;
   }
 
   if (consensusClientGlobal == "prysm") {
-    consensusClientLabel = `Prysm v${prysmVer}`;
+    consensusClientLabel = `Prysm v${consensusClientVer}`;
   } else if (consensusClientGlobal == "lighthouse") {
-    consensusClientLabel = `Lighthouse v${lighthouseVer}`;
+    consensusClientLabel = `Lighthouse v${consensusClientVer}`;
   }
 
   const executionLog = createExecutionLog(grid, executionClientLabel, screen);
@@ -187,9 +182,9 @@ function setupUI(
   const cpuLine = createCpuLine(grid, screen);
   const networkLine = createNetworkLine(grid, screen);
   const diskLine = createDiskLine(grid, screen, installDir);
-  const statusBox = createStatusBox(grid);
+  statusBox = createStatusBox(grid);
   const bandwidthBox = createBandwidthBox(grid);
-  const chainInfoBox = createChainInfoBox(grid);
+  chainInfoBox = createChainInfoBox(grid);
 
   let gethStageGauge, rethStageGauge;
 
@@ -223,23 +218,23 @@ function setupUI(
   setBandwidthBox(bandwidthBox);
   startBandwidthMonitoring(screen);
 
-  async function updateChainWidgets(statusBox, chainInfoBox, screen) {
-    try {
-      // Run both update functions concurrently
-      await Promise.all([
-        updateStatusBox(statusBox),
-        updateChainInfoBox(chainInfoBox, screen),
-      ]);
+  // async function updateChainWidgets(statusBox, chainInfoBox, screen) {
+  //   try {
+  //     // Run both update functions concurrently
+  //     await Promise.all([
+  //       updateStatusBox(statusBox),
+  //       updateChainInfoBox(chainInfoBox, screen),
+  //     ]);
 
-      // Render the screen after both updates are complete
-      screen.render();
-    } catch (error) {
-      debugToFile(`updateWidgets(): ${error}`);
-    }
-  }
+  //     // Render the screen after both updates are complete
+  //     screen.render();
+  //   } catch (error) {
+  //     debugToFile(`updateWidgets(): ${error}`);
+  //   }
+  // }
 
-  setInterval(() => updateBandwidthBox(screen), 2000);
-  setInterval(() => updateChainWidgets(statusBox, chainInfoBox, screen), 5000);
+  // setInterval(() => updateBandwidthBox(screen), 2000);
+  // setInterval(() => updateChainWidgets(statusBox, chainInfoBox, screen), 5000);
 
   function fixBottomMargins(screen) {
     try {
@@ -461,16 +456,6 @@ function setupUI(
       chainInfoBox,
     },
   };
-}
-
-async function updateChainInfoBox(chainInfoBox, screen) {
-  try {
-    if (screen.children.includes(chainInfoBox)) {
-      await populateChainInfoBox();
-    }
-  } catch (error) {
-    debugToFile(`updateChainInfoBox(): ${error}`);
-  }
 }
 
 function suppressMouseOutput(screen) {

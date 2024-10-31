@@ -43,12 +43,21 @@ export function populateRethStageGauge(stagePercentages) {
     const boxWidth = rethStageGauge.width - 9;
     const boxHeight = rethStageGauge.height - 2; // Subtracting 2 for border
 
+    // debugToFile(`
+    //   Raw widget width: ${boxWidth + 9}
+    //   Adjusted box width: ${boxWidth}
+    //   Box height: ${boxHeight}
+    // `);
+
     if (boxWidth > 0 && boxHeight > 0) {
       let content = "";
       const maxItems = Math.floor(boxHeight / 2);
 
       // Find the last completed stage
-      const lastCompletedIndex = stagePercentages.lastIndexOf(1);
+      let lastCompletedIndex = stagePercentages.lastIndexOf(1);
+      if (lastCompletedIndex === -1) {
+        lastCompletedIndex = 0;
+      }
 
       let startIndex = lastCompletedIndex;
       let endIndex = Math.min(stagePercentages.length, startIndex + maxItems);
@@ -59,10 +68,26 @@ export function populateRethStageGauge(stagePercentages) {
       }
 
       for (let i = startIndex; i < endIndex; i++) {
-        const percentComplete = stagePercentages[i];
-        const filledBars = Math.floor(boxWidth * percentComplete);
-        const bar = "█".repeat(filledBars) + " ".repeat(boxWidth - filledBars);
+        let percentComplete = stagePercentages[i];
+        if (percentComplete > 1) {
+          percentComplete = 1;
+        }
+        const filledBars = Math.max(0, Math.floor(boxWidth * percentComplete));
+        const emptyBars = Math.max(0, boxWidth - filledBars);
+        const bar = "█".repeat(filledBars) + " ".repeat(emptyBars);
         const percentString = `${Math.floor(percentComplete * 100)}%`;
+
+        // debugToFile(`
+        //   Stage: ${stageNames[i]}
+        //   Percent Complete: ${percentComplete}
+        //   Filled Bars: ${filledBars}
+        //   Empty Bars: ${emptyBars}
+        //   Total Bar Length: ${filledBars + emptyBars}
+        //   Line Length: ${
+        //     stageNames[i].length + bar.length + percentString.length + 3
+        //   } // +3 for "[]" and space
+        // `);
+
         content += `${stageNames[i]}\n[${bar}] ${percentString}\n`;
       }
 

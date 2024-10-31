@@ -1,13 +1,27 @@
+import os from "os";
 import fs from "fs";
 import minimist from "minimist";
+import readlineSync from "readline-sync";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import {
+  installMacLinuxExecutionClient,
+  installMacLinuxConsensusClient,
+  getVersionNumber,
+  compareClientVersions,
+  removeClient,
+  latestGethVer,
+  latestRethVer,
+  latestLighthouseVer,
+} from "./ethereum_client_scripts/install.js";
 import { debugToFile } from "./helpers.js";
 
 debugToFile(
-  `\n\n\n\n--------------------------------------------------------------------------`
+  `\n\n\n\n\n\n--------------------------------------------------------------------------`
 );
-debugToFile(`----------  CLIENT STARTED  ----------`);
+debugToFile(
+  `----------------------------  CLIENT STARTED  ----------------------------`
+);
 
 /// Set default command line option values
 let executionClient = "reth";
@@ -59,6 +73,12 @@ function showHelp() {
   console.log(
     "  -o, --owner <eth address>                 Specify a owner eth address to opt in to the points system and distributed RPC\n"
   );
+  // console.log(
+  //   "      --update                              Update the execution and consensus clients to the latest version. Updates Reth and Lighthouse by default."
+  // );
+  // console.log(
+  //   "                                            Add --executionclient and/or --consensusclient arguments to update other clients.\n"
+  // );
   console.log(
     "  -h, --help                                Display this help message and exit"
   );
@@ -160,7 +180,7 @@ if (!optionsLoaded) {
       o: "owner",
       h: "help",
     },
-    boolean: ["h", "help"],
+    boolean: ["h", "help", "update"],
     unknown: (option) => {
       console.log(`Invalid option: ${option}`);
       showHelp();
@@ -229,6 +249,58 @@ if (!optionsLoaded) {
   if (argv.owner) {
     owner = argv.owner;
   }
+
+  // if (argv.update) {
+  //   const clients = [executionClient, consensusClient];
+
+  //   for (const client of clients) {
+  //     if (client !== "prysm") {
+  //       const installedVersion = getVersionNumber(client);
+  //       const [isLatest, latestVersion] = compareClientVersions(
+  //         client,
+  //         installedVersion
+  //       );
+  //       if (isLatest) {
+  //         console.log(
+  //           `✅ The currently installed ${client} version (${installedVersion}) is the latest available.`
+  //         );
+  //       } else {
+  //         console.log(
+  //           `❓ An updated version of ${client} is available. ${installedVersion} is currently installed. Would you like to update to ${latestVersion}? (yes/y)`
+  //         );
+
+  //         const answer = readlineSync.question("");
+  //         if (answer.toLowerCase() === "y" || answer.toLowerCase() === "yes") {
+  //           console.log(`Removing old version of ${client}`);
+  //           removeClient(client);
+
+  //           const platform = os.platform();
+  //           if (["darwin", "linux"].includes(platform)) {
+  //             if (client === "reth" || client === "geth") {
+  //               installMacLinuxExecutionClient(
+  //                 client,
+  //                 platform,
+  //                 latestGethVer,
+  //                 latestRethVer
+  //               );
+  //             } else if (client === "lighthouse") {
+  //               installMacLinuxConsensusClient(
+  //                 client,
+  //                 platform,
+  //                 latestLighthouseVer
+  //               );
+  //             }
+  //           }
+  //           console.log("");
+  //           console.log(`👍 Updated ${client} to ${latestVersion}`);
+  //         } else {
+  //           console.log("Update cancelled.");
+  //         }
+  //       }
+  //     }
+  //   }
+  //   process.exit(0);
+  // }
 
   if (argv.help) {
     showHelp();

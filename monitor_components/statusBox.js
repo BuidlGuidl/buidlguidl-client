@@ -1,7 +1,7 @@
 import blessed from "blessed";
 import { debugToFile } from "../helpers.js";
-import { synchronizeAndUpdateWidgets } from "./updateLogicExecution.js";
 import { installDir } from "../commandLineOptions.js";
+import { synchronizeAndUpdateWidgets } from "./updateLogicExecution.js";
 
 export async function updateStatusBox(statusBox) {
   try {
@@ -29,8 +29,6 @@ export function createStatusBox(grid) {
     },
     tags: true,
   });
-
-  // setInterval(() => updateStatusBox(statusBox, screen), 5000);
 
   return statusBox;
 }
