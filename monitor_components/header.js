@@ -74,7 +74,7 @@ export function createHeader(grid, screen, messageForHeader) {
       bigText.setContent(
         `{center}{bold}B u i d l G u i d l  C l i e n t{/bold}{/center}\n` +
           `{center}Branch: ${currentBranch} (${commitHash}){/center}\n` +
-          `{center}{cyan-fg}Owner: ${owner}{/cyan-fg} | {green-fg}Unclaimed Points: ${points}{/green-fg}{/center}\n` +
+          `{center}{cyan-fg}Owner: ${owner}{/cyan-fg} | {green-fg}Credits: ${points}{/green-fg}{/center}\n` +
           `{center}{cyan-fg}${messageForHeader}{/cyan-fg}{/center}`
       );
     } else {
