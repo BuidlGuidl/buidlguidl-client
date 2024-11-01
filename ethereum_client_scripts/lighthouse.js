@@ -7,7 +7,7 @@ import { stripAnsiCodes, getFormattedDateTime } from "../helpers.js";
 import minimist from "minimist";
 
 let installDir = os.homedir();
-let consensusCheckpoint = "https://mainnet.checkpoint.sigp.io";
+let consensusCheckpoint = "https://mainnet-checkpoint-sync.stakely.io/";
 let bgConsensusPeers;
 let bgConsensusAddrs;
 
@@ -81,7 +81,7 @@ const consensusArgs = [
   "--checkpoint-sync-url",
   consensusCheckpoint,
   "--checkpoint-sync-url-timeout",
-  "600",
+  "1200",
   "--disable-deposit-contract-sync",
   "--datadir",
   path.join(installDir, "ethereum_clients", "lighthouse", "database"),
