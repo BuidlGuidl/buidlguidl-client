@@ -30,16 +30,19 @@ You can opt in to the BuidlGuidl distributed RPC points system and earn points f
   node index.js --owner <your ENS name or eth address>
   ```
 
+&nbsp;
 If you want to use a Geth + Prysm client pair, pass those as --executionclient (-e) and --consensusclient (-c) options to index.js:
   ```bash
   node index.js --executionclient geth --consensusclient prysm
   ```
 
+&nbsp;
 If you want to specify a non-standard location for the ethereum_clients directory, pass a --directory (-d) option to index.js:
   ```bash
   node index.js --directory path/for/ethereum_clients
   ```
 
+&nbsp;
 Use the --help (-h) option to see all the available options:
   ```bash
   node index.js --help
