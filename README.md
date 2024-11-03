@@ -1,10 +1,14 @@
 # 📡 buidlguidl client
 This project will download clients executables and start a Reth + Lighthouse node pair. Syncing the client databases will require ~1.2 TB of free space.
 
+&nbsp;
+&nbsp;
 ## Requirements
 - node (https://nodejs.org/en)
 - yarn (https://yarnpkg.com/migration/overview)
 
+&nbsp;
+&nbsp;
 ## Quickstart
 To get a node started:
   ```bash
@@ -14,8 +18,12 @@ To get a node started:
   node index.js
   ```
 
+&nbsp;
 By default, client executables, databases, and logs will be established within /ethereum_clients. After initialization steps, the script displays a terminal view with scrolling client logs and some plots showing some machine and chain stats. Full client logs are located in ethereum_clients/reth/logs and ethereum_clients/lighthouse/logs. Exiting the terminal view (control-c or q) will also gracefully close your clients (can take 15 seconds or so).
 
+&nbsp;
+&nbsp;
+## Startup Options
 If you want to specify a non-standard location for the ethereum_clients directory, pass a --directory (-d) option to index.js:
   ```bash
   node index.js --directory path/for/ethereum_clients
