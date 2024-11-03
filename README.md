@@ -25,9 +25,9 @@ By default, client executables, databases, and logs will be established within /
 &nbsp;
 &nbsp;
 ## Startup Options
-If you want to specify a non-standard location for the ethereum_clients directory, pass a --directory (-d) option to index.js:
+You can opt in to the BuidlGuidl distributed RPC points system and earn points for serving RPC requests to the BuidlGuidl network by passing your eth address to the --owner (-o) option:
   ```bash
-  node index.js --directory path/for/ethereum_clients
+  node index.js --owner <your ENS name or eth address>
   ```
 
 If you want to use a Geth + Prysm client pair, pass those as --executionclient (-e) and --consensusclient (-c) options to index.js:
@@ -35,8 +35,7 @@ If you want to use a Geth + Prysm client pair, pass those as --executionclient (
   node index.js --executionclient geth --consensusclient prysm
   ```
 
-You can opt in to the BuidlGuidl distributed RPC points system and earn points for serving RPC requests to the BuidlGuidl network by passing your eth address to the --owner (-o) option:
+If you want to specify a non-standard location for the ethereum_clients directory, pass a --directory (-d) option to index.js:
   ```bash
-  node index.js --owner <your ENS name or eth address>
+  node index.js --directory path/for/ethereum_clients
   ```
-
