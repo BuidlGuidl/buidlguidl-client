@@ -72,5 +72,15 @@ Use the --help (-h) option to see all the available options:
 &nbsp;
 &nbsp;
 ## Hardware Selection
-The BuidlGuidl team has tested and confirmed that the following hardware works just fine for running a BG Client:
+The BuidlGuidl team has tested and confirmed that the following economical hardware works great for running a BG Client:
 - [ASUS NUC 13 PRO i3 (RNUC13ANKI30000UI)](https://www.newegg.com/asus-rnuc13anki30000ui-nuc-13-pro-intel-core-i3-1315u/p/N82E16856110280?Item=N82E16856110280)
+- [KingSpec XG 7000 4TB M.2 2280 PCIe SSD](https://www.newegg.com/kingspec-4tb-xg-7000-series/p/0D9-000D-00175?Item=9SIB1V8K0E4237)
+- [CORSAIR Vengeance 32GB (2 x 16GB) DDR4 3200 (CMSX32GX4M2A3200C22)](https://www.newegg.com/corsair-32gb-260-pin-ddr4-so-dimm-ddr4-3200/p/N82E16820236681?Item=N82E16820236681)
+
+Be aware that there are some gotchas when selecting hardware. This [Rocket Pool Hardware Guide](https://docs.rocketpool.net/guides/node/local/hardware) is a great resource for overall hardware selection guidelines. Selecting the correct SSD is critical. With a lacking drive, your client will be unable to keep up with the chain ☹️. This [GitHub Doc](https://gist.github.com/yorickdowne/f3a3e79a573bf35767cd002cc977b038) is an ever-growing list of SSDs that have been tested and confirmed to work for a node.
+
+Some main takeaways:
+- If selecting an intel processor, it's best to just go with an i-series (modern i3 works just fine). If you're eyeing something with a Celeron processor you must confirm that it supports [BMI2](https://en.wikipedia.org/wiki/X86_Bit_manipulation_instruction_set#BMI2_(Bit_Manipulation_Instruction_Set_2)).
+- Running a node is a drive read/write intensive task. You will want to select an NVMe SSD.
+- Make sure your SSD has a Triple-level cell (TLC), Mutli-level cell (MLC), or Single-level cell (SLC) architecture. Quad-level cell (QLC) SSDs are a no-go. QLC SSDs are just too slow and lack the reliability for the I/Os that the BG Client requires.
+- You additionally need to make sure that your SSD has an onboard DRAM cache. Sometimes the marketing materials are not explicit about the inclusion of DRAM so you may need to do some digging. When in doubt, you can always go by [what other node runners have already tested](https://gist.github.com/yorickdowne/f3a3e79a573bf35767cd002cc977b038).
