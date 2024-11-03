@@ -39,3 +39,30 @@ If you want to specify a non-standard location for the ethereum_clients director
   ```bash
   node index.js --directory path/for/ethereum_clients
   ```
+
+Use the --help (-h) option to see all the available options:
+  ```bash
+  node index.js --help
+
+  -e, --executionclient <client>            Specify the execution client ('reth' or 'geth')
+                                            Default: reth
+
+  -c, --consensusclient <client>            Specify the consensus client ('lighthouse' or 'prysm')
+                                            Default: lighthouse
+
+  -ep, --executionpeerport <port>           Specify the execution peer port (must be a number)
+                                            Default: 30303
+
+  -cp, --consensuspeerports <port>,<port>   Specify the execution peer ports (must be two comma-separated numbers)
+                                            lighthouse defaults: 9000,9001. prysm defaults: 12000,13000
+
+  -cc, --consensuscheckpoint <url>          Specify the consensus checkpoint server URL
+                                            lighthouse default: https://mainnet.checkpoint.sigp.io. prysm default: https://mainnet-checkpoint-sync.attestant.io/
+
+  -d, --directory <path>                    Specify ethereum client executable, database, and logs directory
+                                            Default: buidlguidl-client/ethereum_clients
+
+  -o, --owner <eth address>                 Specify a owner eth address to opt in to the points system and distributed RPC
+
+  -h, --help                                Display this help message and exit
+  ```
