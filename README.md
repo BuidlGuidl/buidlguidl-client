@@ -64,7 +64,7 @@ Use the --help (-h) option to see all the available options:
   -d, --directory <path>                    Specify ethereum client executable, database, and logs directory
                                             Default: buidlguidl-client/ethereum_clients
 
-  -o, --owner <eth address>                 Specify a owner eth address to opt in to the points system and distributed RPC
+  -o, --owner <eth address>                 Specify a owner eth address to opt in to the points system and distributed RPC network
 
   -h, --help                                Display this help message and exit
   ```
@@ -72,4 +72,5 @@ Use the --help (-h) option to see all the available options:
 &nbsp;
 &nbsp;
 ## Hardware Selection
-In general, hardware is what a computer is.
+The BuidlGuidl team has tested and confirmed that the following hardware works just fine for running a BG Client:
+- [ASUS NUC 13 PRO i3 (RNUC13ANKI30000UI)] (https://www.newegg.com/asus-rnuc13anki30000ui-nuc-13-pro-intel-core-i3-1315u/p/N82E16856110280?Item=N82E16856110280)
