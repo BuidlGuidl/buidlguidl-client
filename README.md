@@ -71,7 +71,7 @@ Use the --help (-h) option to see all the available options:
 
 &nbsp;
 &nbsp;
-## Hardware Selection  💻
+## Hardware Selection&nbsp;&nbsp;💻
 The BuidlGuidl team has tested and confirmed that the following economical hardware works great for running a BG Client:
 - [ASUS NUC 13 PRO i3 (RNUC13ANKI30000UI)](https://www.newegg.com/asus-rnuc13anki30000ui-nuc-13-pro-intel-core-i3-1315u/p/N82E16856110280?Item=N82E16856110280)
 - [KingSpec XG 7000 2TB M.2 2280 PCIe SSD](https://www.newegg.com/kingspec-2tb-xg-7000-series/p/0D9-000D-00172?Item=9SIB1V8JVN5929)
