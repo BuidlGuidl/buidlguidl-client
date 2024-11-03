@@ -73,4 +73,4 @@ Use the --help (-h) option to see all the available options:
 &nbsp;
 ## Hardware Selection
 The BuidlGuidl team has tested and confirmed that the following hardware works just fine for running a BG Client:
-- (ASUS NUC 13 PRO i3 (RNUC13ANKI30000UI)) [https://www.newegg.com/asus-rnuc13anki30000ui-nuc-13-pro-intel-core-i3-1315u/p/N82E16856110280?Item=N82E16856110280]
+- [ASUS NUC 13 PRO i3 (RNUC13ANKI30000UI)](https://www.newegg.com/asus-rnuc13anki30000ui-nuc-13-pro-intel-core-i3-1315u/p/N82E16856110280?Item=N82E16856110280)
