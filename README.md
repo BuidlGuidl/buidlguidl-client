@@ -78,6 +78,7 @@ The BuidlGuidl team has tested and confirmed that the following economical hardw
 - [CORSAIR Vengeance 32GB (2 x 16GB) DDR4 3200 (CMSX32GX4M2A3200C22)](https://www.newegg.com/corsair-32gb-260-pin-ddr4-so-dimm-ddr4-3200/p/N82E16820236681?Item=N82E16820236681)
 
 &nbsp;
+
 Be aware that there are some gotchas when selecting hardware. This [Rocket Pool Hardware Guide](https://docs.rocketpool.net/guides/node/local/hardware) is a great resource for overall hardware selection guidelines. Selecting the correct SSD is critical. With a lacking drive, your client will be unable to keep up with the chain ☹️. This [GitHub Doc](https://gist.github.com/yorickdowne/f3a3e79a573bf35767cd002cc977b038) is an ever-growing list of SSDs that have been tested and confirmed to work for a node.
 
 Some main takeaways:
