@@ -62,7 +62,7 @@ function showHelp() {
     "  -cc, --consensuscheckpoint <url>          Specify the consensus checkpoint server URL"
   );
   console.log(
-    "                                            lighthouse default: https://mainnet.checkpoint.sigp.io. prysm default: https://mainnet-checkpoint-sync.attestant.io/\n"
+    "                                            lighthouse default: https://mainnet-checkpoint-sync.stakely.io/. prysm default: https://mainnet-checkpoint-sync.attestant.io/\n"
   );
   console.log(
     "  -d, --directory <path>                    Specify ethereum client executable, database, and logs directory"

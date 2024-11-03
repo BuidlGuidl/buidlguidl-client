@@ -1,4 +1,4 @@
-# 📡 buidlguidl client
+# 📡 BuidlGuidl Client
 This project will download clients executables and start a Reth + Lighthouse node pair. Syncing the client databases will require ~1.2 TB of free space.
 
 &nbsp;
@@ -59,7 +59,7 @@ Use the --help (-h) option to see all the available options:
                                             lighthouse defaults: 9000,9001. prysm defaults: 12000,13000
 
   -cc, --consensuscheckpoint <url>          Specify the consensus checkpoint server URL
-                                            lighthouse default: https://mainnet.checkpoint.sigp.io. prysm default: https://mainnet-checkpoint-sync.attestant.io/
+                                            lighthouse default: https://mainnet-checkpoint-sync.stakely.io/. prysm default: https://mainnet-checkpoint-sync.attestant.io/
 
   -d, --directory <path>                    Specify ethereum client executable, database, and logs directory
                                             Default: buidlguidl-client/ethereum_clients
@@ -68,3 +68,8 @@ Use the --help (-h) option to see all the available options:
 
   -h, --help                                Display this help message and exit
   ```
+
+&nbsp;
+&nbsp;
+## Hardware Selection
+In general, hardware is what a computer is.
