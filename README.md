@@ -1,5 +1,5 @@
 # 📡 BuidlGuidl Client
-This project will download clients executables and start a Reth + Lighthouse node pair. Syncing the client databases will require ~1.2 TB of free space.
+This project is a set of node.js scripts that will automatically download Ethereum clients, configure/run a Reth + Lighthouse client pair, and provide a terminal dashboard view for monitoring client statuses. Syncing the client databases will require ~1.2 TB of free space.
 
 &nbsp;
 &nbsp;
