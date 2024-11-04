@@ -1,4 +1,15 @@
 # 📡 BuidlGuidl Client
+
+>Run an Ethereum node with a single command:
+
+```
+/bin/bash -c "$(curl -fsSL https://bgclient.io)"
+```
+
+👉 learn more at [client.buidlguidl.com](https://client.buidlguidl.com)
+
+---
+
 This project is a set of node.js scripts that will automatically download Ethereum clients, configure/run a Reth + Lighthouse client pair, and provide a terminal dashboard view for monitoring client statuses. Syncing the client databases will require ~1.2 TB of free space.
 
 By default, the BuidlGuidl Client acts as a local mainnet node that you can do whatever you want with. There is also an option to opt in to the BuidlGuidl distributed RPC points system and earn points for serving RPC requests to the BuidlGuidl network (see [--owner option](#startup-options--%EF%B8%8F)).
