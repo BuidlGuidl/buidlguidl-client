@@ -62,7 +62,7 @@ function showHelp() {
     "  -cc, --consensuscheckpoint <url>          Specify the consensus checkpoint server URL"
   );
   console.log(
-    "                                            lighthouse default: https://mainnet.checkpoint.sigp.io. prysm default: https://mainnet-checkpoint-sync.attestant.io/\n"
+    "                                            lighthouse default: https://mainnet-checkpoint-sync.stakely.io/. prysm default: https://mainnet-checkpoint-sync.attestant.io/\n"
   );
   console.log(
     "  -d, --directory <path>                    Specify ethereum client executable, database, and logs directory"
@@ -71,7 +71,7 @@ function showHelp() {
     "                                            Default: buidlguidl-client/ethereum_clients\n"
   );
   console.log(
-    "  -o, --owner <eth address>                 Specify a owner eth address to opt in to the points system and distributed RPC\n"
+    "  -o, --owner <eth address>                 Specify a owner eth address to opt in to the points system and distributed RPC network\n"
   );
   // console.log(
   //   "      --update                              Update the execution and consensus clients to the latest version. Updates Reth and Lighthouse by default."
