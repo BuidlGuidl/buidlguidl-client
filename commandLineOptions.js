@@ -73,12 +73,9 @@ function showHelp() {
   console.log(
     "  -o, --owner <eth address>                 Specify a owner eth address to opt in to the points system and distributed RPC\n"
   );
-  // console.log(
-  //   "      --update                              Update the execution and consensus clients to the latest version. Updates Reth and Lighthouse by default."
-  // );
-  // console.log(
-  //   "                                            Add --executionclient and/or --consensusclient arguments to update other clients.\n"
-  // );
+  console.log(
+    "      --update                              Update the execution and consensus clients to the latest version.\n"
+  );
   console.log(
     "  -h, --help                                Display this help message and exit"
   );
@@ -250,57 +247,72 @@ if (!optionsLoaded) {
     owner = argv.owner;
   }
 
-  // if (argv.update) {
-  //   const clients = [executionClient, consensusClient];
+  if (argv.update) {
+    // Get list of installed clients from directory
+    const clientsDir = join(installDir, "ethereum_clients");
+    const clients = fs.existsSync(clientsDir)
+      ? fs
+          .readdirSync(clientsDir)
+          .filter((dir) => fs.statSync(join(clientsDir, dir)).isDirectory())
+      : [];
 
-  //   for (const client of clients) {
-  //     if (client !== "prysm") {
-  //       const installedVersion = getVersionNumber(client);
-  //       const [isLatest, latestVersion] = compareClientVersions(
-  //         client,
-  //         installedVersion
-  //       );
-  //       if (isLatest) {
-  //         console.log(
-  //           `✅ The currently installed ${client} version (${installedVersion}) is the latest available.`
-  //         );
-  //       } else {
-  //         console.log(
-  //           `❓ An updated version of ${client} is available. ${installedVersion} is currently installed. Would you like to update to ${latestVersion}? (yes/y)`
-  //         );
+    for (const client of clients) {
+      if (client !== "prysm" && client !== "jwt") {
+        const installedVersion = getVersionNumber(client);
 
-  //         const answer = readlineSync.question("");
-  //         if (answer.toLowerCase() === "y" || answer.toLowerCase() === "yes") {
-  //           console.log(`Removing old version of ${client}`);
-  //           removeClient(client);
+        // Skip if no version number found
+        if (!installedVersion) {
+          console.log(
+            `⚠️  Could not determine version for ${client}, skipping update check.`
+          );
+          continue;
+        }
 
-  //           const platform = os.platform();
-  //           if (["darwin", "linux"].includes(platform)) {
-  //             if (client === "reth" || client === "geth") {
-  //               installMacLinuxExecutionClient(
-  //                 client,
-  //                 platform,
-  //                 latestGethVer,
-  //                 latestRethVer
-  //               );
-  //             } else if (client === "lighthouse") {
-  //               installMacLinuxConsensusClient(
-  //                 client,
-  //                 platform,
-  //                 latestLighthouseVer
-  //               );
-  //             }
-  //           }
-  //           console.log("");
-  //           console.log(`👍 Updated ${client} to ${latestVersion}`);
-  //         } else {
-  //           console.log("Update cancelled.");
-  //         }
-  //       }
-  //     }
-  //   }
-  //   process.exit(0);
-  // }
+        const [isLatest, latestVersion] = compareClientVersions(
+          client,
+          installedVersion
+        );
+        if (isLatest) {
+          console.log(
+            `\n✅ The currently installed ${client} version (${installedVersion}) is the latest available.`
+          );
+        } else {
+          console.log(
+            `\n❓ An updated version of ${client} is available. ${installedVersion} is currently installed. Would you like to update to ${latestVersion}? (yes/y)`
+          );
+
+          const answer = readlineSync.question("");
+          if (answer.toLowerCase() === "y" || answer.toLowerCase() === "yes") {
+            console.log(`Removing old version of ${client}`);
+            removeClient(client);
+
+            const platform = os.platform();
+            if (["darwin", "linux"].includes(platform)) {
+              if (client === "reth" || client === "geth") {
+                installMacLinuxExecutionClient(
+                  client,
+                  platform,
+                  latestGethVer,
+                  latestRethVer
+                );
+              } else if (client === "lighthouse") {
+                installMacLinuxConsensusClient(
+                  client,
+                  platform,
+                  latestLighthouseVer
+                );
+              }
+            }
+            console.log("");
+            console.log(`👍 Updated ${client} to ${latestVersion}`);
+          } else {
+            console.log("Update cancelled.");
+          }
+        }
+      }
+    }
+    process.exit(0);
+  }
 
   if (argv.help) {
     showHelp();

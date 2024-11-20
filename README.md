@@ -31,3 +31,7 @@ You can opt in to the BuidlGuidl distributed RPC points system and earn points f
   node index.js --owner <your ENS name or eth address>
   ```
 
+Pass the --update option to update the execution and consensus clients to the latest version:
+  ```bash
+  node index.js --update
+  ```

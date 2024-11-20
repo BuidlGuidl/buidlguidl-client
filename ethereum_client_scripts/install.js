@@ -5,9 +5,13 @@ import os from "os";
 import { installDir } from "../commandLineOptions.js";
 import { debugToFile } from "../helpers.js";
 
-export const latestGethVer = "1.14.3";
+export const latestGethVer = "1.14.12";
 export const latestRethVer = "1.0.0";
 export const latestLighthouseVer = "5.3.0";
+
+// export const latestGethVer = "1.14.12";
+// export const latestRethVer = "1.0.2";
+// export const latestLighthouseVer = "5.3.0";
 
 // export const latestGethVer = "1.14.3";
 // export const latestRethVer = "1.0.0";
@@ -21,24 +25,29 @@ export function installMacLinuxExecutionClient(
 ) {
   const arch = os.arch();
 
+  const gethHash = {
+    "1.14.3": "ab48ba42",
+    "1.14.12": "293a300d",
+  };
+
   const configs = {
     darwin: {
       x64: {
-        gethFileName: `geth-darwin-amd64-${gethVer}-ab48ba42`,
+        gethFileName: `geth-darwin-amd64-${gethVer}-${gethHash[gethVer]}`,
         rethFileName: `reth-v${rethVer}-x86_64-apple-darwin`,
       },
       arm64: {
-        gethFileName: `geth-darwin-arm64-${gethVer}-ab48ba42`,
+        gethFileName: `geth-darwin-arm64-${gethVer}-${gethHash[gethVer]}`,
         rethFileName: `reth-v${rethVer}-aarch64-apple-darwin`,
       },
     },
     linux: {
       x64: {
-        gethFileName: `geth-linux-amd64-${gethVer}-ab48ba42`,
+        gethFileName: `geth-linux-amd64-${gethVer}-${gethHash[gethVer]}`,
         rethFileName: `reth-v${rethVer}-x86_64-unknown-linux-gnu`,
       },
       arm64: {
-        gethFileName: `geth-linux-arm64-${gethVer}-ab48ba42`,
+        gethFileName: `geth-linux-arm64-${gethVer}-${gethHash[gethVer]}`,
         rethFileName: `reth-v${rethVer}-aarch64-unknown-linux-gnu`,
       },
     },
