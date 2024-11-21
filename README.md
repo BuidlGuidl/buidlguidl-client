@@ -22,7 +22,7 @@ Additional MacOS Specifics:
 - gnupg (https://gnupg.org/)
 - Perl-Digest-SHA (https://metacpan.org/pod/Digest::SHA)
 
-Hint: See the one liner command below if you don't want to install the dependencies manually.
+Hint: See the one line command below if you don't want to install the dependencies manually.
 
 &nbsp;
 &nbsp;
@@ -35,7 +35,7 @@ To get a full node started using a Reth + Lighthouse client pair:
   node index.js
   ```
 
------- OR ------
+------------ OR ------------
 
 Run this fancy one liner command to check for/install dependencies and clone/run this repo (see https://client.buidlguidl.com/):
   ```bash
