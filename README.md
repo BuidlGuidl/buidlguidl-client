@@ -74,7 +74,7 @@ Use the --help (-h) option to see all command line options:
 &nbsp;
 &nbsp;
 ## Common Questions and Issues
-The consensus clients (Lighthouse and Prysm) require a checkpoint sync server URL to initiate sync. Connection to checkpoint servers can fail depending on your location. If the consensus client fails to start the sync and you see an error message in the Lighthouse/Prysm logs like this:
+- The consensus clients (Lighthouse and Prysm) require a checkpoint sync server URL to initiate sync. Connection to checkpoint servers can fail depending on your location. If the consensus client fails to start the sync and you see an error message in the Lighthouse/Prysm logs like this:
 
 ```bash
 Nov 21 17:45:41.833 INFO Starting checkpoint sync                remote_url: https://mainnet-checkpoint-sync.stakely.io/, service: beacon
@@ -85,10 +85,11 @@ Failed to start beacon node
 ```
 
 You will need to specify a different checkpoint server URL using the --consensuscheckpoint (-cc) option. See https://eth-clients.github.io/checkpoint-sync-endpoints/ for a list of public checkpoint sync servers.
+
 &nbsp;
 &nbsp;
 
-The consensus client logs can output many warnings while syncing (see below for some Lighthouse examples). These warnings can be ignored and will resolve after the execution client has synced. They look scary but it's expected behavior.
+- The consensus client logs can output many warnings while syncing (see below for some Lighthouse examples). These warnings can be ignored and will resolve after the execution client has synced. They look scary but it's expected behavior.
 
 ```bash
 Nov 21 20:58:53.309 INFO Block production disabled               reason: no eth1 backend configured
