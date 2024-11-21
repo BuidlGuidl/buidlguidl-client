@@ -1,10 +1,14 @@
 # 📡 BuidlGuidl Client
 This project will download clients executables and start a Reth + Lighthouse node pair. Syncing the client databases will require ~1.4 TB of free space.
 
+&nbsp;
+&nbsp;
 ## Requirements
 - node (https://nodejs.org/en)
 - yarn (https://yarnpkg.com/migration/overview)
 
+&nbsp;
+&nbsp;
 ## Quickstart
 To get a full node started using a Reth + Lighthouse client pair:
   ```bash
@@ -67,6 +71,8 @@ Use the --help (-h) option to see all command line options:
   -h, --help                                Display this help message and exit
   ```
 
+&nbsp;
+&nbsp;
 ## Common issues
 The consensus clients (Lighthouse and Prysm) require a checkpoint sync server URL to initiate sync. Connection to checkpoint servers can fail depending on your location. If the consensus client fails to start the sync and you see an error message in the Lighthouse/Prysm logs like this:
 
