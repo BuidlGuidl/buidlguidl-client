@@ -1,12 +1,12 @@
-# 📡 buidlguidl client
-This project will download clients executables and start a Reth + Lighthouse node pair. Syncing the client databases will require ~1.2 TB of free space.
+# 📡 BuidlGuidl Client
+This project will download clients executables and start a Reth + Lighthouse node pair. Syncing the client databases will require ~1.4 TB of free space.
 
 ## Requirements
 - node (https://nodejs.org/en)
 - yarn (https://yarnpkg.com/migration/overview)
 
 ## Quickstart
-To get a node started:
+To get a full node started using a Reth + Lighthouse client pair:
   ```bash
   git clone https://github.com/BuidlGuidl/buidlguidl-client.git
   cd buidlguidl-client
@@ -35,3 +35,47 @@ Pass the --update option to update the execution and consensus clients to the la
   ```bash
   node index.js --update
   ```
+
+Use the --help (-h) option to see all command line options:
+  ```bash
+  node index.js --help
+
+  -e, --executionclient <client>            Specify the execution client ('reth' or 'geth')
+                                            Default: reth
+
+  -c, --consensusclient <client>            Specify the consensus client ('lighthouse' or 'prysm')
+                                            Default: lighthouse
+
+  -ep, --executionpeerport <port>           Specify the execution peer port (must be a number)
+                                            Default: 30303
+
+  -cp, --consensuspeerports <port>,<port>   Specify the execution peer ports (must be two comma-separated numbers)
+                                            Lighthouse defaults: 9000,9001. prysm defaults: 12000,13000
+
+  -cc, --consensuscheckpoint <url>          Specify the consensus checkpoint server URL
+                                            Lighthouse default: https://mainnet-checkpoint-sync.stakely.io/
+                                            Prysm default: https://mainnet-checkpoint-sync.attestant.io/
+
+  -d, --directory <path>                    Specify ethereum client executable, database, and logs directory
+                                            Default: buidlguidl-client/ethereum_clients
+
+  -o, --owner <eth address>                 Specify a owner eth address to opt in to the points system and distributed RPC
+
+      --update                              Update the execution and consensus clients to the latest version.
+                                            Latest versions: Reth: 1.0.0, Geth: 1.14.12, Lighthouse: 5.3.0
+
+  -h, --help                                Display this help message and exit
+  ```
+
+## Common issues
+The consensus clients (Lighthouse and Prysm) require a checkpoint sync server URL to initiate sync. Connection to checkpoint servers can fail depending on your location. If the consensus client fails to start the sync and you see an error message in the Lighthouse/Prysm logs like this:
+
+```bash
+Nov 21 17:45:41.833 INFO Starting checkpoint sync                remote_url: https://mainnet-checkpoint-sync.stakely.io/, service: beacon
+Nov 21 17:45:51.842 CRIT Failed to start beacon node             reason: Error loading checkpoint state from remote: HttpClient(, kind: timeout, detail: operation timed out)
+Nov 21 17:45:51.843 INFO Internal shutdown received              reason: Failed to start beacon node
+Nov 21 17:45:51.843 INFO Shutting down..                         reason: Failure("Failed to start beacon node")
+Failed to start beacon node
+```
+
+You will need to specify a different checkpoint server URL using the --consensuscheckpoint (-cc) option. See https://eth-clients.github.io/checkpoint-sync-endpoints/ for a list of public checkpoint sync servers. 
