@@ -1,11 +1,28 @@
 # 📡 BuidlGuidl Client
-This project will download clients executables and start a Reth + Lighthouse node pair. Syncing the client databases will require ~1.4 TB of free space.
+This project will download client executables, start a execution + consensus client pair, and provide a terminal dashboard view of client and machine info.
 
 &nbsp;
 &nbsp;
-## Requirements
+## Hardware Requirements
+See this [Rocket Pool Hardware Guide](https://docs.rocketpool.net/guides/node/local/hardware) for a nice rundown of node hardware requirements.
+
+- Node operation doesn't require too much CPU power. We've ran the BG Client using both i3 and i5 versions of the [ASUS NUC 13 PRO](https://www.asus.com/us/displays-desktops/nucs/nuc-mini-pcs/asus-nuc-13-pro/). Note that there are some gotchas if you plan to use a Celeron processor. ([Rocket Pool Hardware Guide](https://docs.rocketpool.net/guides/node/local/hardware)).
+- 32 GB of RAM works well with plenty of overhead.
+- Selecting a suitable NVMe SSD is the trickiest part. You will need at least a 2 TB drive that includes a DRAM cache and DOES NOT use a Quad-level cell (QLC) architecture. The [Rocket Pool Hardware Guide](https://docs.rocketpool.net/guides/node/local/hardware) goes into more detail. This [SSD List GitHub Gist](https://gist.github.com/yorickdowne/f3a3e79a573bf35767cd002cc977b038) has a nice list of SSDs that have been tested and confirmed to work for running nodes.
+
+&nbsp;
+&nbsp;
+## Dependencies
+For Linux & MacOS:
 - node (https://nodejs.org/en)
 - yarn (https://yarnpkg.com/migration/overview)
+- GNU Make (https://www.gnu.org/software/make/)
+
+Additional MacOS Specifics:
+- gnupg (https://gnupg.org/)
+- Perl-Digest-SHA (https://metacpan.org/pod/Digest::SHA)
+
+Hint: See the one liner command below if you don't want to install the dependencies manually.
 
 &nbsp;
 &nbsp;
@@ -17,6 +34,16 @@ To get a full node started using a Reth + Lighthouse client pair:
   yarn install
   node index.js
   ```
+
+------ OR ------
+
+Run this fancy one liner command to check for/install dependencies and clone/run this repo (see https://client.buidlguidl.com/):
+  ```bash
+  /bin/bash -c "$(curl -fsSL https://bgclient.io)"
+  ```
+
+&nbsp;
+&nbsp;
 
 By default, client executables, databases, and logs will be established within /ethereum_clients. After initialization steps, the script displays a terminal view with scrolling client logs and some plots showing some machine and chain stats. Full client logs are located in ethereum_clients/reth/logs and ethereum_clients/lighthouse/logs. Exiting the terminal view (control-c or q) will also gracefully close your clients (can take 15 seconds or so).
 
@@ -47,7 +74,7 @@ You can opt in to the BuidlGuidl distributed RPC points system and earn points f
 &nbsp;
 &nbsp;
 
-Pass the --update option to update the execution and consensus clients to the latest version:
+Pass the --update option to update the execution and consensus clients to the latest versions (that have been tested with the BG Client):
   ```bash
   node index.js --update
   ```
