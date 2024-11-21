@@ -73,7 +73,7 @@ Use the --help (-h) option to see all command line options:
 
 &nbsp;
 &nbsp;
-## Common issues
+## Common Questions and Issues
 The consensus clients (Lighthouse and Prysm) require a checkpoint sync server URL to initiate sync. Connection to checkpoint servers can fail depending on your location. If the consensus client fails to start the sync and you see an error message in the Lighthouse/Prysm logs like this:
 
 ```bash
@@ -84,4 +84,16 @@ Nov 21 17:45:51.843 INFO Shutting down..                         reason: Failure
 Failed to start beacon node
 ```
 
-You will need to specify a different checkpoint server URL using the --consensuscheckpoint (-cc) option. See https://eth-clients.github.io/checkpoint-sync-endpoints/ for a list of public checkpoint sync servers. 
+You will need to specify a different checkpoint server URL using the --consensuscheckpoint (-cc) option. See https://eth-clients.github.io/checkpoint-sync-endpoints/ for a list of public checkpoint sync servers.
+&nbsp;
+&nbsp;
+
+The consensus client logs can output many warnings while syncing (see below for some Lighthouse examples). These warnings can be ignored and will resolve after the execution client has synced. They look scary but it's expected behavior.
+
+```bash
+Nov 21 20:58:53.309 INFO Block production disabled               reason: no eth1 backend configured
+Nov 21 21:01:16.144 WARN Blocks and blobs request for range received invalid data, error: MissingBlobs, sender_id: BackfillSync { batch_id: Epoch(326557) }, peer_id: 16Uiu2HAkv5priPv8S7bawF8u96aAMgAbtkh95x4PkDvm7WSdH3ER, service: sync
+Nov 21 21:01:17.001 WARN Head is optimistic                      execution_block_hash: 0x16410f3d5cb5044dcf596b301a34ec88ffce09dd4346f04aea95d442b1456e62, info: chain not fully verified, block and attestation production disabled until execution engine syncs, service: slot_notifier
+Nov 21 21:01:44.997 WARN Execution engine call failed            error: InvalidClientVersion("Input must be exactly 8 characters long (excluding any '0x' prefix)"), service: exec
+Nov 21 21:01:59.013 WARN Error signalling fork choice waiter     slot: 10449907, error: ForkChoiceSignalOutOfOrder { current: Slot(10449908), latest: Slot(10449907) }, service: beacon
+``` 
