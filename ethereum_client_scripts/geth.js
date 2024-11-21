@@ -12,6 +12,9 @@ const argv = minimist(process.argv.slice(2));
 
 const executionPeerPort = argv.executionpeerport;
 
+const executionType = argv.executiontype;
+debugToFile(`From geth.js: executionType: ${executionType}`);
+
 // Check if a different install directory was provided via the `--directory` option
 if (argv.directory) {
   installDir = argv.directory;
@@ -42,7 +45,12 @@ const execution = pty.spawn(
   [
     "--mainnet",
     "--syncmode",
-    "snap",
+    // "snap",
+    ...(executionType === "full"
+      ? ["snap"]
+      : executionType === "archive"
+      ? ["full", "--gcmode", "archive"]
+      : []),
     "--port",
     executionPeerPort,
     "--discovery.port",

@@ -12,6 +12,9 @@ const argv = minimist(process.argv.slice(2));
 
 const executionPeerPort = argv.executionpeerport;
 
+const executionType = argv.executiontype;
+debugToFile(`From reth.js: executionType: ${executionType}`);
+
 // Check if a different install directory was provided via the `--directory` option
 if (argv.directory) {
   installDir = argv.directory;
@@ -42,7 +45,7 @@ const execution = pty.spawn(
   `${rethCommand}`,
   [
     "node",
-    "--full",
+    ...(executionType === "full" ? ["--full"] : []),
     "--port",
     executionPeerPort,
     "--discovery.port",
@@ -76,6 +79,8 @@ const execution = pty.spawn(
     env: { ...process.env, INSTALL_DIR: installDir },
   }
 );
+
+debugToFile(`From reth.js: execution: ${JSON.stringify(execution, null, 2)}`);
 
 // Pipe stdout and stderr to the log file and to the parent process
 execution.on("data", (data) => {

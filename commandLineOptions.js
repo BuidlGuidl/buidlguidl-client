@@ -25,6 +25,7 @@ debugToFile(
 
 /// Set default command line option values
 let executionClient = "reth";
+let executionType = "full";
 let consensusClient = "lighthouse";
 let executionPeerPort = 30303;
 let consensusPeerPorts = [null, null];
@@ -62,7 +63,10 @@ function showHelp() {
     "  -cc, --consensuscheckpoint <url>          Specify the consensus checkpoint server URL"
   );
   console.log(
-    "                                            lighthouse default: https://mainnet.checkpoint.sigp.io. prysm default: https://mainnet-checkpoint-sync.attestant.io/\n"
+    "                                            Lighthouse default: https://mainnet-checkpoint-sync.stakely.io/"
+  );
+  console.log(
+    "                                            Prysm default: https://mainnet-checkpoint-sync.attestant.io/\n"
   );
   console.log(
     "  -d, --directory <path>                    Specify ethereum client executable, database, and logs directory"
@@ -74,7 +78,10 @@ function showHelp() {
     "  -o, --owner <eth address>                 Specify a owner eth address to opt in to the points system and distributed RPC\n"
   );
   console.log(
-    "      --update                              Update the execution and consensus clients to the latest version.\n"
+    "      --update                              Update the execution and consensus clients to the latest version."
+  );
+  console.log(
+    `                                            Latest versions: Reth: ${latestRethVer}, Geth: ${latestGethVer}, Lighthouse: ${latestLighthouseVer}\n`
   );
   console.log(
     "  -h, --help                                Display this help message and exit"
@@ -177,7 +184,7 @@ if (!optionsLoaded) {
       o: "owner",
       h: "help",
     },
-    boolean: ["h", "help", "update"],
+    boolean: ["h", "help", "update", "archive"],
     unknown: (option) => {
       console.log(`Invalid option: ${option}`);
       showHelp();
@@ -193,6 +200,10 @@ if (!optionsLoaded) {
       );
       process.exit(1);
     }
+  }
+
+  if (argv.archive) {
+    executionType = "archive";
   }
 
   if (argv.consensusclient) {
@@ -336,6 +347,7 @@ if (!optionsLoaded) {
 
 export {
   executionClient,
+  executionType,
   consensusClient,
   executionPeerPort,
   consensusPeerPorts,
