@@ -58,7 +58,7 @@ export function getDiskUsage(installDir) {
               100;
           } else {
             // Linux and others
-            diskUsagePercent = installDrive.use * 100;
+            diskUsagePercent = installDrive.use;
           }
         } else {
           debugToFile(
