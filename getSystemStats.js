@@ -48,15 +48,18 @@ export function getDiskUsage(installDir) {
         });
 
         if (installDrive) {
-          // Debug logging
-          debugToFile(`Drive info: ${JSON.stringify(installDrive, null, 2)}`);
+          // debugToFile(`Drive info: ${JSON.stringify(installDrive, null, 2)}`);
 
-          // Calculate usage based on available space
-          diskUsagePercent =
-            ((installDrive.size - installDrive.available) / installDrive.size) *
-            100;
-
-          debugToFile(`Calculated disk usage: ${diskUsagePercent}%`);
+          if (process.platform === "darwin") {
+            // macOS (installDrive.use is weird on macOS)
+            diskUsagePercent =
+              ((installDrive.size - installDrive.available) /
+                installDrive.size) *
+              100;
+          } else {
+            // Linux and others
+            diskUsagePercent = installDrive.use * 100;
+          }
         } else {
           debugToFile(
             `getDiskUsage(): Drive for ${installDir} not found.`,
