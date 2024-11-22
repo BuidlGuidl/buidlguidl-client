@@ -48,8 +48,15 @@ export function getDiskUsage(installDir) {
         });
 
         if (installDrive) {
+          // Debug logging
+          debugToFile(`Drive info: ${JSON.stringify(installDrive, null, 2)}`);
+
+          // Calculate usage based on available space
           diskUsagePercent =
-            100 - (installDrive.available / installDrive.size) * 100;
+            ((installDrive.size - installDrive.available) / installDrive.size) *
+            100;
+
+          debugToFile(`Calculated disk usage: ${diskUsagePercent}%`);
         } else {
           debugToFile(
             `getDiskUsage(): Drive for ${installDir} not found.`,

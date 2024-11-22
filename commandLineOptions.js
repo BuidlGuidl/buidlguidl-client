@@ -81,7 +81,7 @@ function showHelp() {
     "      --update                              Update the execution and consensus clients to the latest version."
   );
   console.log(
-    `                                            Latest versions: Reth: ${latestRethVer}, Geth: ${latestGethVer}, Lighthouse: ${latestLighthouseVer}\n`
+    `                                            Latest versions: Reth: ${latestRethVer}, Geth: ${latestGethVer}, Lighthouse: ${latestLighthouseVer}, (Prysm is handled by its executable automatically)\n`
   );
   console.log(
     "  -h, --help                                Display this help message and exit"

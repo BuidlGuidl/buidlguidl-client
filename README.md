@@ -110,7 +110,7 @@ Use the --help (-h) option to see all command line options:
   -o, --owner <eth address>                 Specify a owner eth address to opt in to the points system and distributed RPC
 
       --update                              Update the execution and consensus clients to the latest version.
-                                            Latest versions: Reth: 1.0.0, Geth: 1.14.12, Lighthouse: 5.3.0
+                                            Latest versions: Reth: 1.0.0, Geth: 1.14.12, Lighthouse: 5.3.0, (Prysm is handled by its executable automatically)
 
   -h, --help                                Display this help message and exit
   ```
