@@ -14,6 +14,7 @@ import {
 import { initializeWebSocketConnection } from "./web_socket_connection/webSocketConnection.js";
 import {
   executionClient,
+  executionType,
   consensusClient,
   executionPeerPort,
   consensusPeerPorts,
@@ -212,15 +213,17 @@ process.on("unhandledRejection", (reason, promise) => {
 let bgConsensusPeers = [];
 let bgConsensusAddrs;
 
-async function startClient(clientName, installDir) {
+async function startClient(clientName, executionType, installDir) {
   let clientCommand,
     clientArgs = [];
 
   if (clientName === "geth") {
     clientArgs.push("--executionpeerport", executionPeerPort);
+    clientArgs.push("--executiontype", executionType);
     clientCommand = path.join(__dirname, "ethereum_client_scripts/geth.js");
   } else if (clientName === "reth") {
     clientArgs.push("--executionpeerport", executionPeerPort);
+    clientArgs.push("--executiontype", executionType);
     clientCommand = path.join(__dirname, "ethereum_client_scripts/reth.js");
   } else if (clientName === "prysm") {
     bgConsensusPeers = await fetchBGConsensusPeers();
@@ -380,8 +383,8 @@ const wsConfig = {
 if (!isAlreadyRunning()) {
   deleteOptionsFile();
 
-  await startClient(executionClient, installDir);
-  await startClient(consensusClient, installDir);
+  await startClient(executionClient, executionType, installDir);
+  await startClient(consensusClient, executionType, installDir);
 
   if (owner != null) {
     initializeWebSocketConnection(wsConfig);

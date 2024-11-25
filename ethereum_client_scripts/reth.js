@@ -12,6 +12,8 @@ const argv = minimist(process.argv.slice(2));
 
 const executionPeerPort = argv.executionpeerport;
 
+const executionType = argv.executiontype;
+
 // Check if a different install directory was provided via the `--directory` option
 if (argv.directory) {
   installDir = argv.directory;
@@ -42,7 +44,7 @@ const execution = pty.spawn(
   `${rethCommand}`,
   [
     "node",
-    "--full",
+    ...(executionType === "full" ? ["--full"] : []),
     "--port",
     executionPeerPort,
     "--discovery.port",
@@ -51,8 +53,6 @@ const execution = pty.spawn(
     "--http.addr",
     "0.0.0.0",
     "--http.api",
-    // "trace,web3,eth,debug",
-    // "trace,web3,eth,debug,net",
     "debug,eth,net,trace,txpool,web3,rpc,admin",
     "--ws",
     "--ws.api",

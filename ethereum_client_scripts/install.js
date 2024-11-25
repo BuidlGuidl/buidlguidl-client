@@ -5,7 +5,7 @@ import os from "os";
 import { installDir } from "../commandLineOptions.js";
 import { debugToFile } from "../helpers.js";
 
-export const latestGethVer = "1.14.3";
+export const latestGethVer = "1.14.12";
 export const latestRethVer = "1.0.0";
 export const latestLighthouseVer = "5.3.0";
 
@@ -21,24 +21,29 @@ export function installMacLinuxExecutionClient(
 ) {
   const arch = os.arch();
 
+  const gethHash = {
+    "1.14.3": "ab48ba42",
+    "1.14.12": "293a300d",
+  };
+
   const configs = {
     darwin: {
       x64: {
-        gethFileName: `geth-darwin-amd64-${gethVer}-ab48ba42`,
+        gethFileName: `geth-darwin-amd64-${gethVer}-${gethHash[gethVer]}`,
         rethFileName: `reth-v${rethVer}-x86_64-apple-darwin`,
       },
       arm64: {
-        gethFileName: `geth-darwin-arm64-${gethVer}-ab48ba42`,
+        gethFileName: `geth-darwin-arm64-${gethVer}-${gethHash[gethVer]}`,
         rethFileName: `reth-v${rethVer}-aarch64-apple-darwin`,
       },
     },
     linux: {
       x64: {
-        gethFileName: `geth-linux-amd64-${gethVer}-ab48ba42`,
+        gethFileName: `geth-linux-amd64-${gethVer}-${gethHash[gethVer]}`,
         rethFileName: `reth-v${rethVer}-x86_64-unknown-linux-gnu`,
       },
       arm64: {
-        gethFileName: `geth-linux-arm64-${gethVer}-ab48ba42`,
+        gethFileName: `geth-linux-arm64-${gethVer}-${gethHash[gethVer]}`,
         rethFileName: `reth-v${rethVer}-aarch64-unknown-linux-gnu`,
       },
     },
@@ -99,8 +104,6 @@ export function installMacLinuxExecutionClient(
       execSync(`cd "${rethDir}" && rm "${rethFileName}.tar.gz"`, {
         stdio: "inherit",
       });
-
-      // downloadRethSnapshot(rethDir, platform);
     } else {
       console.log("Reth is already installed.");
     }
@@ -393,43 +396,6 @@ export function removeClient(client) {
   const clientDir = path.join(installDir, "ethereum_clients", client, client);
   if (fs.existsSync(clientDir)) {
     fs.rmSync(clientDir, { recursive: true });
-  }
-}
-
-export function downloadRethSnapshot(rethDir, platform) {
-  const snapshotDate = "2024-05-14";
-
-  if (
-    !fs.existsSync(
-      path.join(
-        installDir,
-        "ethereum_clients",
-        "reth",
-        "database",
-        "db",
-        "mdbx.dat"
-      )
-    ) ||
-    !fs.existsSync(
-      path.join(installDir, "ethereum_clients", "reth", "database", "blobstore")
-    )
-  ) {
-    console.log("\nDownloading Reth snapshot.");
-    if (platform === "darwin") {
-      execSync(
-        `cd "${rethDir}/database" && wget -O - https://downloads.merkle.io/reth-${snapshotDate}.tar.lz4 | lz4 -dc | tar -xvf -`,
-        { stdio: "inherit" }
-      );
-    } else if (platform === "linux") {
-      execSync(
-        `cd "${rethDir}/database" && wget -O - https://downloads.merkle.io/reth-${snapshotDate}.tar.lz4 | tar -I lz4 -xvf -`,
-        { stdio: "inherit" }
-      );
-    } else if (platform === "win32") {
-      // TODO: Add code for downloading snapshot on windows
-    }
-  } else {
-    console.log("\nReth snapshot already downloaded.");
   }
 }
 

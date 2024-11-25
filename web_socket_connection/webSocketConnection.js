@@ -275,7 +275,7 @@ export function initializeWebSocketConnection(wsConfig) {
           type: "checkin",
           params: params,
         });
-        debugToFile(`Sending WebSocket checkin message`);
+        //debugToFile(`Sending WebSocket checkin message`);
         ws.send(message);
       } else {
         debugToFile("WebSocket is not open.");

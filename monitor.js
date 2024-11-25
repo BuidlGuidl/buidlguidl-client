@@ -88,10 +88,10 @@ export async function initializeMonitoring(
       await getLatestLogFile(executionLogsPath, executionClient)
     );
 
-    debugToFile(
-      `Monitoring ${executionClient} logs from: ${logFilePathExecution}`,
-      () => {}
-    );
+    // debugToFile(
+    //   `Monitoring ${executionClient} logs from: ${logFilePathExecution}`,
+    //   () => {}
+    // );
 
     setTimeout(() => {
       const logFilePathConsensus = path.join(
@@ -105,10 +105,10 @@ export async function initializeMonitoring(
         screen
       );
 
-      debugToFile(
-        `Monitoring ${consensusClient} logs from: ${logFilePathConsensus}`,
-        () => {}
-      );
+      // debugToFile(
+      //   `Monitoring ${consensusClient} logs from: ${logFilePathConsensus}`,
+      //   () => {}
+      // );
     }, 3000);
 
     setInterval(() => {

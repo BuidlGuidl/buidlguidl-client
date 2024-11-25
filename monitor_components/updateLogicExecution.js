@@ -527,6 +527,9 @@ export async function showHideRethWidgets(
 ) {
   try {
     const syncingStatus = await isSyncing();
+
+    // debugToFile(`syncingStatus: ${JSON.stringify(syncingStatus, null, 2)}`);
+
     const allStagesComplete = checkAllStagesComplete(stagePercentages);
 
     if (syncingStatus && !allStagesComplete) {

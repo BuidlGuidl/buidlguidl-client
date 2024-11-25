@@ -1,61 +1,90 @@
 # 📡 BuidlGuidl Client
-
->Run an Ethereum node with a single command:
-
-```
-/bin/bash -c "$(curl -fsSL https://bgclient.io)"
-```
-
-👉 learn more at [client.buidlguidl.com](https://client.buidlguidl.com)
-
----
-
-This project is a set of node.js scripts that will automatically download Ethereum clients, configure/run a Reth + Lighthouse client pair, and provide a terminal dashboard view for monitoring client statuses. Syncing the client databases will require ~1.2 TB of free space.
-
-By default, the BuidlGuidl Client acts as a local mainnet node that you can do whatever you want with. There is also an option to opt in to the BuidlGuidl distributed RPC points system and earn points for serving RPC requests to the BuidlGuidl network (see [--owner option](#startup-options--%EF%B8%8F)).
+This project will download client executables, start a execution + consensus client pair, and provide a terminal dashboard view of client and machine info.
 
 &nbsp;
 &nbsp;
-## Requirements  📋
+## Hardware Requirements
+See this [Rocket Pool Hardware Guide](https://docs.rocketpool.net/guides/node/local/hardware) for a nice rundown of node hardware requirements.
+
+- Node operation doesn't require too much CPU power. We've ran the BG Client using both i3 and i5 versions of the [ASUS NUC 13 PRO](https://www.asus.com/us/displays-desktops/nucs/nuc-mini-pcs/asus-nuc-13-pro/). Note that there are some gotchas if you plan to use a Celeron processor. ([Rocket Pool Hardware Guide](https://docs.rocketpool.net/guides/node/local/hardware)).
+- 32 GB of RAM works well with plenty of overhead.
+- Selecting a suitable NVMe SSD is the trickiest part. You will need at least a 2 TB drive that includes a DRAM cache and DOES NOT use a Quad-level cell (QLC) architecture. The [Rocket Pool Hardware Guide](https://docs.rocketpool.net/guides/node/local/hardware) goes into more detail. This [SSD List GitHub Gist](https://gist.github.com/yorickdowne/f3a3e79a573bf35767cd002cc977b038) has a nice list of SSDs that have been tested and confirmed to work for running nodes.
+
+&nbsp;
+&nbsp;
+## Dependencies
+For Linux & MacOS:
 - node (https://nodejs.org/en)
 - yarn (https://yarnpkg.com/migration/overview)
+- GNU Make (https://www.gnu.org/software/make/)
+
+Additional MacOS Specifics:
+- gnupg (https://gnupg.org/)
+- Perl-Digest-SHA (https://metacpan.org/pod/Digest::SHA)
+
+Hint: See the one line command below if you don't want to install the dependencies manually.
 
 &nbsp;
 &nbsp;
-## Quickstart  🚀
-To get a node started:
+## Quickstart
+To get a full node started using a Reth + Lighthouse client pair:
   ```bash
   git clone https://github.com/BuidlGuidl/buidlguidl-client.git
   cd buidlguidl-client
   yarn install
   node index.js
   ```
+
+------------ OR ------------
+
+Run this fancy one line command to check for/install dependencies and clone/run this repo (see https://client.buidlguidl.com/):
+  ```bash
+  /bin/bash -c "$(curl -fsSL https://bgclient.io)"
+  ```
+
+&nbsp;
 &nbsp;
 
-By default, client executables, databases, and logs will be established within /ethereum_clients. After initialization steps, the script displays a terminal view with scrolling client logs and some plots showing some machine and chain stats. Full client logs are located in ethereum_clients/reth/logs and ethereum_clients/lighthouse/logs. Exiting the terminal view (control-c or q) will also gracefully close your clients (can take 15 seconds or so).
+By default, client executables, databases, and logs will be established within buidlguidl-client/ethereum_clients. After initialization steps, the script displays a terminal view with scrolling client logs and some plots showing some machine and chain stats. Full client logs are located in buidlguidl-client/ethereum_clients/reth/logs and buidlguidl-client/ethereum_clients/lighthouse/logs. Exiting the terminal view (control-c or q) will also gracefully close your clients (can take 15 seconds or so).
 
 &nbsp;
 &nbsp;
-## Startup Options  🎛️
-You can opt in to the BuidlGuidl distributed RPC points system and earn points for serving RPC requests to the BuidlGuidl network by passing your eth address to the --owner (-o) option:
+
+## Startup Options
+
+You can opt in to the BuidlGuidl distributed RPC system and earn credits for serving RPC requests to the BuidlGuidl network by passing your eth address to the --owner (-o) option:
   ```bash
   node index.js --owner <your ENS name or eth address>
   ```
-&nbsp;
 
-The BuidlGuidl Client can also run a Geth + Prysm client pair. If Geth and Prysm is your jam, pass those as --executionclient (-e) and --consensusclient (-c) options to index.js:
-  ```bash
-  node index.js --executionclient geth --consensusclient prysm
-  ```
+&nbsp;
 &nbsp;
 
 If you want to specify a non-standard location for the ethereum_clients directory, pass a --directory (-d) option to index.js:
   ```bash
-  node index.js --directory path/for/ethereum_clients
+  node index.js --directory path/for/directory/containing/ethereum_clients
   ```
+
+&nbsp;
 &nbsp;
 
-Use the --help (-h) option to see all the available options:
+If you want to use a Geth + Prysm client pair, pass those as --executionclient (-e) and --consensusclient (-c) options to index.js:
+  ```bash
+  node index.js --executionclient geth --consensusclient prysm
+  ```
+
+&nbsp;
+&nbsp;
+
+Pass the --update option to update the execution and consensus clients to the latest versions (that have been tested with the BG Client):
+  ```bash
+  node index.js --update
+  ```
+
+&nbsp;
+&nbsp;
+
+Use the --help (-h) option to see all command line options:
   ```bash
   node index.js --help
 
@@ -69,33 +98,47 @@ Use the --help (-h) option to see all the available options:
                                             Default: 30303
 
   -cp, --consensuspeerports <port>,<port>   Specify the execution peer ports (must be two comma-separated numbers)
-                                            lighthouse defaults: 9000,9001. prysm defaults: 12000,13000
+                                            Lighthouse defaults: 9000,9001. prysm defaults: 12000,13000
 
   -cc, --consensuscheckpoint <url>          Specify the consensus checkpoint server URL
-                                            lighthouse default: https://mainnet-checkpoint-sync.stakely.io/. prysm default: https://mainnet-checkpoint-sync.attestant.io/
+                                            Lighthouse default: https://mainnet-checkpoint-sync.stakely.io/
+                                            Prysm default: https://mainnet-checkpoint-sync.attestant.io/
 
   -d, --directory <path>                    Specify ethereum client executable, database, and logs directory
                                             Default: buidlguidl-client/ethereum_clients
 
-  -o, --owner <eth address>                 Specify a owner eth address to opt in to the points system and distributed RPC network
+  -o, --owner <eth address>                 Specify a owner eth address to opt in to the points system and distributed RPC
+
+      --update                              Update the execution and consensus clients to the latest version.
+                                            Latest versions: Reth: 1.0.0, Geth: 1.14.12, Lighthouse: 5.3.0, (Prysm is handled by its executable automatically)
 
   -h, --help                                Display this help message and exit
   ```
 
 &nbsp;
 &nbsp;
-## Hardware Selection  💻
-<!-- The BuidlGuidl team has tested and confirmed that the following economical hardware works great for running a BG Client:
-- [ASUS NUC 13 PRO i3 (RNUC13ANKI30000UI)](https://www.newegg.com/asus-rnuc13anki30000ui-nuc-13-pro-intel-core-i3-1315u/p/N82E16856110280?Item=N82E16856110280)
-- [KingSpec XG 7000 2TB M.2 2280 PCIe SSD](https://www.newegg.com/kingspec-2tb-xg-7000-series/p/0D9-000D-00172?Item=9SIB1V8JVN5929)
-- [CORSAIR Vengeance 32GB (2 x 16GB) DDR4 3200 (CMSX32GX4M2A3200C22)](https://www.newegg.com/corsair-32gb-260-pin-ddr4-so-dimm-ddr4-3200/p/N82E16820236681?Item=N82E16820236681)
+## Common Questions and Issues
+The consensus clients (Lighthouse and Prysm) require a checkpoint sync server URL to initiate sync. Connection to checkpoint servers can fail depending on your location. If the consensus client fails to start the sync and you see an error message in the Lighthouse/Prysm logs like this:
 
-&nbsp; -->
+```bash
+Nov 21 17:45:41.833 INFO Starting checkpoint sync                remote_url: https://mainnet-checkpoint-sync.stakely.io/, service: beacon
+Nov 21 17:45:51.842 CRIT Failed to start beacon node             reason: Error loading checkpoint state from remote: HttpClient(, kind: timeout, detail: operation timed out)
+Nov 21 17:45:51.843 INFO Internal shutdown received              reason: Failed to start beacon node
+Nov 21 17:45:51.843 INFO Shutting down..                         reason: Failure("Failed to start beacon node")
+Failed to start beacon node
+```
 
-Be aware that there are some gotchas when selecting hardware. This [Rocket Pool Node Hardware Guide](https://docs.rocketpool.net/guides/node/local/hardware) is a great resource for overall hardware selection guidelines. Selecting the correct SSD is critical. With a lacking drive, your client will be unable to keep up with the chain ☹️. This [GitHub Doc](https://gist.github.com/yorickdowne/f3a3e79a573bf35767cd002cc977b038) is an ever-growing list of SSDs that have been tested and confirmed to work for a node.
+You will need to specify a different checkpoint server URL using the --consensuscheckpoint (-cc) option. See https://eth-clients.github.io/checkpoint-sync-endpoints/ for a list of public checkpoint sync servers.
 
-Some main takeaways:
-- If selecting an intel processor, it's best to just go with an i-series (modern i3 works just fine; we've been using this [ASUS NUC](https://www.newegg.com/asus-rnuc13anki30000ui-nuc-13-pro-intel-core-i3-1315u/p/N82E16856110280?Item=N82E16856110280) for testing). If you're eyeing something with a Celeron processor you must confirm that it supports [BMI2](https://en.wikipedia.org/wiki/X86_Bit_manipulation_instruction_set#BMI2_(Bit_Manipulation_Instruction_Set_2)).
-- Running a node is a drive read/write intensive task. You will want to select an NVMe SSD.
-- Make sure your SSD has a Triple-level cell (TLC), Multi-level cell (MLC), or Single-level cell (SLC) architecture. Quad-level cell (QLC) SSDs are a no-go 👎. QLC SSDs are just too slow and lack the reliability for the I/Os that the BG Client requires.
-- You additionally need to make sure that your SSD has an onboard DRAM cache. Sometimes the marketing materials are not explicit about the inclusion of DRAM so you may need to do some digging. When in doubt, you can always go by [what other node runners have already tested](https://gist.github.com/yorickdowne/f3a3e79a573bf35767cd002cc977b038).
+&nbsp;
+&nbsp;
+
+The consensus client logs can output many warnings while syncing (see below for some Lighthouse examples). These warnings can be ignored and will resolve after the execution client has synced. They look scary but it's expected behavior.
+
+```bash
+Nov 21 20:58:53.309 INFO Block production disabled               reason: no eth1 backend configured
+Nov 21 21:01:16.144 WARN Blocks and blobs request for range received invalid data, error: MissingBlobs, sender_id: BackfillSync { batch_id: Epoch(326557) }, peer_id: 16Uiu2HAkv5priPv8S7bawF8u96aAMgAbtkh95x4PkDvm7WSdH3ER, service: sync
+Nov 21 21:01:17.001 WARN Head is optimistic                      execution_block_hash: 0x16410f3d5cb5044dcf596b301a34ec88ffce09dd4346f04aea95d442b1456e62, info: chain not fully verified, block and attestation production disabled until execution engine syncs, service: slot_notifier
+Nov 21 21:01:44.997 WARN Execution engine call failed            error: InvalidClientVersion("Input must be exactly 8 characters long (excluding any '0x' prefix)"), service: exec
+Nov 21 21:01:59.013 WARN Error signalling fork choice waiter     slot: 10449907, error: ForkChoiceSignalOutOfOrder { current: Slot(10449908), latest: Slot(10449907) }, service: beacon
+``` 
