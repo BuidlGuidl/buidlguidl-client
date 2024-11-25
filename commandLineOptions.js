@@ -50,6 +50,9 @@ function showHelp() {
     "                                            Default: lighthouse\n"
   );
   console.log(
+    "       --archive                            Perform an archive sync for the execution client\n"
+  );
+  console.log(
     "  -ep, --executionpeerport <port>           Specify the execution peer port (must be a number)"
   );
   console.log("                                            Default: 30303\n");
