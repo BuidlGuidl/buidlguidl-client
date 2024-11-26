@@ -127,9 +127,14 @@ export function initializeWebSocketConnection(wsConfig) {
             id: 1,
           });
           debugToFile("\n");
-          debugToFile("rpcResponse.method:", rpcResponse.method);
-          debugToFile("rpcResponse.params:", rpcResponse.params);
-          debugToFile("rpcResponse.data:", rpcResponse.data);
+          debugToFile(
+            "Full rpcResponse:",
+            JSON.stringify(rpcResponse, null, 2)
+          );
+          debugToFile(
+            "rpcResponse.data:",
+            JSON.stringify(rpcResponse.data, null, 2)
+          );
           debugToFile("\n");
 
           // Send the response back to the WebSocket server
@@ -139,12 +144,12 @@ export function initializeWebSocketConnection(wsConfig) {
               bgMessageId: response.bgMessageId,
             })
           );
-          debugToFile("\n");
-          debugToFile(
-            "rpcResponse.data:",
-            JSON.stringify(rpcResponse.data, null, 2)
-          );
-          debugToFile("\n");
+          // debugToFile("\n");
+          // debugToFile(
+          //   "rpcResponse.data:",
+          //   JSON.stringify(rpcResponse.data, null, 2)
+          // );
+          // debugToFile("\n");
         } catch (error) {
           debugToFile("Error returning RPC response:", error);
 
