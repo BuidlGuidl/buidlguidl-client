@@ -139,8 +139,14 @@ export function initializeWebSocketConnection(wsConfig) {
               bgMessageId: response.bgMessageId,
             })
           );
+          debugToFile("\n");
+          debugToFile(
+            "rpcResponse.data:",
+            JSON.stringify(rpcResponse.data, null, 2)
+          );
+          debugToFile("\n");
         } catch (error) {
-          debugToFile("Error fetching block number:", error);
+          debugToFile("Error returning RPC response:", error);
 
           // Send an error response back to the WebSocket server
           ws.send(
