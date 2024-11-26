@@ -126,7 +126,11 @@ export function initializeWebSocketConnection(wsConfig) {
             params: response.params,
             id: 1,
           });
-          debugToFile("Current Block Number:", rpcResponse.data);
+          debugToFile("\n");
+          debugToFile("rpcResponse.method:", rpcResponse.method);
+          debugToFile("rpcResponse.params:", rpcResponse.params);
+          debugToFile("rpcResponse.data:", rpcResponse.data);
+          debugToFile("\n");
 
           // Send the response back to the WebSocket server
           ws.send(
