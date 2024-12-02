@@ -126,16 +126,16 @@ export function initializeWebSocketConnection(wsConfig) {
             params: response.params,
             id: 1,
           });
-          debugToFile("\n");
-          debugToFile(
-            "Full rpcResponse:",
-            JSON.stringify(rpcResponse, null, 2)
-          );
-          debugToFile(
-            "rpcResponse.data:",
-            JSON.stringify(rpcResponse.data, null, 2)
-          );
-          debugToFile("\n");
+          // debugToFile("\n");
+          // debugToFile(
+          //   "Full rpcResponse:",
+          //   JSON.stringify(rpcResponse, null, 2)
+          // );
+          // debugToFile(
+          //   "rpcResponse.data:",
+          //   JSON.stringify(rpcResponse.data, null, 2)
+          // );
+          // debugToFile("\n");
 
           // Send the response back to the WebSocket server
           ws.send(
