@@ -556,9 +556,9 @@ export async function showHideRethWidgets(
       debugToFile(
         `Attempting to append rpcInfoBox. owner value: ${owner}, type: ${typeof owner}`
       );
-      if (!screen.children.includes(rpcInfoBox) && owner != null) {
-        screen.append(rpcInfoBox);
-      }
+      // if (!screen.children.includes(rpcInfoBox) && owner != null) {
+      //   screen.append(rpcInfoBox);
+      // }
     }
   } catch (error) {
     debugToFile(`showHideRethWidgets(): ${error}`);
@@ -594,9 +594,9 @@ export async function showHideGethWidgets(
       debugToFile(
         `Attempting to append rpcInfoBox. owner value: ${owner}, type: ${typeof owner}`
       );
-      if (!screen.children.includes(rpcInfoBox) && owner != null) {
-        screen.append(rpcInfoBox);
-      }
+      // if (!screen.children.includes(rpcInfoBox) && owner != null) {
+      //   screen.append(rpcInfoBox);
+      // }
     }
   } catch (error) {
     debugToFile(`showHideGethWidgets(): ${error}`);
