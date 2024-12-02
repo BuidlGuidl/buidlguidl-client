@@ -274,9 +274,15 @@ function setupUI(
         }
       }
 
+      let chainInfoBoxGap;
+
       if (screen.children.includes(chainInfoBox)) {
         let chainInfoBoxBottom = chainInfoBox.top + chainInfoBox.height - 1;
-        let chainInfoBoxGap = rpcInfoBox.top - chainInfoBoxBottom - 1;
+        if (screen.children.includes(rpcInfoBox)) {
+          chainInfoBoxGap = rpcInfoBox.top - chainInfoBoxBottom - 1;
+        } else {
+          chainInfoBoxGap = diskLine.top - chainInfoBoxBottom - 1;
+        }
         if (chainInfoBoxGap != 0) {
           chainInfoBox.height = chainInfoBox.height + chainInfoBoxGap;
         }

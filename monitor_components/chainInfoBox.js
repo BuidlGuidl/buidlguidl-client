@@ -1,11 +1,16 @@
 import blessed from "blessed";
 import { localClient } from "./viemClients.js";
+import { owner } from "../commandLineOptions.js";
 import { debugToFile } from "../helpers.js";
 
 let chainInfoBox;
 
 export function createChainInfoBox(grid) {
-  chainInfoBox = grid.set(2, 7, 3, 1, blessed.box, {
+  let nRows = 5;
+  if (owner) {
+    nRows = 3;
+  }
+  chainInfoBox = grid.set(2, 7, nRows, 1, blessed.box, {
     label: "Chain Info",
     stroke: "cyan",
     fill: "white",

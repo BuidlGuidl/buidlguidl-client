@@ -6,7 +6,7 @@ import {
   formatLogLines,
 } from "./helperFunctions.js";
 import { debugToFile } from "../helpers.js";
-import { executionClient } from "../commandLineOptions.js";
+import { executionClient, owner } from "../commandLineOptions.js";
 import { mainnetClient, localClient, isSyncing } from "./viemClients.js";
 import { exec } from "child_process";
 import { populateRethStageGauge } from "./rethStageGauge.js";
@@ -523,7 +523,8 @@ function checkAllStagesComplete(percentages) {
 export async function showHideRethWidgets(
   screen,
   rethStageGauge,
-  chainInfoBox
+  chainInfoBox,
+  rpcInfoBox
 ) {
   try {
     const syncingStatus = await isSyncing();
@@ -539,12 +540,18 @@ export async function showHideRethWidgets(
       if (screen.children.includes(chainInfoBox)) {
         screen.remove(chainInfoBox);
       }
+      if (screen.children.includes(rpcInfoBox)) {
+        screen.remove(rpcInfoBox);
+      }
     } else {
       if (screen.children.includes(rethStageGauge)) {
         screen.remove(rethStageGauge);
       }
       if (!screen.children.includes(chainInfoBox)) {
         screen.append(chainInfoBox);
+      }
+      if (!screen.children.includes(rpcInfoBox) && owner) {
+        screen.append(rpcInfoBox);
       }
     }
   } catch (error) {
@@ -555,7 +562,8 @@ export async function showHideRethWidgets(
 export async function showHideGethWidgets(
   screen,
   gethStageGauge,
-  chainInfoBox
+  chainInfoBox,
+  rpcInfoBox
 ) {
   try {
     const syncingStatus = await isSyncing();
@@ -567,12 +575,18 @@ export async function showHideGethWidgets(
       if (screen.children.includes(chainInfoBox)) {
         screen.remove(chainInfoBox);
       }
+      if (screen.children.includes(rpcInfoBox)) {
+        screen.remove(rpcInfoBox);
+      }
     } else {
       if (screen.children.includes(gethStageGauge)) {
         screen.remove(gethStageGauge);
       }
       if (!screen.children.includes(chainInfoBox)) {
         screen.append(chainInfoBox);
+      }
+      if (!screen.children.includes(rpcInfoBox) && owner) {
+        screen.append(rpcInfoBox);
       }
     }
   } catch (error) {
