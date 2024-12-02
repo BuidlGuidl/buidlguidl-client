@@ -1,5 +1,4 @@
 import blessed from "blessed";
-// import { localClient } from "./viemClients.js";
 import { debugToFile } from "../helpers.js";
 
 let rpcInfoBox;
@@ -8,7 +7,7 @@ const MAX_HISTORY_LENGTH = 30;
 
 export function createRpcInfoBox(grid) {
   rpcInfoBox = grid.set(5, 7, 2, 1, blessed.box, {
-    label: "RPC Calls",
+    label: "RPC Requests",
     stroke: "cyan",
     fill: "white",
     border: {
