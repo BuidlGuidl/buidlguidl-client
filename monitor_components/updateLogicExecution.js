@@ -520,9 +520,6 @@ function checkAllStagesComplete(percentages) {
   return allOnes || allZeros;
 }
 
-debugToFile(`updateLogicExecution: owner: ${owner}`);
-debugToFile(`updateLogicExecution: owner !== null: ${owner !== null}`);
-
 export async function showHideRethWidgets(
   screen,
   rethStageGauge,
@@ -553,9 +550,6 @@ export async function showHideRethWidgets(
       if (!screen.children.includes(chainInfoBox)) {
         screen.append(chainInfoBox);
       }
-      debugToFile(
-        `Attempting to append rpcInfoBox. owner value: ${owner}, type: ${typeof owner}`
-      );
       if (!screen.children.includes(rpcInfoBox) && owner) {
         screen.append(rpcInfoBox);
       }
@@ -591,9 +585,6 @@ export async function showHideGethWidgets(
       if (!screen.children.includes(chainInfoBox)) {
         screen.append(chainInfoBox);
       }
-      debugToFile(
-        `Attempting to append rpcInfoBox. owner value: ${owner}, type: ${typeof owner}`
-      );
       if (!screen.children.includes(rpcInfoBox) && owner) {
         screen.append(rpcInfoBox);
       }
