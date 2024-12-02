@@ -521,6 +521,7 @@ function checkAllStagesComplete(percentages) {
 }
 
 debugToFile(`updateLogicExecution: owner: ${owner}`);
+debugToFile(`updateLogicExecution: owner !== null: ${owner !== null}`);
 
 export async function showHideRethWidgets(
   screen,
