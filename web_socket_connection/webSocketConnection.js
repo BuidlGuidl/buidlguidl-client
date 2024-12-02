@@ -108,9 +108,8 @@ export function initializeWebSocketConnection(wsConfig) {
     ws.on("message", async (data) => {
       const response = JSON.parse(data);
       debugToFile(
-        `Received response from server. Checkin Success: ${JSON.stringify(
-          response.success
-        )}`
+        "WebSocket received data:",
+        JSON.stringify(response, null, 2)
       );
 
       if (!socketId || socketId === null) {
@@ -127,17 +126,9 @@ export function initializeWebSocketConnection(wsConfig) {
             id: 1,
           });
           debugToFile("\n");
-          // debugToFile("Full rpcResponse:", JSON.stringify(response, null, 2));
-          debugToFile("Full rpcResponse:", response);
           debugToFile(
-            "rpcResponse.method:",
-            // JSON.stringify(response.method, null, 2)
-            response.method
-          );
-          debugToFile(
-            "rpcResponse.data:",
-            // JSON.stringify(response.data, null, 2)
-            response.data
+            "RPC Response:",
+            JSON.stringify(rpcResponse.data, null, 2)
           );
           debugToFile("\n");
 
@@ -148,12 +139,6 @@ export function initializeWebSocketConnection(wsConfig) {
               bgMessageId: response.bgMessageId,
             })
           );
-          // debugToFile("\n");
-          // debugToFile(
-          //   "rpcResponse.data:",
-          //   JSON.stringify(rpcResponse.data, null, 2)
-          // );
-          // debugToFile("\n");
         } catch (error) {
           debugToFile("Error returning RPC response:", error);
 
