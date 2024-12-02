@@ -7,7 +7,7 @@ let chainInfoBox;
 
 export function createChainInfoBox(grid) {
   let nRows = 5;
-  if (owner) {
+  if (owner !== null) {
     nRows = 3;
   }
   chainInfoBox = grid.set(2, 7, nRows, 1, blessed.box, {

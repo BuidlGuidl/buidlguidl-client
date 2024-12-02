@@ -386,7 +386,7 @@ if (!isAlreadyRunning()) {
   await startClient(executionClient, executionType, installDir);
   await startClient(consensusClient, executionType, installDir);
 
-  if (owner != null) {
+  if (owner !== null) {
     initializeWebSocketConnection(wsConfig);
   }
 

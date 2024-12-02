@@ -550,7 +550,7 @@ export async function showHideRethWidgets(
       if (!screen.children.includes(chainInfoBox)) {
         screen.append(chainInfoBox);
       }
-      if (!screen.children.includes(rpcInfoBox) && owner) {
+      if (!screen.children.includes(rpcInfoBox) && owner !== null) {
         screen.append(rpcInfoBox);
       }
     }
@@ -585,7 +585,7 @@ export async function showHideGethWidgets(
       if (!screen.children.includes(chainInfoBox)) {
         screen.append(chainInfoBox);
       }
-      if (!screen.children.includes(rpcInfoBox) && owner) {
+      if (!screen.children.includes(rpcInfoBox) && owner !== null) {
         screen.append(rpcInfoBox);
       }
     }
