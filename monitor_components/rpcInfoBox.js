@@ -26,9 +26,7 @@ export function populateRpcInfoBox(rpcMethod) {
     if (rpcMethod) {
       rpcMethodsHistory.unshift(rpcMethod); // Add the new method to the top of the history
     }
-    const content = rpcMethodsHistory
-      .map((method, index) => `${index + 1}. ${method}`)
-      .join("\n");
+    const content = rpcMethodsHistory.map((method) => `${method}`).join("\n");
     rpcInfoBox.setContent(content);
   } catch (error) {
     debugToFile(`populateRpcInfoBox(): ${error}`);
