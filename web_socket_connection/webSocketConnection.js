@@ -127,14 +127,17 @@ export function initializeWebSocketConnection(wsConfig) {
             id: 1,
           });
           debugToFile("\n");
-          debugToFile("Full rpcResponse:", JSON.stringify(response, null, 2));
+          // debugToFile("Full rpcResponse:", JSON.stringify(response, null, 2));
+          debugToFile("Full rpcResponse:", response);
           debugToFile(
             "rpcResponse.method:",
-            JSON.stringify(response.method, null, 2)
+            // JSON.stringify(response.method, null, 2)
+            response.method
           );
           debugToFile(
             "rpcResponse.data:",
-            JSON.stringify(response.data, null, 2)
+            // JSON.stringify(response.data, null, 2)
+            response.data
           );
           debugToFile("\n");
 
