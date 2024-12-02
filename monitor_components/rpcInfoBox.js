@@ -4,6 +4,7 @@ import { debugToFile } from "../helpers.js";
 
 let rpcInfoBox;
 let rpcMethodsHistory = [];
+const MAX_HISTORY_LENGTH = 30;
 
 export function createRpcInfoBox(grid) {
   rpcInfoBox = grid.set(5, 7, 2, 1, blessed.box, {
@@ -25,6 +26,9 @@ export function populateRpcInfoBox(rpcMethod) {
   try {
     if (rpcMethod) {
       rpcMethodsHistory.unshift(rpcMethod); // Add the new method to the top of the history
+      if (rpcMethodsHistory.length > MAX_HISTORY_LENGTH) {
+        rpcMethodsHistory = rpcMethodsHistory.slice(0, MAX_HISTORY_LENGTH); // Keep only the most recent entries
+      }
     }
     const content = rpcMethodsHistory.map((method) => `${method}`).join("\n");
     rpcInfoBox.setContent(content);
