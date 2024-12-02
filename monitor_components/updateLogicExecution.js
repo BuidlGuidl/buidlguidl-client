@@ -556,7 +556,7 @@ export async function showHideRethWidgets(
       debugToFile(
         `Attempting to append rpcInfoBox. owner value: ${owner}, type: ${typeof owner}`
       );
-      if (!screen.children.includes(rpcInfoBox) && owner !== null) {
+      if (!screen.children.includes(rpcInfoBox) && owner) {
         screen.append(rpcInfoBox);
       }
     }
@@ -594,7 +594,7 @@ export async function showHideGethWidgets(
       debugToFile(
         `Attempting to append rpcInfoBox. owner value: ${owner}, type: ${typeof owner}`
       );
-      if (!screen.children.includes(rpcInfoBox) && owner !== null) {
+      if (!screen.children.includes(rpcInfoBox) && owner) {
         screen.append(rpcInfoBox);
       }
     }
