@@ -520,6 +520,8 @@ function checkAllStagesComplete(percentages) {
   return allOnes || allZeros;
 }
 
+debugToFile(`updateLogicExecution: owner: ${owner}`);
+
 export async function showHideRethWidgets(
   screen,
   rethStageGauge,
