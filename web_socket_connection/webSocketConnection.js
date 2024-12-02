@@ -108,10 +108,10 @@ export function initializeWebSocketConnection(wsConfig) {
 
     ws.on("message", async (data) => {
       const response = JSON.parse(data);
-      debugToFile(`WebSocket response: ${JSON.stringify(response, null, 2)}`);
-      debugToFile(
-        `WebSocket response.method: ${JSON.stringify(response.method, null, 2)}`
-      );
+      // debugToFile(`WebSocket response: ${JSON.stringify(response, null, 2)}`);
+      // debugToFile(
+      //   `WebSocket response.method: ${JSON.stringify(response.method, null, 2)}`
+      // );
 
       populateRpcInfoBox(response.method);
 
