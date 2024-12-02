@@ -108,8 +108,7 @@ export function initializeWebSocketConnection(wsConfig) {
     ws.on("message", async (data) => {
       const response = JSON.parse(data);
       debugToFile(
-        "WebSocket received data:",
-        JSON.stringify(response, null, 2)
+        `WebSocket received data: ${JSON.stringify(response, null, 2)}`
       );
 
       if (!socketId || socketId === null) {
@@ -127,8 +126,7 @@ export function initializeWebSocketConnection(wsConfig) {
           });
           debugToFile("\n");
           debugToFile(
-            "RPC Response:",
-            JSON.stringify(rpcResponse.data, null, 2)
+            `RPC Response: ${JSON.stringify(rpcResponse.data, null, 2)}`
           );
           debugToFile("\n");
 
