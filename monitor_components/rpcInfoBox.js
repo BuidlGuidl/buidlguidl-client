@@ -1,12 +1,14 @@
 import blessed from "blessed";
 import { debugToFile } from "../helpers.js";
+import { owner } from "../commandLineOptions.js";
 
 let rpcInfoBox;
 let rpcMethodsHistory = [];
 const MAX_HISTORY_LENGTH = 30;
 
 export function createRpcInfoBox(grid) {
-  rpcInfoBox = grid.set(5, 7, 2, 1, blessed.box, {
+  // Create the box configuration but don't add it to grid yet
+  const boxConfig = {
     label: "RPC Requests",
     stroke: "cyan",
     fill: "white",
@@ -16,7 +18,15 @@ export function createRpcInfoBox(grid) {
     },
     wrap: false,
     tags: true,
-  });
+  };
+
+  // Only create and add to grid if owner exists
+  if (owner != null) {
+    rpcInfoBox = grid.set(5, 7, 2, 1, blessed.box, boxConfig);
+  } else {
+    // Create the box without adding it to grid
+    rpcInfoBox = blessed.box(boxConfig);
+  }
 
   return rpcInfoBox;
 }
