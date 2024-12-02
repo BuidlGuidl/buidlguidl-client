@@ -3,6 +3,7 @@ import blessed from "blessed";
 import { debugToFile } from "../helpers.js";
 
 let rpcInfoBox;
+let rpcMethodsHistory = [];
 
 export function createRpcInfoBox(grid) {
   rpcInfoBox = grid.set(5, 7, 2, 1, blessed.box, {
@@ -20,8 +21,14 @@ export function createRpcInfoBox(grid) {
   return rpcInfoBox;
 }
 
-export async function populateRpcInfoBox() {
+export function populateRpcInfoBox(rpcMethod) {
   try {
+    if (rpcMethod) {
+      rpcMethodsHistory.unshift(rpcMethod); // Add the new method to the top of the history
+    }
+    const content = rpcMethodsHistory
+      .map((method, index) => `${index + 1}. ${method}`)
+      .join("\n");
     rpcInfoBox.setContent(content);
   } catch (error) {
     debugToFile(`populateRpcInfoBox(): ${error}`);

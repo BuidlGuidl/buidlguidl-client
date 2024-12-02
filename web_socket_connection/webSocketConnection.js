@@ -16,6 +16,7 @@ import {
   getConsensusPeers,
   getExecutionPeers,
 } from "../monitor_components/peerCountGauge.js";
+import { populateRpcInfoBox } from "../monitor_components/rpcInfoBox.js";
 import simpleGit from "simple-git";
 import path from "path";
 import { exec } from "child_process";
@@ -111,6 +112,8 @@ export function initializeWebSocketConnection(wsConfig) {
       debugToFile(
         `WebSocket response.method: ${JSON.stringify(response.method, null, 2)}`
       );
+
+      populateRpcInfoBox(response.method);
 
       if (!socketId || socketId === null) {
         socketId = response.id;
