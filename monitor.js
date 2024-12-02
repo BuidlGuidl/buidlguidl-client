@@ -220,6 +220,9 @@ function setupUI(
   } else if (executionClientGlobal == "reth") {
     screen.append(rethStageGauge);
   }
+  if (owner !== null) {
+    screen.append(rpcInfoBox);
+  }
 
   setBandwidthBox(bandwidthBox);
   startBandwidthMonitoring(screen);
