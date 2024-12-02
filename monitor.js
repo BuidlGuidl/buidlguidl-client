@@ -274,13 +274,21 @@ function setupUI(
         }
       }
 
-      // if (screen.children.includes(chainInfoBox)) {
-      //   let chainInfoBoxBottom = chainInfoBox.top + chainInfoBox.height - 1;
-      //   let chainInfoBoxGap = cpuLine.top - chainInfoBoxBottom - 1;
-      //   if (chainInfoBoxGap != 0) {
-      //     chainInfoBox.height = chainInfoBox.height + chainInfoBoxGap;
-      //   }
-      // }
+      if (screen.children.includes(chainInfoBox)) {
+        let chainInfoBoxBottom = chainInfoBox.top + chainInfoBox.height - 1;
+        let chainInfoBoxGap = rpcInfoBox.top - chainInfoBoxBottom - 1;
+        if (chainInfoBoxGap != 0) {
+          chainInfoBox.height = chainInfoBox.height + chainInfoBoxGap;
+        }
+      }
+
+      if (screen.children.includes(rpcInfoBox)) {
+        let rpcInfoBoxBottom = rpcInfoBox.top + rpcInfoBox.height - 1;
+        let rpcInfoBoxGap = diskLine.top - rpcInfoBoxBottom - 1;
+        if (rpcInfoBoxGap != 0) {
+          rpcInfoBox.height = rpcInfoBox.height + rpcInfoBoxGap;
+        }
+      }
 
       let systemStatsGaugeBottom =
         systemStatsGauge.top + systemStatsGauge.height - 1;
@@ -349,13 +357,21 @@ function setupUI(
         }
       }
 
-      // if (screen.children.includes(chainInfoBox)) {
-      //   let chainInfoBoxRight = chainInfoBox.left + chainInfoBox.width - 1;
-      //   let chainInfoBoxGap = peerCountGauge.left - chainInfoBoxRight - 1;
-      //   if (chainInfoBoxGap != 0) {
-      //     chainInfoBox.width = chainInfoBox.width + chainInfoBoxGap;
-      //   }
-      // }
+      if (screen.children.includes(chainInfoBox)) {
+        let chainInfoBoxRight = chainInfoBox.left + chainInfoBox.width - 1;
+        let chainInfoBoxGap = peerCountGauge.left - chainInfoBoxRight - 1;
+        if (chainInfoBoxGap != 0) {
+          chainInfoBox.width = chainInfoBox.width + chainInfoBoxGap;
+        }
+      }
+
+      if (screen.children.includes(rpcInfoBox)) {
+        let rpcInfoBoxRight = rpcInfoBox.left + rpcInfoBox.width - 1;
+        let rpcInfoBoxGap = peerCountGauge.left - rpcInfoBoxRight - 1;
+        if (rpcInfoBoxGap != 0) {
+          rpcInfoBox.width = rpcInfoBox.width + rpcInfoBoxGap;
+        }
+      }
 
       let peerCountGaugeRight = peerCountGauge.left + peerCountGauge.width - 1;
       let peerCountGaugeGap = screen.width - peerCountGaugeRight - 1;
