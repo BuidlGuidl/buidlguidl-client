@@ -423,7 +423,7 @@ function setupUI(
   screen.render();
 
   setTimeout(() => {
-    // fixBottomMargins(screen);
+    fixBottomMargins(screen);
     fixRightMargins(screen);
 
     cpuLine.emit("attach");
@@ -434,7 +434,7 @@ function setupUI(
   }, 250);
 
   screen.on("resize", () => {
-    // fixBottomMargins(screen);
+    fixBottomMargins(screen);
     fixRightMargins(screen);
 
     cpuLine.emit("attach");
