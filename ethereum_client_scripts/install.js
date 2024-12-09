@@ -3,11 +3,10 @@ import path from "path";
 import { execSync } from "child_process";
 import os from "os";
 import { installDir } from "../commandLineOptions.js";
-import { debugToFile } from "../helpers.js";
 
 export const latestGethVer = "1.14.12";
 export const latestRethVer = "1.0.0";
-export const latestLighthouseVer = "5.3.0";
+export const latestLighthouseVer = "6.0.0";
 
 // export const latestGethVer = "1.14.3";
 // export const latestRethVer = "1.0.0";
