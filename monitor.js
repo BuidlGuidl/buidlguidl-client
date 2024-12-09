@@ -99,12 +99,6 @@ export async function initializeMonitoring(
         getLatestLogFile(consensusLogsPath, consensusClient)
       );
 
-      // setupConsensusLogStreaming(
-      //   logFilePathConsensus,
-      //   components.consensusLog,
-      //   screen
-      // );
-
       setupLogStreaming(
         consensusClientGlobal,
         logFilePathConsensus,
