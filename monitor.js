@@ -27,15 +27,13 @@ import {
 } from "./monitor_components/bandwidthGauge.js";
 
 import {
-  setupLogStreaming,
+  setupExecutionLogStreaming,
   showHideRethWidgets,
   showHideGethWidgets,
 } from "./monitor_components/updateLogicExecution.js";
 
-import {
-  createConsensusLog,
-  updateConsensusClientInfo,
-} from "./monitor_components/consensusLog.js";
+import { createConsensusLog } from "./monitor_components/consensusLog.js";
+import { setupConsensusLogStreaming } from "./monitor_components/updateLogicConsensus.js";
 import { createHeader } from "./monitor_components/header.js";
 
 let executionClientGlobal;
@@ -101,7 +99,7 @@ export async function initializeMonitoring(
         getLatestLogFile(consensusLogsPath, consensusClient)
       );
 
-      updateConsensusClientInfo(
+      setupConsensusLogStreaming(
         logFilePathConsensus,
         components.consensusLog,
         screen
@@ -122,7 +120,7 @@ export async function initializeMonitoring(
       );
     }, 5000);
 
-    setupLogStreaming(
+    setupExecutionLogStreaming(
       logFilePathExecution,
       components.executionLog,
       screen,

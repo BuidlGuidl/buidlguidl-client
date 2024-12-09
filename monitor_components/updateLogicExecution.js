@@ -79,7 +79,7 @@ function saveChainDlProgress(line) {
 
 let globalLine = "";
 
-export function setupLogStreaming(
+export function setupExecutionLogStreaming(
   logFilePath,
   executionLog,
   screen,

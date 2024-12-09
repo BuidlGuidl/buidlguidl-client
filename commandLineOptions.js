@@ -5,8 +5,7 @@ import readlineSync from "readline-sync";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import {
-  installMacLinuxExecutionClient,
-  installMacLinuxConsensusClient,
+  installMacLinuxClient,
   getVersionNumber,
   compareClientVersions,
   removeClient,
@@ -292,7 +291,7 @@ if (!optionsLoaded) {
           );
         } else {
           console.log(
-            `\n❓ An updated version of ${client} is available. ${installedVersion} is currently installed. Would you like to update to ${latestVersion}? (yes/y)`
+            `\n❓ An updated version of ${client} is available. ${installedVersion} is currently installed. Would you like to update to ${latestVersion}? (y/yes)`
           );
 
           const answer = readlineSync.question("");
@@ -302,20 +301,7 @@ if (!optionsLoaded) {
 
             const platform = os.platform();
             if (["darwin", "linux"].includes(platform)) {
-              if (client === "reth" || client === "geth") {
-                installMacLinuxExecutionClient(
-                  client,
-                  platform,
-                  latestGethVer,
-                  latestRethVer
-                );
-              } else if (client === "lighthouse") {
-                installMacLinuxConsensusClient(
-                  client,
-                  platform,
-                  latestLighthouseVer
-                );
-              }
+              installMacLinuxClient(client, platform);
             }
             console.log("");
             console.log(`👍 Updated ${client} to ${latestVersion}`);
