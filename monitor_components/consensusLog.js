@@ -5,10 +5,7 @@ import { formatLogLines } from "./helperFunctions.js";
 import { debugToFile } from "../helpers.js";
 
 export function createConsensusLog(grid, consensusClientLabel, screen) {
-  // const colSpan = screen.height < layoutHeightThresh ? 7 : 9;
-
   const consensusLog = grid.set(4, 0, 3, 7, blessed.box, {
-    // const consensusLog = grid.set(4, 0, 3, 7, blessed.log, {
     label: `${consensusClientLabel}`,
     content: `Loading ${consensusClientLabel} logs`,
     border: {
@@ -19,10 +16,6 @@ export function createConsensusLog(grid, consensusClientLabel, screen) {
     shrink: true,
     wrap: true,
   });
-
-  // screen.on("resize", () => {
-  //   consensusLog.render(); // Re-render the log
-  // });
 
   return consensusLog;
 }
@@ -104,53 +97,3 @@ export function updateConsensusClientInfo(logFilePath, log, screen) {
     }
   });
 }
-
-// export function updateConsensusClientInfo(logFilePath, consensusLog, screen) {
-//   let lastSize = 0;
-
-//   const updateLogContent = () => {
-//     try {
-//       const stats = fs.statSync(logFilePath);
-//       const newSize = stats.size;
-
-//       if (newSize > lastSize) {
-//         const newStream = fs.createReadStream(logFilePath, {
-//           encoding: "utf8",
-//           start: lastSize,
-//           end: newSize,
-//         });
-
-//         const newRl = readline.createInterface({
-//           input: newStream,
-//           output: process.stdout,
-//           terminal: false,
-//         });
-
-//         newRl.on("line", (line) => {
-//           consensusLog.log(formatLogLines(line));
-//           screen.render(); // Render after each line
-//         });
-
-//         newRl.on("close", () => {
-//           lastSize = newSize;
-//         });
-
-//         newRl.on("error", (err) => {
-//           debugToFile(`Error reading log file: ${err}`);
-//         });
-//       }
-//     } catch (error) {
-//       debugToFile(`Error accessing log file: ${error}`);
-//     }
-//   };
-
-//   // Initial read to load existing content
-//   updateLogContent();
-
-//   // Watch for file changes
-//   fs.watchFile(logFilePath, (curr, prev) => {
-//     if (curr.mtime > prev.mtime) {
-//       updateLogContent();
-//     }
-//   });
-// }
