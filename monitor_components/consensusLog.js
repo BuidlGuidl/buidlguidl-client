@@ -20,7 +20,7 @@ export function createConsensusLog(grid, consensusClientLabel, screen) {
   return consensusLog;
 }
 
-export function updateConsensusClientInfo(logFilePath, log, screen) {
+export function setupConsensusLogStreaming(logFilePath, log, screen) {
   let logBuffer = [];
   let lastSize = 0;
 
