@@ -27,13 +27,13 @@ import {
 } from "./monitor_components/bandwidthGauge.js";
 
 import {
-  setupExecutionLogStreaming,
+  setupLogStreaming,
   showHideRethWidgets,
   showHideGethWidgets,
-} from "./monitor_components/updateLogicExecution.js";
+} from "./monitor_components/updateLogic.js";
 
 import { createConsensusLog } from "./monitor_components/consensusLog.js";
-import { setupConsensusLogStreaming } from "./monitor_components/updateLogicConsensus.js";
+// import { setupConsensusLogStreaming } from "./monitor_components/updateLogicConsensus.js";
 import { createHeader } from "./monitor_components/header.js";
 
 let executionClientGlobal;
@@ -99,10 +99,18 @@ export async function initializeMonitoring(
         getLatestLogFile(consensusLogsPath, consensusClient)
       );
 
-      setupConsensusLogStreaming(
+      // setupConsensusLogStreaming(
+      //   logFilePathConsensus,
+      //   components.consensusLog,
+      //   screen
+      // );
+
+      setupLogStreaming(
+        consensusClientGlobal,
         logFilePathConsensus,
         components.consensusLog,
-        screen
+        screen,
+        components.gethStageGauge
       );
 
       // debugToFile(
@@ -120,7 +128,8 @@ export async function initializeMonitoring(
       );
     }, 5000);
 
-    setupExecutionLogStreaming(
+    setupLogStreaming(
+      executionClientGlobal,
       logFilePathExecution,
       components.executionLog,
       screen,
