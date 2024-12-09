@@ -79,9 +79,10 @@ function saveChainDlProgress(line) {
 
 let globalLine = "";
 
-export function setupExecutionLogStreaming(
+export function setupLogStreaming(
+  client,
   logFilePath,
-  executionLog,
+  log,
   screen,
   gethStageGauge
 ) {
@@ -90,7 +91,7 @@ export function setupExecutionLogStreaming(
   let lastKnownBlockNumber = 0;
 
   const ensureBufferFillsWidget = () => {
-    const visibleHeight = executionLog.height - 2; // Account for border
+    const visibleHeight = log.height - 2; // Account for border
 
     // Only pad if the buffer is already full, otherwise, just ensure it doesn't exceed the height
     if (logBuffer.length >= visibleHeight) {
@@ -134,9 +135,9 @@ export function setupExecutionLogStreaming(
 
           ensureBufferFillsWidget();
 
-          executionLog.setContent(logBuffer.join("\n"));
+          log.setContent(logBuffer.join("\n"));
 
-          if (executionClient == "geth") {
+          if (client == "geth") {
             if (screen.children.includes(gethStageGauge)) {
               populateGethStageGauge(gethStageProgress);
             }
@@ -147,15 +148,17 @@ export function setupExecutionLogStreaming(
           }
 
           // Check for new block
-          const blockNumberMatch = line.match(/block=(\d+)/);
-          if (blockNumberMatch) {
-            const currentBlockNumber = parseInt(blockNumberMatch[1], 10);
-            if (currentBlockNumber > lastKnownBlockNumber) {
-              lastKnownBlockNumber = currentBlockNumber;
-              try {
-                await checkIn(); // Call checkIn when a new block is found
-              } catch (error) {
-                debugToFile(`Error calling checkIn: ${error}`);
+          if (client == "geth" || client == "reth") {
+            const blockNumberMatch = line.match(/block=(\d+)/);
+            if (blockNumberMatch) {
+              const currentBlockNumber = parseInt(blockNumberMatch[1], 10);
+              if (currentBlockNumber > lastKnownBlockNumber) {
+                lastKnownBlockNumber = currentBlockNumber;
+                try {
+                  await checkIn(); // Call checkIn when a new block is found
+                } catch (error) {
+                  debugToFile(`Error calling checkIn: ${error}`);
+                }
               }
             }
           }

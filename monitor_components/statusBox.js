@@ -1,7 +1,7 @@
 import blessed from "blessed";
 import { debugToFile } from "../helpers.js";
 import { installDir } from "../commandLineOptions.js";
-import { synchronizeAndUpdateWidgets } from "./updateLogicExecution.js";
+import { synchronizeAndUpdateWidgets } from "./updateLogic.js";
 
 export async function updateStatusBox(statusBox) {
   try {
