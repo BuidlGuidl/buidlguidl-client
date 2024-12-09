@@ -272,13 +272,9 @@ async function startClient(clientName, executionType, installDir) {
     env: { ...process.env, INSTALL_DIR: installDir },
   });
 
-  if (clientName === "geth") {
+  if (clientName === "geth" || clientName === "reth") {
     executionChild = child;
-  } else if (clientName === "reth") {
-    executionChild = child;
-  } else if (clientName === "prysm") {
-    consensusChild = child;
-  } else if (clientName === "lighthouse") {
+  } else if (clientName === "prysm" || clientName === "lighthouse") {
     consensusChild = child;
   }
 
