@@ -32,10 +32,8 @@ import {
   showHideGethWidgets,
 } from "./monitor_components/updateLogicExecution.js";
 
-import {
-  createConsensusLog,
-  setupConsensusLogStreaming,
-} from "./monitor_components/consensusLog.js";
+import { createConsensusLog } from "./monitor_components/consensusLog.js";
+import { setupConsensusLogStreaming } from "./monitor_components/updateLogicConsensus.js";
 import { createHeader } from "./monitor_components/header.js";
 
 let executionClientGlobal;
