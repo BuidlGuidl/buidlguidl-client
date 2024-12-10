@@ -18,7 +18,6 @@ import {
 } from "../monitor_components/peerCountGauge.js";
 import { populateRpcInfoBox } from "../monitor_components/rpcInfoBox.js";
 import simpleGit from "simple-git";
-import path from "path";
 import { exec } from "child_process";
 import { getPublicIPAddress, getMacAddress } from "../getSystemStats.js";
 import WebSocket from "ws";

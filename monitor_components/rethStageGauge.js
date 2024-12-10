@@ -4,10 +4,6 @@ import { debugToFile } from "../helpers.js";
 let rethStageGauge;
 
 export function createRethStageGauge(grid) {
-  // const row = screen.height < layoutHeightThresh ? 3 : 6;
-  // const rowSpan = screen.height < layoutHeightThresh ? 6 : 3;
-
-  // rethStageGauge = grid.set(2, 8, 5, 1, blessed.box, {
   rethStageGauge = grid.set(2, 7, 5, 1, blessed.box, {
     label: "Sync Progress",
     content: `INITIALIZING...`,

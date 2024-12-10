@@ -33,7 +33,6 @@ import {
 } from "./monitor_components/updateLogic.js";
 
 import { createConsensusLog } from "./monitor_components/consensusLog.js";
-// import { setupConsensusLogStreaming } from "./monitor_components/updateLogicConsensus.js";
 import { createHeader } from "./monitor_components/header.js";
 
 let executionClientGlobal;

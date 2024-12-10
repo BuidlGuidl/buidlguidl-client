@@ -9,10 +9,6 @@ import { debugToFile } from "../helpers.js";
 let systemStatsGauge;
 
 export function createSystemStatsGauge(grid, installDir) {
-  // const row = screen.height < layoutHeightThresh ? 5 : 7;
-  // const rowSpan = screen.height < layoutHeightThresh ? 2 : 2;
-
-  // systemStatsGauge = grid.set(5, 9, 2, 1, blessed.box, {
   systemStatsGauge = grid.set(5, 8, 2, 1, blessed.box, {
     label: "System Stats",
     stroke: "green",
