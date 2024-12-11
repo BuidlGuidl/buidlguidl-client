@@ -3,22 +3,16 @@ import path from "path";
 import { execSync } from "child_process";
 import os from "os";
 import { installDir } from "../commandLineOptions.js";
-import { debugToFile } from "../helpers.js";
 
 export const latestGethVer = "1.14.12";
 export const latestRethVer = "1.0.0";
-export const latestLighthouseVer = "5.3.0";
+export const latestLighthouseVer = "6.0.0";
 
 // export const latestGethVer = "1.14.3";
 // export const latestRethVer = "1.0.0";
 // export const latestLighthouseVer = "5.2.0";
 
-export function installMacLinuxExecutionClient(
-  executionClient,
-  platform,
-  gethVer,
-  rethVer
-) {
+export function installMacLinuxClient(clientName, platform) {
   const arch = os.arch();
 
   const gethHash = {
@@ -29,290 +23,90 @@ export function installMacLinuxExecutionClient(
   const configs = {
     darwin: {
       x64: {
-        gethFileName: `geth-darwin-amd64-${gethVer}-${gethHash[gethVer]}`,
-        rethFileName: `reth-v${rethVer}-x86_64-apple-darwin`,
+        geth: `geth-darwin-amd64-${latestGethVer}-${gethHash[latestGethVer]}`,
+        reth: `reth-v${latestRethVer}-x86_64-apple-darwin`,
+        lighthouse: `lighthouse-v${latestLighthouseVer}-x86_64-apple-darwin`,
+        prysm: "prysm.sh",
       },
       arm64: {
-        gethFileName: `geth-darwin-arm64-${gethVer}-${gethHash[gethVer]}`,
-        rethFileName: `reth-v${rethVer}-aarch64-apple-darwin`,
+        geth: `geth-darwin-arm64-${latestGethVer}-${gethHash[latestGethVer]}`,
+        reth: `reth-v${latestRethVer}-aarch64-apple-darwin`,
+        lighthouse: `lighthouse-v${latestLighthouseVer}-x86_64-apple-darwin`,
+        prysm: "prysm.sh",
       },
     },
     linux: {
       x64: {
-        gethFileName: `geth-linux-amd64-${gethVer}-${gethHash[gethVer]}`,
-        rethFileName: `reth-v${rethVer}-x86_64-unknown-linux-gnu`,
+        geth: `geth-linux-amd64-${latestGethVer}-${gethHash[latestGethVer]}`,
+        reth: `reth-v${latestRethVer}-x86_64-unknown-linux-gnu`,
+        lighthouse: `lighthouse-v${latestLighthouseVer}-x86_64-unknown-linux-gnu`,
+        prysm: "prysm.sh",
       },
       arm64: {
-        gethFileName: `geth-linux-arm64-${gethVer}-${gethHash[gethVer]}`,
-        rethFileName: `reth-v${rethVer}-aarch64-unknown-linux-gnu`,
+        geth: `geth-linux-arm64-${latestGethVer}-${gethHash[latestGethVer]}`,
+        reth: `reth-v${latestRethVer}-aarch64-unknown-linux-gnu`,
+        lighthouse: `lighthouse-v${latestLighthouseVer}-aarch64-unknown-linux-gnu`,
+        prysm: "prysm.sh",
       },
     },
   };
 
-  const { gethFileName, rethFileName } = configs[platform][arch];
+  const fileName = configs[platform][arch][clientName];
+  const clientDir = path.join(installDir, "ethereum_clients", clientName);
+  const clientScript = path.join(
+    clientDir,
+    clientName === "prysm" ? "prysm.sh" : clientName
+  );
 
-  if (executionClient === "geth") {
-    const gethDir = path.join(installDir, "ethereum_clients", "geth");
-    const gethScript = path.join(gethDir, "geth");
-    if (!fs.existsSync(gethScript)) {
-      console.log("\nInstalling Geth.");
-      if (!fs.existsSync(gethDir)) {
-        console.log(`Creating '${gethDir}'`);
-        fs.mkdirSync(`${gethDir}/database`, { recursive: true });
-        fs.mkdirSync(`${gethDir}/logs`, { recursive: true });
-      }
-      console.log("Downloading Geth.");
-      execSync(
-        `cd "${gethDir}" && curl -L -O -# https://gethstore.blob.core.windows.net/builds/${gethFileName}.tar.gz`,
-        { stdio: "inherit" }
-      );
-      console.log("Uncompressing Geth.");
-      execSync(`cd "${gethDir}" && tar -xzvf "${gethFileName}.tar.gz"`, {
-        stdio: "inherit",
-      });
-      execSync(`cd "${gethDir}/${gethFileName}" && mv geth ..`, {
-        stdio: "inherit",
-      });
-      console.log("Cleaning up Geth directory.");
-      execSync(
-        `cd "${gethDir}" && rm -r "${gethFileName}" && rm "${gethFileName}.tar.gz"`,
-        { stdio: "inherit" }
-      );
-    } else {
-      console.log("Geth is already installed.");
+  if (!fs.existsSync(clientScript)) {
+    console.log(`\nInstalling ${clientName}.`);
+    if (!fs.existsSync(clientDir)) {
+      console.log(`Creating '${clientDir}'`);
+      fs.mkdirSync(`${clientDir}/database`, { recursive: true });
+      fs.mkdirSync(`${clientDir}/logs`, { recursive: true });
     }
-  } else if (executionClient === "reth") {
-    const rethDir = path.join(installDir, "ethereum_clients", "reth");
-    const rethScript = path.join(rethDir, "reth");
-    if (!fs.existsSync(rethScript)) {
-      console.log("\nInstalling Reth.");
-      if (!fs.existsSync(rethDir)) {
-        console.log(`Creating '${rethDir}'`);
-        fs.mkdirSync(`${rethDir}/database`, { recursive: true });
-        fs.mkdirSync(`${rethDir}/logs`, { recursive: true });
-      }
-      console.log("Downloading Reth.");
-      execSync(
-        `cd "${rethDir}" && curl -L -O -# https://github.com/paradigmxyz/reth/releases/download/v${rethVer}/${rethFileName}.tar.gz`,
-        { stdio: "inherit" }
-      );
-      console.log("Uncompressing Reth.");
-      execSync(`cd "${rethDir}" && tar -xzvf "${rethFileName}.tar.gz"`, {
-        stdio: "inherit",
-      });
-      console.log("Cleaning up Reth directory.");
-      execSync(`cd "${rethDir}" && rm "${rethFileName}.tar.gz"`, {
-        stdio: "inherit",
-      });
-    } else {
-      console.log("Reth is already installed.");
-    }
-  }
-}
 
-export function installMacLinuxConsensusClient(
-  consensusClient,
-  platform,
-  // prysmVer,
-  lighthouseVer
-) {
-  const arch = os.arch();
+    const downloadUrls = {
+      geth: `https://gethstore.blob.core.windows.net/builds/${fileName}.tar.gz`,
+      reth: `https://github.com/paradigmxyz/reth/releases/download/v${latestRethVer}/${fileName}.tar.gz`,
+      lighthouse: `https://github.com/sigp/lighthouse/releases/download/v${latestLighthouseVer}/${fileName}.tar.gz`,
+      prysm:
+        "https://raw.githubusercontent.com/prysmaticlabs/prysm/master/prysm.sh",
+    };
 
-  const configs = {
-    darwin: {
-      x64: {
-        lighthouseFileName: `lighthouse-v${lighthouseVer}-x86_64-apple-darwin`,
-      },
-      arm64: {
-        // lighthouseFileName: `lighthouse-v${lighthouseVer}-x86_64-apple-darwin-portable`,
-        lighthouseFileName: `lighthouse-v${lighthouseVer}-x86_64-apple-darwin`,
-      },
-    },
-    linux: {
-      x64: {
-        lighthouseFileName: `lighthouse-v${lighthouseVer}-x86_64-unknown-linux-gnu`,
-      },
-      arm64: {
-        lighthouseFileName: `lighthouse-v${lighthouseVer}-aarch64-unknown-linux-gnu`,
-      },
-    },
-  };
-
-  const prysmFileName = "prysm";
-  const { lighthouseFileName } = configs[platform][arch];
-
-  if (consensusClient === "prysm") {
-    const prysmDir = path.join(installDir, "ethereum_clients", "prysm");
-    const prysmScript = path.join(prysmDir, "prysm.sh");
-    if (!fs.existsSync(prysmScript)) {
-      console.log("\nInstalling Prysm.");
-      if (!fs.existsSync(prysmDir)) {
-        console.log(`Creating '${prysmDir}'`);
-        fs.mkdirSync(`${prysmDir}/database`, { recursive: true });
-        fs.mkdirSync(`${prysmDir}/logs`, { recursive: true });
-      }
+    if (clientName === "prysm") {
       console.log("Downloading Prysm.");
       execSync(
-        `cd "${prysmDir}" && curl -L -O -# https://raw.githubusercontent.com/prysmaticlabs/prysm/master/${prysmFileName}.sh && chmod +x prysm.sh`,
+        `cd "${clientDir}" && curl -L -O -# ${downloadUrls.prysm} && chmod +x prysm.sh`,
         { stdio: "inherit" }
       );
     } else {
-      console.log("Prysm is already installed.");
-    }
-  } else if (consensusClient === "lighthouse") {
-    const lighthouseDir = path.join(
-      installDir,
-      "ethereum_clients",
-      "lighthouse"
-    );
-    const lighthouseScript = path.join(lighthouseDir, "lighthouse");
-    if (!fs.existsSync(lighthouseScript)) {
-      console.log("\nInstalling Lighthouse.");
-      if (!fs.existsSync(lighthouseDir)) {
-        console.log(`Creating '${lighthouseDir}'`);
-        fs.mkdirSync(`${lighthouseDir}/database`, { recursive: true });
-        fs.mkdirSync(`${lighthouseDir}/logs`, { recursive: true });
-      }
-      console.log("Downloading Lighthouse.");
+      console.log(`Downloading ${clientName}.`);
       execSync(
-        `cd "${lighthouseDir}" && curl -L -O -# https://github.com/sigp/lighthouse/releases/download/v${lighthouseVer}/${lighthouseFileName}.tar.gz`,
+        `cd "${clientDir}" && curl -L -O -# ${downloadUrls[clientName]}`,
         { stdio: "inherit" }
       );
-      console.log("Uncompressing Lighthouse.");
-      execSync(
-        `cd "${lighthouseDir}" && tar -xzvf ${lighthouseFileName}.tar.gz`,
-        {
-          stdio: "inherit",
-        }
-      );
-      console.log("Cleaning up Lighthouse directory.");
-      execSync(`cd "${lighthouseDir}" && rm ${lighthouseFileName}.tar.gz`, {
+      console.log(`Uncompressing ${clientName}.`);
+      execSync(`cd "${clientDir}" && tar -xzvf "${fileName}.tar.gz"`, {
         stdio: "inherit",
       });
-    } else {
-      console.log("Lighthouse is already installed.");
-    }
-  }
-}
 
-export function installWindowsExecutionClient(executionClient) {
-  if (executionClient === "geth") {
-    const gethDir = path.join(installDir, "ethereum_clients", "geth");
-    const gethScript = path.join(gethDir, "geth.exe");
-    if (!fs.existsSync(gethScript)) {
-      console.log("\nInstalling Geth.");
-      if (!fs.existsSync(gethDir)) {
-        console.log(`Creating '${gethDir}'`);
-        fs.mkdirSync(`${gethDir}/database`, { recursive: true });
-        fs.mkdirSync(`${gethDir}/logs`, { recursive: true });
+      if (clientName === "geth") {
+        execSync(`cd "${clientDir}/${fileName}" && mv geth ..`, {
+          stdio: "inherit",
+        });
+        execSync(`cd "${clientDir}" && rm -r "${fileName}"`, {
+          stdio: "inherit",
+        });
       }
-      execSync(
-        `cd "${gethDir}" && curl https://gethstore.blob.core.windows.net/builds/geth-windows-amd64-1.14.3-ab48ba42.zip --output geth.zip`,
-        { stdio: "inherit" }
-      );
-      execSync(`cd "${gethDir}" && tar -xf geth.zip`, {
+
+      console.log(`Cleaning up ${clientName} directory.`);
+      execSync(`cd "${clientDir}" && rm "${fileName}.tar.gz"`, {
         stdio: "inherit",
       });
-      execSync(
-        `cd "${gethDir}/geth-windows-amd64-1.14.3-ab48ba42" && move geth.exe ..`,
-        {
-          stdio: "inherit",
-        }
-      );
-      execSync(
-        `cd "${gethDir}" && del geth.zip && rd /S /Q geth-windows-amd64-1.14.3-ab48ba42`,
-        { stdio: "inherit" }
-      );
-    } else {
-      console.log("Geth is already installed.");
     }
-  } else if (executionClient === "reth") {
-    const rethDir = path.join(installDir, "ethereum_clients", "reth");
-    const rethScript = path.join(rethDir, "reth.exe");
-    if (!fs.existsSync(rethScript)) {
-      console.log("\nInstalling Reth.");
-      if (!fs.existsSync(rethDir)) {
-        console.log(`Creating '${rethDir}'`);
-        fs.mkdirSync(`${rethDir}/database`, { recursive: true });
-        fs.mkdirSync(`${rethDir}/logs`, { recursive: true });
-      }
-      execSync(
-        `cd "${rethDir}" && curl -LO https://github.com/paradigmxyz/reth/releases/download/v0.2.0-beta.6/reth-v0.2.0-beta.6-x86_64-pc-windows-gnu.tar.gz`,
-        { stdio: "inherit" }
-      );
-      execSync(
-        `cd "${rethDir}" && tar -xzf reth-v0.2.0-beta.6-x86_64-pc-windows-gnu.tar.gz`,
-        {
-          stdio: "inherit",
-        }
-      );
-      execSync(
-        `cd "${rethDir}" && del reth-v0.2.0-beta.6-x86_64-pc-windows-gnu.tar.gz`,
-        {
-          stdio: "inherit",
-        }
-      );
-    } else {
-      console.log("Reth is already installed.");
-    }
-  }
-}
-
-export function installWindowsConsensusClient(consensusClient) {
-  if (consensusClient === "prysm") {
-    const prysmDir = path.join(installDir, "ethereum_clients", "prysm");
-    const prysmScript = path.join(prysmDir, "prysm.bat");
-    if (!fs.existsSync(prysmScript)) {
-      console.log("Installing Prysm.");
-      if (!fs.existsSync(prysmDir)) {
-        console.log(`Creating '${prysmDir}'`);
-        fs.mkdirSync(`${prysmDir}/database`, { recursive: true });
-        fs.mkdirSync(`${prysmDir}/logs`, { recursive: true });
-      }
-      execSync(
-        `cd "${prysmDir}" && curl https://raw.githubusercontent.com/prysmaticlabs/prysm/master/prysm.bat --output prysm.bat`,
-        { stdio: "inherit" }
-      );
-      execSync(
-        "reg add HKCU\\Console /v VirtualTerminalLevel /t REG_DWORD /d 1",
-        { stdio: "inherit" }
-      );
-    } else {
-      console.log("Prysm is already installed.");
-    }
-  } else if (consensusClient === "lighthouse") {
-    const lighthouseDir = path.join(
-      installDir,
-      "ethereum_clients",
-      "lighthouse"
-    );
-    const lighthouseScript = path.join(lighthouseDir, "lighthouse.exe");
-    if (!fs.existsSync(lighthouseScript)) {
-      console.log("Installing Lighthouse.");
-      if (!fs.existsSync(lighthouseDir)) {
-        console.log(`Creating '${lighthouseDir}'`);
-        fs.mkdirSync(`${lighthouseDir}/database`, { recursive: true });
-        fs.mkdirSync(`${lighthouseDir}/logs`, { recursive: true });
-      }
-      execSync(
-        `cd "${lighthouseDir}" && curl -LO https://github.com/sigp/lighthouse/releases/download/v5.1.3/lighthouse-v5.1.3-x86_64-windows.tar.gz`,
-        { stdio: "inherit" }
-      );
-      execSync(
-        `cd "${lighthouseDir}" && tar -xzf lighthouse-v5.1.3-x86_64-windows.tar.gz`,
-        {
-          stdio: "inherit",
-        }
-      );
-      execSync(
-        `cd "${lighthouseDir}" && del lighthouse-v5.1.3-x86_64-windows.tar.gz`,
-        {
-          stdio: "inherit",
-        }
-      );
-    } else {
-      console.log("Lighthouse is already installed.");
-    }
+  } else {
+    console.log(`${clientName} is already installed.`);
   }
 }
 
@@ -399,7 +193,6 @@ export function removeClient(client) {
   }
 }
 
-// Add this helper function at the end of the file
 function compareVersions(v1, v2) {
   const parts1 = v1.split(".").map(Number);
   const parts2 = v2.split(".").map(Number);

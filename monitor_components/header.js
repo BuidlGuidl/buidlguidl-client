@@ -7,7 +7,6 @@ import { dirname } from "path";
 import { debugToFile } from "../helpers.js";
 import { execSync } from "child_process";
 import { getPublicIPAddress } from "../getSystemStats.js";
-import { exec } from "child_process";
 import { owner } from "../commandLineOptions.js";
 import { isConnected } from "../web_socket_connection/webSocketConnection.js";
 

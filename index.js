@@ -5,12 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { initializeMonitoring } from "./monitor.js";
-import {
-  installMacLinuxConsensusClient,
-  installMacLinuxExecutionClient,
-  installWindowsConsensusClient,
-  installWindowsExecutionClient,
-} from "./ethereum_client_scripts/install.js";
+import { installMacLinuxClient } from "./ethereum_client_scripts/install.js";
 import { initializeWebSocketConnection } from "./web_socket_connection/webSocketConnection.js";
 import {
   executionClient,
@@ -31,11 +26,6 @@ import {
   configureBGConsensusPeers,
 } from "./ethereum_client_scripts/configureBGPeers.js";
 import { getVersionNumber } from "./ethereum_client_scripts/install.js";
-import {
-  latestGethVer,
-  latestRethVer,
-  latestLighthouseVer,
-} from "./ethereum_client_scripts/install.js";
 import { debugToFile } from "./helpers.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -282,13 +272,9 @@ async function startClient(clientName, executionType, installDir) {
     env: { ...process.env, INSTALL_DIR: installDir },
   });
 
-  if (clientName === "geth") {
+  if (clientName === "geth" || clientName === "reth") {
     executionChild = child;
-  } else if (clientName === "reth") {
-    executionChild = child;
-  } else if (clientName === "prysm") {
-    consensusChild = child;
-  } else if (clientName === "lighthouse") {
+  } else if (clientName === "prysm" || clientName === "lighthouse") {
     consensusChild = child;
   }
 
@@ -349,21 +335,13 @@ const jwtDir = path.join(installDir, "ethereum_clients", "jwt");
 const platform = os.platform();
 
 if (["darwin", "linux"].includes(platform)) {
-  installMacLinuxExecutionClient(
-    executionClient,
-    platform,
-    latestGethVer,
-    latestRethVer
-  );
-  installMacLinuxConsensusClient(
-    consensusClient,
-    platform,
-    latestLighthouseVer
-  );
-} else if (platform === "win32") {
-  installWindowsExecutionClient(executionClient);
-  installWindowsConsensusClient(consensusClient);
+  installMacLinuxClient(executionClient, platform);
+  installMacLinuxClient(consensusClient, platform);
 }
+// } else if (platform === "win32") {
+//   installWindowsExecutionClient(executionClient);
+//   installWindowsConsensusClient(consensusClient);
+// }
 
 let messageForHeader = "";
 let runsClient = false;
@@ -386,7 +364,7 @@ if (!isAlreadyRunning()) {
   await startClient(executionClient, executionType, installDir);
   await startClient(consensusClient, executionType, installDir);
 
-  if (owner != null) {
+  if (owner !== null) {
     initializeWebSocketConnection(wsConfig);
   }
 

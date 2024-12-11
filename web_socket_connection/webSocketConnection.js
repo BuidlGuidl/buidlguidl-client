@@ -16,8 +16,8 @@ import {
   getConsensusPeers,
   getExecutionPeers,
 } from "../monitor_components/peerCountGauge.js";
+import { populateRpcInfoBox } from "../monitor_components/rpcInfoBox.js";
 import simpleGit from "simple-git";
-import path from "path";
 import { exec } from "child_process";
 import { getPublicIPAddress, getMacAddress } from "../getSystemStats.js";
 import WebSocket from "ws";
@@ -107,11 +107,12 @@ export function initializeWebSocketConnection(wsConfig) {
 
     ws.on("message", async (data) => {
       const response = JSON.parse(data);
-      debugToFile(
-        `Received response from server. Checkin Success: ${JSON.stringify(
-          response.success
-        )}`
-      );
+      // debugToFile(`WebSocket response: ${JSON.stringify(response, null, 2)}`);
+      // debugToFile(
+      //   `WebSocket response.method: ${JSON.stringify(response.method, null, 2)}`
+      // );
+
+      populateRpcInfoBox(response.method);
 
       if (!socketId || socketId === null) {
         socketId = response.id;
@@ -126,7 +127,11 @@ export function initializeWebSocketConnection(wsConfig) {
             params: response.params,
             id: 1,
           });
-          debugToFile("Current Block Number:", rpcResponse.data);
+          // debugToFile("\n");
+          // debugToFile(
+          //   `RPC Response: ${JSON.stringify(rpcResponse.data, null, 2)}`
+          // );
+          // debugToFile("\n");
 
           // Send the response back to the WebSocket server
           ws.send(
@@ -136,7 +141,7 @@ export function initializeWebSocketConnection(wsConfig) {
             })
           );
         } catch (error) {
-          debugToFile("Error fetching block number:", error);
+          debugToFile("Error returning RPC response:", error);
 
           // Send an error response back to the WebSocket server
           ws.send(
