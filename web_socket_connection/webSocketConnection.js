@@ -22,14 +22,35 @@ import { exec } from "child_process";
 import { getPublicIPAddress, getMacAddress } from "../getSystemStats.js";
 import WebSocket from "ws";
 import axios from "axios";
+import fs from "fs";
+import path from "path";
 
 // let socket;
 let socketId;
 export let checkIn;
 let ws;
-export let isConnected = false;
+const connectionStatus = new Map();
+
+export function isConnected(pid) {
+  return connectionStatus.get(pid) || false;
+}
+
 let isConnecting = false;
 let reconnectTimeout;
+
+const connectionStatusFilePath = path.join(
+  installDir,
+  "ethereum_clients",
+  "websocket_connection_status.json"
+);
+
+const lockFilePath = path.join(installDir, "ethereum_clients", "script.lock");
+const ethereumClientsDir = path.dirname(lockFilePath);
+
+// Ensure the ethereum_clients directory exists
+if (!fs.existsSync(ethereumClientsDir)) {
+  fs.mkdirSync(ethereumClientsDir, { recursive: true });
+}
 
 export function initializeWebSocketConnection(wsConfig) {
   let lastCheckInTime = 0;
@@ -92,98 +113,144 @@ export function initializeWebSocketConnection(wsConfig) {
     }
   }
 
+  function updateConnectionStatusFile(status) {
+    fs.writeFileSync(
+      connectionStatusFilePath,
+      JSON.stringify({ connected: status })
+    );
+  }
+
   function connectWebSocket() {
     if (isConnecting) return;
     isConnecting = true;
 
-    ws = new WebSocket("wss://rpc.buidlguidl.com:48544");
+    try {
+      // Check if this is a primary instance
+      const isPrimary =
+        fs.existsSync(lockFilePath) &&
+        fs.readFileSync(lockFilePath, "utf8") === process.pid.toString();
 
-    ws.on("open", () => {
-      debugToFile("WebSocket connection established");
-      isConnecting = false;
-      isConnected = true;
-      clearTimeout(reconnectTimeout); // Clear any pending reconnect attempt
-    });
-
-    ws.on("message", async (data) => {
-      const response = JSON.parse(data);
-      // debugToFile(`WebSocket response: ${JSON.stringify(response, null, 2)}`);
-      // debugToFile(
-      //   `WebSocket response.method: ${JSON.stringify(response.method, null, 2)}`
-      // );
-
-      populateRpcInfoBox(response.method);
-
-      if (!socketId || socketId === null) {
-        socketId = response.id;
-        debugToFile(`Socket ID: ${socketId}`);
-      } else {
-        const targetUrl = "http://localhost:8545";
-
-        try {
-          const rpcResponse = await axios.post(targetUrl, {
+      // For non-primary instances, we should still connect to the local RPC
+      if (!isPrimary) {
+        // Test the RPC connection
+        axios
+          .post("http://localhost:8545", {
             jsonrpc: "2.0",
-            method: response.method,
-            params: response.params,
+            method: "eth_blockNumber",
+            params: [],
             id: 1,
+          })
+          .then(() => {
+            connectionStatus.set(process.pid, true);
+            updateConnectionStatusFile(true);
+          })
+          .catch(() => {
+            connectionStatus.set(process.pid, false);
+            updateConnectionStatusFile(false);
           });
-          // debugToFile("\n");
-          // debugToFile(
-          //   `RPC Response: ${JSON.stringify(rpcResponse.data, null, 2)}`
-          // );
-          // debugToFile("\n");
 
-          // Send the response back to the WebSocket server
-          ws.send(
-            JSON.stringify({
-              ...rpcResponse.data,
-              bgMessageId: response.bgMessageId,
-            })
-          );
-        } catch (error) {
-          debugToFile("Error returning RPC response:", error);
+        isConnecting = false;
+        return;
+      }
 
-          // Send an error response back to the WebSocket server
-          ws.send(
-            JSON.stringify({
+      // Primary instance WebSocket connection logic continues here...
+      ws = new WebSocket("wss://rpc.buidlguidl.com:48544");
+
+      ws.on("open", () => {
+        debugToFile("WebSocket connection established");
+        isConnecting = false;
+        connectionStatus.set(process.pid, true);
+        updateConnectionStatusFile(true);
+        clearTimeout(reconnectTimeout);
+      });
+
+      ws.on("message", async (data) => {
+        const response = JSON.parse(data);
+        // debugToFile(`WebSocket response: ${JSON.stringify(response, null, 2)}`);
+        // debugToFile(
+        //   `WebSocket response.method: ${JSON.stringify(response.method, null, 2)}`
+        // );
+
+        populateRpcInfoBox(response.method);
+
+        if (!socketId || socketId === null) {
+          socketId = response.id;
+          debugToFile(`Socket ID: ${socketId}`);
+        } else {
+          const targetUrl = "http://localhost:8545";
+
+          try {
+            const rpcResponse = await axios.post(targetUrl, {
               jsonrpc: "2.0",
-              error: {
-                code: -32603,
-                message: "Internal error",
-                data: error.message,
-              },
+              method: response.method,
+              params: response.params,
               id: 1,
-            })
-          );
+            });
+            // debugToFile("\n");
+            // debugToFile(
+            //   `RPC Response: ${JSON.stringify(rpcResponse.data, null, 2)}`
+            // );
+            // debugToFile("\n");
+
+            // Send the response back to the WebSocket server
+            ws.send(
+              JSON.stringify({
+                ...rpcResponse.data,
+                bgMessageId: response.bgMessageId,
+              })
+            );
+          } catch (error) {
+            debugToFile("Error returning RPC response:", error);
+
+            // Send an error response back to the WebSocket server
+            ws.send(
+              JSON.stringify({
+                jsonrpc: "2.0",
+                error: {
+                  code: -32603,
+                  message: "Internal error",
+                  data: error.message,
+                },
+                id: 1,
+              })
+            );
+          }
         }
-      }
-    });
+      });
 
-    const pingInterval = setInterval(() => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.ping();
-      }
-    }, 30000); // Send a ping every 30 seconds
+      const pingInterval = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.ping();
+        }
+      }, 30000); // Send a ping every 30 seconds
 
-    // Clear the ping interval when the socket closes
-    ws.on("close", () => {
-      socketId = null;
+      // Clear the ping interval when the socket closes
+      ws.on("close", () => {
+        socketId = null;
+        isConnecting = false;
+        connectionStatus.set(process.pid, false);
+        updateConnectionStatusFile(false);
+        debugToFile("Disconnected from WebSocket server");
+        clearInterval(pingInterval);
+
+        debugToFile("Attempting to reconnect...");
+        reconnectTimeout = setTimeout(() => {
+          connectWebSocket();
+        }, 10000);
+      });
+
+      ws.on("error", (error) => {
+        debugToFile(`WebSocket error: ${error}`);
+        isConnecting = false;
+        connectionStatus.set(process.pid, false);
+        updateConnectionStatusFile(false);
+      });
+    } catch (error) {
+      debugToFile(`connectWebSocket error: ${error}`);
       isConnecting = false;
-      isConnected = false;
-      debugToFile("Disconnected from WebSocket server");
-      clearInterval(pingInterval);
-
-      debugToFile("Attempting to reconnect...");
-      reconnectTimeout = setTimeout(() => {
-        connectWebSocket();
-      }, 10000);
-    });
-
-    ws.on("error", (error) => {
-      debugToFile(`WebSocket error: ${error}`);
-      isConnecting = false;
-      isConnected = false;
-    });
+      connectionStatus.set(process.pid, false);
+      updateConnectionStatusFile(false);
+    }
   }
 
   connectWebSocket();
@@ -309,6 +376,16 @@ export function initializeWebSocketConnection(wsConfig) {
 
   // Regular interval check-in
   setInterval(() => checkIn(true), 60000); // Force check-in every 60 seconds
+
+  setInterval(() => {
+    try {
+      const statusData = fs.readFileSync(connectionStatusFilePath, "utf8");
+      const { connected } = JSON.parse(statusData);
+      connectionStatus.set(process.pid, connected);
+    } catch (error) {
+      debugToFile(`Error reading connection status file: ${error}`);
+    }
+  }, 5000); // Check every 5 seconds
 }
 
 let cachedEnode = null;

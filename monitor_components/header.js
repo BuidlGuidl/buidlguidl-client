@@ -188,7 +188,7 @@ export function createHeader(grid, screen, messageForHeader) {
   function updateWSStatusMessage() {
     // Update the RPC status message
     if (owner !== null) {
-      if (isConnected) {
+      if (isConnected(process.pid)) {
         rpcStatusMessage =
           "{center}{green-fg}RPC Server Connected{/green-fg}{/center}";
       } else {
