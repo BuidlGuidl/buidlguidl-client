@@ -360,6 +360,7 @@ const wsConfig = {
 
 if (!isAlreadyRunning()) {
   deleteOptionsFile();
+  createLockFile();
 
   await startClient(executionClient, executionType, installDir);
   await startClient(consensusClient, executionType, installDir);
@@ -369,11 +370,14 @@ if (!isAlreadyRunning()) {
   }
 
   runsClient = true;
-  createLockFile();
   saveOptionsToFile();
 } else {
   messageForHeader = "Dashboard View (client already running)";
   runsClient = false;
+  // Initialize WebSocket connection for secondary instances too
+  if (owner !== null) {
+    initializeWebSocketConnection(wsConfig);
+  }
 }
 
 initializeMonitoring(
