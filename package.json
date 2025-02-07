@@ -22,6 +22,8 @@
     "open": "^10.1.0",
     "readline-sync": "^1.4.10",
     "simple-git": "^3.26.0",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
     "systeminformation": "^5.22.8",
     "viem": "^2.13.3",
     "ws": "^8.15.0"

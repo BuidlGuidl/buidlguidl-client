@@ -20,15 +20,14 @@ import { populateRpcInfoBox } from "../monitor_components/rpcInfoBox.js";
 import simpleGit from "simple-git";
 import { exec } from "child_process";
 import { getPublicIPAddress, getMacAddress } from "../getSystemStats.js";
-import WebSocket from "ws";
+import { io } from "socket.io-client";
 import axios from "axios";
 import fs from "fs";
 import path from "path";
 
-// let socket;
 let socketId;
 export let checkIn;
-let ws;
+let socket;
 const connectionStatus = new Map();
 
 export function isConnected(pid) {
@@ -153,94 +152,70 @@ export function initializeWebSocketConnection(wsConfig) {
         return;
       }
 
-      // Primary instance WebSocket connection logic continues here...
-      ws = new WebSocket("wss://rpc.buidlguidl.com:48544");
+      // Primary instance Socket.IO connection logic
+      socket = io("wss://stage.rpc.buidlguidl.com:48546", {
+        reconnection: true,
+        reconnectionDelay: 10000,
+        reconnectionAttempts: Infinity,
+      });
 
-      ws.on("open", () => {
-        debugToFile("WebSocket connection established");
+      socket.on("connect", () => {
+        debugToFile("Socket.IO connection established");
         isConnecting = false;
         connectionStatus.set(process.pid, true);
         updateConnectionStatusFile(true);
         clearTimeout(reconnectTimeout);
       });
 
-      ws.on("message", async (data) => {
-        const response = JSON.parse(data);
-        // debugToFile(`WebSocket response: ${JSON.stringify(response, null, 2)}`);
-        // debugToFile(
-        //   `WebSocket response.method: ${JSON.stringify(response.method, null, 2)}`
-        // );
+      socket.on("init", (id) => {
+        socketId = id;
+        debugToFile(`Socket ID: ${socketId}`);
+      });
 
-        populateRpcInfoBox(response.method);
+      socket.on("rpc_request", async (request, callback) => {
+        populateRpcInfoBox(request.method);
 
-        if (!socketId || socketId === null) {
-          socketId = response.id;
-          debugToFile(`Socket ID: ${socketId}`);
-        } else {
-          const targetUrl = "http://localhost:8545";
+        const targetUrl = "http://localhost:8545";
 
-          try {
-            const rpcResponse = await axios.post(targetUrl, {
-              jsonrpc: "2.0",
-              method: response.method,
-              params: response.params,
-              id: 1,
-            });
-            // debugToFile("\n");
-            // debugToFile(
-            //   `RPC Response: ${JSON.stringify(rpcResponse.data, null, 2)}`
-            // );
-            // debugToFile("\n");
+        try {
+          const rpcResponse = await axios.post(targetUrl, {
+            jsonrpc: "2.0",
+            method: request.method,
+            params: request.params,
+            id: 1,
+          });
 
-            // Send the response back to the WebSocket server
-            ws.send(
-              JSON.stringify({
-                ...rpcResponse.data,
-                bgMessageId: response.bgMessageId,
-              })
-            );
-          } catch (error) {
-            debugToFile("Error returning RPC response:", error);
+          // Use the acknowledgment callback to send the response
+          callback({
+            ...rpcResponse.data,
+            bgMessageId: request.bgMessageId,
+          });
+        } catch (error) {
+          debugToFile("Error returning RPC response:", error);
 
-            // Send an error response back to the WebSocket server
-            ws.send(
-              JSON.stringify({
-                jsonrpc: "2.0",
-                error: {
-                  code: -32603,
-                  message: "Internal error",
-                  data: error.message,
-                },
-                id: 1,
-              })
-            );
-          }
+          // Send error response using the callback
+          callback({
+            jsonrpc: "2.0",
+            error: {
+              code: -32603,
+              message: "Internal error",
+              data: error.message,
+            },
+            id: 1,
+          });
         }
       });
 
-      const pingInterval = setInterval(() => {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.ping();
-        }
-      }, 30000); // Send a ping every 30 seconds
-
-      // Clear the ping interval when the socket closes
-      ws.on("close", () => {
+      socket.on("disconnect", () => {
         socketId = null;
         isConnecting = false;
         connectionStatus.set(process.pid, false);
         updateConnectionStatusFile(false);
-        debugToFile("Disconnected from WebSocket server");
-        clearInterval(pingInterval);
-
-        debugToFile("Attempting to reconnect...");
-        reconnectTimeout = setTimeout(() => {
-          connectWebSocket();
-        }, 10000);
+        debugToFile("Disconnected from Socket.IO server");
       });
 
-      ws.on("error", (error) => {
-        debugToFile(`WebSocket error: ${error}`);
+      socket.on("connect_error", (error) => {
+        debugToFile(`Socket.IO connection error: ${error}`);
         isConnecting = false;
         connectionStatus.set(process.pid, false);
         updateConnectionStatusFile(false);
@@ -342,15 +317,13 @@ export function initializeWebSocketConnection(wsConfig) {
 
       // debugToFile(`Checkin() params: ${JSON.stringify(params)}`);
 
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        const message = JSON.stringify({
+      if (socket && socket.connected) {
+        socket.emit("checkin", {
           type: "checkin",
           params: params,
         });
-        //debugToFile(`Sending WebSocket checkin message`);
-        ws.send(message);
       } else {
-        debugToFile("WebSocket is not open.");
+        debugToFile("Socket.IO is not connected.");
       }
     } catch (error) {
       debugToFile(`checkIn() Error: ${error}`);
