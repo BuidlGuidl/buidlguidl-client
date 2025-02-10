@@ -189,6 +189,7 @@ export function initializeWebSocketConnection(wsConfig) {
           if (typeof callback === "function") {
             callback({
               ...rpcResponse.data,
+              messageId: request.messageId,
               bgMessageId: request.bgMessageId,
             });
           } else {
@@ -198,6 +199,7 @@ export function initializeWebSocketConnection(wsConfig) {
             // If no callback is provided, we can emit a response event instead
             socket.emit("rpc_response", {
               ...rpcResponse.data,
+              messageId: request.messageId,
               bgMessageId: request.bgMessageId,
             });
           }
@@ -212,6 +214,7 @@ export function initializeWebSocketConnection(wsConfig) {
               data: error.message,
             },
             id: 1,
+            messageId: request.messageId,
           };
 
           if (typeof callback === "function") {
