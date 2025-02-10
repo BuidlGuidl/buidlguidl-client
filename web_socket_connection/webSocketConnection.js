@@ -182,46 +182,26 @@ export function initializeWebSocketConnection(wsConfig) {
             jsonrpc: "2.0",
             method: request.method,
             params: request.params,
-            id: 1,
+            id: request.id,
           });
 
-          // Check if callback is a function before using it
-          if (typeof callback === "function") {
-            callback({
-              ...rpcResponse.data,
-              messageId: request.messageId,
-              bgMessageId: request.bgMessageId,
-            });
-          } else {
-            debugToFile(
-              "Warning: RPC request received without valid callback function"
-            );
-            // If no callback is provided, we can emit a response event instead
-            socket.emit("rpc_response", {
-              ...rpcResponse.data,
-              messageId: request.messageId,
-              bgMessageId: request.bgMessageId,
-            });
-          }
+          callback({
+            result: rpcResponse.data.result,
+            jsonrpc: "2.0",
+            id: request.id,
+          });
         } catch (error) {
           debugToFile("Error returning RPC response:", error);
 
-          const errorResponse = {
+          callback({
             jsonrpc: "2.0",
             error: {
               code: -32603,
               message: "Internal error",
               data: error.message,
             },
-            id: 1,
-            messageId: request.messageId,
-          };
-
-          if (typeof callback === "function") {
-            callback(errorResponse);
-          } else {
-            socket.emit("rpc_response", errorResponse);
-          }
+            id: request.id,
+          });
         }
       });
 
