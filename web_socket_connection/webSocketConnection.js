@@ -185,16 +185,26 @@ export function initializeWebSocketConnection(wsConfig) {
             id: 1,
           });
 
-          // Use the acknowledgment callback to send the response
-          callback({
-            ...rpcResponse.data,
-            bgMessageId: request.bgMessageId,
-          });
+          // Check if callback is a function before using it
+          if (typeof callback === "function") {
+            callback({
+              ...rpcResponse.data,
+              bgMessageId: request.bgMessageId,
+            });
+          } else {
+            debugToFile(
+              "Warning: RPC request received without valid callback function"
+            );
+            // If no callback is provided, we can emit a response event instead
+            socket.emit("rpc_response", {
+              ...rpcResponse.data,
+              bgMessageId: request.bgMessageId,
+            });
+          }
         } catch (error) {
           debugToFile("Error returning RPC response:", error);
 
-          // Send error response using the callback
-          callback({
+          const errorResponse = {
             jsonrpc: "2.0",
             error: {
               code: -32603,
@@ -202,7 +212,13 @@ export function initializeWebSocketConnection(wsConfig) {
               data: error.message,
             },
             id: 1,
-          });
+          };
+
+          if (typeof callback === "function") {
+            callback(errorResponse);
+          } else {
+            socket.emit("rpc_response", errorResponse);
+          }
         }
       });
 
