@@ -108,7 +108,7 @@ export async function fetchBGConsensusPeers() {
 export async function configureBGConsensusPeers() {
   try {
     const response = await fetch(
-      "https://stage.rpc.buidlguidl.com:48546/consensusPeerAddr"
+      "https://stage.rpc.buidlguidl.com:48546/consensuspeeraddr"
     );
     const data = await response.json();
 
