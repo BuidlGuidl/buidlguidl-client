@@ -332,12 +332,29 @@ export function initializeWebSocketConnection(wsConfig) {
   // Immediate check-in when monitoring starts
   checkIn(true);
 
+  let checkInTimer;
+
+  // Function to schedule next check-in
+  const scheduleNextCheckIn = () => {
+    if (checkInTimer) {
+      clearTimeout(checkInTimer);
+    }
+    checkInTimer = setTimeout(() => {
+      checkIn(true);
+      scheduleNextCheckIn(); // Schedule next check-in after this one completes
+    }, 60000);
+  };
+
+  // Initial timer setup
+  scheduleNextCheckIn();
+
   // Set up block listener
   localClient.watchBlocks(
     {
       onBlock: (block) => {
         if (block.number > 0) {
-          checkIn(true, block.number); // Pass block number to checkIn
+          checkIn(true, block.number); // Check in with new block
+          scheduleNextCheckIn(); // Reset the timer
         }
       },
     },
@@ -345,9 +362,6 @@ export function initializeWebSocketConnection(wsConfig) {
       debugToFile(`Error in block watcher: ${error}`);
     }
   );
-
-  // Regular interval check-in
-  setInterval(() => checkIn(true), 60000); // Force check-in every 60 seconds
 
   setInterval(() => {
     try {
