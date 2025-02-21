@@ -185,6 +185,9 @@ export function initializeWebSocketConnection(wsConfig) {
             id: request.id,
           });
 
+          debugToFile(
+            "⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️"
+          );
           debugToFile(`RPC response: ${JSON.stringify(rpcResponse)}`);
 
           callback({
