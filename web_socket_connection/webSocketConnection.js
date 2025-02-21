@@ -190,11 +190,20 @@ export function initializeWebSocketConnection(wsConfig) {
           );
           debugToFile(`RPC response data: ${JSON.stringify(rpcResponse.data)}`);
 
-          callback({
-            result: rpcResponse.data.result,
-            jsonrpc: "2.0",
-            id: request.id,
-          });
+          // Check if the RPC response contains an error
+          if (rpcResponse.data.error) {
+            callback({
+              jsonrpc: "2.0",
+              error: rpcResponse.data.error,
+              id: request.id,
+            });
+          } else {
+            callback({
+              jsonrpc: "2.0",
+              result: rpcResponse.data.result,
+              id: request.id,
+            });
+          }
         } catch (error) {
           debugToFile("Error returning RPC response:", error);
 
