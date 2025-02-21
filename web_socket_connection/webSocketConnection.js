@@ -186,9 +186,9 @@ export function initializeWebSocketConnection(wsConfig) {
           });
 
           debugToFile(
-            "⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️"
+            "⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️"
           );
-          debugToFile(`RPC response: ${JSON.stringify(rpcResponse)}`);
+          debugToFile(`RPC response data: ${JSON.stringify(rpcResponse.data)}`);
 
           callback({
             result: rpcResponse.data.result,
