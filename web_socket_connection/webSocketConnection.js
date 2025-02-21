@@ -185,6 +185,8 @@ export function initializeWebSocketConnection(wsConfig) {
             id: request.id,
           });
 
+          debugToFile(`RPC response: ${JSON.stringify(rpcResponse)}`);
+
           callback({
             result: rpcResponse.data.result,
             jsonrpc: "2.0",
