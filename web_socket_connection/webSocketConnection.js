@@ -186,10 +186,11 @@ export function initializeWebSocketConnection(wsConfig) {
           });
 
           // don't delete this. I need it for later
-          // debugToFile(
-          //   "⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️"
-          // );
-          // debugToFile(`RPC response data: ${JSON.stringify(rpcResponse.data)}`);
+          debugToFile(
+            "⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️"
+          );
+          debugToFile(`rpcResponse.data: ${JSON.stringify(rpcResponse.data)}`);
+          debugToFile(`rpcResponse: ${JSON.stringify(rpcResponse)}`);
 
           // Check if the RPC response contains an error
           if (rpcResponse.data.error) {
