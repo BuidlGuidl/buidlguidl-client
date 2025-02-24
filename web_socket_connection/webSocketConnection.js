@@ -186,26 +186,29 @@ export function initializeWebSocketConnection(wsConfig) {
           });
 
           // don't delete this. I need it for later
-          debugToFile(
-            "⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️"
-          );
-          debugToFile(`rpcResponse.data: ${JSON.stringify(rpcResponse.data)}`);
-          debugToFile(`rpcResponse: ${JSON.stringify(rpcResponse)}`);
+          // debugToFile(
+          //   "⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️⚙️"
+          // );
+          // debugToFile(`rpcResponse.data: ${JSON.stringify(rpcResponse.data)}`);
+          // debugToFile(`rpcResponse: ${JSON.stringify(rpcResponse)}`);
 
+          callback(rpcResponse.data);
+
+          // don't delete this. I need it for later
           // Check if the RPC response contains an error
-          if (rpcResponse.data.error) {
-            callback({
-              jsonrpc: "2.0",
-              error: rpcResponse.data.error,
-              id: request.id,
-            });
-          } else {
-            callback({
-              jsonrpc: "2.0",
-              result: rpcResponse.data.result,
-              id: request.id,
-            });
-          }
+          // if (rpcResponse.data.error) {
+          //   callback({
+          //     jsonrpc: "2.0",
+          //     error: rpcResponse.data.error,
+          //     id: request.id,
+          //   });
+          // } else {
+          //   callback({
+          //     jsonrpc: "2.0",
+          //     result: rpcResponse.data.result,
+          //     id: request.id,
+          //   });
+          // }
         } catch (error) {
           debugToFile("Error returning RPC response:", error);
 
