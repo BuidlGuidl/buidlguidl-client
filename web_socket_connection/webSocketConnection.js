@@ -192,8 +192,8 @@ export function initializeWebSocketConnection(wsConfig) {
           callback({
             jsonrpc: "2.0",
             error: {
-              code: -32603,
-              message: "Internal error",
+              code: -70000,
+              message: "Internal node error",
               data: error.message,
             },
             id: request.id,
