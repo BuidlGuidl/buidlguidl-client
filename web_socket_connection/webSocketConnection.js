@@ -153,7 +153,7 @@ export function initializeWebSocketConnection(wsConfig) {
       }
 
       // Primary instance Socket.IO connection logic
-      socket = io("wss://stage.rpc.buidlguidl.com:48546", {
+      socket = io("wss://mainnet.rpc.buidlguidl.com:48546", {
         reconnection: true,
         reconnectionDelay: 10000,
         reconnectionAttempts: Infinity,
