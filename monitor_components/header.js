@@ -33,7 +33,7 @@ export function createHeader(grid, screen, messageForHeader) {
   async function fetchPoints(owner) {
     try {
       const response = await axios.get(
-        `https://mainnet.rpc.buidlguidl.com:48546/yourpoints?owner=${owner}`
+        `https://pool.mainnet.rpc.buidlguidl.com:48546/yourpoints?owner=${owner}`
       );
       return response.data.points;
     } catch (error) {

@@ -10,7 +10,7 @@ export async function fetchBGExecutionPeers() {
   try {
     const publicIP = await getPublicIPAddress();
     const response = await fetch(
-      "https://mainnet.rpc.buidlguidl.com:48546/enodes"
+      "https://pool.mainnet.rpc.buidlguidl.com:48546/enodes"
     );
     const data = await response.json();
 
@@ -90,7 +90,7 @@ export async function configureBGExecutionPeers(bgPeers) {
 export async function fetchBGConsensusPeers() {
   try {
     const response = await fetch(
-      "https://mainnet.rpc.buidlguidl.com:48546/peerids"
+      "https://pool.mainnet.rpc.buidlguidl.com:48546/peerids"
     );
     const data = await response.json();
 
@@ -108,7 +108,7 @@ export async function fetchBGConsensusPeers() {
 export async function configureBGConsensusPeers() {
   try {
     const response = await fetch(
-      "https://mainnet.rpc.buidlguidl.com:48546/consensuspeeraddr"
+      "https://pool.mainnet.rpc.buidlguidl.com:48546/consensuspeeraddr"
     );
     const data = await response.json();
 
