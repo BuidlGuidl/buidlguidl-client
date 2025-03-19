@@ -2,9 +2,9 @@ import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
 import os from "os";
-import { installDir } from "../commandLineOptions.js";
+import { installDir } from "../commandLineOptions.js"; // Adjust the path as needed
 
-export const latestGethVer = "1.15.0"; 
+export const latestGethVer = "1.15.0";
 export const latestRethVer = "1.0.0";
 export const latestLighthouseVer = "6.0.0";
 
@@ -12,32 +12,29 @@ export function installMacLinuxClient(clientName, platform) {
   const arch = os.arch();
   const clientDir = path.join(installDir, "ethereum_clients", clientName);
 
-  // For prysm we use prysm.sh, for others we used to use <clientName>.
-  // For geth, we'll store the built binary in "go-ethereum/build/bin/geth"
-  // and NOT copy it to a top-level file.
-
   if (clientName === "geth") {
-    // The path where the final geth binary will live
+    // The built geth binary is expected at:
     const builtBinary = path.join(clientDir, "go-ethereum", "build", "bin", "geth");
 
-    // If that binary doesn't exist, we clone and build it
     if (!fs.existsSync(builtBinary)) {
       console.log(`\nInstalling ${clientName} from source.`);
+      // Ensure necessary directories exist
       if (!fs.existsSync(clientDir)) {
         console.log(`Creating '${clientDir}'`);
         fs.mkdirSync(path.join(clientDir, "database"), { recursive: true });
         fs.mkdirSync(path.join(clientDir, "logs"), { recursive: true });
       }
-      // Clone the Gnosis-compatible go-ethereum repository
+      // Define the clone directory for the go-ethereum repository
       const cloneDir = path.join(clientDir, "go-ethereum");
-      execSync(`git clone https://github.com/gnosischain/go-ethereum "${cloneDir}"`, {
-        stdio: "inherit",
-      });
-
-      // Build geth using make
+      if (!fs.existsSync(cloneDir)) {
+        console.log("Cloning go-ethereum repository...");
+        execSync(`git clone https://github.com/gnosischain/go-ethereum "${cloneDir}"`, { stdio: "inherit" });
+      } else {
+        console.log("go-ethereum repository already exists. Updating repository...");
+        execSync(`cd "${cloneDir}" && git pull`, { stdio: "inherit" });
+      }
+      // Build geth using "make geth"
       execSync(`cd "${cloneDir}" && make geth`, { stdio: "inherit" });
-
-      // builtBinary now exists at <cloneDir>/build/bin/geth
       console.log("Geth installed successfully.");
     } else {
       console.log(`${clientName} is already installed.`);
@@ -150,7 +147,6 @@ export function getVersionNumber(client) {
     clientCommand = path.join(installDir, "ethereum_clients", client, client);
     argument = "--version";
   } else if (client === "geth") {
-    // The geth binary is in go-ethereum/build/bin/geth
     clientCommand = path.join(
       installDir,
       "ethereum_clients",
@@ -178,8 +174,6 @@ export function getVersionNumber(client) {
     } else if (client === "lighthouse") {
       versionMatch = versionOutput.match(/Lighthouse v(\d+\.\d+\.\d+)/);
     } else if (client === "geth") {
-      // Geth output example:
-      // Version: 1.15.0-unstable
       versionMatch = versionOutput.match(/Version:\s*([\d]+\.[\d]+\.[\d]+)/i);
     } else if (client === "prysm") {
       versionMatch = versionOutput.match(/beacon-chain-v(\d+\.\d+\.\d+)-/);

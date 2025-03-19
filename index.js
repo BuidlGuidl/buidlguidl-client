@@ -33,10 +33,6 @@ const __dirname = dirname(__filename);
 
 const lockFilePath = path.join(installDir, "ethereum_clients", "script.lock");
 
-// const CONFIG = {
-//   debugLogPath: path.join(installDir, "ethereum_clients", "debugIndex.log"),
-// };
-
 function createJwtSecret(jwtDir) {
   if (!fs.existsSync(jwtDir)) {
     console.log(`\nCreating '${jwtDir}'`);
@@ -53,10 +49,8 @@ function createJwtSecret(jwtDir) {
 
 let executionChild;
 let consensusChild;
-
 let executionExited = false;
 let consensusExited = false;
-
 let isExiting = false;
 
 function handleExit(exitType) {
@@ -72,19 +66,21 @@ function handleExit(exitType) {
       process.exit(0);
     }
   } catch (error) {
-    console.error("Error reading lockfile:", error);
-    process.exit(1);
+    if (error.code === "ENOENT") {
+      console.warn("Lockfile not found; continuing exit handling.");
+    } else {
+      console.error("Error reading lockfile:", error);
+      process.exit(1);
+    }
   }
 
   isExiting = true;
-
   console.log(`\n\n🛰️  Received exit signal: ${exitType}\n`);
 
   deleteOptionsFile();
   debugToFile(`handleExit(): deleteOptionsFile() has been called`);
 
   try {
-    // Check if both child processes have exited
     const checkExit = () => {
       if (executionExited && consensusExited) {
         console.log("\n👍 Both clients exited!");
@@ -93,7 +89,6 @@ function handleExit(exitType) {
       }
     };
 
-    // Handle execution client exit
     const handleExecutionExit = (code) => {
       if (!executionExited) {
         executionExited = true;
@@ -102,7 +97,6 @@ function handleExit(exitType) {
       }
     };
 
-    // Handle consensus client exit
     const handleConsensusExit = (code) => {
       if (!consensusExited) {
         consensusExited = true;
@@ -111,7 +105,6 @@ function handleExit(exitType) {
       }
     };
 
-    // Handle execution client close
     const handleExecutionClose = (code) => {
       if (!executionExited) {
         executionExited = true;
@@ -120,7 +113,6 @@ function handleExit(exitType) {
       }
     };
 
-    // Handle consensus client close
     const handleConsensusClose = (code) => {
       if (!consensusExited) {
         consensusExited = true;
@@ -129,7 +121,6 @@ function handleExit(exitType) {
       }
     };
 
-    // Ensure event listeners are set before killing the processes
     if (executionChild && !executionExited) {
       executionChild.on("exit", handleExecutionExit);
       executionChild.on("close", handleExecutionClose);
@@ -144,7 +135,6 @@ function handleExit(exitType) {
       consensusExited = true;
     }
 
-    // Send the kill signals after setting the event listeners
     if (executionChild && !executionExited) {
       console.log("⌛️ Exiting execution client...");
       setTimeout(() => {
@@ -159,13 +149,10 @@ function handleExit(exitType) {
       }, 750);
     }
 
-    // Initial check in case both children are already not running
     checkExit();
 
-    // Periodically check if both child processes have exited
     const intervalId = setInterval(() => {
       checkExit();
-      // Clear interval if both clients have exited
       if (executionExited && consensusExited) {
         clearInterval(intervalId);
       }
@@ -175,26 +162,19 @@ function handleExit(exitType) {
   }
 }
 
-// Modify existing listeners
 process.on("SIGINT", () => handleExit("SIGINT"));
 process.on("SIGTERM", () => handleExit("SIGTERM"));
 process.on("SIGHUP", () => handleExit("SIGHUP"));
 process.on("SIGUSR2", () => handleExit("SIGUSR2"));
-
-// Modify the exit listener
 process.on("exit", (code) => {
   if (!isExiting) {
     handleExit("exit");
   }
 });
-
-// This helps catch uncaught exceptions
 process.on("uncaughtException", (error) => {
   console.error("Uncaught Exception:", error);
   handleExit("uncaughtException");
 });
-
-// This helps catch unhandled promise rejections
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection at:", promise, "reason:", reason);
   handleExit("unhandledRejection");
@@ -204,8 +184,7 @@ let bgConsensusPeers = [];
 let bgConsensusAddrs;
 
 async function startClient(clientName, executionType, installDir) {
-  let clientCommand,
-    clientArgs = [];
+  let clientCommand, clientArgs = [];
 
   if (clientName === "geth") {
     clientArgs.push("--executionpeerport", executionPeerPort);
@@ -218,50 +197,33 @@ async function startClient(clientName, executionType, installDir) {
   } else if (clientName === "prysm") {
     bgConsensusPeers = await fetchBGConsensusPeers();
     bgConsensusAddrs = await configureBGConsensusPeers(consensusClient);
-
     if (bgConsensusPeers.length > 0) {
       clientArgs.push("--bgconsensuspeers", bgConsensusPeers);
     }
-
     if (bgConsensusAddrs != null) {
       clientArgs.push("--bgconsensusaddrs", bgConsensusAddrs);
     }
-
     if (consensusCheckpoint != null) {
       clientArgs.push("--consensuscheckpoint", consensusCheckpoint);
     }
-
     clientArgs.push("--consensuspeerports", consensusPeerPorts);
-
     clientCommand = path.join(__dirname, "ethereum_client_scripts/prysm.js");
   } else if (clientName === "lighthouse") {
     bgConsensusPeers = await fetchBGConsensusPeers();
     bgConsensusAddrs = await configureBGConsensusPeers(consensusClient);
-
     if (bgConsensusPeers.length > 0) {
       clientArgs.push("--bgconsensuspeers", bgConsensusPeers);
     }
-
     if (bgConsensusAddrs != null) {
       clientArgs.push("--bgconsensusaddrs", bgConsensusAddrs);
     }
-
     if (consensusCheckpoint != null) {
       clientArgs.push("--consensuscheckpoint", consensusCheckpoint);
     }
     clientArgs.push("--consensuspeerports", consensusPeerPorts);
-
-    clientCommand = path.join(
-      __dirname,
-      "ethereum_client_scripts/lighthouse.js"
-    );
+    clientCommand = path.join(__dirname, "ethereum_client_scripts/lighthouse.js");
   } else {
-    clientCommand = path.join(
-      installDir,
-      "ethereum_clients",
-      clientName,
-      clientName
-    );
+    clientCommand = path.join(installDir, "ethereum_clients", clientName, clientName);
   }
 
   clientArgs.push("--directory", installDir);
@@ -322,7 +284,6 @@ function isAlreadyRunning() {
 
 function createLockFile() {
   fs.writeFileSync(lockFilePath, process.pid.toString(), "utf8");
-  // console.log(process.pid.toString())
 }
 
 function removeLockFile() {
@@ -338,13 +299,6 @@ if (["darwin", "linux"].includes(platform)) {
   installMacLinuxClient(executionClient, platform);
   installMacLinuxClient(consensusClient, platform);
 }
-// } else if (platform === "win32") {
-//   installWindowsExecutionClient(executionClient);
-//   installWindowsConsensusClient(consensusClient);
-// }
-
-let messageForHeader = "";
-let runsClient = false;
 
 createJwtSecret(jwtDir);
 
@@ -358,6 +312,9 @@ const wsConfig = {
   consensusClientVer: consensusClientVer,
 };
 
+let messageForHeader = "";
+let runsClient = false;
+
 if (!isAlreadyRunning()) {
   deleteOptionsFile();
   createLockFile();
@@ -368,13 +325,11 @@ if (!isAlreadyRunning()) {
   if (owner !== null) {
     initializeWebSocketConnection(wsConfig);
   }
-
   runsClient = true;
   saveOptionsToFile();
 } else {
   messageForHeader = "Dashboard View (client already running)";
   runsClient = false;
-  // Initialize WebSocket connection for secondary instances too
   if (owner !== null) {
     initializeWebSocketConnection(wsConfig);
   }
