@@ -128,7 +128,7 @@ export function createHeader(grid, screen, messageForHeader) {
   }
 
   const bigText = grid.set(0, 2, 1, 5, blessed.box, {
-    content: `{center}{bold}B u i d l G u i d l  C l i e n t{/bold}{/center}\n{center}{cyan-fg}${messageForHeader}{/cyan-fg}{/center}`,
+    content: `{center}{bold}B u i d l G u i d l  C l i e n t ( G N O S I S ){/bold}{/center}\n{center}{cyan-fg}${messageForHeader}{/cyan-fg}{/center}`,
     tags: true,
     align: "center",
     valign: "middle",

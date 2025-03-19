@@ -3,6 +3,7 @@ import { localClient } from "./viemClients.js";
 import { owner } from "../commandLineOptions.js";
 import { debugToFile } from "../helpers.js";
 
+// The box displaying chain data
 let chainInfoBox;
 
 export function createChainInfoBox(grid) {
@@ -25,11 +26,14 @@ export function createChainInfoBox(grid) {
   return chainInfoBox;
 }
 
-// DAI and WETH contract addresses
-const DAI_CONTRACT_ADDRESS = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
-const WETH_CONTRACT_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
+/**
+ * Gnosis chain addresses for DAI & WETH:
+ *  - DAI:  0x44fA8E6f47987339850636F88629646662444217
+ *  - WETH: 0x6A023CCD1FF6F2045C3309768EaD9e68F978f6e1
+ */
+const DAI_CONTRACT_ADDRESS = "0x44fA8E6f47987339850636F88629646662444217";
+const WETH_CONTRACT_ADDRESS = "0x6A023CCD1FF6F2045C3309768EaD9e68F978f6e1";
 
-// ABI to interact with the balanceOf function in an ERC-20 contract
 const ERC20_ABI = [
   {
     constant: true,
@@ -40,105 +44,133 @@ const ERC20_ABI = [
   },
 ];
 
-// Address to check
+// Example address whose DAI/WETH balances we want to compare
 const addressToCheck = "0xA478c2975Ab1Ea89e8196811F51A7B7Ade33eB11";
 
 function formatBalance(balance, decimals = 18) {
+  // Divides the raw BigInt by 10^decimals
   return (BigInt(balance) / BigInt(10 ** decimals)).toString();
 }
 
-async function getEthPrice(blockNumber) {
+/**
+ * Fetch ratio of DAI to WETH on Gnosis chain
+ * for a specific address at a given blockNumber.
+ */
+async function getDaiWethRatio(blockNumber) {
   try {
+    // Get DAI balance
     const daiBalance = await localClient.readContract({
       address: DAI_CONTRACT_ADDRESS,
       abi: ERC20_ABI,
       functionName: "balanceOf",
       args: [addressToCheck],
-      blockNumber: blockNumber, // Specify the block number here
+      blockNumber,
     });
 
+    // Get WETH balance
     const wethBalance = await localClient.readContract({
       address: WETH_CONTRACT_ADDRESS,
       abi: ERC20_ABI,
       functionName: "balanceOf",
       args: [addressToCheck],
-      blockNumber: blockNumber, // Specify the block number here
+      blockNumber,
     });
 
-    const ratio = formatBalance(daiBalance) / formatBalance(wethBalance);
-    const roundedRatio = ratio.toFixed(2);
+    // Convert to decimal strings
+    const daiStr = formatBalance(daiBalance);
+    const wethStr = formatBalance(wethBalance);
 
-    return roundedRatio;
+    // Avoid division by zero
+    if (Number(wethStr) === 0) return "0.00";
+
+    // Calculate ratio and round
+    const ratio = Number(daiStr) / Number(wethStr);
+    return ratio.toFixed(2);
   } catch (error) {
-    debugToFile(`Error fetching token balances: ${error}`);
-    return null; // Return null or a default value in case of an error
+    debugToFile(`Error fetching token balances on Gnosis: ${error}`);
+    return null;
   }
 }
 
+/**
+ * Fetch a batch of block info from the Gnosis chain,
+ * including transaction counts, base fees, and DAI/WETH ratio.
+ */
 async function getBatchBlockInfo() {
   try {
+    // We'll display info for N blocks
     const nBlocks = Math.floor((chainInfoBox.height - 3) / 5);
 
     const currentBlockNumber = await localClient.getBlockNumber();
-
-    // Create an array of block numbers for the most current block and the previous blocks
     const blockNumbers = [];
+
+    // Collect most recent N blockNumbers
     for (let i = 0; i < nBlocks; i++) {
       const blockNumber = currentBlockNumber - BigInt(i);
-      if (blockNumber < 0n) break; // Stop if block number is out of range
+      if (blockNumber < 0n) break;
       blockNumbers.push(blockNumber);
     }
 
-    // Fetch the blocks concurrently using Promise.all
+    // Fetch block data concurrently
     const blocks = await Promise.all(
       blockNumbers.map((blockNumber) =>
-        localClient.getBlock({
-          blockNumber: blockNumber,
-        })
+        localClient.getBlock({ blockNumber })
       )
     );
 
-    // Extract transaction counts, gas prices, and ETH prices from the blocks
-    const transactionCounts = blocks.map((block) => block.transactions.length);
-    const gasPrices = blocks.map(
-      (block) => (Number(block.baseFeePerGas) / 10 ** 9).toFixed(4) // Convert gas prices to Gwei
+    // Transaction counts
+    const transactionCounts = blocks.map(
+      (block) => block.transactions.length
     );
 
-    // Fetch ETH prices concurrently for each block
-    const ethPrices = await Promise.all(
-      blockNumbers.map((blockNumber) => getEthPrice(blockNumber))
+    // Gas prices (baseFeePerGas in Gwei)
+    const gasPrices = blocks.map((block) => {
+      if (!block.baseFeePerGas) return "0.0000";
+      return (Number(block.baseFeePerGas) / 10 ** 9).toFixed(4);
+    });
+
+    // Fetch DAI/WETH ratio for each block
+    const daiWethRatios = await Promise.all(
+      blockNumbers.map((blockNumber) => getDaiWethRatio(blockNumber))
     );
 
-    return { blockNumbers, transactionCounts, gasPrices, ethPrices };
+    return { blockNumbers, transactionCounts, gasPrices, daiWethRatios };
   } catch (error) {
-    debugToFile(`getBatchBlockInfo(): ${error}`);
+    debugToFile(`getBatchBlockInfo() on Gnosis: ${error}`);
     return {
       blockNumbers: [],
       transactionCounts: [],
       gasPrices: [],
-      ethPrices: [],
+      daiWethRatios: [],
     };
   }
 }
 
+/**
+ * Populate the chain info box with Gnosis chain data.
+ */
 export async function populateChainInfoBox() {
   try {
-    const { blockNumbers, transactionCounts, gasPrices, ethPrices } =
+    const { blockNumbers, transactionCounts, gasPrices, daiWethRatios } =
       await getBatchBlockInfo();
 
-    // Get the width of the chainInfoBox to properly format the separator line
-    const boxWidth = chainInfoBox.width - 2; // Adjusting for border padding
+    // Make a separator line matching the box width
+    const boxWidth = chainInfoBox.width - 2; // minus border
     const separator = "-".repeat(boxWidth);
 
     let content = "";
     content += separator + "\n";
 
     for (let i = 0; i < blockNumbers.length; i++) {
+      // Show block number
       content += `{center}{bold}{green-fg}${blockNumbers[
         i
       ].toLocaleString()}{/green-fg}{/bold}{/center}\n`;
-      content += `{bold}{blue-fg}ETH $:{/blue-fg}{/bold} ${ethPrices[i]}\n`;
-      content += `{bold}{blue-fg}GAS:{/blue-fg}{/bold}   ${gasPrices[i]}\n`;
+      // Show DAI/WETH ratio
+      content += `{bold}{blue-fg}DAI/WETH:{/blue-fg}{/bold} ${daiWethRatios[i]}\n`;
+      // Show Gas Price
+      content += `{bold}{blue-fg}GAS:{/blue-fg}{/bold}   ${gasPrices[i]} Gwei\n`;
+      // Show TX Count
       content += `{bold}{blue-fg}# TX:{/blue-fg}{/bold}  ${transactionCounts[i]}\n`;
       content += separator;
 
@@ -149,6 +181,6 @@ export async function populateChainInfoBox() {
 
     chainInfoBox.setContent(content);
   } catch (error) {
-    debugToFile(`populateChainInfoBox(): ${error}`);
+    debugToFile(`populateChainInfoBox() on Gnosis: ${error}`);
   }
 }

@@ -7,7 +7,7 @@ import { stripAnsiCodes, getFormattedDateTime } from "../helpers.js";
 import minimist from "minimist";
 
 let installDir = os.homedir();
-let consensusCheckpoint = "https://mainnet-checkpoint-sync.stakely.io/";
+let consensusCheckpoint = "https://checkpoint.gnosischain.com";
 let bgConsensusPeers;
 let bgConsensusAddrs;
 
@@ -71,7 +71,7 @@ const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
 const consensusArgs = [
   "bn",
   "--network",
-  "mainnet",
+  "gnosis",
   "--port",
   consensusPeerPorts[0],
   "--quic-port",

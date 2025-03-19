@@ -23,7 +23,7 @@ debugToFile(
 );
 
 /// Set default command line option values
-let executionClient = "reth";
+let executionClient = "geth";
 let executionType = "full";
 let consensusClient = "lighthouse";
 let executionPeerPort = 30303;

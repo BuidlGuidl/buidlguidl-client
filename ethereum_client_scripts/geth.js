@@ -9,9 +9,7 @@ import minimist from "minimist";
 let installDir = os.homedir();
 
 const argv = minimist(process.argv.slice(2));
-
 const executionPeerPort = argv.executionpeerport;
-
 const executionType = argv.executiontype;
 debugToFile(`From geth.js: executionType: ${executionType}`);
 
@@ -22,13 +20,16 @@ if (argv.directory) {
 
 const jwtPath = path.join(installDir, "ethereum_clients", "jwt", "jwt.hex");
 
-let gethCommand;
-const platform = os.platform();
-if (["darwin", "linux"].includes(platform)) {
-  gethCommand = path.join(installDir, "ethereum_clients", "geth", "geth");
-} else if (platform === "win32") {
-  gethCommand = path.join(installDir, "ethereum_clients", "geth", "geth.exe");
-}
+// IMPORTANT: Use the geth binary in the go-ethereum/build/bin/ subfolder
+const gethCommand = path.join(
+  installDir,
+  "ethereum_clients",
+  "geth",
+  "go-ethereum",
+  "build",
+  "bin",
+  "geth"
+);
 
 const logFilePath = path.join(
   installDir,
@@ -43,9 +44,8 @@ const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
 const execution = pty.spawn(
   gethCommand,
   [
-    "--mainnet",
+    "--gnosis", // Run geth on Gnosis Mainnet
     "--syncmode",
-    // "snap",
     ...(executionType === "full"
       ? ["snap"]
       : executionType === "archive"
@@ -90,8 +90,6 @@ execution.on("data", (data) => {
 });
 
 execution.on("exit", (code) => {
-  // const exitMessage = `geth process exited with code ${code}`;
-  // logStream.write(exitMessage);
   logStream.end();
 });
 
@@ -99,7 +97,7 @@ execution.on("error", (err) => {
   const errorMessage = `Error: ${err.message}`;
   logStream.write(errorMessage);
   if (process.send) {
-    process.send({ log: errorMessage }); // Send error message to parent process
+    process.send({ log: errorMessage });
   }
   debugToFile(`From geth.js: ${errorMessage}`);
 });
