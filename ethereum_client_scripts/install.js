@@ -119,16 +119,16 @@ export function installMacLinuxClient(clientName, platform) {
 
         if (clientName === "geth") {
           execSync(`cd "${clientDir}/${fileName}" && mv geth ..`, {
-            stdio: "inherit",
+            stdio: "inherit"
           });
           execSync(`cd "${clientDir}" && rm -r "${fileName}"`, {
-            stdio: "inherit",
+            stdio: "inherit"
           });
         }
 
         console.log(`Cleaning up ${clientName} directory.`);
         execSync(`cd "${clientDir}" && rm "${fileName}.tar.gz"`, {
-          stdio: "inherit",
+          stdio: "inherit"
         });
       }
     } else {
@@ -163,20 +163,22 @@ export function getVersionNumber(client) {
   }
 
   try {
+    // Capture both stdout and stderr
     const versionCommand = execSync(`${clientCommand} ${argument}`, {
       encoding: "utf-8",
-      stdio: ["pipe", "pipe", "ignore"],
+      stdio: ["pipe", "pipe", "pipe"]
     });
     versionOutput = versionCommand.trim();
 
     if (client === "reth") {
-      versionMatch = versionOutput.match(/reth Version: (\d+\.\d+\.\d+)/);
+      versionMatch = versionOutput.match(/reth Version: (\d+\.\d+\.\d+)/i);
     } else if (client === "lighthouse") {
-      versionMatch = versionOutput.match(/Lighthouse v(\d+\.\d+\.\d+)/);
+      versionMatch = versionOutput.match(/Lighthouse v(\d+\.\d+\.\d+)/i);
     } else if (client === "geth") {
-      versionMatch = versionOutput.match(/Version:\s*([\d]+\.[\d]+\.[\d]+)/i);
+      // Updated regex to capture "1.15.0" from "geth version 1.15.0-unstable-5543cff6-20250202"
+      versionMatch = versionOutput.match(/geth version\s+([\d]+\.[\d]+\.[\d]+)(?:-|$)/i);
     } else if (client === "prysm") {
-      versionMatch = versionOutput.match(/beacon-chain-v(\d+\.\d+\.\d+)-/);
+      versionMatch = versionOutput.match(/beacon-chain-v(\d+\.\d+\.\d+)-/i);
     }
 
     const parsedVersion = versionMatch ? versionMatch[1] : null;

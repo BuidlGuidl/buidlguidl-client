@@ -69,14 +69,14 @@ export function createHeader(grid, screen, messageForHeader) {
     const commitHash = getCurrentCommitHash();
     if (owner !== null) {
       bigText.setContent(
-        `{center}{bold}B u i d l G u i d l  C l i e n t{/bold}{/center}\n` +
+        `{center}{bold}B u i d l G u i d l  C l i e n t ( G N O S I S ){/bold}{/center}\n` +
           `{center}Branch: ${currentBranch} (${commitHash}){/center}\n` +
           `{center}{cyan-fg}Owner: ${owner}{/cyan-fg} | {green-fg}Credits: ${points}{/green-fg}{/center}\n` +
           `{center}{cyan-fg}${messageForHeader}{/cyan-fg}{/center}`
       );
     } else {
       bigText.setContent(
-        `{center}{bold}B u i d l G u i d l  C l i e n t{/bold}{/center}\n` +
+        `{center}{bold}B u i d l G u i d l  C l i e n t ( G N O S I S ){/bold}{/center}\n` +
           `{center}Branch: ${currentBranch} (${commitHash}){/center}\n` +
           `{center}{cyan-fg}${messageForHeader}{/cyan-fg}{/center}`
       );
