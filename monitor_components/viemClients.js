@@ -10,7 +10,7 @@ export const localClient = createPublicClient({
 export const mainnetClient = createPublicClient({
   name: "mainnetClient",
   chain: mainnet,
-  transport: http("https://office.buidlguidl.com:48544"),
+  transport: http("https://mainnet.rpc.buidlguidl.com"),
 });
 
 export async function isSyncing() {
