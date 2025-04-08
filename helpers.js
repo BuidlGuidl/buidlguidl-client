@@ -71,26 +71,61 @@ export function getFormattedDateTime() {
     .replace(/:/g, "_");
 }
 
-// let proxyUrl = "";
+export function syncStatusToFile(data) {
+  const now = new Date();
+  const timestamp = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+  const syncStatusLogPath = path.join(__dirname, "syncStatus.log");
 
-// function setProxyUrl() {
-//   try {
-//     const currentBranch = execSync("git rev-parse --abbrev-ref HEAD")
-//       .toString()
-//       .trim();
-//     proxyUrl =
-//       currentBranch === "main"
-//         ? "rpc.buidlguidl.com"
-//         : "stage.rpc.buidlguidl.com";
-//   } catch (error) {
-//     console.error("Error getting Git branch:", error);
-//     proxyUrl = "stage.rpc.buidlguidl.com"; // Default to stage if there's an error
-//   }
-// }
+  // Helper function to convert hex to int
+  function convertHexToInt(value) {
+    if (typeof value === "string" && value.startsWith("0x")) {
+      return parseInt(value, 16);
+    }
+    return value;
+  }
 
-// export function getProxyUrl() {
-//   return proxyUrl;
-// }
+  // Helper function to process an object and add integer values
+  function processObject(obj) {
+    if (!obj || typeof obj !== "object") return obj;
 
-// // Call setProxyUrl when the module is imported
-// setProxyUrl();
+    const result = Array.isArray(obj) ? [] : {};
+
+    for (const [key, value] of Object.entries(obj)) {
+      if (typeof value === "object" && value !== null) {
+        result[key] = processObject(value);
+      } else if (typeof value === "string" && value.startsWith("0x")) {
+        result[key] = `${value} | ${convertHexToInt(value)}`;
+      } else {
+        result[key] = value;
+      }
+    }
+
+    return result;
+  }
+
+  let processedData = processObject(data);
+  let content = `\n${timestamp} - ${JSON.stringify(processedData, null, 2)}\n`;
+
+  fs.appendFile(syncStatusLogPath, content, (err) => {
+    if (err) {
+      console.error("Error writing to sync status log file:", err);
+    }
+  });
+}
+
+export function syncStatusToFileB(data) {
+  const now = new Date();
+  const timestamp = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+  const syncStatusLogPath = path.join(__dirname, "syncStatusB.log");
+
+  // Sort the data array if it's an array
+  const sortedData = Array.isArray(data) ? [...data].sort() : data;
+
+  let content = `\n${timestamp} - ${JSON.stringify(sortedData, null, 2)}\n`;
+
+  fs.appendFile(syncStatusLogPath, content, (err) => {
+    if (err) {
+      console.error("Error writing to sync status log file:", err);
+    }
+  });
+}

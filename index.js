@@ -26,7 +26,7 @@ import {
   configureBGConsensusPeers,
 } from "./ethereum_client_scripts/configureBGPeers.js";
 import { getVersionNumber } from "./ethereum_client_scripts/install.js";
-import { debugToFile } from "./helpers.js";
+import { debugToFile, syncStatusToFile, syncStatusToFileB } from "./helpers.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -358,12 +358,55 @@ const wsConfig = {
   consensusClientVer: consensusClientVer,
 };
 
+async function fetchAndLogSyncStatus() {
+  try {
+    const response = await fetch("http://127.0.0.1:8545", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "eth_syncing",
+        params: [],
+      }),
+    });
+
+    const data = await response.json();
+    syncStatusToFile(data.result);
+  } catch (error) {
+    console.error("Error fetching sync status:", error);
+  }
+}
+
+async function fetchAndLogSyncStatusB() {
+  try {
+    const response = await fetch("http://127.0.0.1:9001");
+    const text = await response.text();
+    const lines = text.split("\n");
+    const filteredLines = lines.filter((line) =>
+      /^reth_sync_entities_processed|^reth_sync_entities_total/.test(line)
+    );
+    syncStatusToFileB(filteredLines);
+  } catch (error) {
+    console.error("Error fetching sync status:", error);
+  }
+}
+
 if (!isAlreadyRunning()) {
   deleteOptionsFile();
   createLockFile();
 
   await startClient(executionClient, executionType, installDir);
   await startClient(consensusClient, executionType, installDir);
+
+  // Initial sync status check
+  // await fetchAndLogSyncStatus();
+
+  // Set up interval for sync status checks every 10 minutes
+  setInterval(fetchAndLogSyncStatus, 10 * 60 * 1000);
+  setInterval(fetchAndLogSyncStatusB, 10 * 60 * 1000);
 
   if (owner !== null) {
     initializeWebSocketConnection(wsConfig);
