@@ -2,6 +2,17 @@ import blessed from "blessed";
 import { debugToFile } from "../helpers.js";
 import { getVersionNumber } from "../ethereum_client_scripts/install.js";
 
+// Store Reth version at module level
+let rethVersion = null;
+
+// Function to initialize Reth version
+function initRethVersion() {
+  if (rethVersion === null) {
+    rethVersion = getVersionNumber("reth");
+  }
+  return rethVersion;
+}
+
 let rethStageGauge;
 
 export function createRethStageGauge(grid) {
@@ -24,7 +35,8 @@ export function populateRethStageGauge(stagePercentages) {
   try {
     let stageNames;
 
-    const rethVersion = getVersionNumber("reth");
+    // Initialize Reth version if not already done
+    initRethVersion();
 
     if (rethVersion >= "1.3.4") {
       stageNames = [

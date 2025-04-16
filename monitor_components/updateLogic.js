@@ -18,6 +18,7 @@ import { populateChainInfoBox } from "./chainInfoBox.js";
 import { updateStatusBox } from "./statusBox.js";
 import { screen, statusBox, chainInfoBox } from "../monitor.js";
 import { updateBandwidthBox } from "./bandwidthGauge.js";
+import { getVersionNumber } from "../ethereum_client_scripts/install.js";
 
 const progress = loadProgress();
 let gethStageProgress = [
@@ -25,6 +26,17 @@ let gethStageProgress = [
   progress.chainDlProgress,
   progress.stateDlProgress,
 ];
+
+// Store Reth version at module level
+let rethVersion = null;
+
+// Function to initialize Reth version
+function initRethVersion() {
+  if (rethVersion === null) {
+    rethVersion = getVersionNumber("reth");
+  }
+  return rethVersion;
+}
 
 function stripAnsiCodes(input) {
   return input.replace(
@@ -233,12 +245,15 @@ let stagePercentages = {
 async function parseAndPopulateRethMetrics() {
   const rethSyncMetrics = await getRethSyncMetrics();
 
+  // Initialize Reth version if not already done
+  initRethVersion();
+
   // If metrics are empty (likely because Reth is shutting down), don't process further
   if (!rethSyncMetrics) {
     return;
   }
 
-  // Handle header progress [1/12]
+  // Handle header progress [1/12 or 1/14]
   const headersProcessedMatch = rethSyncMetrics.match(
     /reth_sync_entities_processed\{stage="Headers"\} (\d+)/
   );
@@ -272,7 +287,7 @@ async function parseAndPopulateRethMetrics() {
     }
   }
 
-  // Handle bodies progress [2/12]
+  // Handle bodies progress [2/12 or 2/14]
   const bodiesProcessedMatch = rethSyncMetrics.match(
     /reth_sync_entities_processed\{stage="Bodies"\} (\d+)/
   );
@@ -290,7 +305,7 @@ async function parseAndPopulateRethMetrics() {
     }
   }
 
-  // Handle Sender Recovery progress [3/12]
+  // Handle Sender Recovery progress [3/12 or 3/14]
   const senderRecoveryProcessedMatch = rethSyncMetrics.match(
     /reth_sync_entities_processed\{stage="SenderRecovery"\} (\d+)/
   );
@@ -311,7 +326,7 @@ async function parseAndPopulateRethMetrics() {
     }
   }
 
-  // Handle Execution progress [4/12]
+  // Handle Execution progress [4/12 or 4/14]
   const executionProcessedMatch = rethSyncMetrics.match(
     /reth_sync_entities_processed\{stage="Execution"\} (\d+)/
   );
@@ -329,7 +344,34 @@ async function parseAndPopulateRethMetrics() {
     }
   }
 
-  // Handle Merkle Unwind progress [5/12]
+  // Handle Prune Sender Recovery progress [5/14] - Only for Reth v1.3.4+
+  let pruneSenderRecoveryPercent = 0;
+  if (rethVersion >= "1.3.4") {
+    const pruneSenderRecoveryProcessedMatch = rethSyncMetrics.match(
+      /reth_sync_entities_processed\{stage="PruneSenderRecovery"\} (\d+)/
+    );
+    const pruneSenderRecoveryTotalMatch = rethSyncMetrics.match(
+      /reth_sync_entities_total\{stage="PruneSenderRecovery"\} (\d+)/
+    );
+
+    if (pruneSenderRecoveryProcessedMatch && pruneSenderRecoveryTotalMatch) {
+      const pruneSenderRecoveryProcessed = parseInt(
+        pruneSenderRecoveryProcessedMatch[1],
+        10
+      );
+      const pruneSenderRecoveryTotal = parseInt(
+        pruneSenderRecoveryTotalMatch[1],
+        10
+      );
+
+      if (pruneSenderRecoveryProcessed > 0) {
+        pruneSenderRecoveryPercent =
+          pruneSenderRecoveryProcessed / pruneSenderRecoveryTotal;
+      }
+    }
+  }
+
+  // Handle Merkle Unwind progress [5/12 or 6/14]
   const merkleUnwindProcessedMatch = rethSyncMetrics.match(
     /reth_sync_entities_processed\{stage="MerkleUnwind"\} (\d+)/
   );
@@ -347,7 +389,7 @@ async function parseAndPopulateRethMetrics() {
     }
   }
 
-  // Handle Account Hashing progress [6/12]
+  // Handle Account Hashing progress [6/12 or 7/14]
   const accountHashingProcessedMatch = rethSyncMetrics.match(
     /reth_sync_entities_processed\{stage="AccountHashing"\} (\d+)/
   );
@@ -368,7 +410,7 @@ async function parseAndPopulateRethMetrics() {
     }
   }
 
-  // Handle Storage Hashing progress [7/12]
+  // Handle Storage Hashing progress [7/12 or 8/14]
   const storageHashingProcessedMatch = rethSyncMetrics.match(
     /reth_sync_entities_processed\{stage="StorageHashing"\} (\d+)/
   );
@@ -389,7 +431,7 @@ async function parseAndPopulateRethMetrics() {
     }
   }
 
-  // Handle Merkle Execute progress [8/12]
+  // Handle Merkle Execute progress [8/12 or 9/14]
   const merkleExecuteProcessedMatch = rethSyncMetrics.match(
     /reth_sync_entities_processed\{stage="MerkleExecute"\} (\d+)/
   );
@@ -407,7 +449,7 @@ async function parseAndPopulateRethMetrics() {
     }
   }
 
-  // Handle Transaction Lookup progress [9/12]
+  // Handle Transaction Lookup progress [9/12 or 10/14]
   const transactionLookupProcessedMatch = rethSyncMetrics.match(
     /reth_sync_entities_processed\{stage="TransactionLookup"\} (\d+)/
   );
@@ -429,7 +471,7 @@ async function parseAndPopulateRethMetrics() {
     }
   }
 
-  // Handle Index Storage History progress [10/12]
+  // Handle Index Storage History progress [10/12 or 11/14]
   const indexStorageHistoryProcessedMatch = rethSyncMetrics.match(
     /reth_sync_entities_processed\{stage="IndexStorageHistory"\} (\d+)/
   );
@@ -454,7 +496,7 @@ async function parseAndPopulateRethMetrics() {
     }
   }
 
-  // Handle Index Account History progress [11/12]
+  // Handle Index Account History progress [11/12 or 12/14]
   const indexAccountHistoryProcessedMatch = rethSyncMetrics.match(
     /reth_sync_entities_processed\{stage="IndexAccountHistory"\} (\d+)/
   );
@@ -479,7 +521,27 @@ async function parseAndPopulateRethMetrics() {
     }
   }
 
-  // Handle Finish progress [12/12]
+  // Handle Prune progress [13/14] - Only for Reth v1.3.4+
+  let prunePercent = 0;
+  if (rethVersion >= "1.3.4") {
+    const pruneProcessedMatch = rethSyncMetrics.match(
+      /reth_sync_entities_processed\{stage="Prune"\} (\d+)/
+    );
+    const pruneTotalMatch = rethSyncMetrics.match(
+      /reth_sync_entities_total\{stage="Prune"\} (\d+)/
+    );
+
+    if (pruneProcessedMatch && pruneTotalMatch) {
+      const pruneProcessed = parseInt(pruneProcessedMatch[1], 10);
+      const pruneTotal = parseInt(pruneTotalMatch[1], 10);
+
+      if (pruneProcessed > 0) {
+        prunePercent = pruneProcessed / pruneTotal;
+      }
+    }
+  }
+
+  // Handle Finish progress [12/12 or 14/14]
   const finishProcessedMatch = rethSyncMetrics.match(
     /reth_sync_entities_processed\{stage="Finish"\} (\d+)/
   );
@@ -497,21 +559,40 @@ async function parseAndPopulateRethMetrics() {
     }
   }
 
-  // Update stagePercentages object
-  stagePercentages = {
-    headersPercent,
-    bodiesPercent,
-    senderRecoveryPercent,
-    executionPercent,
-    merkleUnwindPercent,
-    accountHashingPercent,
-    storageHashingPercent,
-    merkleExecutePercent,
-    transactionLookupPercent,
-    indexStorageHistoryPercent,
-    indexAccountHistoryPercent,
-    finishPercent,
-  };
+  // Update stagePercentages object based on Reth version
+  if (rethVersion >= "1.3.4") {
+    stagePercentages = {
+      headersPercent,
+      bodiesPercent,
+      senderRecoveryPercent,
+      executionPercent,
+      pruneSenderRecoveryPercent,
+      merkleUnwindPercent,
+      accountHashingPercent,
+      storageHashingPercent,
+      merkleExecutePercent,
+      transactionLookupPercent,
+      indexStorageHistoryPercent,
+      indexAccountHistoryPercent,
+      prunePercent,
+      finishPercent,
+    };
+  } else {
+    stagePercentages = {
+      headersPercent,
+      bodiesPercent,
+      senderRecoveryPercent,
+      executionPercent,
+      merkleUnwindPercent,
+      accountHashingPercent,
+      storageHashingPercent,
+      merkleExecutePercent,
+      transactionLookupPercent,
+      indexStorageHistoryPercent,
+      indexAccountHistoryPercent,
+      finishPercent,
+    };
+  }
 
   populateRethStageGauge(Object.values(stagePercentages));
 }
