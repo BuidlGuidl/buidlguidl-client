@@ -1,5 +1,6 @@
 import blessed from "blessed";
 import { debugToFile } from "../helpers.js";
+import { getVersionNumber } from "../ethereum_client_scripts/install.js";
 
 let rethStageGauge;
 
@@ -21,45 +22,56 @@ export function createRethStageGauge(grid) {
 
 export function populateRethStageGauge(stagePercentages) {
   try {
-    const stageNames = [
-      "HEADERS",
-      "BODIES",
-      "SENDER RECOVERY",
-      "EXECUTION",
-      "MERKLE UNWIND",
-      "ACCOUNT HASHING",
-      "STORAGE HASHING",
-      "MERKLE EXECUTE",
-      "TRANSACTION LOOKUP",
-      "INDEX STORAGE HIST",
-      "INDEX ACCOUNT HIST",
-      "FINISH",
-    ];
+    let stageNames;
+
+    const rethVersion = getVersionNumber("reth");
+
+    if (rethVersion >= "1.3.4") {
+      stageNames = [
+        "HEADERS",
+        "BODIES",
+        "SENDER RECOVERY",
+        "EXECUTION",
+        "PRUNE SENDER RECOVERY",
+        "MERKLE UNWIND",
+        "ACCOUNT HASHING",
+        "STORAGE HASHING",
+        "MERKLE EXECUTE",
+        "TRANSACTION LOOKUP",
+        "INDEX STORAGE HIST",
+        "INDEX ACCOUNT HIST",
+        "PRUNE",
+        "FINISH",
+      ];
+    } else {
+      stageNames = [
+        "HEADERS",
+        "BODIES",
+        "SENDER RECOVERY",
+        "EXECUTION",
+        "MERKLE UNWIND",
+        "ACCOUNT HASHING",
+        "STORAGE HASHING",
+        "MERKLE EXECUTE",
+        "TRANSACTION LOOKUP",
+        "INDEX STORAGE HIST",
+        "INDEX ACCOUNT HIST",
+        "FINISH",
+      ];
+    }
 
     const boxWidth = rethStageGauge.width - 9;
     const boxHeight = rethStageGauge.height - 2; // Subtracting 2 for border
-
-    // debugToFile(`
-    //   Raw widget width: ${boxWidth + 9}
-    //   Adjusted box width: ${boxWidth}
-    //   Box height: ${boxHeight}
-    // `);
 
     if (boxWidth > 0 && boxHeight > 0) {
       let content = "";
       const maxItems = Math.floor(boxHeight / 2);
 
-      // Find the last completed stage
-      let lastCompletedIndex = stagePercentages.lastIndexOf(1);
-      if (lastCompletedIndex === -1) {
-        lastCompletedIndex = 0;
-      }
-
-      let startIndex = lastCompletedIndex;
-      let endIndex = Math.min(stagePercentages.length, startIndex + maxItems);
+      // Display stages based on available space
+      let startIndex = 0;
+      let endIndex = Math.min(stagePercentages.length, maxItems);
 
       if (boxHeight >= 24) {
-        startIndex = 0;
         endIndex = stagePercentages.length;
       }
 
@@ -72,17 +84,6 @@ export function populateRethStageGauge(stagePercentages) {
         const emptyBars = Math.max(0, boxWidth - filledBars);
         const bar = "█".repeat(filledBars) + " ".repeat(emptyBars);
         const percentString = `${Math.floor(percentComplete * 100)}%`;
-
-        // debugToFile(`
-        //   Stage: ${stageNames[i]}
-        //   Percent Complete: ${percentComplete}
-        //   Filled Bars: ${filledBars}
-        //   Empty Bars: ${emptyBars}
-        //   Total Bar Length: ${filledBars + emptyBars}
-        //   Line Length: ${
-        //     stageNames[i].length + bar.length + percentString.length + 3
-        //   } // +3 for "[]" and space
-        // `);
 
         content += `${stageNames[i]}\n[${bar}] ${percentString}\n`;
       }
