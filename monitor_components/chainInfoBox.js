@@ -81,6 +81,15 @@ async function getBatchBlockInfo() {
 
     const currentBlockNumber = await localClient.getBlockNumber();
 
+    if (currentBlockNumber === 0n) {
+      return {
+        blockNumbers: [],
+        transactionCounts: [],
+        gasPrices: [],
+        ethPrices: [],
+      };
+    }
+
     // Create an array of block numbers for the most current block and the previous blocks
     const blockNumbers = [];
     for (let i = 0; i < nBlocks; i++) {
