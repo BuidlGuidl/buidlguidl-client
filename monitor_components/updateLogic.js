@@ -253,6 +253,11 @@ async function parseAndPopulateRethMetrics() {
     return;
   }
 
+  // Helper function to round progress values > 0.99 to 1.0
+  const roundProgress = (progress) => {
+    return progress > 0.99 ? 1 : progress;
+  };
+
   // Handle header progress [1/12 or 1/14]
   const headersProcessedMatch = rethSyncMetrics.match(
     /reth_sync_entities_processed\{stage="Headers"\} (\d+)/
@@ -280,7 +285,9 @@ async function parseAndPopulateRethMetrics() {
 
         // debugToFile(`largestToBlock: ${largestToBlock}`);
 
-        headersPercent = (largestToBlock - toBlock) / largestToBlock;
+        headersPercent = roundProgress(
+          (largestToBlock - toBlock) / largestToBlock
+        );
       }
     } else if (headersProcessed === headersTotal && headersTotal > 0) {
       headersPercent = 1;
@@ -301,7 +308,7 @@ async function parseAndPopulateRethMetrics() {
     const bodiesTotal = parseInt(bodiesTotalMatch[1], 10);
 
     if (bodiesProcessed > 0 && bodiesTotal > 0) {
-      bodiesPercent = bodiesProcessed / bodiesTotal;
+      bodiesPercent = roundProgress(bodiesProcessed / bodiesTotal);
     }
   }
 
@@ -322,7 +329,9 @@ async function parseAndPopulateRethMetrics() {
     const senderRecoveryTotal = parseInt(senderRecoveryTotalMatch[1], 10);
 
     if (senderRecoveryProcessed > 0 && senderRecoveryTotal > 0) {
-      senderRecoveryPercent = senderRecoveryProcessed / senderRecoveryTotal;
+      senderRecoveryPercent = roundProgress(
+        senderRecoveryProcessed / senderRecoveryTotal
+      );
     }
   }
 
@@ -340,7 +349,7 @@ async function parseAndPopulateRethMetrics() {
     const executionTotal = parseInt(executionTotalMatch[1], 10);
 
     if (executionProcessed > 0 && executionTotal > 0) {
-      executionPercent = executionProcessed / executionTotal;
+      executionPercent = roundProgress(executionProcessed / executionTotal);
     }
   }
 
@@ -365,8 +374,9 @@ async function parseAndPopulateRethMetrics() {
       );
 
       if (pruneSenderRecoveryProcessed > 0 && pruneSenderRecoveryTotal > 0) {
-        pruneSenderRecoveryPercent =
-          pruneSenderRecoveryProcessed / pruneSenderRecoveryTotal;
+        pruneSenderRecoveryPercent = roundProgress(
+          pruneSenderRecoveryProcessed / pruneSenderRecoveryTotal
+        );
       }
     }
   }
@@ -385,7 +395,9 @@ async function parseAndPopulateRethMetrics() {
     const merkleUnwindTotal = parseInt(merkleUnwindTotalMatch[1], 10);
 
     if (merkleUnwindProcessed > 0 && merkleUnwindTotal > 0) {
-      merkleUnwindPercent = merkleUnwindProcessed / merkleUnwindTotal;
+      merkleUnwindPercent = roundProgress(
+        merkleUnwindProcessed / merkleUnwindTotal
+      );
     }
   }
 
@@ -406,7 +418,9 @@ async function parseAndPopulateRethMetrics() {
     const accountHashingTotal = parseInt(accountHashingTotalMatch[1], 10);
 
     if (accountHashingProcessed > 0 && accountHashingTotal > 0) {
-      accountHashingPercent = accountHashingProcessed / accountHashingTotal;
+      accountHashingPercent = roundProgress(
+        accountHashingProcessed / accountHashingTotal
+      );
     }
   }
 
@@ -427,7 +441,9 @@ async function parseAndPopulateRethMetrics() {
     const storageHashingTotal = parseInt(storageHashingTotalMatch[1], 10);
 
     if (storageHashingProcessed > 0 && storageHashingTotal > 0) {
-      storageHashingPercent = storageHashingProcessed / storageHashingTotal;
+      storageHashingPercent = roundProgress(
+        storageHashingProcessed / storageHashingTotal
+      );
     }
   }
 
@@ -445,7 +461,9 @@ async function parseAndPopulateRethMetrics() {
     const merkleExecuteTotal = parseInt(merkleExecuteTotalMatch[1], 10);
 
     if (merkleExecuteProcessed > 0 && merkleExecuteTotal > 0) {
-      merkleExecutePercent = merkleExecuteProcessed / merkleExecuteTotal;
+      merkleExecutePercent = roundProgress(
+        merkleExecuteProcessed / merkleExecuteTotal
+      );
     }
   }
 
@@ -466,8 +484,9 @@ async function parseAndPopulateRethMetrics() {
     const transactionLookupTotal = parseInt(transactionLookupTotalMatch[1], 10);
 
     if (transactionLookupProcessed > 0 && transactionLookupTotal > 0) {
-      transactionLookupPercent =
-        transactionLookupProcessed / transactionLookupTotal;
+      transactionLookupPercent = roundProgress(
+        transactionLookupProcessed / transactionLookupTotal
+      );
     }
   }
 
@@ -491,8 +510,9 @@ async function parseAndPopulateRethMetrics() {
     );
 
     if (indexStorageHistoryProcessed > 0 && indexStorageHistoryTotal > 0) {
-      indexStorageHistoryPercent =
-        indexStorageHistoryProcessed / indexStorageHistoryTotal;
+      indexStorageHistoryPercent = roundProgress(
+        indexStorageHistoryProcessed / indexStorageHistoryTotal
+      );
     }
   }
 
@@ -516,8 +536,9 @@ async function parseAndPopulateRethMetrics() {
     );
 
     if (indexAccountHistoryProcessed > 0 && indexAccountHistoryTotal > 0) {
-      indexAccountHistoryPercent =
-        indexAccountHistoryProcessed / indexAccountHistoryTotal;
+      indexAccountHistoryPercent = roundProgress(
+        indexAccountHistoryProcessed / indexAccountHistoryTotal
+      );
     }
   }
 
@@ -536,7 +557,7 @@ async function parseAndPopulateRethMetrics() {
       const pruneTotal = parseInt(pruneTotalMatch[1], 10);
 
       if (pruneProcessed > 0 && pruneTotal > 0) {
-        prunePercent = pruneProcessed / pruneTotal;
+        prunePercent = roundProgress(pruneProcessed / pruneTotal);
       }
     }
   }
@@ -555,7 +576,7 @@ async function parseAndPopulateRethMetrics() {
     const finishTotal = parseInt(finishTotalMatch[1], 10);
 
     if (finishProcessed > 0 && finishTotal > 0) {
-      finishPercent = finishProcessed / finishTotal;
+      finishPercent = roundProgress(finishProcessed / finishTotal);
     }
   }
 
@@ -721,7 +742,10 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         (percent) => percent === 0
       );
 
-      if (syncingStatus || allStagesZero) {
+      // Check if syncingStatus is an object (syncing) or false (not syncing)
+      const isNodeSyncing = syncingStatus !== false;
+
+      if (isNodeSyncing || allStagesZero) {
         statusMessage = `SYNC IN PROGRESS`;
         await parseAndPopulateRethMetrics();
       } else if (allStagesComplete) {
@@ -734,6 +758,21 @@ export async function synchronizeAndUpdateWidgets(installDir) {
           statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${latestBlock.toLocaleString()}`;
         }
       }
+
+      // Don't delete
+      // if (syncingStatus || allStagesZero) {
+      //   statusMessage = `SYNC IN PROGRESS`;
+      //   await parseAndPopulateRethMetrics();
+      // } else if (allStagesComplete) {
+      //   if (
+      //     blockNumber >= latestBlock ||
+      //     blockNumber === latestBlock - BigInt(1)
+      //   ) {
+      //     statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
+      //   } else {
+      //     statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${latestBlock.toLocaleString()}`;
+      //   }
+      // }
     }
 
     return statusMessage;
