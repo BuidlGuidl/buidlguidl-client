@@ -135,6 +135,17 @@ export async function populateChainInfoBox() {
     const { blockNumbers, transactionCounts, gasPrices, ethPrices } =
       await getBatchBlockInfo();
 
+    // Check if all arrays are empty
+    if (
+      blockNumbers.length === 0 &&
+      transactionCounts.length === 0 &&
+      gasPrices.length === 0 &&
+      ethPrices.length === 0
+    ) {
+      chainInfoBox.setContent("INITIALIZING...");
+      return;
+    }
+
     // Get the width of the chainInfoBox to properly format the separator line
     const boxWidth = chainInfoBox.width - 2; // Adjusting for border padding
     const separator = "-".repeat(boxWidth);

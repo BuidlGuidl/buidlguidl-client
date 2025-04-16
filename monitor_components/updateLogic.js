@@ -300,7 +300,7 @@ async function parseAndPopulateRethMetrics() {
     const bodiesProcessed = parseInt(bodiesProcessedMatch[1], 10);
     const bodiesTotal = parseInt(bodiesTotalMatch[1], 10);
 
-    if (bodiesProcessed > 0) {
+    if (bodiesProcessed > 0 && bodiesTotal > 0) {
       bodiesPercent = bodiesProcessed / bodiesTotal;
     }
   }
@@ -321,7 +321,7 @@ async function parseAndPopulateRethMetrics() {
     );
     const senderRecoveryTotal = parseInt(senderRecoveryTotalMatch[1], 10);
 
-    if (senderRecoveryProcessed > 0) {
+    if (senderRecoveryProcessed > 0 && senderRecoveryTotal > 0) {
       senderRecoveryPercent = senderRecoveryProcessed / senderRecoveryTotal;
     }
   }
@@ -339,7 +339,7 @@ async function parseAndPopulateRethMetrics() {
     const executionProcessed = parseInt(executionProcessedMatch[1], 10);
     const executionTotal = parseInt(executionTotalMatch[1], 10);
 
-    if (executionProcessed > 0) {
+    if (executionProcessed > 0 && executionTotal > 0) {
       executionPercent = executionProcessed / executionTotal;
     }
   }
@@ -364,7 +364,7 @@ async function parseAndPopulateRethMetrics() {
         10
       );
 
-      if (pruneSenderRecoveryProcessed > 0) {
+      if (pruneSenderRecoveryProcessed > 0 && pruneSenderRecoveryTotal > 0) {
         pruneSenderRecoveryPercent =
           pruneSenderRecoveryProcessed / pruneSenderRecoveryTotal;
       }
@@ -384,7 +384,7 @@ async function parseAndPopulateRethMetrics() {
     const merkleUnwindProcessed = parseInt(merkleUnwindProcessedMatch[1], 10);
     const merkleUnwindTotal = parseInt(merkleUnwindTotalMatch[1], 10);
 
-    if (merkleUnwindProcessed > 0) {
+    if (merkleUnwindProcessed > 0 && merkleUnwindTotal > 0) {
       merkleUnwindPercent = merkleUnwindProcessed / merkleUnwindTotal;
     }
   }
@@ -405,7 +405,7 @@ async function parseAndPopulateRethMetrics() {
     );
     const accountHashingTotal = parseInt(accountHashingTotalMatch[1], 10);
 
-    if (accountHashingProcessed > 0) {
+    if (accountHashingProcessed > 0 && accountHashingTotal > 0) {
       accountHashingPercent = accountHashingProcessed / accountHashingTotal;
     }
   }
@@ -426,7 +426,7 @@ async function parseAndPopulateRethMetrics() {
     );
     const storageHashingTotal = parseInt(storageHashingTotalMatch[1], 10);
 
-    if (storageHashingProcessed > 0) {
+    if (storageHashingProcessed > 0 && storageHashingTotal > 0) {
       storageHashingPercent = storageHashingProcessed / storageHashingTotal;
     }
   }
@@ -444,7 +444,7 @@ async function parseAndPopulateRethMetrics() {
     const merkleExecuteProcessed = parseInt(merkleExecuteProcessedMatch[1], 10);
     const merkleExecuteTotal = parseInt(merkleExecuteTotalMatch[1], 10);
 
-    if (merkleExecuteProcessed > 0) {
+    if (merkleExecuteProcessed > 0 && merkleExecuteTotal > 0) {
       merkleExecutePercent = merkleExecuteProcessed / merkleExecuteTotal;
     }
   }
@@ -465,7 +465,7 @@ async function parseAndPopulateRethMetrics() {
     );
     const transactionLookupTotal = parseInt(transactionLookupTotalMatch[1], 10);
 
-    if (transactionLookupProcessed > 0) {
+    if (transactionLookupProcessed > 0 && transactionLookupTotal > 0) {
       transactionLookupPercent =
         transactionLookupProcessed / transactionLookupTotal;
     }
@@ -490,7 +490,7 @@ async function parseAndPopulateRethMetrics() {
       10
     );
 
-    if (indexStorageHistoryProcessed > 0) {
+    if (indexStorageHistoryProcessed > 0 && indexStorageHistoryTotal > 0) {
       indexStorageHistoryPercent =
         indexStorageHistoryProcessed / indexStorageHistoryTotal;
     }
@@ -515,7 +515,7 @@ async function parseAndPopulateRethMetrics() {
       10
     );
 
-    if (indexAccountHistoryProcessed > 0) {
+    if (indexAccountHistoryProcessed > 0 && indexAccountHistoryTotal > 0) {
       indexAccountHistoryPercent =
         indexAccountHistoryProcessed / indexAccountHistoryTotal;
     }
@@ -535,7 +535,7 @@ async function parseAndPopulateRethMetrics() {
       const pruneProcessed = parseInt(pruneProcessedMatch[1], 10);
       const pruneTotal = parseInt(pruneTotalMatch[1], 10);
 
-      if (pruneProcessed > 0) {
+      if (pruneProcessed > 0 && pruneTotal > 0) {
         prunePercent = pruneProcessed / pruneTotal;
       }
     }
@@ -554,7 +554,7 @@ async function parseAndPopulateRethMetrics() {
     const finishProcessed = parseInt(finishProcessedMatch[1], 10);
     const finishTotal = parseInt(finishTotalMatch[1], 10);
 
-    if (finishProcessed > 0) {
+    if (finishProcessed > 0 && finishTotal > 0) {
       finishPercent = finishProcessed / finishTotal;
     }
   }
