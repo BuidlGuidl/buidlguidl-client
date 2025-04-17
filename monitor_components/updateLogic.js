@@ -747,7 +747,6 @@ export async function synchronizeAndUpdateWidgets(installDir) {
       return "{red-fg}DISK SPACE LOW{/red-fg}";
     }
 
-    // const syncingStatus = await getEthSyncingStatus();
     const { isSyncing, syncingStatus } = await calcSyncingStatus(
       executionClient
     );
@@ -863,7 +862,11 @@ async function setupUpdateMechanism() {
     currentUpdateInterval = null;
   }
   if (currentBlockWatcher) {
-    currentBlockWatcher.unsubscribe();
+    try {
+      await currentBlockWatcher.unsubscribe();
+    } catch (error) {
+      debugToFile(`Error unsubscribing from block watcher: ${error}`);
+    }
     currentBlockWatcher = null;
   }
 
@@ -875,16 +878,20 @@ async function setupUpdateMechanism() {
     );
   } else {
     // When not syncing, update only on new blocks
-    currentBlockWatcher = localClient.watchBlocks(
-      {
-        onBlock: () => {
-          updateChainWidgets(statusBox, chainInfoBox, screen);
+    try {
+      currentBlockWatcher = await localClient.watchBlocks(
+        {
+          onBlock: () => {
+            updateChainWidgets(statusBox, chainInfoBox, screen);
+          },
         },
-      },
-      (error) => {
-        debugToFile(`Error in block watcher: ${error}`);
-      }
-    );
+        (error) => {
+          debugToFile(`Error in block watcher: ${error}`);
+        }
+      );
+    } catch (error) {
+      debugToFile(`Error setting up block watcher: ${error}`);
+    }
   }
 }
 
