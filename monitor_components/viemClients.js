@@ -13,7 +13,7 @@ export const mainnetClient = createPublicClient({
   transport: http("https://pool.mainnet.rpc.buidlguidl.com:48544/"),
 });
 
-export async function isSyncing() {
+export async function getEthSyncingStatus() {
   try {
     const syncingStatus = await localClient.request({
       method: "eth_syncing",
@@ -22,6 +22,7 @@ export async function isSyncing() {
 
     return syncingStatus;
   } catch (error) {
-    debugToFile(`isSyncing(): ${error}`);
+    debugToFile(`getEthSyncingStatus(): ${error}`);
+    return false; // Return false to indicate not syncing when there's an error
   }
 }

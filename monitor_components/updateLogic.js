@@ -7,7 +7,11 @@ import {
 } from "./helperFunctions.js";
 import { debugToFile } from "../helpers.js";
 import { executionClient, owner } from "../commandLineOptions.js";
-import { mainnetClient, localClient, isSyncing } from "./viemClients.js";
+import {
+  mainnetClient,
+  localClient,
+  getEthSyncingStatus,
+} from "./viemClients.js";
 import { exec } from "child_process";
 import { populateRethStageGauge } from "./rethStageGauge.js";
 import { populateGethStageGauge } from "./gethStageGauge.js";
@@ -632,7 +636,7 @@ export async function showHideRethWidgets(
   rpcInfoBox
 ) {
   try {
-    const syncingStatus = await isSyncing();
+    const syncingStatus = await getEthSyncingStatus();
 
     // debugToFile(`syncingStatus: ${JSON.stringify(syncingStatus, null, 2)}`);
 
@@ -671,7 +675,7 @@ export async function showHideGethWidgets(
   rpcInfoBox
 ) {
   try {
-    const syncingStatus = await isSyncing();
+    const syncingStatus = await getEthSyncingStatus();
 
     if (syncingStatus) {
       if (!screen.children.includes(gethStageGauge)) {
@@ -699,6 +703,37 @@ export async function showHideGethWidgets(
   }
 }
 
+async function calcSyncingStatus(executionClient) {
+  try {
+    const syncingStatus = await getEthSyncingStatus();
+    let isSyncing = false; // Default value
+
+    if (executionClient === "reth") {
+      // Check if syncingStatus is an object (syncing) or false (not syncing)
+      const isNodeSyncing = syncingStatus !== false;
+
+      const allStagesComplete = checkAllStagesComplete(stagePercentages);
+      const allStagesZero = Object.values(stagePercentages).every(
+        (percent) => percent === 0
+      );
+
+      if (isNodeSyncing || allStagesZero) {
+        isSyncing = true;
+      } else if (allStagesComplete) {
+        isSyncing = false;
+      }
+      // If none of the conditions are met, isSyncing remains false
+    } else if (executionClient === "geth") {
+      isSyncing = !!syncingStatus; // Convert to boolean
+    }
+
+    return { isSyncing, syncingStatus };
+  } catch (error) {
+    debugToFile(`calcSyncingStatus(): ${error}`);
+    return { isSyncing: false, syncingStatus: null };
+  }
+}
+
 export async function synchronizeAndUpdateWidgets(installDir) {
   try {
     // Check for network connectivity
@@ -712,7 +747,10 @@ export async function synchronizeAndUpdateWidgets(installDir) {
       return "{red-fg}DISK SPACE LOW{/red-fg}";
     }
 
-    const syncingStatus = await isSyncing();
+    // const syncingStatus = await getEthSyncingStatus();
+    const { isSyncing, syncingStatus } = await calcSyncingStatus(
+      executionClient
+    );
 
     if (executionClient == "geth") {
       if (syncingStatus) {
@@ -738,18 +776,19 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         }
       }
     } else if (executionClient == "reth") {
-      const allStagesComplete = checkAllStagesComplete(stagePercentages);
-      const allStagesZero = Object.values(stagePercentages).every(
-        (percent) => percent === 0
-      );
+      // Don't delete
+      // const allStagesComplete = checkAllStagesComplete(stagePercentages);
+      // const allStagesZero = Object.values(stagePercentages).every(
+      //   (percent) => percent === 0
+      // );
+      // // Check if syncingStatus is an object (syncing) or false (not syncing)
+      // const isNodeSyncing = syncingStatus !== false;
 
-      // Check if syncingStatus is an object (syncing) or false (not syncing)
-      const isNodeSyncing = syncingStatus !== false;
-
-      if (isNodeSyncing || allStagesZero) {
+      // if (isNodeSyncing || allStagesZero) {
+      if (isSyncing) {
         statusMessage = `SYNC IN PROGRESS`;
         await parseAndPopulateRethMetrics();
-      } else if (allStagesComplete) {
+      } else if (isSyncing === false) {
         const blockNumber = await localClient.getBlockNumber();
         const latestBlock = await mainnetClient.getBlockNumber();
         debugToFile(`latestBlock: ${latestBlock}`);
