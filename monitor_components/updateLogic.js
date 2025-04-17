@@ -716,6 +716,8 @@ export async function synchronizeAndUpdateWidgets(installDir) {
     const blockNumber = await localClient.getBlockNumber();
     const latestBlock = await mainnetClient.getBlockNumber();
 
+    debugToFile(`latestBlock: ${latestBlock}`);
+
     if (executionClient == "geth") {
       if (syncingStatus) {
         const currentBlock = parseInt(syncingStatus.currentBlock, 16);
