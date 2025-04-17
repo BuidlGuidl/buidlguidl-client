@@ -851,7 +851,57 @@ async function updateChainInfoBox(chainInfoBox, screen) {
   }
 }
 
-setInterval(() => updateChainWidgets(statusBox, chainInfoBox, screen), 5000);
+let currentUpdateInterval = null;
+let currentBlockWatcher = null;
+
+async function setupUpdateMechanism() {
+  const { isSyncing } = await calcSyncingStatus(executionClient);
+
+  // Clean up existing update mechanism
+  if (currentUpdateInterval) {
+    clearInterval(currentUpdateInterval);
+    currentUpdateInterval = null;
+  }
+  if (currentBlockWatcher) {
+    currentBlockWatcher.unsubscribe();
+    currentBlockWatcher = null;
+  }
+
+  if (isSyncing) {
+    // When syncing, update every 5 seconds
+    currentUpdateInterval = setInterval(
+      () => updateChainWidgets(statusBox, chainInfoBox, screen),
+      5000
+    );
+  } else {
+    // When not syncing, update only on new blocks
+    currentBlockWatcher = localClient.watchBlocks(
+      {
+        onBlock: () => {
+          updateChainWidgets(statusBox, chainInfoBox, screen);
+        },
+      },
+      (error) => {
+        debugToFile(`Error in block watcher: ${error}`);
+      }
+    );
+  }
+}
+
+// Initialize the update mechanism
+setupUpdateMechanism();
+
+// Check for syncing status changes every 30 seconds
+setInterval(async () => {
+  const { isSyncing } = await calcSyncingStatus(executionClient);
+  const isCurrentlySyncing = currentUpdateInterval !== null;
+
+  // Only update the mechanism if the syncing status has changed
+  if (isSyncing !== isCurrentlySyncing) {
+    setupUpdateMechanism();
+  }
+}, 10000);
+
 setInterval(() => updateBandwidthBox(screen), 2000);
 
 async function checkNetworkConnectivity() {
