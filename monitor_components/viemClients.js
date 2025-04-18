@@ -11,8 +11,10 @@ export const mainnetClient = createPublicClient({
   name: "mainnetClient",
   chain: mainnet,
   transport: http("https://pool.mainnet.rpc.buidlguidl.com:48544/", {
-    headers: {
-      Origin: "buidlguidl-client",
+    fetchOptions: {
+      headers: {
+        Origin: "buidlguidl-client",
+      },
     },
   }),
 });
