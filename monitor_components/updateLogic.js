@@ -764,7 +764,7 @@ export async function synchronizeAndUpdateWidgets(installDir) {
       } else {
         const blockNumber = await localClient.getBlockNumber();
         const latestBlock = await mainnetClient.getBlockNumber();
-        debugToFile(`latestBlock: ${latestBlock}`);
+
         if (
           blockNumber >= latestBlock ||
           blockNumber === latestBlock - BigInt(1)
@@ -790,7 +790,7 @@ export async function synchronizeAndUpdateWidgets(installDir) {
       } else if (isSyncing === false) {
         const blockNumber = await localClient.getBlockNumber();
         const latestBlock = await mainnetClient.getBlockNumber();
-        debugToFile(`latestBlock: ${latestBlock}`);
+
         if (
           blockNumber >= latestBlock ||
           blockNumber === latestBlock - BigInt(1)
