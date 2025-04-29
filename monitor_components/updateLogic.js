@@ -39,6 +39,7 @@ let lastBlockNumber = null; // Track the last block we processed
 let isFetchingLatestBlock = false; // Mutex flag to prevent parallel fetches
 let cachedLatestBlock = null; // Cache for the latest block
 let lastFetchTime = 0; // Track when we last fetched the latest block
+let lastFetchedForBlock = null; // Track which block number we last fetched for
 
 // Function to initialize Reth version
 function initRethVersion() {
@@ -882,7 +883,7 @@ export async function synchronizeAndUpdateWidgets(installDir) {
           shouldCheckLatestBlock = blockCounter % 10 === 0;
           debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
 
-          if (shouldCheckLatestBlock) {
+          if (shouldCheckLatestBlock && lastFetchedForBlock !== blockNumber) {
             try {
               latestBlock = await fetchLatestBlockWithMutex();
             } catch (error) {
@@ -894,11 +895,13 @@ export async function synchronizeAndUpdateWidgets(installDir) {
           statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
         } else {
           // If we're catching up, always fetch the latest block
-          try {
-            latestBlock = await fetchLatestBlockWithMutex();
-          } catch (error) {
-            debugToFile(`Error fetching latest block: ${error}`);
-            latestBlock = null;
+          if (lastFetchedForBlock !== blockNumber) {
+            try {
+              latestBlock = await fetchLatestBlockWithMutex();
+            } catch (error) {
+              debugToFile(`Error fetching latest block: ${error}`);
+              latestBlock = null;
+            }
           }
 
           statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${
@@ -955,7 +958,7 @@ export async function synchronizeAndUpdateWidgets(installDir) {
           shouldCheckLatestBlock = blockCounter % 10 === 0;
           debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
 
-          if (shouldCheckLatestBlock) {
+          if (shouldCheckLatestBlock && lastFetchedForBlock !== blockNumber) {
             try {
               latestBlock = await fetchLatestBlockWithMutex();
             } catch (error) {
@@ -967,11 +970,13 @@ export async function synchronizeAndUpdateWidgets(installDir) {
           statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
         } else {
           // If we're catching up, always fetch the latest block
-          try {
-            latestBlock = await fetchLatestBlockWithMutex();
-          } catch (error) {
-            debugToFile(`Error fetching latest block: ${error}`);
-            latestBlock = null;
+          if (lastFetchedForBlock !== blockNumber) {
+            try {
+              latestBlock = await fetchLatestBlockWithMutex();
+            } catch (error) {
+              debugToFile(`Error fetching latest block: ${error}`);
+              latestBlock = null;
+            }
           }
 
           statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${
@@ -1027,6 +1032,7 @@ async function fetchLatestBlockWithMutex() {
         debugToFile(`Getting latestBlock: ${latestBlock}`);
         cachedLatestBlock = latestBlock;
         lastFetchTime = now;
+        lastFetchedForBlock = lastBlockNumber;
         return latestBlock;
       } else {
         // Use cached value if available
@@ -1039,6 +1045,7 @@ async function fetchLatestBlockWithMutex() {
           debugToFile(`Getting latestBlock (no cache): ${latestBlock}`);
           cachedLatestBlock = latestBlock;
           lastFetchTime = now;
+          lastFetchedForBlock = lastBlockNumber;
           return latestBlock;
         }
       }
@@ -1064,6 +1071,7 @@ async function fetchLatestBlockWithMutex() {
         debugToFile(`Getting latestBlock (last resort): ${latestBlock}`);
         cachedLatestBlock = latestBlock;
         lastFetchTime = Date.now();
+        lastFetchedForBlock = lastBlockNumber;
         return latestBlock;
       }
     }
