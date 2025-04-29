@@ -860,6 +860,9 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         let shouldCheckLatestBlock = lastIsFollowingChainHead
           ? blockCounter % 10 === 0
           : true;
+        if (lastLatestBlock === null) {
+          shouldCheckLatestBlock = true; // Always fetch on startup or if we have no mainnet block
+        }
         debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
 
         if (shouldCheckLatestBlock) {
@@ -915,6 +918,9 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         let shouldCheckLatestBlock = lastIsFollowingChainHead
           ? blockCounter % 10 === 0
           : true;
+        if (lastLatestBlock === null) {
+          shouldCheckLatestBlock = true; // Always fetch on startup or if we have no mainnet block
+        }
         debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
 
         if (shouldCheckLatestBlock) {
