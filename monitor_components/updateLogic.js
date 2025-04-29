@@ -853,39 +853,21 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
 
         // Only fetch latest block when needed
-        if (shouldCheckLatestBlock && !latestBlockFetched) {
-          // Use mutex-like approach to prevent parallel fetches
-          if (!isFetchingLatestBlock) {
-            isFetchingLatestBlock = true;
-            try {
-              latestBlock = await mainnetClient.getBlockNumber();
-              debugToFile(`Getting latestBlock: ${latestBlock}`);
-              cachedLatestBlock = latestBlock; // Cache the result
-              latestBlockFetched = true; // Mark that we've fetched the latest block
-            } finally {
-              isFetchingLatestBlock = false;
-            }
-          } else {
-            // Wait for the other call to finish fetching
-            debugToFile(
-              `Waiting for latest block to be fetched by another call`
-            );
-            // Use the cached value if available
-            if (cachedLatestBlock !== null) {
-              latestBlock = cachedLatestBlock;
-              debugToFile(`Using cached latestBlock: ${latestBlock}`);
-            } else {
-              // This should rarely happen, but just in case
-              latestBlock = await mainnetClient.getBlockNumber();
-              debugToFile(`Fetched latestBlock after waiting: ${latestBlock}`);
-            }
-          }
+        if (shouldCheckLatestBlock) {
+          try {
+            latestBlock = await mainnetClient.getBlockNumber();
+            debugToFile(`Getting latestBlock: ${latestBlock}`);
 
-          // Determine if we're following chain head
-          isFollowingChainHead =
-            blockNumber >= latestBlock ||
-            blockNumber === latestBlock - BigInt(1);
-        } else if (!shouldCheckLatestBlock) {
+            // Determine if we're following chain head
+            isFollowingChainHead =
+              blockNumber >= latestBlock ||
+              blockNumber === latestBlock - BigInt(1);
+          } catch (error) {
+            debugToFile(`Error fetching latest block: ${error}`);
+            // If we can't fetch the latest block, assume we're following chain head
+            isFollowingChainHead = true;
+          }
+        } else {
           // If we're not checking the latest block, use the previous state
           // This assumes we were following chain head in the previous state
           isFollowingChainHead = true;
@@ -916,37 +898,15 @@ export async function synchronizeAndUpdateWidgets(installDir) {
 
           statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
         } else {
-          // If we're catching up, we need to fetch the latest block
-          if (!latestBlockFetched) {
-            // Use mutex-like approach to prevent parallel fetches
-            if (!isFetchingLatestBlock) {
-              isFetchingLatestBlock = true;
-              try {
-                latestBlock = await mainnetClient.getBlockNumber();
-                debugToFile(`Getting latestBlock: ${latestBlock}`);
-                cachedLatestBlock = latestBlock; // Cache the result
-                latestBlockFetched = true; // Mark that we've fetched the latest block
-              } finally {
-                isFetchingLatestBlock = false;
-              }
-            } else {
-              // Wait for the other call to finish fetching
-              debugToFile(
-                `Waiting for latest block to be fetched by another call`
-              );
-              // Use the cached value if available
-              if (cachedLatestBlock !== null) {
-                latestBlock = cachedLatestBlock;
-                debugToFile(`Using cached latestBlock: ${latestBlock}`);
-              } else {
-                // This should rarely happen, but just in case
-                latestBlock = await mainnetClient.getBlockNumber();
-                debugToFile(
-                  `Fetched latestBlock after waiting: ${latestBlock}`
-                );
-              }
-            }
+          // If we're catching up, always fetch the latest block
+          try {
+            latestBlock = await mainnetClient.getBlockNumber();
+            debugToFile(`Getting latestBlock: ${latestBlock}`);
+          } catch (error) {
+            debugToFile(`Error fetching latest block: ${error}`);
+            latestBlock = null;
           }
+
           statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${
             latestBlock ? latestBlock.toLocaleString() : "Unknown"
           }`;
@@ -969,39 +929,21 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
 
         // Only fetch latest block when needed
-        if (shouldCheckLatestBlock && !latestBlockFetched) {
-          // Use mutex-like approach to prevent parallel fetches
-          if (!isFetchingLatestBlock) {
-            isFetchingLatestBlock = true;
-            try {
-              latestBlock = await mainnetClient.getBlockNumber();
-              debugToFile(`Getting latestBlock: ${latestBlock}`);
-              cachedLatestBlock = latestBlock; // Cache the result
-              latestBlockFetched = true; // Mark that we've fetched the latest block
-            } finally {
-              isFetchingLatestBlock = false;
-            }
-          } else {
-            // Wait for the other call to finish fetching
-            debugToFile(
-              `Waiting for latest block to be fetched by another call`
-            );
-            // Use the cached value if available
-            if (cachedLatestBlock !== null) {
-              latestBlock = cachedLatestBlock;
-              debugToFile(`Using cached latestBlock: ${latestBlock}`);
-            } else {
-              // This should rarely happen, but just in case
-              latestBlock = await mainnetClient.getBlockNumber();
-              debugToFile(`Fetched latestBlock after waiting: ${latestBlock}`);
-            }
-          }
+        if (shouldCheckLatestBlock) {
+          try {
+            latestBlock = await mainnetClient.getBlockNumber();
+            debugToFile(`Getting latestBlock: ${latestBlock}`);
 
-          // Determine if we're following chain head
-          isFollowingChainHead =
-            blockNumber >= latestBlock ||
-            blockNumber === latestBlock - BigInt(1);
-        } else if (!shouldCheckLatestBlock) {
+            // Determine if we're following chain head
+            isFollowingChainHead =
+              blockNumber >= latestBlock ||
+              blockNumber === latestBlock - BigInt(1);
+          } catch (error) {
+            debugToFile(`Error fetching latest block: ${error}`);
+            // If we can't fetch the latest block, assume we're following chain head
+            isFollowingChainHead = true;
+          }
+        } else {
           // If we're not checking the latest block, use the previous state
           // This assumes we were following chain head in the previous state
           isFollowingChainHead = true;
@@ -1032,37 +974,15 @@ export async function synchronizeAndUpdateWidgets(installDir) {
 
           statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
         } else {
-          // If we're catching up, we need to fetch the latest block
-          if (!latestBlockFetched) {
-            // Use mutex-like approach to prevent parallel fetches
-            if (!isFetchingLatestBlock) {
-              isFetchingLatestBlock = true;
-              try {
-                latestBlock = await mainnetClient.getBlockNumber();
-                debugToFile(`Getting latestBlock: ${latestBlock}`);
-                cachedLatestBlock = latestBlock; // Cache the result
-                latestBlockFetched = true; // Mark that we've fetched the latest block
-              } finally {
-                isFetchingLatestBlock = false;
-              }
-            } else {
-              // Wait for the other call to finish fetching
-              debugToFile(
-                `Waiting for latest block to be fetched by another call`
-              );
-              // Use the cached value if available
-              if (cachedLatestBlock !== null) {
-                latestBlock = cachedLatestBlock;
-                debugToFile(`Using cached latestBlock: ${latestBlock}`);
-              } else {
-                // This should rarely happen, but just in case
-                latestBlock = await mainnetClient.getBlockNumber();
-                debugToFile(
-                  `Fetched latestBlock after waiting: ${latestBlock}`
-                );
-              }
-            }
+          // If we're catching up, always fetch the latest block
+          try {
+            latestBlock = await mainnetClient.getBlockNumber();
+            debugToFile(`Getting latestBlock: ${latestBlock}`);
+          } catch (error) {
+            debugToFile(`Error fetching latest block: ${error}`);
+            latestBlock = null;
           }
+
           statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${
             latestBlock ? latestBlock.toLocaleString() : "Unknown"
           }`;
