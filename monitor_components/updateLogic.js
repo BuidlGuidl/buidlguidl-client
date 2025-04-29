@@ -741,6 +741,7 @@ let currentBlockWatcher = null;
 let latestBlockFetched = false; // Flag to track if we've fetched the latest block in the current cycle
 let isFetchingLatestBlock = false; // Mutex-like flag to prevent parallel fetches
 let cachedLatestBlock = null; // Cache for the latest block
+let lastProcessedBlock = null; // Track the last block we processed
 
 async function setupUpdateMechanism() {
   const { isSyncing } = await calcSyncingStatus(executionClient);
@@ -899,13 +900,16 @@ export async function synchronizeAndUpdateWidgets(installDir) {
 
         // Set status message based on state
         if (isFollowingChainHead) {
-          // Only increment block counter when following chain head
-          blockCounter++;
-          shouldCheckLatestBlock = blockCounter % 10 === 0;
-          debugToFile(`Updated blockCounter: ${blockCounter}`);
-          debugToFile(
-            `Updated shouldCheckLatestBlock: ${shouldCheckLatestBlock}`
-          );
+          // Only increment block counter once per block
+          if (lastProcessedBlock !== blockNumber) {
+            blockCounter++;
+            lastProcessedBlock = blockNumber;
+            shouldCheckLatestBlock = blockCounter % 10 === 0;
+            debugToFile(`Updated blockCounter: ${blockCounter}`);
+            debugToFile(
+              `Updated shouldCheckLatestBlock: ${shouldCheckLatestBlock}`
+            );
+          }
 
           statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
         } else {
@@ -1000,13 +1004,16 @@ export async function synchronizeAndUpdateWidgets(installDir) {
 
         // Set status message based on state
         if (isFollowingChainHead) {
-          // Only increment block counter when following chain head
-          blockCounter++;
-          shouldCheckLatestBlock = blockCounter % 10 === 0;
-          debugToFile(`Updated blockCounter: ${blockCounter}`);
-          debugToFile(
-            `Updated shouldCheckLatestBlock: ${shouldCheckLatestBlock}`
-          );
+          // Only increment block counter once per block
+          if (lastProcessedBlock !== blockNumber) {
+            blockCounter++;
+            lastProcessedBlock = blockNumber;
+            shouldCheckLatestBlock = blockCounter % 10 === 0;
+            debugToFile(`Updated blockCounter: ${blockCounter}`);
+            debugToFile(
+              `Updated shouldCheckLatestBlock: ${shouldCheckLatestBlock}`
+            );
+          }
 
           statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
         } else {
