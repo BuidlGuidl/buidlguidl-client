@@ -850,7 +850,6 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         if (lastBlockNumber !== blockNumber) {
           blockCounter++;
           lastBlockNumber = blockNumber;
-          debugToFile(`Updated blockCounter: ${blockCounter}`);
         }
 
         let isFollowingChainHead;
@@ -863,7 +862,6 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         if (lastLatestBlock === null) {
           shouldCheckLatestBlock = true; // Always fetch on startup or if we have no mainnet block
         }
-        debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
 
         if (shouldCheckLatestBlock) {
           try {
@@ -905,7 +903,6 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         if (lastBlockNumber !== blockNumber) {
           blockCounter++;
           lastBlockNumber = blockNumber;
-          debugToFile(`Updated blockCounter: ${blockCounter}`);
         }
 
         let isFollowingChainHead;
@@ -940,9 +937,6 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         }
 
         // Set status message
-        debugToFile(
-          `blockNumber: ${blockNumber}, latestBlock: ${latestBlock}, isFollowingChainHead: ${isFollowingChainHead}`
-        );
         if (isFollowingChainHead) {
           statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
         } else {
