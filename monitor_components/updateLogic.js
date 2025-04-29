@@ -42,6 +42,10 @@ let lastFetchTime = 0; // Track when we last fetched the latest block
 let lastFetchedForBlock = null; // Track which block number we last fetched for
 let lastFetchPromise = null; // Store the promise for the latest fetch
 
+// Add these at the module level (top of file or before synchronizeAndUpdateWidgets)
+let lastIsFollowingChainHead = true;
+let lastLatestBlock = null;
+
 // Function to initialize Reth version
 function initRethVersion() {
   if (rethVersion === null) {
@@ -849,42 +853,52 @@ export async function synchronizeAndUpdateWidgets(installDir) {
           debugToFile(`Updated blockCounter: ${blockCounter}`);
         }
 
-        // Only fetch latest block every 10 blocks
-        let shouldCheckLatestBlock = blockCounter % 10 === 0;
-        debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
-        let isFollowingChainHead = false;
+        let isFollowingChainHead;
         let latestBlock;
 
-        if (shouldCheckLatestBlock) {
+        if (lastIsFollowingChainHead) {
+          let shouldCheckLatestBlock = blockCounter % 10 === 0;
+          debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
+          if (shouldCheckLatestBlock) {
+            try {
+              latestBlock = await fetchLatestBlockWithMutex();
+              isFollowingChainHead =
+                blockNumber >= latestBlock ||
+                blockNumber === latestBlock - BigInt(1);
+              lastLatestBlock = latestBlock;
+              lastIsFollowingChainHead = isFollowingChainHead;
+            } catch (error) {
+              debugToFile(`Error fetching latest block: ${error}`);
+              isFollowingChainHead = true;
+              lastIsFollowingChainHead = isFollowingChainHead;
+              lastLatestBlock = null;
+            }
+          } else {
+            // Use last known state
+            isFollowingChainHead = lastIsFollowingChainHead;
+            latestBlock = lastLatestBlock;
+          }
+        } else {
+          // If we were NOT following, always fetch
           try {
             latestBlock = await fetchLatestBlockWithMutex();
-            // Determine if we're following chain head
             isFollowingChainHead =
               blockNumber >= latestBlock ||
               blockNumber === latestBlock - BigInt(1);
+            lastLatestBlock = latestBlock;
+            lastIsFollowingChainHead = isFollowingChainHead;
           } catch (error) {
             debugToFile(`Error fetching latest block: ${error}`);
-            // If we can't fetch the latest block, assume we're following chain head
-            isFollowingChainHead = true;
+            isFollowingChainHead = false;
+            lastIsFollowingChainHead = isFollowingChainHead;
+            lastLatestBlock = null;
           }
-        } else {
-          // If we're not checking the latest block, use the previous state
-          // This assumes we were following chain head in the previous state
-          isFollowingChainHead = true;
         }
 
-        // Set status message based on state
+        // Set status message
         if (isFollowingChainHead) {
           statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
         } else {
-          // If we're catching up, always fetch the latest block
-          try {
-            latestBlock = await fetchLatestBlockWithMutex();
-          } catch (error) {
-            debugToFile(`Error fetching latest block: ${error}`);
-            latestBlock = null;
-          }
-
           statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${
             latestBlock ? latestBlock.toLocaleString() : "Unknown"
           }`;
@@ -904,42 +918,52 @@ export async function synchronizeAndUpdateWidgets(installDir) {
           debugToFile(`Updated blockCounter: ${blockCounter}`);
         }
 
-        // Only fetch latest block every 10 blocks
-        let shouldCheckLatestBlock = blockCounter % 10 === 0;
-        debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
-        let isFollowingChainHead = false;
+        let isFollowingChainHead;
         let latestBlock;
 
-        if (shouldCheckLatestBlock) {
+        if (lastIsFollowingChainHead) {
+          let shouldCheckLatestBlock = blockCounter % 10 === 0;
+          debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
+          if (shouldCheckLatestBlock) {
+            try {
+              latestBlock = await fetchLatestBlockWithMutex();
+              isFollowingChainHead =
+                blockNumber >= latestBlock ||
+                blockNumber === latestBlock - BigInt(1);
+              lastLatestBlock = latestBlock;
+              lastIsFollowingChainHead = isFollowingChainHead;
+            } catch (error) {
+              debugToFile(`Error fetching latest block: ${error}`);
+              isFollowingChainHead = true;
+              lastIsFollowingChainHead = isFollowingChainHead;
+              lastLatestBlock = null;
+            }
+          } else {
+            // Use last known state
+            isFollowingChainHead = lastIsFollowingChainHead;
+            latestBlock = lastLatestBlock;
+          }
+        } else {
+          // If we were NOT following, always fetch
           try {
             latestBlock = await fetchLatestBlockWithMutex();
-            // Determine if we're following chain head
             isFollowingChainHead =
               blockNumber >= latestBlock ||
               blockNumber === latestBlock - BigInt(1);
+            lastLatestBlock = latestBlock;
+            lastIsFollowingChainHead = isFollowingChainHead;
           } catch (error) {
             debugToFile(`Error fetching latest block: ${error}`);
-            // If we can't fetch the latest block, assume we're following chain head
-            isFollowingChainHead = true;
+            isFollowingChainHead = false;
+            lastIsFollowingChainHead = isFollowingChainHead;
+            lastLatestBlock = null;
           }
-        } else {
-          // If we're not checking the latest block, use the previous state
-          // This assumes we were following chain head in the previous state
-          isFollowingChainHead = true;
         }
 
-        // Set status message based on state
+        // Set status message
         if (isFollowingChainHead) {
           statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
         } else {
-          // If we're catching up, always fetch the latest block
-          try {
-            latestBlock = await fetchLatestBlockWithMutex();
-          } catch (error) {
-            debugToFile(`Error fetching latest block: ${error}`);
-            latestBlock = null;
-          }
-
           statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${
             latestBlock ? latestBlock.toLocaleString() : "Unknown"
           }`;
