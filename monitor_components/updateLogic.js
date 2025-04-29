@@ -886,9 +886,6 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         }
 
         // Set status message
-        debugToFile(
-          `blockNumber: ${blockNumber}, latestBlock: ${latestBlock}, isFollowingChainHead: ${isFollowingChainHead}`
-        );
         if (isFollowingChainHead) {
           statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
         } else {
@@ -921,7 +918,6 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         if (lastLatestBlock === null) {
           shouldCheckLatestBlock = true; // Always fetch on startup or if we have no mainnet block
         }
-        debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
 
         if (shouldCheckLatestBlock) {
           try {
@@ -994,26 +990,22 @@ async function updateChainInfoBox(chainInfoBox, screen) {
 async function fetchLatestBlockWithMutex() {
   // If there's already a fetch in progress, return that promise
   if (lastFetchPromise) {
-    debugToFile(`Reusing existing fetch promise`);
     return lastFetchPromise;
   }
 
   // If we have a cached value that's less than 5 seconds old, use it
   const now = Date.now();
   if (cachedLatestBlock !== null && now - lastFetchTime < 5000) {
-    debugToFile(`Using recent cached latestBlock: ${cachedLatestBlock}`);
     return cachedLatestBlock;
   }
 
   // Start a new fetch
-  debugToFile(`Starting new fetch for latestBlock`);
   isFetchingLatestBlock = true;
 
   // Create a new promise for this fetch
   lastFetchPromise = (async () => {
     try {
       const latestBlock = await mainnetClient.getBlockNumber();
-      debugToFile(`Got new latestBlock: ${latestBlock}`);
       cachedLatestBlock = latestBlock;
       lastFetchTime = now;
       lastFetchedForBlock = lastBlockNumber;
