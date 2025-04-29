@@ -749,7 +749,14 @@ async function setupUpdateMechanism() {
   }
   if (currentBlockWatcher) {
     try {
-      await currentBlockWatcher.unsubscribe();
+      // Check if unsubscribe method exists before calling it
+      if (typeof currentBlockWatcher.unsubscribe === "function") {
+        await currentBlockWatcher.unsubscribe();
+      } else {
+        debugToFile(
+          "Block watcher does not have unsubscribe method, skipping unsubscribe"
+        );
+      }
     } catch (error) {
       debugToFile(`Error unsubscribing from block watcher: ${error}`);
     }
@@ -835,9 +842,6 @@ export async function synchronizeAndUpdateWidgets(installDir) {
       } else {
         const blockNumber = await localClient.getBlockNumber();
 
-        // Increment block counter
-        blockCounter++;
-
         // Check if we need to fetch the latest block (every 10th block) when following chain head
         let latestBlock;
         let shouldCheckLatestBlock = blockCounter % 10 === 0;
@@ -864,6 +868,14 @@ export async function synchronizeAndUpdateWidgets(installDir) {
 
         // Set status message based on state
         if (isFollowingChainHead) {
+          // Only increment block counter when following chain head
+          blockCounter++;
+          shouldCheckLatestBlock = blockCounter % 10 === 0;
+          debugToFile(`Updated blockCounter: ${blockCounter}`);
+          debugToFile(
+            `Updated shouldCheckLatestBlock: ${shouldCheckLatestBlock}`
+          );
+
           statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
         } else {
           // If we're catching up, we need to fetch the latest block
@@ -881,9 +893,6 @@ export async function synchronizeAndUpdateWidgets(installDir) {
       } else if (isSyncing === false) {
         const blockNumber = await localClient.getBlockNumber();
 
-        // Increment block counter
-        blockCounter++;
-
         // Check if we need to fetch the latest block (every 10th block) when following chain head
         let latestBlock;
         let shouldCheckLatestBlock = blockCounter % 10 === 0;
@@ -910,6 +919,14 @@ export async function synchronizeAndUpdateWidgets(installDir) {
 
         // Set status message based on state
         if (isFollowingChainHead) {
+          // Only increment block counter when following chain head
+          blockCounter++;
+          shouldCheckLatestBlock = blockCounter % 10 === 0;
+          debugToFile(`Updated blockCounter: ${blockCounter}`);
+          debugToFile(
+            `Updated shouldCheckLatestBlock: ${shouldCheckLatestBlock}`
+          );
+
           statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
         } else {
           // If we're catching up, we need to fetch the latest block
