@@ -738,10 +738,7 @@ async function calcSyncingStatus(executionClient) {
 
 let currentUpdateInterval = null;
 let currentBlockWatcher = null;
-let latestBlockFetched = false; // Flag to track if we've fetched the latest block in the current cycle
-let isFetchingLatestBlock = false; // Mutex-like flag to prevent parallel fetches
-let cachedLatestBlock = null; // Cache for the latest block
-let lastProcessedBlock = null; // Track the last block we processed
+let lastBlockNumber = null; // Track the last block we processed
 
 async function setupUpdateMechanism() {
   const { isSyncing } = await calcSyncingStatus(executionClient);
@@ -804,11 +801,7 @@ setInterval(async () => {
   if (isSyncing !== isCurrentlySyncing) {
     setupUpdateMechanism();
   }
-
-  // Reset the latestBlockFetched flag every 10 seconds
-  latestBlockFetched = false;
-  cachedLatestBlock = null; // Clear the cache
-}, 10000);
+}, 30000);
 
 setInterval(() => updateBandwidthBox(screen), 2000);
 
@@ -901,14 +894,24 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         // Set status message based on state
         if (isFollowingChainHead) {
           // Only increment block counter once per block
-          if (lastProcessedBlock !== blockNumber) {
+          if (lastBlockNumber !== blockNumber) {
             blockCounter++;
-            lastProcessedBlock = blockNumber;
-            shouldCheckLatestBlock = blockCounter % 10 === 0;
+            lastBlockNumber = blockNumber;
             debugToFile(`Updated blockCounter: ${blockCounter}`);
-            debugToFile(
-              `Updated shouldCheckLatestBlock: ${shouldCheckLatestBlock}`
-            );
+          }
+
+          // Only fetch latest block every 10 blocks
+          shouldCheckLatestBlock = blockCounter % 10 === 0;
+          debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
+
+          if (shouldCheckLatestBlock) {
+            try {
+              latestBlock = await mainnetClient.getBlockNumber();
+              debugToFile(`Getting latestBlock: ${latestBlock}`);
+            } catch (error) {
+              debugToFile(`Error fetching latest block: ${error}`);
+              latestBlock = null;
+            }
           }
 
           statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
@@ -944,7 +947,9 @@ export async function synchronizeAndUpdateWidgets(installDir) {
               }
             }
           }
-          statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${latestBlock.toLocaleString()}`;
+          statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${
+            latestBlock ? latestBlock.toLocaleString() : "Unknown"
+          }`;
         }
       }
     } else if (executionClient == "reth") {
@@ -1005,14 +1010,24 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         // Set status message based on state
         if (isFollowingChainHead) {
           // Only increment block counter once per block
-          if (lastProcessedBlock !== blockNumber) {
+          if (lastBlockNumber !== blockNumber) {
             blockCounter++;
-            lastProcessedBlock = blockNumber;
-            shouldCheckLatestBlock = blockCounter % 10 === 0;
+            lastBlockNumber = blockNumber;
             debugToFile(`Updated blockCounter: ${blockCounter}`);
-            debugToFile(
-              `Updated shouldCheckLatestBlock: ${shouldCheckLatestBlock}`
-            );
+          }
+
+          // Only fetch latest block every 10 blocks
+          shouldCheckLatestBlock = blockCounter % 10 === 0;
+          debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
+
+          if (shouldCheckLatestBlock) {
+            try {
+              latestBlock = await mainnetClient.getBlockNumber();
+              debugToFile(`Getting latestBlock: ${latestBlock}`);
+            } catch (error) {
+              debugToFile(`Error fetching latest block: ${error}`);
+              latestBlock = null;
+            }
           }
 
           statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
@@ -1048,7 +1063,9 @@ export async function synchronizeAndUpdateWidgets(installDir) {
               }
             }
           }
-          statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${latestBlock.toLocaleString()}`;
+          statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${
+            latestBlock ? latestBlock.toLocaleString() : "Unknown"
+          }`;
         }
       }
     }
@@ -1098,10 +1115,6 @@ setInterval(async () => {
   if (isSyncing !== isCurrentlySyncing) {
     setupUpdateMechanism();
   }
-
-  // Reset the latestBlockFetched flag every 10 seconds
-  latestBlockFetched = false;
-  cachedLatestBlock = null; // Clear the cache
-}, 10000);
+}, 30000);
 
 setInterval(() => updateBandwidthBox(screen), 2000);
