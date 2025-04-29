@@ -738,6 +738,7 @@ async function calcSyncingStatus(executionClient) {
 
 let currentUpdateInterval = null;
 let currentBlockWatcher = null;
+let latestBlockFetched = false; // Flag to track if we've fetched the latest block in the current cycle
 
 async function setupUpdateMechanism() {
   const { isSyncing } = await calcSyncingStatus(executionClient);
@@ -800,6 +801,9 @@ setInterval(async () => {
   if (isSyncing !== isCurrentlySyncing) {
     setupUpdateMechanism();
   }
+
+  // Reset the latestBlockFetched flag every 10 seconds
+  latestBlockFetched = false;
 }, 10000);
 
 setInterval(() => updateBandwidthBox(screen), 2000);
@@ -852,15 +856,16 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
 
         // Only fetch latest block when needed
-        if (shouldCheckLatestBlock) {
+        if (shouldCheckLatestBlock && !latestBlockFetched) {
           latestBlock = await mainnetClient.getBlockNumber();
           debugToFile(`Getting latestBlock: ${latestBlock}`);
+          latestBlockFetched = true; // Mark that we've fetched the latest block
 
           // Determine if we're following chain head
           isFollowingChainHead =
             blockNumber >= latestBlock ||
             blockNumber === latestBlock - BigInt(1);
-        } else {
+        } else if (!shouldCheckLatestBlock) {
           // If we're not checking the latest block, use the previous state
           // This assumes we were following chain head in the previous state
           isFollowingChainHead = true;
@@ -879,9 +884,10 @@ export async function synchronizeAndUpdateWidgets(installDir) {
           statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
         } else {
           // If we're catching up, we need to fetch the latest block
-          if (!shouldCheckLatestBlock) {
+          if (!latestBlockFetched) {
             latestBlock = await mainnetClient.getBlockNumber();
             debugToFile(`Getting latestBlock: ${latestBlock}`);
+            latestBlockFetched = true; // Mark that we've fetched the latest block
           }
           statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${latestBlock.toLocaleString()}`;
         }
@@ -903,15 +909,16 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
 
         // Only fetch latest block when needed
-        if (shouldCheckLatestBlock) {
+        if (shouldCheckLatestBlock && !latestBlockFetched) {
           latestBlock = await mainnetClient.getBlockNumber();
           debugToFile(`Getting latestBlock: ${latestBlock}`);
+          latestBlockFetched = true; // Mark that we've fetched the latest block
 
           // Determine if we're following chain head
           isFollowingChainHead =
             blockNumber >= latestBlock ||
             blockNumber === latestBlock - BigInt(1);
-        } else {
+        } else if (!shouldCheckLatestBlock) {
           // If we're not checking the latest block, use the previous state
           // This assumes we were following chain head in the previous state
           isFollowingChainHead = true;
@@ -930,9 +937,10 @@ export async function synchronizeAndUpdateWidgets(installDir) {
           statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
         } else {
           // If we're catching up, we need to fetch the latest block
-          if (!shouldCheckLatestBlock) {
+          if (!latestBlockFetched) {
             latestBlock = await mainnetClient.getBlockNumber();
             debugToFile(`Getting latestBlock: ${latestBlock}`);
+            latestBlockFetched = true; // Mark that we've fetched the latest block
           }
           statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${latestBlock.toLocaleString()}`;
         }
@@ -984,6 +992,9 @@ setInterval(async () => {
   if (isSyncing !== isCurrentlySyncing) {
     setupUpdateMechanism();
   }
+
+  // Reset the latestBlockFetched flag every 10 seconds
+  latestBlockFetched = false;
 }, 10000);
 
 setInterval(() => updateBandwidthBox(screen), 2000);
