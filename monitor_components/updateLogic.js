@@ -33,6 +33,8 @@ let gethStageProgress = [
 
 // Store Reth version at module level
 let rethVersion = null;
+// Add a counter to track block numbers
+let blockCounter = 0;
 
 // Function to initialize Reth version
 function initRethVersion() {
@@ -734,122 +736,6 @@ async function calcSyncingStatus(executionClient) {
   }
 }
 
-export async function synchronizeAndUpdateWidgets(installDir) {
-  try {
-    // Check for network connectivity
-    await checkNetworkConnectivity();
-
-    // Get disk usage
-    const diskUsagePercent = await getDiskUsage(installDir);
-
-    // Check if disk usage is critical
-    if (diskUsagePercent >= 97) {
-      return "{red-fg}DISK SPACE LOW{/red-fg}";
-    }
-
-    const { isSyncing, syncingStatus } = await calcSyncingStatus(
-      executionClient
-    );
-
-    if (executionClient == "geth") {
-      if (syncingStatus) {
-        const currentBlock = parseInt(syncingStatus.currentBlock, 16);
-        const highestBlock = parseInt(syncingStatus.highestBlock, 16);
-
-        if (currentBlock === 0 && highestBlock === 0) {
-          statusMessage = `SYNC IN PROGRESS`;
-        } else {
-          statusMessage = `SYNC IN PROGRESS\nCurrent Block: ${currentBlock.toLocaleString()}\nHighest Block: ${highestBlock.toLocaleString()}`;
-        }
-      } else {
-        const blockNumber = await localClient.getBlockNumber();
-        const latestBlock = await mainnetClient.getBlockNumber();
-
-        if (
-          blockNumber >= latestBlock ||
-          blockNumber === latestBlock - BigInt(1)
-        ) {
-          statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
-        } else {
-          statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${latestBlock.toLocaleString()}`;
-        }
-      }
-    } else if (executionClient == "reth") {
-      // Don't delete
-      // const allStagesComplete = checkAllStagesComplete(stagePercentages);
-      // const allStagesZero = Object.values(stagePercentages).every(
-      //   (percent) => percent === 0
-      // );
-      // // Check if syncingStatus is an object (syncing) or false (not syncing)
-      // const isNodeSyncing = syncingStatus !== false;
-
-      // if (isNodeSyncing || allStagesZero) {
-      if (isSyncing) {
-        statusMessage = `SYNC IN PROGRESS`;
-        await parseAndPopulateRethMetrics();
-      } else if (isSyncing === false) {
-        const blockNumber = await localClient.getBlockNumber();
-        const latestBlock = await mainnetClient.getBlockNumber();
-
-        if (
-          blockNumber >= latestBlock ||
-          blockNumber === latestBlock - BigInt(1)
-        ) {
-          statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
-        } else {
-          statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${latestBlock.toLocaleString()}`;
-        }
-      }
-
-      // Don't delete
-      // if (syncingStatus || allStagesZero) {
-      //   statusMessage = `SYNC IN PROGRESS`;
-      //   await parseAndPopulateRethMetrics();
-      // } else if (allStagesComplete) {
-      //   if (
-      //     blockNumber >= latestBlock ||
-      //     blockNumber === latestBlock - BigInt(1)
-      //   ) {
-      //     statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
-      //   } else {
-      //     statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${latestBlock.toLocaleString()}`;
-      //   }
-      // }
-    }
-
-    return statusMessage;
-  } catch (error) {
-    debugToFile(`synchronizeAndUpdateWidgets error: ${error}`);
-    if (error.message === "No network connection") {
-      return "{red-fg}NO NETWORK CONNECTION{/red-fg}";
-    }
-    return "";
-  }
-}
-
-async function updateChainWidgets(statusBox, chainInfoBox, screen) {
-  try {
-    await Promise.all([
-      updateStatusBox(statusBox),
-      updateChainInfoBox(chainInfoBox, screen),
-    ]);
-
-    screen.render();
-  } catch (error) {
-    debugToFile(`updateWidgets(): ${error}`);
-  }
-}
-
-async function updateChainInfoBox(chainInfoBox, screen) {
-  try {
-    if (screen.children.includes(chainInfoBox)) {
-      await populateChainInfoBox();
-    }
-  } catch (error) {
-    debugToFile(`updateChainInfoBox(): ${error}`);
-  }
-}
-
 let currentUpdateInterval = null;
 let currentBlockWatcher = null;
 
@@ -918,3 +804,147 @@ async function checkNetworkConnectivity() {
     throw new Error("No network connection");
   }
 }
+
+export async function synchronizeAndUpdateWidgets(installDir) {
+  try {
+    // Check for network connectivity
+    await checkNetworkConnectivity();
+
+    // Get disk usage
+    const diskUsagePercent = await getDiskUsage(installDir);
+
+    // Check if disk usage is critical
+    if (diskUsagePercent >= 97) {
+      return "{red-fg}DISK SPACE LOW{/red-fg}";
+    }
+
+    const { isSyncing, syncingStatus } = await calcSyncingStatus(
+      executionClient
+    );
+
+    if (executionClient == "geth") {
+      if (syncingStatus) {
+        const currentBlock = parseInt(syncingStatus.currentBlock, 16);
+        const highestBlock = parseInt(syncingStatus.highestBlock, 16);
+
+        if (currentBlock === 0 && highestBlock === 0) {
+          statusMessage = `SYNC IN PROGRESS`;
+        } else {
+          statusMessage = `SYNC IN PROGRESS\nCurrent Block: ${currentBlock.toLocaleString()}\nHighest Block: ${highestBlock.toLocaleString()}`;
+        }
+      } else {
+        const blockNumber = await localClient.getBlockNumber();
+
+        // Increment block counter
+        blockCounter++;
+
+        // Check if we need to fetch the latest block (every 10th block)
+        let latestBlock;
+        let shouldCheckLatestBlock = blockCounter % 10 === 0;
+
+        debugToFile(`blockNumber: ${blockNumber}`);
+        debugToFile(`blockCounter: ${blockCounter}`);
+        debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
+
+        if (shouldCheckLatestBlock) {
+          latestBlock = await mainnetClient.getBlockNumber();
+          debugToFile(`Getting latestBlock: ${latestBlock}`);
+
+          if (
+            blockNumber >= latestBlock ||
+            blockNumber === latestBlock - BigInt(1)
+          ) {
+            statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
+          } else {
+            statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${latestBlock.toLocaleString()}`;
+          }
+        } else {
+          // If we're not checking the latest block, assume we're following the chain head
+          statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
+        }
+      }
+    } else if (executionClient == "reth") {
+      if (isSyncing) {
+        statusMessage = `SYNC IN PROGRESS`;
+        await parseAndPopulateRethMetrics();
+      } else if (isSyncing === false) {
+        const blockNumber = await localClient.getBlockNumber();
+
+        // Increment block counter
+        blockCounter++;
+
+        // Check if we need to fetch the latest block (every 10th block)
+        let latestBlock;
+        let shouldCheckLatestBlock = blockCounter % 10 === 0;
+
+        debugToFile(`blockNumber: ${blockNumber}`);
+        debugToFile(`blockCounter: ${blockCounter}`);
+        debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
+
+        if (shouldCheckLatestBlock) {
+          latestBlock = await mainnetClient.getBlockNumber();
+          debugToFile(`Getting latestBlock: ${latestBlock}`);
+
+          if (
+            blockNumber >= latestBlock ||
+            blockNumber === latestBlock - BigInt(1)
+          ) {
+            statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
+          } else {
+            statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${latestBlock.toLocaleString()}`;
+          }
+        } else {
+          // If we're not checking the latest block, assume we're following the chain head
+          statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
+        }
+      }
+    }
+
+    return statusMessage;
+  } catch (error) {
+    debugToFile(`synchronizeAndUpdateWidgets error: ${error}`);
+    if (error.message === "No network connection") {
+      return "{red-fg}NO NETWORK CONNECTION{/red-fg}";
+    }
+    return "";
+  }
+}
+
+async function updateChainWidgets(statusBox, chainInfoBox, screen) {
+  try {
+    await Promise.all([
+      updateStatusBox(statusBox),
+      updateChainInfoBox(chainInfoBox, screen),
+    ]);
+
+    screen.render();
+  } catch (error) {
+    debugToFile(`updateWidgets(): ${error}`);
+  }
+}
+
+async function updateChainInfoBox(chainInfoBox, screen) {
+  try {
+    if (screen.children.includes(chainInfoBox)) {
+      await populateChainInfoBox();
+    }
+  } catch (error) {
+    debugToFile(`updateChainInfoBox(): ${error}`);
+  }
+}
+
+// Initialize the update mechanism
+setupUpdateMechanism();
+
+// Check for syncing status changes every 30 seconds
+setInterval(async () => {
+  const { isSyncing } = await calcSyncingStatus(executionClient);
+  const isCurrentlySyncing = currentUpdateInterval !== null;
+
+  // Only update the mechanism if the syncing status has changed
+  if (isSyncing !== isCurrentlySyncing) {
+    setupUpdateMechanism();
+  }
+}, 10000);
+
+setInterval(() => updateBandwidthBox(screen), 2000);
