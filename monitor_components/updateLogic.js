@@ -856,43 +856,30 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         let isFollowingChainHead;
         let latestBlock;
 
-        if (lastIsFollowingChainHead) {
-          let shouldCheckLatestBlock = blockCounter % 10 === 0;
-          debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
-          if (shouldCheckLatestBlock) {
-            try {
-              latestBlock = await fetchLatestBlockWithMutex();
-              isFollowingChainHead =
-                blockNumber >= latestBlock ||
-                blockNumber === latestBlock - BigInt(1);
-              lastLatestBlock = latestBlock;
-              lastIsFollowingChainHead = isFollowingChainHead;
-            } catch (error) {
-              debugToFile(`Error fetching latest block: ${error}`);
-              isFollowingChainHead = true;
-              lastIsFollowingChainHead = isFollowingChainHead;
-              lastLatestBlock = null;
-            }
-          } else {
-            // Use last known state
-            isFollowingChainHead = lastIsFollowingChainHead;
-            latestBlock = lastLatestBlock;
-          }
-        } else {
-          // If we were NOT following, always fetch
+        // Only use the 10-block optimization if we are following chain head
+        let shouldCheckLatestBlock = lastIsFollowingChainHead
+          ? blockCounter % 10 === 0
+          : true;
+        debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
+
+        if (shouldCheckLatestBlock) {
           try {
             latestBlock = await fetchLatestBlockWithMutex();
             isFollowingChainHead =
-              blockNumber >= latestBlock ||
-              blockNumber === latestBlock - BigInt(1);
+              latestBlock !== null &&
+              (blockNumber >= latestBlock || blockNumber === latestBlock - 1n); // Use 1n for BigInt
             lastLatestBlock = latestBlock;
             lastIsFollowingChainHead = isFollowingChainHead;
           } catch (error) {
             debugToFile(`Error fetching latest block: ${error}`);
-            isFollowingChainHead = false;
+            isFollowingChainHead = true; // fallback
             lastIsFollowingChainHead = isFollowingChainHead;
             lastLatestBlock = null;
           }
+        } else {
+          // Use last known state
+          isFollowingChainHead = lastIsFollowingChainHead;
+          latestBlock = lastLatestBlock;
         }
 
         // Set status message
@@ -921,43 +908,30 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         let isFollowingChainHead;
         let latestBlock;
 
-        if (lastIsFollowingChainHead) {
-          let shouldCheckLatestBlock = blockCounter % 10 === 0;
-          debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
-          if (shouldCheckLatestBlock) {
-            try {
-              latestBlock = await fetchLatestBlockWithMutex();
-              isFollowingChainHead =
-                blockNumber >= latestBlock ||
-                blockNumber === latestBlock - BigInt(1);
-              lastLatestBlock = latestBlock;
-              lastIsFollowingChainHead = isFollowingChainHead;
-            } catch (error) {
-              debugToFile(`Error fetching latest block: ${error}`);
-              isFollowingChainHead = true;
-              lastIsFollowingChainHead = isFollowingChainHead;
-              lastLatestBlock = null;
-            }
-          } else {
-            // Use last known state
-            isFollowingChainHead = lastIsFollowingChainHead;
-            latestBlock = lastLatestBlock;
-          }
-        } else {
-          // If we were NOT following, always fetch
+        // Only use the 10-block optimization if we are following chain head
+        let shouldCheckLatestBlock = lastIsFollowingChainHead
+          ? blockCounter % 10 === 0
+          : true;
+        debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
+
+        if (shouldCheckLatestBlock) {
           try {
             latestBlock = await fetchLatestBlockWithMutex();
             isFollowingChainHead =
-              blockNumber >= latestBlock ||
-              blockNumber === latestBlock - BigInt(1);
+              latestBlock !== null &&
+              (blockNumber >= latestBlock || blockNumber === latestBlock - 1n); // Use 1n for BigInt
             lastLatestBlock = latestBlock;
             lastIsFollowingChainHead = isFollowingChainHead;
           } catch (error) {
             debugToFile(`Error fetching latest block: ${error}`);
-            isFollowingChainHead = false;
+            isFollowingChainHead = true; // fallback
             lastIsFollowingChainHead = isFollowingChainHead;
             lastLatestBlock = null;
           }
+        } else {
+          // Use last known state
+          isFollowingChainHead = lastIsFollowingChainHead;
+          latestBlock = lastLatestBlock;
         }
 
         // Set status message
