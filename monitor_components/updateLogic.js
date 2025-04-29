@@ -35,6 +35,10 @@ let gethStageProgress = [
 let rethVersion = null;
 // Add a counter to track block numbers
 let blockCounter = 0;
+let lastBlockNumber = null; // Track the last block we processed
+let isFetchingLatestBlock = false; // Mutex flag to prevent parallel fetches
+let cachedLatestBlock = null; // Cache for the latest block
+let lastFetchTime = 0; // Track when we last fetched the latest block
 
 // Function to initialize Reth version
 function initRethVersion() {
@@ -738,7 +742,6 @@ async function calcSyncingStatus(executionClient) {
 
 let currentUpdateInterval = null;
 let currentBlockWatcher = null;
-let lastBlockNumber = null; // Track the last block we processed
 
 async function setupUpdateMechanism() {
   const { isSyncing } = await calcSyncingStatus(executionClient);
@@ -750,16 +753,10 @@ async function setupUpdateMechanism() {
   }
   if (currentBlockWatcher) {
     try {
-      // Check if unsubscribe method exists before calling it
-      if (typeof currentBlockWatcher.unsubscribe === "function") {
-        await currentBlockWatcher.unsubscribe();
-      } else {
-        debugToFile(
-          "Block watcher does not have unsubscribe method, skipping unsubscribe"
-        );
-      }
+      // Remove the check for unsubscribe method since it will never exist
+      debugToFile("Block watcher cleanup - no unsubscribe needed");
     } catch (error) {
-      debugToFile(`Error unsubscribing from block watcher: ${error}`);
+      debugToFile(`Error cleaning up block watcher: ${error}`);
     }
     currentBlockWatcher = null;
   }
@@ -855,8 +852,7 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         // Only fetch latest block when needed
         if (shouldCheckLatestBlock) {
           try {
-            latestBlock = await mainnetClient.getBlockNumber();
-            debugToFile(`Getting latestBlock: ${latestBlock}`);
+            latestBlock = await fetchLatestBlockWithMutex();
 
             // Determine if we're following chain head
             isFollowingChainHead =
@@ -888,8 +884,7 @@ export async function synchronizeAndUpdateWidgets(installDir) {
 
           if (shouldCheckLatestBlock) {
             try {
-              latestBlock = await mainnetClient.getBlockNumber();
-              debugToFile(`Getting latestBlock: ${latestBlock}`);
+              latestBlock = await fetchLatestBlockWithMutex();
             } catch (error) {
               debugToFile(`Error fetching latest block: ${error}`);
               latestBlock = null;
@@ -900,8 +895,7 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         } else {
           // If we're catching up, always fetch the latest block
           try {
-            latestBlock = await mainnetClient.getBlockNumber();
-            debugToFile(`Getting latestBlock: ${latestBlock}`);
+            latestBlock = await fetchLatestBlockWithMutex();
           } catch (error) {
             debugToFile(`Error fetching latest block: ${error}`);
             latestBlock = null;
@@ -931,8 +925,7 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         // Only fetch latest block when needed
         if (shouldCheckLatestBlock) {
           try {
-            latestBlock = await mainnetClient.getBlockNumber();
-            debugToFile(`Getting latestBlock: ${latestBlock}`);
+            latestBlock = await fetchLatestBlockWithMutex();
 
             // Determine if we're following chain head
             isFollowingChainHead =
@@ -964,8 +957,7 @@ export async function synchronizeAndUpdateWidgets(installDir) {
 
           if (shouldCheckLatestBlock) {
             try {
-              latestBlock = await mainnetClient.getBlockNumber();
-              debugToFile(`Getting latestBlock: ${latestBlock}`);
+              latestBlock = await fetchLatestBlockWithMutex();
             } catch (error) {
               debugToFile(`Error fetching latest block: ${error}`);
               latestBlock = null;
@@ -976,8 +968,7 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         } else {
           // If we're catching up, always fetch the latest block
           try {
-            latestBlock = await mainnetClient.getBlockNumber();
-            debugToFile(`Getting latestBlock: ${latestBlock}`);
+            latestBlock = await fetchLatestBlockWithMutex();
           } catch (error) {
             debugToFile(`Error fetching latest block: ${error}`);
             latestBlock = null;
@@ -1020,6 +1011,62 @@ async function updateChainInfoBox(chainInfoBox, screen) {
     }
   } catch (error) {
     debugToFile(`updateChainInfoBox(): ${error}`);
+  }
+}
+
+// Function to fetch the latest block with mutex protection
+async function fetchLatestBlockWithMutex() {
+  // Use mutex pattern to prevent parallel fetches
+  if (!isFetchingLatestBlock) {
+    isFetchingLatestBlock = true;
+    try {
+      // Only fetch if we haven't fetched in the last 5 seconds
+      const now = Date.now();
+      if (now - lastFetchTime > 5000) {
+        const latestBlock = await mainnetClient.getBlockNumber();
+        debugToFile(`Getting latestBlock: ${latestBlock}`);
+        cachedLatestBlock = latestBlock;
+        lastFetchTime = now;
+        return latestBlock;
+      } else {
+        // Use cached value if available
+        if (cachedLatestBlock !== null) {
+          debugToFile(`Using cached latestBlock: ${cachedLatestBlock}`);
+          return cachedLatestBlock;
+        } else {
+          // If no cache, fetch anyway
+          const latestBlock = await mainnetClient.getBlockNumber();
+          debugToFile(`Getting latestBlock (no cache): ${latestBlock}`);
+          cachedLatestBlock = latestBlock;
+          lastFetchTime = now;
+          return latestBlock;
+        }
+      }
+    } finally {
+      isFetchingLatestBlock = false;
+    }
+  } else {
+    // Another call is already fetching, use cached value if available
+    if (cachedLatestBlock !== null) {
+      debugToFile(`Using cached latestBlock (waiting): ${cachedLatestBlock}`);
+      return cachedLatestBlock;
+    } else {
+      // If no cache, wait a bit and try again
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      if (cachedLatestBlock !== null) {
+        debugToFile(
+          `Using cached latestBlock (after wait): ${cachedLatestBlock}`
+        );
+        return cachedLatestBlock;
+      } else {
+        // Last resort, fetch anyway
+        const latestBlock = await mainnetClient.getBlockNumber();
+        debugToFile(`Getting latestBlock (last resort): ${latestBlock}`);
+        cachedLatestBlock = latestBlock;
+        lastFetchTime = Date.now();
+        return latestBlock;
+      }
+    }
   }
 }
 
