@@ -841,27 +841,36 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         // Check if we need to fetch the latest block (every 10th block) when following chain head
         let latestBlock;
         let shouldCheckLatestBlock = blockCounter % 10 === 0;
+        let isFollowingChainHead = false;
 
         debugToFile(`blockNumber: ${blockNumber}`);
         debugToFile(`blockCounter: ${blockCounter}`);
         debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
 
-        // Always check latest block when catching up
-        latestBlock = await mainnetClient.getBlockNumber();
-        debugToFile(`Getting latestBlock: ${latestBlock}`);
+        // Only fetch latest block when needed
+        if (shouldCheckLatestBlock) {
+          latestBlock = await mainnetClient.getBlockNumber();
+          debugToFile(`Getting latestBlock: ${latestBlock}`);
 
-        if (
-          blockNumber >= latestBlock ||
-          blockNumber === latestBlock - BigInt(1)
-        ) {
-          // When following chain head, only update status every 10th time
-          if (shouldCheckLatestBlock) {
-            statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
-          } else {
-            statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
-          }
+          // Determine if we're following chain head
+          isFollowingChainHead =
+            blockNumber >= latestBlock ||
+            blockNumber === latestBlock - BigInt(1);
         } else {
-          // When catching up, always show the latest block
+          // If we're not checking the latest block, use the previous state
+          // This assumes we were following chain head in the previous state
+          isFollowingChainHead = true;
+        }
+
+        // Set status message based on state
+        if (isFollowingChainHead) {
+          statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
+        } else {
+          // If we're catching up, we need to fetch the latest block
+          if (!shouldCheckLatestBlock) {
+            latestBlock = await mainnetClient.getBlockNumber();
+            debugToFile(`Getting latestBlock: ${latestBlock}`);
+          }
           statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${latestBlock.toLocaleString()}`;
         }
       }
@@ -878,27 +887,36 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         // Check if we need to fetch the latest block (every 10th block) when following chain head
         let latestBlock;
         let shouldCheckLatestBlock = blockCounter % 10 === 0;
+        let isFollowingChainHead = false;
 
         debugToFile(`blockNumber: ${blockNumber}`);
         debugToFile(`blockCounter: ${blockCounter}`);
         debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
 
-        // Always check latest block when catching up
-        latestBlock = await mainnetClient.getBlockNumber();
-        debugToFile(`Getting latestBlock: ${latestBlock}`);
+        // Only fetch latest block when needed
+        if (shouldCheckLatestBlock) {
+          latestBlock = await mainnetClient.getBlockNumber();
+          debugToFile(`Getting latestBlock: ${latestBlock}`);
 
-        if (
-          blockNumber >= latestBlock ||
-          blockNumber === latestBlock - BigInt(1)
-        ) {
-          // When following chain head, only update status every 10th time
-          if (shouldCheckLatestBlock) {
-            statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
-          } else {
-            statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
-          }
+          // Determine if we're following chain head
+          isFollowingChainHead =
+            blockNumber >= latestBlock ||
+            blockNumber === latestBlock - BigInt(1);
         } else {
-          // When catching up, always show the latest block
+          // If we're not checking the latest block, use the previous state
+          // This assumes we were following chain head in the previous state
+          isFollowingChainHead = true;
+        }
+
+        // Set status message based on state
+        if (isFollowingChainHead) {
+          statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
+        } else {
+          // If we're catching up, we need to fetch the latest block
+          if (!shouldCheckLatestBlock) {
+            latestBlock = await mainnetClient.getBlockNumber();
+            debugToFile(`Getting latestBlock: ${latestBlock}`);
+          }
           statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${latestBlock.toLocaleString()}`;
         }
       }
