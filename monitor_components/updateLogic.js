@@ -883,6 +883,9 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         }
 
         // Set status message
+        debugToFile(
+          `blockNumber: ${blockNumber}, latestBlock: ${latestBlock}, isFollowingChainHead: ${isFollowingChainHead}`
+        );
         if (isFollowingChainHead) {
           statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
         } else {
@@ -935,6 +938,9 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         }
 
         // Set status message
+        debugToFile(
+          `blockNumber: ${blockNumber}, latestBlock: ${latestBlock}, isFollowingChainHead: ${isFollowingChainHead}`
+        );
         if (isFollowingChainHead) {
           statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
         } else {
