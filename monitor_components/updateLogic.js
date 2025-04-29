@@ -739,6 +739,8 @@ async function calcSyncingStatus(executionClient) {
 let currentUpdateInterval = null;
 let currentBlockWatcher = null;
 let latestBlockFetched = false; // Flag to track if we've fetched the latest block in the current cycle
+let isFetchingLatestBlock = false; // Mutex-like flag to prevent parallel fetches
+let cachedLatestBlock = null; // Cache for the latest block
 
 async function setupUpdateMechanism() {
   const { isSyncing } = await calcSyncingStatus(executionClient);
@@ -804,6 +806,7 @@ setInterval(async () => {
 
   // Reset the latestBlockFetched flag every 10 seconds
   latestBlockFetched = false;
+  cachedLatestBlock = null; // Clear the cache
 }, 10000);
 
 setInterval(() => updateBandwidthBox(screen), 2000);
@@ -857,9 +860,32 @@ export async function synchronizeAndUpdateWidgets(installDir) {
 
         // Only fetch latest block when needed
         if (shouldCheckLatestBlock && !latestBlockFetched) {
-          latestBlock = await mainnetClient.getBlockNumber();
-          debugToFile(`Getting latestBlock: ${latestBlock}`);
-          latestBlockFetched = true; // Mark that we've fetched the latest block
+          // Use mutex-like approach to prevent parallel fetches
+          if (!isFetchingLatestBlock) {
+            isFetchingLatestBlock = true;
+            try {
+              latestBlock = await mainnetClient.getBlockNumber();
+              debugToFile(`Getting latestBlock: ${latestBlock}`);
+              cachedLatestBlock = latestBlock; // Cache the result
+              latestBlockFetched = true; // Mark that we've fetched the latest block
+            } finally {
+              isFetchingLatestBlock = false;
+            }
+          } else {
+            // Wait for the other call to finish fetching
+            debugToFile(
+              `Waiting for latest block to be fetched by another call`
+            );
+            // Use the cached value if available
+            if (cachedLatestBlock !== null) {
+              latestBlock = cachedLatestBlock;
+              debugToFile(`Using cached latestBlock: ${latestBlock}`);
+            } else {
+              // This should rarely happen, but just in case
+              latestBlock = await mainnetClient.getBlockNumber();
+              debugToFile(`Fetched latestBlock after waiting: ${latestBlock}`);
+            }
+          }
 
           // Determine if we're following chain head
           isFollowingChainHead =
@@ -885,9 +911,34 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         } else {
           // If we're catching up, we need to fetch the latest block
           if (!latestBlockFetched) {
-            latestBlock = await mainnetClient.getBlockNumber();
-            debugToFile(`Getting latestBlock: ${latestBlock}`);
-            latestBlockFetched = true; // Mark that we've fetched the latest block
+            // Use mutex-like approach to prevent parallel fetches
+            if (!isFetchingLatestBlock) {
+              isFetchingLatestBlock = true;
+              try {
+                latestBlock = await mainnetClient.getBlockNumber();
+                debugToFile(`Getting latestBlock: ${latestBlock}`);
+                cachedLatestBlock = latestBlock; // Cache the result
+                latestBlockFetched = true; // Mark that we've fetched the latest block
+              } finally {
+                isFetchingLatestBlock = false;
+              }
+            } else {
+              // Wait for the other call to finish fetching
+              debugToFile(
+                `Waiting for latest block to be fetched by another call`
+              );
+              // Use the cached value if available
+              if (cachedLatestBlock !== null) {
+                latestBlock = cachedLatestBlock;
+                debugToFile(`Using cached latestBlock: ${latestBlock}`);
+              } else {
+                // This should rarely happen, but just in case
+                latestBlock = await mainnetClient.getBlockNumber();
+                debugToFile(
+                  `Fetched latestBlock after waiting: ${latestBlock}`
+                );
+              }
+            }
           }
           statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${latestBlock.toLocaleString()}`;
         }
@@ -910,9 +961,32 @@ export async function synchronizeAndUpdateWidgets(installDir) {
 
         // Only fetch latest block when needed
         if (shouldCheckLatestBlock && !latestBlockFetched) {
-          latestBlock = await mainnetClient.getBlockNumber();
-          debugToFile(`Getting latestBlock: ${latestBlock}`);
-          latestBlockFetched = true; // Mark that we've fetched the latest block
+          // Use mutex-like approach to prevent parallel fetches
+          if (!isFetchingLatestBlock) {
+            isFetchingLatestBlock = true;
+            try {
+              latestBlock = await mainnetClient.getBlockNumber();
+              debugToFile(`Getting latestBlock: ${latestBlock}`);
+              cachedLatestBlock = latestBlock; // Cache the result
+              latestBlockFetched = true; // Mark that we've fetched the latest block
+            } finally {
+              isFetchingLatestBlock = false;
+            }
+          } else {
+            // Wait for the other call to finish fetching
+            debugToFile(
+              `Waiting for latest block to be fetched by another call`
+            );
+            // Use the cached value if available
+            if (cachedLatestBlock !== null) {
+              latestBlock = cachedLatestBlock;
+              debugToFile(`Using cached latestBlock: ${latestBlock}`);
+            } else {
+              // This should rarely happen, but just in case
+              latestBlock = await mainnetClient.getBlockNumber();
+              debugToFile(`Fetched latestBlock after waiting: ${latestBlock}`);
+            }
+          }
 
           // Determine if we're following chain head
           isFollowingChainHead =
@@ -938,9 +1012,34 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         } else {
           // If we're catching up, we need to fetch the latest block
           if (!latestBlockFetched) {
-            latestBlock = await mainnetClient.getBlockNumber();
-            debugToFile(`Getting latestBlock: ${latestBlock}`);
-            latestBlockFetched = true; // Mark that we've fetched the latest block
+            // Use mutex-like approach to prevent parallel fetches
+            if (!isFetchingLatestBlock) {
+              isFetchingLatestBlock = true;
+              try {
+                latestBlock = await mainnetClient.getBlockNumber();
+                debugToFile(`Getting latestBlock: ${latestBlock}`);
+                cachedLatestBlock = latestBlock; // Cache the result
+                latestBlockFetched = true; // Mark that we've fetched the latest block
+              } finally {
+                isFetchingLatestBlock = false;
+              }
+            } else {
+              // Wait for the other call to finish fetching
+              debugToFile(
+                `Waiting for latest block to be fetched by another call`
+              );
+              // Use the cached value if available
+              if (cachedLatestBlock !== null) {
+                latestBlock = cachedLatestBlock;
+                debugToFile(`Using cached latestBlock: ${latestBlock}`);
+              } else {
+                // This should rarely happen, but just in case
+                latestBlock = await mainnetClient.getBlockNumber();
+                debugToFile(
+                  `Fetched latestBlock after waiting: ${latestBlock}`
+                );
+              }
+            }
           }
           statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${latestBlock.toLocaleString()}`;
         }
@@ -995,6 +1094,7 @@ setInterval(async () => {
 
   // Reset the latestBlockFetched flag every 10 seconds
   latestBlockFetched = false;
+  cachedLatestBlock = null; // Clear the cache
 }, 10000);
 
 setInterval(() => updateBandwidthBox(screen), 2000);
