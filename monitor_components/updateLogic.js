@@ -842,20 +842,22 @@ export async function synchronizeAndUpdateWidgets(installDir) {
       } else {
         const blockNumber = await localClient.getBlockNumber();
 
-        // Check if we need to fetch the latest block (every 10th block) when following chain head
-        let latestBlock;
+        // Only increment block counter once per block
+        if (lastBlockNumber !== blockNumber) {
+          blockCounter++;
+          lastBlockNumber = blockNumber;
+          debugToFile(`Updated blockCounter: ${blockCounter}`);
+        }
+
+        // Only fetch latest block every 10 blocks
         let shouldCheckLatestBlock = blockCounter % 10 === 0;
-        let isFollowingChainHead = false;
-
-        debugToFile(`blockNumber: ${blockNumber}`);
-        debugToFile(`blockCounter: ${blockCounter}`);
         debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
+        let isFollowingChainHead = false;
+        let latestBlock;
 
-        // Only fetch latest block when needed
         if (shouldCheckLatestBlock) {
           try {
             latestBlock = await fetchLatestBlockWithMutex();
-
             // Determine if we're following chain head
             isFollowingChainHead =
               blockNumber >= latestBlock ||
@@ -873,26 +875,6 @@ export async function synchronizeAndUpdateWidgets(installDir) {
 
         // Set status message based on state
         if (isFollowingChainHead) {
-          // Only increment block counter once per block
-          if (lastBlockNumber !== blockNumber) {
-            blockCounter++;
-            lastBlockNumber = blockNumber;
-            debugToFile(`Updated blockCounter: ${blockCounter}`);
-          }
-
-          // Only fetch latest block every 10 blocks
-          shouldCheckLatestBlock = blockCounter % 10 === 0;
-          debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
-
-          if (shouldCheckLatestBlock) {
-            try {
-              latestBlock = await fetchLatestBlockWithMutex();
-            } catch (error) {
-              debugToFile(`Error fetching latest block: ${error}`);
-              latestBlock = null;
-            }
-          }
-
           statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
         } else {
           // If we're catching up, always fetch the latest block
@@ -915,20 +897,22 @@ export async function synchronizeAndUpdateWidgets(installDir) {
       } else if (isSyncing === false) {
         const blockNumber = await localClient.getBlockNumber();
 
-        // Check if we need to fetch the latest block (every 10th block) when following chain head
-        let latestBlock;
+        // Only increment block counter once per block
+        if (lastBlockNumber !== blockNumber) {
+          blockCounter++;
+          lastBlockNumber = blockNumber;
+          debugToFile(`Updated blockCounter: ${blockCounter}`);
+        }
+
+        // Only fetch latest block every 10 blocks
         let shouldCheckLatestBlock = blockCounter % 10 === 0;
-        let isFollowingChainHead = false;
-
-        debugToFile(`blockNumber: ${blockNumber}`);
-        debugToFile(`blockCounter: ${blockCounter}`);
         debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
+        let isFollowingChainHead = false;
+        let latestBlock;
 
-        // Only fetch latest block when needed
         if (shouldCheckLatestBlock) {
           try {
             latestBlock = await fetchLatestBlockWithMutex();
-
             // Determine if we're following chain head
             isFollowingChainHead =
               blockNumber >= latestBlock ||
@@ -946,26 +930,6 @@ export async function synchronizeAndUpdateWidgets(installDir) {
 
         // Set status message based on state
         if (isFollowingChainHead) {
-          // Only increment block counter once per block
-          if (lastBlockNumber !== blockNumber) {
-            blockCounter++;
-            lastBlockNumber = blockNumber;
-            debugToFile(`Updated blockCounter: ${blockCounter}`);
-          }
-
-          // Only fetch latest block every 10 blocks
-          shouldCheckLatestBlock = blockCounter % 10 === 0;
-          debugToFile(`shouldCheckLatestBlock: ${shouldCheckLatestBlock}`);
-
-          if (shouldCheckLatestBlock) {
-            try {
-              latestBlock = await fetchLatestBlockWithMutex();
-            } catch (error) {
-              debugToFile(`Error fetching latest block: ${error}`);
-              latestBlock = null;
-            }
-          }
-
           statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
         } else {
           // If we're catching up, always fetch the latest block
