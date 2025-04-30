@@ -4,7 +4,7 @@ import { execSync } from "child_process";
 import os from "os";
 import { installDir } from "../commandLineOptions.js";
 
-export const latestGethVer = "1.14.12";
+export const latestGethVer = "1.15.10";
 export const latestRethVer = "1.3.4";
 export const latestLighthouseVer = "7.0.1";
 
@@ -14,6 +14,7 @@ export function installMacLinuxClient(clientName, platform) {
   const gethHash = {
     "1.14.3": "ab48ba42",
     "1.14.12": "293a300d",
+    "1.15.10": "2bf8a789",
   };
 
   const configs = {
