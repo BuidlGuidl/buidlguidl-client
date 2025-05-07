@@ -334,6 +334,9 @@ if (!optionsLoaded) {
   }
 }
 
+// TEMPORARILY DISABLE OWNER OPTION
+owner = null;
+
 export {
   executionClient,
   executionType,

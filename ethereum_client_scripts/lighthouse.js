@@ -71,7 +71,7 @@ const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
 const consensusArgs = [
   "bn",
   "--network",
-  "mainnet",
+  "sepolia",
   "--port",
   consensusPeerPorts[0],
   "--quic-port",
@@ -79,7 +79,8 @@ const consensusArgs = [
   "--execution-endpoint",
   "http://localhost:8551",
   "--checkpoint-sync-url",
-  consensusCheckpoint,
+  "https://checkpoint-sync.sepolia.ethpandaops.io",
+  // consensusCheckpoint,
   "--checkpoint-sync-url-timeout",
   "1200",
   "--disable-deposit-contract-sync",

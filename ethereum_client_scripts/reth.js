@@ -45,6 +45,8 @@ const execution = pty.spawn(
   [
     "node",
     ...(executionType === "archive" ? [] : ["--full"]),
+    "--chain",
+    "sepolia",
     "--port",
     executionPeerPort,
     "--discovery.port",
