@@ -5,7 +5,7 @@ import os from "os";
 import { installDir } from "../commandLineOptions.js";
 
 export const latestGethVer = "1.15.10";
-export const latestRethVer = "1.3.4";
+export const latestRethVer = "1.3.12";
 export const latestLighthouseVer = "7.0.1";
 
 export function installMacLinuxClient(clientName, platform) {
