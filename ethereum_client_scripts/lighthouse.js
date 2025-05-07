@@ -85,7 +85,7 @@ const consensusArgs = [
   "1200",
   "--disable-deposit-contract-sync",
   "--datadir",
-  path.join(installDir, "ethereum_clients", "lighthouse", "database"),
+  path.join(installDir, "ethereum_clients", "lighthouse", "database_sepolia"),
   "--execution-jwt",
   `${jwtPath}`,
   "--metrics",

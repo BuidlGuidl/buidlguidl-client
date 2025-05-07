@@ -61,7 +61,7 @@ const execution = pty.spawn(
     "--authrpc.port",
     "8551",
     "--datadir",
-    path.join(installDir, "ethereum_clients", "reth", "database"),
+    path.join(installDir, "ethereum_clients", "reth", "database_sepolia"),
     "--authrpc.jwtsecret",
     `${jwtPath}`,
     "--metrics",
