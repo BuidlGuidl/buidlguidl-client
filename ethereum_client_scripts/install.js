@@ -143,7 +143,6 @@ export function getVersionNumber(client) {
       }
     );
     versionOutput = versionCommand.trim();
-    debugToFile(`Version output for ${client}: ${versionOutput}`);
 
     if (client === "reth") {
       versionMatch = versionOutput.match(
