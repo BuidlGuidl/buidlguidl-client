@@ -153,7 +153,7 @@ export function initializeWebSocketConnection(wsConfig) {
       }
 
       // Primary instance Socket.IO connection logic
-      socket = io("wss://pool.mainnet.rpc.buidlguidl.com:48546", {
+      socket = io("wss://stage.rpc.buidlguidl.com:48546", {
         reconnection: true,
         reconnectionDelay: 10000,
         reconnectionAttempts: Infinity,
@@ -185,7 +185,9 @@ export function initializeWebSocketConnection(wsConfig) {
             id: request.id,
           });
 
-          callback(rpcResponse.data);
+          setTimeout(() => {
+            callback(rpcResponse.data);
+          }, 1000);
         } catch (error) {
           debugToFile("Error returning RPC response:", error);
 
