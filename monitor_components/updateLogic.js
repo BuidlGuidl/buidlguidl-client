@@ -258,6 +258,22 @@ let stagePercentages = {
   finishPercent: 0,
 };
 
+// Add this function before initRethVersion
+function compareVersions(version1, version2) {
+  const v1Parts = version1.split(".").map(Number);
+  const v2Parts = version2.split(".").map(Number);
+
+  for (let i = 0; i < Math.max(v1Parts.length, v2Parts.length); i++) {
+    const v1 = v1Parts[i] || 0;
+    const v2 = v2Parts[i] || 0;
+
+    if (v1 > v2) return 1;
+    if (v1 < v2) return -1;
+  }
+
+  return 0;
+}
+
 async function parseAndPopulateRethMetrics() {
   const rethSyncMetrics = await getRethSyncMetrics();
 
@@ -371,7 +387,7 @@ async function parseAndPopulateRethMetrics() {
 
   // Handle Prune Sender Recovery progress [5/14] - Only for Reth v1.3.4+
   let pruneSenderRecoveryPercent = 0;
-  if (rethVersion >= "1.3.4") {
+  if (compareVersions(rethVersion, "1.3.4") >= 0) {
     const pruneSenderRecoveryProcessedMatch = rethSyncMetrics.match(
       /reth_sync_entities_processed\{stage="PruneSenderRecovery"\} (\d+)/
     );
@@ -560,7 +576,7 @@ async function parseAndPopulateRethMetrics() {
 
   // Handle Prune progress [13/14] - Only for Reth v1.3.4+
   let prunePercent = 0;
-  if (rethVersion >= "1.3.4") {
+  if (compareVersions(rethVersion, "1.3.4") >= 0) {
     const pruneProcessedMatch = rethSyncMetrics.match(
       /reth_sync_entities_processed\{stage="Prune"\} (\d+)/
     );
@@ -597,7 +613,7 @@ async function parseAndPopulateRethMetrics() {
   }
 
   // Update stagePercentages object based on Reth version
-  if (rethVersion >= "1.3.4") {
+  if (compareVersions(rethVersion, "1.3.4") >= 0) {
     stagePercentages = {
       headersPercent,
       bodiesPercent,

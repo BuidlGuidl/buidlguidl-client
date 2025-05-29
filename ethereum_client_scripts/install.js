@@ -3,9 +3,10 @@ import path from "path";
 import { execSync } from "child_process";
 import os from "os";
 import { installDir } from "../commandLineOptions.js";
+import { debugToFile } from "./../helpers.js";
 
-export const latestGethVer = "1.15.10";
-export const latestRethVer = "1.3.4";
+export const latestGethVer = "1.15.11";
+export const latestRethVer = "1.4.3";
 export const latestLighthouseVer = "7.0.1";
 
 export function installMacLinuxClient(clientName, platform) {
@@ -15,6 +16,7 @@ export function installMacLinuxClient(clientName, platform) {
     "1.14.3": "ab48ba42",
     "1.14.12": "293a300d",
     "1.15.10": "2bf8a789",
+    "1.15.11": "36b2371c",
   };
 
   const configs = {
@@ -143,7 +145,9 @@ export function getVersionNumber(client) {
     versionOutput = versionCommand.trim();
 
     if (client === "reth") {
-      versionMatch = versionOutput.match(/reth Version: (\d+\.\d+\.\d+)/);
+      versionMatch = versionOutput.match(
+        /reth(?:-ethereum-cli)? Version: (\d+\.\d+\.\d+)/
+      );
     } else if (client === "lighthouse") {
       versionMatch = versionOutput.match(/Lighthouse v(\d+\.\d+\.\d+)/);
     } else if (client === "geth") {
@@ -157,11 +161,11 @@ export function getVersionNumber(client) {
     if (parsedVersion) {
       return parsedVersion;
     } else {
-      console.error(`Unable to parse version number for ${client}`);
+      debugToFile(`Unable to parse version number for ${client}`);
       return null;
     }
   } catch (error) {
-    console.error(`Error getting version for ${client}:`, error.message);
+    debugToFile(`Error getting version for ${client}:`, error.message);
     return null;
   }
 }
