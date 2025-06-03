@@ -233,7 +233,7 @@ export function initializeWebSocketConnection(wsConfig) {
     }
 
     let currentBlockNumber = blockNumber;
-    if (!force && !currentBlockNumber) {
+    if (!currentBlockNumber) {
       try {
         currentBlockNumber = await localClient.getBlockNumber();
       } catch (error) {
@@ -284,6 +284,9 @@ export function initializeWebSocketConnection(wsConfig) {
       const macAddress = await getMacAddress();
       const executionPeers = await getExecutionPeers(wsConfig.executionClient);
       const consensusPeers = await getConsensusPeers(wsConfig.consensusClient);
+
+      // Force block number to be 10 ahead for testing
+      possibleBlockNumber = possibleBlockNumber + 10;
 
       // Use the stored gitInfo instead of calling getGitInfo()
       const params = {
