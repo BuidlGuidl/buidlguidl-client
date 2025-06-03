@@ -233,7 +233,7 @@ export function initializeWebSocketConnection(wsConfig) {
     }
 
     let currentBlockNumber = blockNumber;
-    if (!currentBlockNumber) {
+    if (!force && !currentBlockNumber) {
       try {
         currentBlockNumber = await localClient.getBlockNumber();
       } catch (error) {
