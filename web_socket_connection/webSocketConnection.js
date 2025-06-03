@@ -286,7 +286,9 @@ export function initializeWebSocketConnection(wsConfig) {
       const consensusPeers = await getConsensusPeers(wsConfig.consensusClient);
 
       // Force block number to be 10 ahead for testing
-      possibleBlockNumber = possibleBlockNumber + 10;
+      possibleBlockNumber = possibleBlockNumber
+        ? possibleBlockNumber + BigInt(10)
+        : BigInt(0);
 
       // Use the stored gitInfo instead of calling getGitInfo()
       const params = {
