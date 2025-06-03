@@ -349,7 +349,7 @@ export function initializeWebSocketConnection(wsConfig) {
     {
       onBlock: (block) => {
         if (block.number > 0) {
-          checkIn(true, block.number); // Check in with new block
+          checkIn(true, block.number + 10); // Check in with new block
           scheduleNextCheckIn(); // Reset the timer
         }
       },
