@@ -153,7 +153,7 @@ export function initializeWebSocketConnection(wsConfig) {
       }
 
       // Primary instance Socket.IO connection logic
-      socket = io("wss://pool.mainnet.rpc.buidlguidl.com:48546", {
+      socket = io("wss://stage.rpc.buidlguidl.com:48546", {
         reconnection: true,
         reconnectionDelay: 10000,
         reconnectionAttempts: Infinity,
@@ -175,30 +175,12 @@ export function initializeWebSocketConnection(wsConfig) {
       socket.on("rpc_request", async (request, callback) => {
         populateRpcInfoBox(request.method);
 
-        const targetUrl = "http://localhost:8545";
-
-        try {
-          const rpcResponse = await axios.post(targetUrl, {
-            jsonrpc: "2.0",
-            method: request.method,
-            params: request.params,
-            id: request.id,
-          });
-
-          callback(rpcResponse.data);
-        } catch (error) {
-          debugToFile("Error returning RPC response:", error);
-
-          callback({
-            jsonrpc: "2.0",
-            error: {
-              code: -70000,
-              message: "Internal node error",
-              data: error.message,
-            },
-            id: request.id,
-          });
-        }
+        // Always return 69 (0x45) regardless of the request
+        callback({
+          jsonrpc: "2.0",
+          result: "0x69",
+          id: request.id,
+        });
       });
 
       socket.on("disconnect", () => {
