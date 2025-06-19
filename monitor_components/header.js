@@ -30,15 +30,15 @@ export function createHeader(grid, screen, messageForHeader) {
     }
   }
 
-  // New function to fetch points
-  async function fetchPoints(owner) {
+  // New function to fetch pending bread
+  async function fetchPendingBread(owner) {
     try {
       const response = await axios.get(
-        `https://${BASE_URL}:48546/yourpoints?owner=${owner}`
+        `https://${BASE_URL}:48546/yourpendingbread?owner=${owner}`
       );
-      return response.data.points;
+      return response.data.bread;
     } catch (error) {
-      debugToFile(`Error fetching points: ${error}`);
+      debugToFile(`Error fetching pending bread: ${error}`);
       return null;
     }
   }
@@ -64,15 +64,15 @@ export function createHeader(grid, screen, messageForHeader) {
   }
 
   // Updated function to update bigText with points, branch name, and commit hash
-  async function updatePointsAndBranchDisplay() {
-    const points = await fetchPoints(owner);
+  async function updateBreadAndBranchDisplay() {
+    const pendingBread = await fetchPendingBread(owner);
     const currentBranch = getCurrentBranch();
     const commitHash = getCurrentCommitHash();
     if (owner !== null) {
       bigText.setContent(
         `{center}{bold}B u i d l G u i d l  C l i e n t{/bold}{/center}\n` +
           `{center}Branch: ${currentBranch} (${commitHash}){/center}\n` +
-          `{center}{cyan-fg}Owner: ${owner}{/cyan-fg} | {green-fg}Credits: ${points}{/green-fg}{/center}\n` +
+          `{center}{cyan-fg}Owner: ${owner}{/cyan-fg} | {green-fg}Pending Bread: ${pendingBread}{/green-fg}{/center}\n` +
           `{center}{cyan-fg}${messageForHeader}{/cyan-fg}{/center}`
       );
     } else {
@@ -229,8 +229,8 @@ export function createHeader(grid, screen, messageForHeader) {
     }
   );
 
-  updatePointsAndBranchDisplay();
-  setInterval(updatePointsAndBranchDisplay, 1 * 60 * 1000); // Every 1 minute
+  updateBreadAndBranchDisplay();
+  setInterval(updateBreadAndBranchDisplay, 1 * 60 * 1000); // Every 1 minute
   setInterval(updateWSStatusMessage, 1000); // Check every second for smoother transitions
 
   // Add resize event listener
