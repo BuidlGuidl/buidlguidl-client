@@ -15,7 +15,7 @@ import {
 import { exec } from "child_process";
 import { populateRethStageGauge } from "./rethStageGauge.js";
 import { populateGethStageGauge } from "./gethStageGauge.js";
-import { checkIn } from "../web_socket_connection/webSocketConnection.js";
+import { checkIn } from "../webSocketConnection.js";
 import fetch from "node-fetch";
 import { getDiskUsage } from "../getSystemStats.js";
 import { populateChainInfoBox } from "./chainInfoBox.js";

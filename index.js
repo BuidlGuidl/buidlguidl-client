@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { initializeMonitoring } from "./monitor.js";
 import { installMacLinuxClient } from "./ethereum_client_scripts/install.js";
-import { initializeWebSocketConnection } from "./web_socket_connection/webSocketConnection.js";
+import { initializeWebSocketConnection } from "./webSocketConnection.js";
 import {
   executionClient,
   executionType,

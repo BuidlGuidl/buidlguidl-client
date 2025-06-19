@@ -1,5 +1,6 @@
 import { createPublicClient, http } from "viem";
 import { mainnet } from "viem/chains";
+import BASE_URL from "../config.js";
 
 export const localClient = createPublicClient({
   name: "localClient",
@@ -10,7 +11,7 @@ export const localClient = createPublicClient({
 export const mainnetClient = createPublicClient({
   name: "mainnetClient",
   chain: mainnet,
-  transport: http("https://pool.mainnet.rpc.buidlguidl.com:48544/", {
+  transport: http(`https://${BASE_URL}:48544/`, {
     fetchOptions: {
       headers: {
         Origin: "buidlguidl-client",

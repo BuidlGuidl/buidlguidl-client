@@ -1,29 +1,22 @@
 import https from "https";
 import os from "os";
-import { debugToFile } from "../helpers.js";
-import {
-  getMemoryUsage,
-  getCpuUsage,
-  getDiskUsage,
-} from "../getSystemStats.js";
-import { localClient } from "../monitor_components/viemClients.js";
-import {
-  installDir,
-  consensusPeerPorts,
-  owner,
-} from "../commandLineOptions.js";
+import { debugToFile } from "./helpers.js";
+import { getMemoryUsage, getCpuUsage, getDiskUsage } from "./getSystemStats.js";
+import { localClient } from "./monitor_components/viemClients.js";
+import { installDir, consensusPeerPorts, owner } from "./commandLineOptions.js";
 import {
   getConsensusPeers,
   getExecutionPeers,
-} from "../monitor_components/peerCountGauge.js";
-import { populateRpcInfoBox } from "../monitor_components/rpcInfoBox.js";
+} from "./monitor_components/peerCountGauge.js";
+import { populateRpcInfoBox } from "./monitor_components/rpcInfoBox.js";
 import simpleGit from "simple-git";
 import { exec } from "child_process";
-import { getPublicIPAddress, getMacAddress } from "../getSystemStats.js";
+import { getPublicIPAddress, getMacAddress } from "./getSystemStats.js";
 import { io } from "socket.io-client";
 import axios from "axios";
 import fs from "fs";
 import path from "path";
+import BASE_URL from "./config.js";
 
 let socketId;
 export let checkIn;
@@ -153,7 +146,7 @@ export function initializeWebSocketConnection(wsConfig) {
       }
 
       // Primary instance Socket.IO connection logic
-      socket = io("wss://pool.mainnet.rpc.buidlguidl.com:48546", {
+      socket = io(`wss://${BASE_URL}:48546`, {
         reconnection: true,
         reconnectionDelay: 10000,
         reconnectionAttempts: Infinity,

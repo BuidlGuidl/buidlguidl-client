@@ -5,13 +5,12 @@ import { executionPeerPort } from "../commandLineOptions.js";
 import os from "os";
 import { getMacAddress } from "../getSystemStats.js";
 import { consensusClient } from "../commandLineOptions.js";
+import BASE_URL from "../config.js";
 
 export async function fetchBGExecutionPeers() {
   try {
     const publicIP = await getPublicIPAddress();
-    const response = await fetch(
-      "https://pool.mainnet.rpc.buidlguidl.com:48546/enodes"
-    );
+    const response = await fetch(`https://${BASE_URL}:48546/enodes`);
     const data = await response.json();
 
     const filteredEnodes = data.enodes.filter((node) => {
@@ -89,9 +88,7 @@ export async function configureBGExecutionPeers(bgPeers) {
 
 export async function fetchBGConsensusPeers() {
   try {
-    const response = await fetch(
-      "https://pool.mainnet.rpc.buidlguidl.com:48546/peerids"
-    );
+    const response = await fetch(`https://${BASE_URL}:48546/peerids`);
     const data = await response.json();
 
     const peerIDValues = data.peerids
@@ -107,9 +104,7 @@ export async function fetchBGConsensusPeers() {
 
 export async function configureBGConsensusPeers() {
   try {
-    const response = await fetch(
-      "https://pool.mainnet.rpc.buidlguidl.com:48546/consensuspeeraddr"
-    );
+    const response = await fetch(`https://${BASE_URL}:48546/consensuspeeraddr`);
     const data = await response.json();
 
     const macAddress = await getMacAddress();

@@ -8,7 +8,8 @@ import { debugToFile } from "../helpers.js";
 import { execSync } from "child_process";
 import { getPublicIPAddress } from "../getSystemStats.js";
 import { owner } from "../commandLineOptions.js";
-import { isConnected } from "../web_socket_connection/webSocketConnection.js";
+import { isConnected } from "../webSocketConnection.js";
+import BASE_URL from "../config.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -33,7 +34,7 @@ export function createHeader(grid, screen, messageForHeader) {
   async function fetchPoints(owner) {
     try {
       const response = await axios.get(
-        `https://pool.mainnet.rpc.buidlguidl.com:48546/yourpoints?owner=${owner}`
+        `https://${BASE_URL}:48546/yourpoints?owner=${owner}`
       );
       return response.data.points;
     } catch (error) {
