@@ -131,7 +131,7 @@ export function createHeader(grid, screen, messageForHeader) {
     content: `{center}{bold}B u i d l G u i d l  C l i e n t{/bold}{/center}\n{center}{cyan-fg}${messageForHeader}{/cyan-fg}{/center}`,
     tags: true,
     align: "center",
-    valign: "middle",
+    valign: "top",
     style: {
       fg: "white",
       border: {
