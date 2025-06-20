@@ -5,7 +5,7 @@ import { executionPeerPort } from "../commandLineOptions.js";
 import os from "os";
 import { getMacAddress } from "../getSystemStats.js";
 import { consensusClient } from "../commandLineOptions.js";
-import BASE_URL from "../config.js";
+import { BASE_URL } from "../config.js";
 
 export async function fetchBGExecutionPeers() {
   try {

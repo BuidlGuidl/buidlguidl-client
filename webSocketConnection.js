@@ -16,7 +16,7 @@ import { io } from "socket.io-client";
 import axios from "axios";
 import fs from "fs";
 import path from "path";
-import BASE_URL from "./config.js";
+import { BASE_URL } from "./config.js";
 
 let socketId;
 export let checkIn;

@@ -9,7 +9,11 @@ import { execSync } from "child_process";
 import { getPublicIPAddress } from "../getSystemStats.js";
 import { owner } from "../commandLineOptions.js";
 import { isConnected } from "../webSocketConnection.js";
-import BASE_URL from "../config.js";
+import { BASE_URL, BREAD_CONTRACT_ADDRESS } from "../config.js";
+import { baseSepoliaPublicClient } from "../chain_utills/baseSepoliaPublicClient.js";
+import { mainnetPublicClient } from "../chain_utills/mainnetPublicClient.js";
+import { breadContractAbi } from "../chain_utills/breadContractAbi.js";
+import { isAddress, formatUnits } from "viem";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -43,6 +47,47 @@ export function createHeader(grid, screen, messageForHeader) {
     }
   }
 
+  async function fetchBread(owner) {
+    try {
+      if (!owner) return null;
+
+      let resolvedAddress = owner;
+
+      // Resolve ENS name if needed
+      if (owner.endsWith(".eth")) {
+        try {
+          resolvedAddress = await mainnetPublicClient.getEnsAddress({
+            name: owner,
+          });
+          if (!resolvedAddress) {
+            debugToFile(`Could not resolve ENS name: ${owner}`);
+            return null;
+          }
+        } catch (error) {
+          debugToFile(`Error resolving ENS name ${owner}: ${error}`);
+          return null;
+        }
+      } else if (!isAddress(owner)) {
+        debugToFile(`Invalid address format: ${owner}`);
+        return null;
+      }
+
+      // Get bread balance from the contract
+      const balance = await baseSepoliaPublicClient.readContract({
+        address: BREAD_CONTRACT_ADDRESS,
+        abi: breadContractAbi,
+        functionName: "balanceOf",
+        args: [resolvedAddress],
+      });
+
+      // Convert from wei to readable format (assuming 18 decimals)
+      return formatUnits(balance, 18);
+    } catch (error) {
+      debugToFile(`Error fetching bread balance: ${error}`);
+      return null;
+    }
+  }
+
   // New function to get the current Git branch
   function getCurrentBranch() {
     try {
@@ -63,16 +108,22 @@ export function createHeader(grid, screen, messageForHeader) {
     }
   }
 
-  // Updated function to update bigText with points, branch name, and commit hash
+  // Updated function to update bigText with bread amounts, branch name, and commit hash
   async function updateBreadAndBranchDisplay() {
     const pendingBread = await fetchPendingBread(owner);
+    const bread = await fetchBread(owner);
     const currentBranch = getCurrentBranch();
     const commitHash = getCurrentCommitHash();
+
     if (owner !== null) {
+      const pendingBreadDisplay = pendingBread !== null ? pendingBread : "0";
+      const breadDisplay =
+        bread !== null ? parseFloat(bread).toFixed(2) : "0.00";
+
       bigText.setContent(
         `{center}{bold}B u i d l G u i d l  C l i e n t{/bold}{/center}\n` +
           `{center}Branch: ${currentBranch} (${commitHash}){/center}\n` +
-          `{center}{cyan-fg}Owner: ${owner}{/cyan-fg} | {green-fg}Pending Bread: ${pendingBread}{/green-fg}{/center}\n` +
+          `{center}{cyan-fg}Owner: ${owner}{/cyan-fg} | {green-fg}Pending Bread: ${pendingBreadDisplay}{/green-fg} | {green-fg}Bread: ${breadDisplay}{/green-fg}{/center}\n` +
           `{center}{cyan-fg}${messageForHeader}{/cyan-fg}{/center}`
       );
     } else {
