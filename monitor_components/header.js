@@ -19,6 +19,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 export function createHeader(grid, screen, messageForHeader) {
+  // Store branch info once on startup
+  let currentBranch = "unknown";
+  let commitHash = "unknown";
+
   // Function to get the local IP address
   async function getIPAddress() {
     while (true) {
@@ -88,37 +92,40 @@ export function createHeader(grid, screen, messageForHeader) {
     }
   }
 
-  // New function to get the current Git branch
-  function getCurrentBranch() {
+  // Function to get git branch info once on startup
+  function initializeBranchInfo() {
     try {
-      return execSync("git rev-parse --abbrev-ref HEAD").toString().trim();
+      currentBranch = execSync("git rev-parse --abbrev-ref HEAD")
+        .toString()
+        .trim();
     } catch (error) {
       debugToFile(`Error getting current branch: ${error}`);
-      return "unknown";
+      currentBranch = "unknown";
     }
-  }
 
-  // Updated function to get the full Git commit hash
-  function getCurrentCommitHash() {
     try {
-      return execSync("git rev-parse HEAD").toString().trim();
+      commitHash = execSync("git rev-parse HEAD").toString().trim();
     } catch (error) {
       debugToFile(`Error getting current commit hash: ${error}`);
-      return "unknown";
+      commitHash = "unknown";
     }
   }
 
-  // Updated function to update bigText with bread amounts, branch name, and commit hash
-  async function updateBreadAndBranchDisplay() {
-    const pendingBread = await fetchPendingBread(owner);
-    const bread = await fetchBread(owner);
-    const currentBranch = getCurrentBranch();
-    const commitHash = getCurrentCommitHash();
+  // Function to update only bread amounts (called every minute)
+  async function updateBreadDisplay() {
+    let pendingBread = null;
+    let bread = null;
+
+    // Only fetch bread amounts if owner is set
+    if (owner !== null) {
+      pendingBread = await fetchPendingBread(owner);
+      bread = await fetchBread(owner);
+    }
 
     if (owner !== null) {
       const pendingBreadDisplay = pendingBread !== null ? pendingBread : "0";
       const breadDisplay =
-        bread !== null ? parseFloat(bread).toFixed(2) : "0.00";
+        bread !== null ? Math.floor(parseFloat(bread)).toString() : "0";
 
       bigText.setContent(
         `{center}{bold}B u i d l G u i d l  C l i e n t{/bold}{/center}\n` +
@@ -280,8 +287,11 @@ export function createHeader(grid, screen, messageForHeader) {
     }
   );
 
-  updateBreadAndBranchDisplay();
-  setInterval(updateBreadAndBranchDisplay, 1 * 60 * 1000); // Every 1 minute
+  // Initialize branch info once on startup
+  initializeBranchInfo();
+
+  updateBreadDisplay();
+  setInterval(updateBreadDisplay, 1 * 5 * 1000); // Every 1 minute
   setInterval(updateWSStatusMessage, 1000); // Check every second for smoother transitions
 
   // Add resize event listener
