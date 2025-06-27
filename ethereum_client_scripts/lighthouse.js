@@ -93,6 +93,8 @@ const consensusArgs = [
   "--metrics-port",
   "5054",
   "--http",
+  "--http-address",
+  "0.0.0.0",
   "--disable-upnp", // There is currently a bug in the p2p-lib that causes panics with this enabled
   "--disable-enr-auto-update", // This is causing a loop of ENR updates that crashes lighthouse
   // "--libp2p-addresses",
