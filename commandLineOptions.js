@@ -30,6 +30,8 @@ let executionPeerPort = 30303;
 let consensusPeerPorts = [null, null];
 let consensusCheckpoint = null;
 let owner = null;
+let l1RpcEndpoint = null;
+let l1BeaconEndpoint = null;
 
 const filename = fileURLToPath(import.meta.url);
 let installDir = dirname(filename);
@@ -39,11 +41,11 @@ const optionsFilePath = join(installDir, "options.json");
 function showHelp() {
   console.log("");
   console.log(
-    "  -e, --executionclient <client>            Specify the execution client ('reth' or 'geth')"
+    "  -e, --executionclient <client>            Specify the execution client ('reth', 'geth', or 'base-reth')"
   );
   console.log("                                            Default: reth\n");
   console.log(
-    "  -c, --consensusclient <client>            Specify the consensus client ('lighthouse' or 'prysm')"
+    "  -c, --consensusclient <client>            Specify the consensus client ('lighthouse', 'prysm', or 'base-op')"
   );
   console.log(
     "                                            Default: lighthouse\n"
@@ -78,6 +80,18 @@ function showHelp() {
   );
   console.log(
     "  -o, --owner <eth address>                 Specify a owner eth address to opt in to the points system and distributed RPC network\n"
+  );
+  console.log(
+    "      --l1rpc <url>                         Specify L1 RPC endpoint for Base clients (REQUIRED)"
+  );
+  console.log(
+    "                                            Example: http://YOUR_L1_NODE_IP:8545\n"
+  );
+  console.log(
+    "      --l1beacon <url>                      Specify L1 Beacon endpoint for Base clients (REQUIRED)"
+  );
+  console.log(
+    "                                            Example: http://YOUR_L1_NODE_IP:5052\n"
   );
   console.log(
     "      --update                              Update the execution and consensus clients to the latest version."
@@ -178,6 +192,8 @@ if (!optionsLoaded) {
       "directory",
       "o",
       "owner",
+      "l1rpc",
+      "l1beacon",
     ],
     alias: {
       e: "executionclient",
@@ -196,9 +212,13 @@ if (!optionsLoaded) {
 
   if (argv.executionclient) {
     executionClient = argv.executionclient;
-    if (executionClient !== "reth" && executionClient !== "geth") {
+    if (
+      executionClient !== "reth" &&
+      executionClient !== "geth" &&
+      executionClient !== "base-reth"
+    ) {
       console.log(
-        "Invalid option for --executionclient (-e). Use 'reth' or 'geth'."
+        "Invalid option for --executionclient (-e). Use 'reth', 'geth', or 'base-reth'."
       );
       process.exit(1);
     }
@@ -210,9 +230,13 @@ if (!optionsLoaded) {
 
   if (argv.consensusclient) {
     consensusClient = argv.consensusclient;
-    if (consensusClient !== "lighthouse" && consensusClient !== "prysm") {
+    if (
+      consensusClient !== "lighthouse" &&
+      consensusClient !== "prysm" &&
+      consensusClient !== "base-op"
+    ) {
       console.log(
-        "Invalid option for --consensusclient (-c). Use 'lighthouse' or 'prysm'."
+        "Invalid option for --consensusclient (-c). Use 'lighthouse', 'prysm', or 'base-op'."
       );
       process.exit(1);
     }
@@ -258,6 +282,43 @@ if (!optionsLoaded) {
 
   if (argv.owner) {
     owner = argv.owner;
+  }
+
+  if (argv.l1rpc) {
+    l1RpcEndpoint = argv.l1rpc;
+  }
+
+  if (argv.l1beacon) {
+    l1BeaconEndpoint = argv.l1beacon;
+  }
+
+  // Smart pairing: automatically pair Base execution and consensus clients
+  if (executionClient === "base-reth" && !argv.consensusclient) {
+    consensusClient = "base-op";
+    console.log("🔗 Auto-pairing base-reth with base-op");
+  }
+
+  // Validate that L1 endpoints are provided for Base clients
+  if (executionClient === "base-reth" || consensusClient === "base-op") {
+    if (!l1RpcEndpoint) {
+      console.error("❌ ERROR: L1 RPC endpoint is required for Base clients!");
+      console.error(
+        "   Please specify --l1rpc <url> or set BASE_L1_RPC environment variable"
+      );
+      console.error("   Example: --l1rpc http://YOUR_L1_NODE_IP:8545");
+      process.exit(1);
+    }
+
+    if (!l1BeaconEndpoint) {
+      console.error(
+        "❌ ERROR: L1 Beacon endpoint is required for Base clients!"
+      );
+      console.error(
+        "   Please specify --l1beacon <url> or set BASE_L1_BEACON environment variable"
+      );
+      console.error("   Example: --l1beacon http://YOUR_L1_NODE_IP:5052");
+      process.exit(1);
+    }
   }
 
   if (argv.update) {
@@ -343,6 +404,8 @@ export {
   consensusCheckpoint,
   installDir,
   owner,
+  l1RpcEndpoint,
+  l1BeaconEndpoint,
   saveOptionsToFile,
   deleteOptionsFile,
 };

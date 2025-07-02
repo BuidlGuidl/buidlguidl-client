@@ -736,7 +736,7 @@ async function calcSyncingStatus(executionClient) {
     const syncingStatus = await getEthSyncingStatus();
     let isSyncing = false; // Default value
 
-    if (executionClient === "reth") {
+    if (executionClient === "reth" || executionClient === "base-reth") {
       // Check if syncingStatus is an object (syncing) or false (not syncing)
       const isNodeSyncing = syncingStatus !== false;
 
@@ -908,7 +908,7 @@ export async function synchronizeAndUpdateWidgets(installDir) {
           }`;
         }
       }
-    } else if (executionClient == "reth") {
+    } else if (executionClient == "reth" || executionClient == "base-reth") {
       if (isSyncing) {
         statusMessage = `SYNC IN PROGRESS`;
         await parseAndPopulateRethMetrics();

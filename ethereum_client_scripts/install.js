@@ -110,6 +110,41 @@ export function installMacLinuxClient(clientName, platform) {
 }
 
 export function getVersionNumber(client) {
+  // Handle Base clients (Docker containers)
+  if (client.startsWith("base-")) {
+    try {
+      const baseClientType = client.replace("base-", "");
+      // Handle special case for base-op (which uses op-node image)
+      const imageType =
+        baseClientType === "op" ? "op-node" : `op-${baseClientType}`;
+      const imageName =
+        baseClientType === "op"
+          ? `us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.7.7`
+          : `ghcr.io/paradigmxyz/${imageType}:latest`;
+
+      // Get Docker image information
+      const imageInfo = execSync(
+        `docker image inspect ${imageName} --format='{{.RepoTags}}'`,
+        {
+          encoding: "utf-8",
+          stdio: ["pipe", "pipe", "ignore"],
+        }
+      ).trim();
+
+      // Extract version from tag (e.g., "ghcr.io/base/node-reth:v0.12.6")
+      const versionMatch = imageInfo.match(/v(\d+\.\d+\.\d+)/);
+      if (versionMatch) {
+        return versionMatch[1];
+      } else {
+        return "latest";
+      }
+    } catch (error) {
+      debugToFile(`Error getting version for ${client}:`, error.message);
+      return "unknown";
+    }
+  }
+
+  // Handle regular clients (binaries)
   const platform = os.platform();
   let clientCommand;
   let argument;
@@ -204,4 +239,53 @@ function compareVersions(v1, v2) {
   }
 
   return 0;
+}
+
+// Install Base clients (Docker containers)
+export function installBaseClient(clientName) {
+  if (!clientName.startsWith("base-")) {
+    console.log(`Invalid Base client name: ${clientName}`);
+    return;
+  }
+
+  // Check if Docker is available
+  try {
+    execSync("docker --version", { stdio: "ignore" });
+  } catch (error) {
+    console.error(
+      "❌ Docker is not available. Please install Docker to use Base clients."
+    );
+    process.exit(1);
+  }
+
+  const baseClientType = clientName.replace("base-", ""); // e.g., 'reth' or 'op'
+  // Handle special case for base-op (which uses op-node image)
+  const imageType =
+    baseClientType === "op" ? "op-node" : `op-${baseClientType}`;
+  const imageName =
+    baseClientType === "op"
+      ? `us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.7.7`
+      : `ghcr.io/paradigmxyz/${imageType}:latest`;
+
+  console.log(`\n📦 Installing ${clientName} (Docker container)...`);
+
+  // Create directories for data persistence
+  const clientDir = path.join(installDir, "ethereum_clients", clientName);
+  if (!fs.existsSync(clientDir)) {
+    console.log(`Creating '${clientDir}'`);
+    fs.mkdirSync(`${clientDir}/database`, { recursive: true });
+    fs.mkdirSync(`${clientDir}/logs`, { recursive: true });
+  }
+
+  try {
+    // Check if image exists locally
+    execSync(`docker image inspect ${imageName}`, { stdio: "ignore" });
+    console.log(`✅ ${clientName} image already available`);
+  } catch (error) {
+    console.log(`📥 Pulling ${clientName} container image: ${imageName}`);
+    execSync(`docker pull --platform=linux/amd64 ${imageName}`, {
+      stdio: "inherit",
+    });
+    console.log(`✅ ${clientName} image pulled successfully`);
+  }
 }

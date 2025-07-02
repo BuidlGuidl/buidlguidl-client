@@ -32,6 +32,14 @@ export function getLatestLogFile(dir, client) {
       logFiles = files.filter(
         (file) => file.startsWith("reth_") && file.endsWith(".log")
       );
+    } else if (client === "base-reth") {
+      logFiles = files.filter(
+        (file) => file.startsWith("base-reth_") && file.endsWith(".log")
+      );
+    } else if (client === "base-op") {
+      logFiles = files.filter(
+        (file) => file.startsWith("base-op_") && file.endsWith(".log")
+      );
     } else if (client === "prysm") {
       logFiles = files.filter(
         (file) => file.startsWith("prysm_") && file.endsWith(".log")
@@ -42,7 +50,7 @@ export function getLatestLogFile(dir, client) {
       );
     } else {
       debugToFile(
-        `getLatestLogFile(): Invalid client specified. Must be 'geth', 'reth', 'prysm', or 'lighthouse'.`,
+        `getLatestLogFile(): Invalid client specified. Must be 'geth', 'reth', 'base-reth', 'base-op', 'prysm', or 'lighthouse'.`,
         () => {}
       );
     }

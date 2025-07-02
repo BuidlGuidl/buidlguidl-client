@@ -5,7 +5,10 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { initializeMonitoring } from "./monitor.js";
-import { installMacLinuxClient } from "./ethereum_client_scripts/install.js";
+import {
+  installMacLinuxClient,
+  installBaseClient,
+} from "./ethereum_client_scripts/install.js";
 import { initializeWebSocketConnection } from "./webSocketConnection.js";
 import {
   executionClient,
@@ -16,6 +19,8 @@ import {
   consensusCheckpoint,
   installDir,
   owner,
+  l1RpcEndpoint,
+  l1BeaconEndpoint,
   saveOptionsToFile,
   deleteOptionsFile,
 } from "./commandLineOptions.js";
@@ -215,6 +220,19 @@ async function startClient(clientName, executionType, installDir) {
     clientArgs.push("--executionpeerport", executionPeerPort);
     clientArgs.push("--executiontype", executionType);
     clientCommand = path.join(__dirname, "ethereum_client_scripts/reth.js");
+  } else if (clientName === "base-reth") {
+    clientArgs.push("--executionpeerport", executionPeerPort);
+    clientArgs.push("--executiontype", executionType);
+    if (l1RpcEndpoint) {
+      clientArgs.push("--l1rpc", l1RpcEndpoint);
+    }
+    if (l1BeaconEndpoint) {
+      clientArgs.push("--l1beacon", l1BeaconEndpoint);
+    }
+    clientCommand = path.join(
+      __dirname,
+      "ethereum_client_scripts/base-reth.js"
+    );
   } else if (clientName === "prysm") {
     bgConsensusPeers = await fetchBGConsensusPeers();
     bgConsensusAddrs = await configureBGConsensusPeers(consensusClient);
@@ -255,6 +273,14 @@ async function startClient(clientName, executionType, installDir) {
       __dirname,
       "ethereum_client_scripts/lighthouse.js"
     );
+  } else if (clientName === "base-op") {
+    if (l1RpcEndpoint) {
+      clientArgs.push("--l1rpc", l1RpcEndpoint);
+    }
+    if (l1BeaconEndpoint) {
+      clientArgs.push("--l1beacon", l1BeaconEndpoint);
+    }
+    clientCommand = path.join(__dirname, "ethereum_client_scripts/base-op.js");
   } else {
     clientCommand = path.join(
       installDir,
@@ -272,17 +298,33 @@ async function startClient(clientName, executionType, installDir) {
     env: { ...process.env, INSTALL_DIR: installDir },
   });
 
-  if (clientName === "geth" || clientName === "reth") {
+  if (
+    clientName === "geth" ||
+    clientName === "reth" ||
+    clientName === "base-reth"
+  ) {
     executionChild = child;
-  } else if (clientName === "prysm" || clientName === "lighthouse") {
+  } else if (
+    clientName === "prysm" ||
+    clientName === "lighthouse" ||
+    clientName === "base-op"
+  ) {
     consensusChild = child;
   }
 
   child.on("exit", (code) => {
     console.log(`🫡 ${clientName} process exited with code ${code}`);
-    if (clientName === "geth" || clientName === "reth") {
+    if (
+      clientName === "geth" ||
+      clientName === "reth" ||
+      clientName === "base-reth"
+    ) {
       executionExited = true;
-    } else if (clientName === "prysm" || clientName === "lighthouse") {
+    } else if (
+      clientName === "prysm" ||
+      clientName === "lighthouse" ||
+      clientName === "base-op"
+    ) {
       consensusExited = true;
     }
   });
@@ -335,8 +377,19 @@ const jwtDir = path.join(installDir, "ethereum_clients", "jwt");
 const platform = os.platform();
 
 if (["darwin", "linux"].includes(platform)) {
-  installMacLinuxClient(executionClient, platform);
-  installMacLinuxClient(consensusClient, platform);
+  // Install execution client
+  if (executionClient.startsWith("base-")) {
+    installBaseClient(executionClient);
+  } else {
+    installMacLinuxClient(executionClient, platform);
+  }
+
+  // Install consensus client
+  if (consensusClient.startsWith("base-")) {
+    installBaseClient(consensusClient);
+  } else {
+    installMacLinuxClient(consensusClient, platform);
+  }
 }
 // } else if (platform === "win32") {
 //   installWindowsExecutionClient(executionClient);

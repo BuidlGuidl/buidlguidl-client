@@ -172,12 +172,16 @@ function setupUI(
     executionClientLabel = `Geth v${executionClientVer}`;
   } else if (executionClientGlobal == "reth") {
     executionClientLabel = `Reth v${executionClientVer}`;
+  } else if (executionClientGlobal == "base-reth") {
+    executionClientLabel = `Base Reth v${executionClientVer}`;
   }
 
   if (consensusClientGlobal == "prysm") {
     consensusClientLabel = `Prysm v${consensusClientVer}`;
   } else if (consensusClientGlobal == "lighthouse") {
     consensusClientLabel = `Lighthouse v${consensusClientVer}`;
+  } else if (consensusClientGlobal == "base-op") {
+    consensusClientLabel = `Base OP v${consensusClientVer}`;
   }
 
   const executionLog = createExecutionLog(grid, executionClientLabel, screen);
@@ -196,7 +200,10 @@ function setupUI(
 
   if (executionClientGlobal == "geth") {
     gethStageGauge = createGethStageGauge(grid);
-  } else if (executionClientGlobal == "reth") {
+  } else if (
+    executionClientGlobal == "reth" ||
+    executionClientGlobal == "base-reth"
+  ) {
     rethStageGauge = createRethStageGauge(grid);
   }
 
