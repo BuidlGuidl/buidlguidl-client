@@ -73,6 +73,9 @@ const execution = pty.spawn(
     "127.0.0.1",
     "--ws.port",
     "8546",
+    "--prune.bodies.pre-merge",
+    "--prune.receipts.before",
+    "15537394",
   ],
   {
     name: "xterm-color",
