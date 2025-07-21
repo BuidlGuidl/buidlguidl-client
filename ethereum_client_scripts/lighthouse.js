@@ -82,7 +82,6 @@ const consensusArgs = [
   consensusCheckpoint,
   "--checkpoint-sync-url-timeout",
   "1200",
-  "--disable-deposit-contract-sync",
   "--datadir",
   path.join(installDir, "ethereum_clients", "lighthouse", "database"),
   "--execution-jwt",
