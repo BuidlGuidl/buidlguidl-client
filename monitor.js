@@ -38,6 +38,13 @@ import { createHeader } from "./monitor_components/header.js";
 let executionClientGlobal;
 let consensusClientGlobal;
 
+// Track current log files and their components for potential restart monitoring
+let currentExecutionLogFile = null;
+let currentConsensusLogFile = null;
+let executionLogComponent = null;
+let consensusLogComponent = null;
+let gethStageGaugeComponent = null;
+
 export let statusBox = null;
 export let chainInfoBox = null;
 export let rpcInfoBox = null;
@@ -87,6 +94,11 @@ export async function initializeMonitoring(
       await getLatestLogFile(executionLogsPath, executionClient)
     );
 
+    // Store current log file and components for restart monitoring
+    currentExecutionLogFile = logFilePathExecution;
+    executionLogComponent = components.executionLog;
+    gethStageGaugeComponent = components.gethStageGauge;
+
     // debugToFile(
     //   `Monitoring ${executionClient} logs from: ${logFilePathExecution}`,
     //   () => {}
@@ -97,6 +109,10 @@ export async function initializeMonitoring(
         consensusLogsPath,
         getLatestLogFile(consensusLogsPath, consensusClient)
       );
+
+      // Store current consensus log file and component
+      currentConsensusLogFile = logFilePathConsensus;
+      consensusLogComponent = components.consensusLog;
 
       setupLogStreaming(
         consensusClientGlobal,
@@ -148,8 +164,85 @@ export async function initializeMonitoring(
         );
       }, 5000);
     }
+
+    // Periodically check for new log files (for auto-restart scenarios)
+    setInterval(async () => {
+      try {
+        await checkForNewLogFiles();
+      } catch (error) {
+        debugToFile(`Error checking for new log files: ${error}`);
+      }
+    }, 10000); // Check every 10 seconds
   } catch (error) {
     debugToFile(`Error initializing monitoring: ${error}`);
+  }
+}
+
+async function checkForNewLogFiles() {
+  try {
+    // Check execution client log
+    if (currentExecutionLogFile && executionLogComponent) {
+      const executionLogsPath = path.join(
+        installDir,
+        "ethereum_clients",
+        executionClientGlobal,
+        "logs"
+      );
+
+      const latestExecutionLogFile = path.join(
+        executionLogsPath,
+        await getLatestLogFile(executionLogsPath, executionClientGlobal)
+      );
+
+      if (latestExecutionLogFile !== currentExecutionLogFile) {
+        debugToFile(
+          `New execution log file detected: ${latestExecutionLogFile}`
+        );
+        currentExecutionLogFile = latestExecutionLogFile;
+
+        // Set up new log streaming for execution client
+        setupLogStreaming(
+          executionClientGlobal,
+          latestExecutionLogFile,
+          executionLogComponent,
+          screen,
+          gethStageGaugeComponent
+        );
+      }
+    }
+
+    // Check consensus client log
+    if (currentConsensusLogFile && consensusLogComponent) {
+      const consensusLogsPath = path.join(
+        installDir,
+        "ethereum_clients",
+        consensusClientGlobal,
+        "logs"
+      );
+
+      const latestConsensusLogFile = path.join(
+        consensusLogsPath,
+        await getLatestLogFile(consensusLogsPath, consensusClientGlobal)
+      );
+
+      if (latestConsensusLogFile !== currentConsensusLogFile) {
+        debugToFile(
+          `New consensus log file detected: ${latestConsensusLogFile}`
+        );
+        currentConsensusLogFile = latestConsensusLogFile;
+
+        // Set up new log streaming for consensus client
+        setupLogStreaming(
+          consensusClientGlobal,
+          latestConsensusLogFile,
+          consensusLogComponent,
+          screen,
+          gethStageGaugeComponent
+        );
+      }
+    }
+  } catch (error) {
+    debugToFile(`Error in checkForNewLogFiles: ${error}`);
   }
 }
 

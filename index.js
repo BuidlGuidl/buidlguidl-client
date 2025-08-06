@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { initializeMonitoring } from "./monitor.js";
 import { installMacLinuxClient } from "./ethereum_client_scripts/install.js";
+import { getLatestLogFile } from "./monitor_components/helperFunctions.js";
 import { initializeWebSocketConnection } from "./webSocketConnection.js";
 import {
   executionClient,
@@ -59,8 +60,22 @@ let consensusExited = false;
 
 let isExiting = false;
 
+// Auto-restart state tracking
+let userRequestedExit = false;
+let restartTimeouts = new Map(); // Track restart timeouts
+let clientRestartCounts = new Map(); // Track restart attempts per client
+
 function handleExit(exitType) {
   if (isExiting) return; // Prevent multiple calls
+
+  // Mark that user requested exit to prevent auto-restart
+  userRequestedExit = true;
+
+  // Cancel any pending restart timers
+  restartTimeouts.forEach((timeout, clientName) => {
+    clearTimeout(timeout);
+    restartTimeouts.delete(clientName);
+  });
 
   // Check if the current process PID matches the one in the lockfile
   try {
@@ -203,6 +218,85 @@ process.on("unhandledRejection", (reason, promise) => {
 let bgConsensusPeers = [];
 let bgConsensusAddrs;
 
+async function notifyMonitoringOfRestart(clientName) {
+  try {
+    // Give the new log file a moment to be created
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // Log the restart for debugging
+    debugToFile(
+      `${clientName} restarted - log monitoring should automatically pick up new log file`
+    );
+
+    // The monitoring system will automatically detect the new log file since it uses getLatestLogFile()
+    // which sorts by modification time. The fs.watchFile in setupLogStreaming will handle file changes.
+  } catch (error) {
+    debugToFile(
+      `Error notifying monitoring of restart for ${clientName}: ${error}`
+    );
+  }
+}
+
+async function handleClientAutoRestart(clientName, exitCode) {
+  // Don't restart if user requested exit
+  if (userRequestedExit || isExiting) {
+    return;
+  }
+
+  // Track restart attempts to prevent infinite restart loops
+  const restartCount = clientRestartCounts.get(clientName) || 0;
+  const maxRestarts = 5; // Maximum restarts within a time window
+
+  if (restartCount >= maxRestarts) {
+    debugToFile(
+      `${clientName} has reached maximum restart attempts (${maxRestarts}). Auto-restart disabled for this client.`
+    );
+    return;
+  }
+
+  // Increment restart count
+  clientRestartCounts.set(clientName, restartCount + 1);
+
+  // Reset restart count after 30 minutes
+  setTimeout(() => {
+    clientRestartCounts.set(clientName, 0);
+  }, 30 * 60 * 1000);
+
+  debugToFile(
+    `${clientName} exited with code ${exitCode}. Scheduling auto-restart in 20 seconds (attempt ${
+      restartCount + 1
+    }/${maxRestarts})`
+  );
+
+  // Schedule restart after 20 seconds
+  const restartTimeout = setTimeout(async () => {
+    try {
+      restartTimeouts.delete(clientName);
+
+      // Reset the exit flags for the client being restarted
+      if (clientName === executionClient) {
+        executionExited = false;
+        executionChild = null;
+      } else if (clientName === consensusClient) {
+        consensusExited = false;
+        consensusChild = null;
+      }
+
+      debugToFile(`Auto-restarting ${clientName}...`);
+      await startClient(clientName, executionType, installDir);
+      debugToFile(`${clientName} auto-restart completed successfully`);
+
+      // Notify the monitoring system about the restart so it can pick up the new log file
+      await notifyMonitoringOfRestart(clientName);
+    } catch (error) {
+      debugToFile(`Error during auto-restart of ${clientName}: ${error}`);
+    }
+  }, 20000); // 20 second delay
+
+  // Track the timeout so we can cancel it if needed
+  restartTimeouts.set(clientName, restartTimeout);
+}
+
 async function startClient(clientName, executionType, installDir) {
   let clientCommand,
     clientArgs = [];
@@ -279,22 +373,28 @@ async function startClient(clientName, executionType, installDir) {
   }
 
   child.on("exit", (code) => {
-    console.log(`🫡 ${clientName} process exited with code ${code}`);
+    // Don't show exit message on the terminal dashboard to prevent overlay
+    // Instead, log to debug file only
+    debugToFile(`${clientName} process exited with code ${code}`);
+
     if (clientName === "geth" || clientName === "reth") {
       executionExited = true;
     } else if (clientName === "prysm" || clientName === "lighthouse") {
       consensusExited = true;
     }
+
+    // Trigger auto-restart if conditions are met
+    handleClientAutoRestart(clientName, code);
   });
 
   child.on("error", (err) => {
-    console.log(`Error from start client: ${err.message}`);
+    debugToFile(`Error from start client: ${err.message}`);
   });
 
-  console.log(clientName, "started");
+  debugToFile(`${clientName} started`);
 
   child.stdout.on("error", (err) => {
-    console.error(`Error on stdout of ${clientName}: ${err.message}`);
+    debugToFile(`Error on stdout of ${clientName}: ${err.message}`);
   });
 }
 
@@ -315,7 +415,7 @@ function isAlreadyRunning() {
     }
     return false;
   } catch (err) {
-    console.error("Error checking for existing process:", err);
+    debugToFile("Error checking for existing process:", err);
     return false;
   }
 }
