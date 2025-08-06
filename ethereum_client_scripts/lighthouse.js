@@ -82,7 +82,6 @@ const consensusArgs = [
   consensusCheckpoint,
   "--checkpoint-sync-url-timeout",
   "1200",
-  "--disable-deposit-contract-sync",
   "--datadir",
   path.join(installDir, "ethereum_clients", "lighthouse", "database"),
   "--execution-jwt",
@@ -93,11 +92,10 @@ const consensusArgs = [
   "--metrics-port",
   "5054",
   "--http",
+  "--http-address",
+  "0.0.0.0",
   "--disable-upnp", // There is currently a bug in the p2p-lib that causes panics with this enabled
   "--disable-enr-auto-update", // This is causing a loop of ENR updates that crashes lighthouse
-  // "--libp2p-addresses",
-  // "/ip4/76.155.211.156/tcp/26617/p2p/16Uiu2HAkw5RWctJguL1CPRyvgwuF4GsqTKUBW7qXdNrX3t6k4CH9,/ip4/76.155.211.156/udp/26617/quic-v1/p2p/16Uiu2HAkw5RWctJguL1CPRyvgwuF4GsqTKUBW7qXdNrX3t6k4CH9,/ip4/76.155.211.156/tcp/10000/p2p/16Uiu2HAmT4mjLEPrwStrRvorexA3rH9FLJLS367N1KJYUCPWTSio,/ip4/76.155.211.156/udp/10000/quic-v1/p2p/16Uiu2HAmT4mjLEPrwStrRvorexA3rH9FLJLS367N1KJYUCPWTSio",
-  // "/ip4/76.155.211.156/tcp/9000/p2p/16Uiu2HAkw5RWctJguL1CPRyvgwuF4GsqTKUBW7qXdNrX3t6k4CH9,/ip4/76.155.211.156/udp/9001/quic-v1/p2p/16Uiu2HAkw5RWctJguL1CPRyvgwuF4GsqTKUBW7qXdNrX3t6k4CH9,/ip4/76.155.211.156/tcp/10000/p2p/16Uiu2HAmT4mjLEPrwStrRvorexA3rH9FLJLS367N1KJYUCPWTSio,/ip4/76.155.211.156/udp/10001/quic-v1/p2p/16Uiu2HAmT4mjLEPrwStrRvorexA3rH9FLJLS367N1KJYUCPWTSio,/ip4/140.228.255.200/tcp/9000/p2p/16Uiu2HAmUxRVA7mHdJdt8QeauaiFU9ifHUuqANs6BAPcU3nWbyAu,/ip4/140.228.255.200/udp/9001/quic-v1/p2p/16Uiu2HAmUxRVA7mHdJdt8QeauaiFU9ifHUuqANs6BAPcU3nWbyAu",
 ];
 
 if (argv.bgconsensuspeers) {

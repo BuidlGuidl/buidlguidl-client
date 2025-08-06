@@ -11,7 +11,7 @@ export const localClient = createPublicClient({
 export const mainnetClient = createPublicClient({
   name: "mainnetClient",
   chain: mainnet,
-  transport: http(`https://${BASE_URL}:48544/`, {
+  transport: http(`https://mainnet.rpc.buidlguidl.com`, {
     fetchOptions: {
       headers: {
         Origin: "buidlguidl-client",

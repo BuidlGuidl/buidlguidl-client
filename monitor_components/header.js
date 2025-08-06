@@ -10,7 +10,7 @@ import { getPublicIPAddress } from "../getSystemStats.js";
 import { owner } from "../commandLineOptions.js";
 import { isConnected } from "../webSocketConnection.js";
 import { BASE_URL, BREAD_CONTRACT_ADDRESS } from "../config.js";
-import { baseSepoliaPublicClient } from "../chain_utills/baseSepoliaPublicClient.js";
+import { basePublicClient } from "../chain_utills/basePublicClient.js";
 import { mainnetPublicClient } from "../chain_utills/mainnetPublicClient.js";
 import { breadContractAbi } from "../chain_utills/breadContractAbi.js";
 import { isAddress, formatUnits } from "viem";
@@ -77,7 +77,7 @@ export function createHeader(grid, screen, messageForHeader) {
       }
 
       // Get bread balance from the contract
-      const balance = await baseSepoliaPublicClient.readContract({
+      const balance = await basePublicClient.readContract({
         address: BREAD_CONTRACT_ADDRESS,
         abi: breadContractAbi,
         functionName: "balanceOf",

@@ -1,6 +1,6 @@
 import { isAddress } from "viem";
 import { mainnetPublicClient } from "./mainnetPublicClient.js";
-import { baseSepoliaPublicClient } from "./baseSepoliaPublicClient.js";
+import { basePublicClient } from "./basePublicClient.js";
 
 // Validate and resolve addresses (ENS support)
 export async function validateAndResolveAddresses(addresses) {
@@ -58,8 +58,8 @@ export async function checkAddressesExist(addresses) {
   for (let i = 0; i < addresses.length; i++) {
     const addr = addresses[i];
     try {
-      const code = await baseSepoliaPublicClient.getBytecode({ address: addr });
-      const balance = await baseSepoliaPublicClient.getBalance({
+      const code = await basePublicClient.getBytecode({ address: addr });
+      const balance = await basePublicClient.getBalance({
         address: addr,
       });
 
