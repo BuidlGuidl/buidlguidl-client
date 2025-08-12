@@ -3,7 +3,7 @@ import path from "path";
 import { installDir } from "./commandLineOptions.js";
 
 // Create the log file path
-const LOG_FILE_PATH = path.join(installDir, "ethereum_clients", "requests.log");
+const LOG_FILE_PATH = path.join(installDir, "requests.log");
 
 // Ensure the log directory exists
 const logDir = path.dirname(LOG_FILE_PATH);
