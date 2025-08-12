@@ -17,6 +17,7 @@ import axios from "axios";
 import fs from "fs";
 import path from "path";
 import BASE_URL from "./config.js";
+import { logRequest } from "./logResponse.js";
 
 let socketId;
 export let checkIn;
@@ -166,6 +167,9 @@ export function initializeWebSocketConnection(wsConfig) {
       });
 
       socket.on("rpc_request", async (request, callback) => {
+        // Record the start time for logging
+        const requestStartTime = new Date();
+
         populateRpcInfoBox(request.method);
 
         const targetUrl = "http://localhost:8545";
@@ -178,11 +182,23 @@ export function initializeWebSocketConnection(wsConfig) {
             id: request.id,
           });
 
+          // Calculate elapsed time
+          const elapsedMs = Date.now() - requestStartTime.getTime();
+
+          // Log the request asynchronously (non-blocking)
+          logRequest(
+            requestStartTime,
+            elapsedMs,
+            request.method,
+            request.params,
+            rpcResponse.data
+          );
+
           callback(rpcResponse.data);
         } catch (error) {
           debugToFile("Error returning RPC response:", error);
 
-          callback({
+          const errorResponse = {
             jsonrpc: "2.0",
             error: {
               code: -70000,
@@ -190,7 +206,21 @@ export function initializeWebSocketConnection(wsConfig) {
               data: error.message,
             },
             id: request.id,
-          });
+          };
+
+          // Calculate elapsed time for error case
+          const elapsedMs = Date.now() - requestStartTime.getTime();
+
+          // Log the error response asynchronously (non-blocking)
+          logRequest(
+            requestStartTime,
+            elapsedMs,
+            request.method,
+            request.params,
+            errorResponse
+          );
+
+          callback(errorResponse);
         }
       });
 
