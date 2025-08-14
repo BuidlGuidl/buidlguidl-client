@@ -110,8 +110,7 @@ async function updateNetworkLinePlot(networkLine, screen) {
 }
 
 export function createNetworkLine(grid, screen) {
-  // const networkLine = grid.set(7, 5, 2, 5, contrib.line, {
-  const networkLine = grid.set(7, 3, 2, 3, contrib.line, {
+  const networkLine = grid.set(7, 0, 2, 4, contrib.line, {
     style: { line: "yellow", text: "green", baseline: "green" },
     xLabelPadding: 3,
     xPadding: 5,

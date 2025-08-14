@@ -97,7 +97,7 @@ async function updateDiskLinePlot(diskLine, screen, installDir) {
 }
 
 export function createDiskLine(grid, screen, installDir) {
-  const diskLine = grid.set(7, 6, 2, 3, contrib.line, {
+  const diskLine = grid.set(7, 4, 2, 4, contrib.line, {
     style: { line: "yellow", text: "green", baseline: "green" },
     xLabelPadding: 0,
     xPadding: 0,

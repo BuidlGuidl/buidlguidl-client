@@ -16,7 +16,7 @@ function initRethVersion() {
 let rethStageGauge;
 
 export function createRethStageGauge(grid) {
-  rethStageGauge = grid.set(2, 7, 5, 1, blessed.box, {
+  rethStageGauge = grid.set(1, 7, 6, 2, blessed.box, {
     label: "Sync Progress",
     content: `INITIALIZING...`,
     stroke: "cyan",

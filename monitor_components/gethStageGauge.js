@@ -4,7 +4,7 @@ import { debugToFile } from "../helpers.js";
 let gethStageGauge;
 
 export function createGethStageGauge(grid) {
-  gethStageGauge = grid.set(2, 7, 5, 1, blessed.box, {
+  gethStageGauge = grid.set(1, 7, 6, 2, blessed.box, {
     label: "Sync Progress",
     content: `INITIALIZING...`,
     stroke: "cyan",

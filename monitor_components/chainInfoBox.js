@@ -6,11 +6,7 @@ import { debugToFile } from "../helpers.js";
 let chainInfoBox;
 
 export function createChainInfoBox(grid) {
-  let nRows = 5;
-  if (owner !== null) {
-    nRows = 3;
-  }
-  chainInfoBox = grid.set(2, 7, nRows, 1, blessed.box, {
+  chainInfoBox = grid.set(1, 7, 6, 2, blessed.box, {
     label: "Chain Info",
     stroke: "cyan",
     fill: "white",
