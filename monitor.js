@@ -192,11 +192,7 @@ function setupUI(
     rethStageGauge = createRethStageGauge(grid);
   }
 
-  const { bigText, ipAddressBox } = createHeader(
-    grid,
-    screen,
-    messageForHeader
-  );
+  const { bigText } = createHeader(grid, screen, messageForHeader);
 
   screen.append(executionLog);
   screen.append(consensusLog);
@@ -290,18 +286,6 @@ function setupUI(
 
   function fixRightMargins(screen) {
     try {
-      // let bigTextRight = bigText.left + bigText.width - 1;
-      // let bigTextGap = ipAddressBox.left - bigTextRight - 1;
-      // if (bigTextGap != 0) {
-      //   bigTextGap.width = bigTextGap.width + bigTextGap;
-      // }
-
-      let ipAddressBoxRight = ipAddressBox.left + ipAddressBox.width - 1;
-      let ipAddressBoxGap = screen.width - ipAddressBoxRight - 1;
-      if (ipAddressBoxGap != 0) {
-        ipAddressBox.width = ipAddressBox.width + ipAddressBoxGap;
-      }
-
       if (screen.children.includes(rethStageGauge)) {
         let rethStageGaugeRight =
           rethStageGauge.left + rethStageGauge.width - 1;

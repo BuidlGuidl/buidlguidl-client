@@ -1,29 +1,11 @@
 import blessed from "blessed";
-import os from "os";
-import axios from "axios";
 import { debugToFile } from "../helpers.js";
 import { execSync } from "child_process";
-import { getPublicIPAddress } from "../getSystemStats.js";
+import axios from "axios";
 import { owner } from "../commandLineOptions.js";
-import { isConnected } from "../webSocketConnection.js";
 import BASE_URL from "../config.js";
 
 export function createHeader(grid, screen, messageForHeader) {
-  // Function to get the local IP address
-  async function getIPAddress() {
-    while (true) {
-      const interfaces = os.networkInterfaces();
-      for (const iface in interfaces) {
-        for (const alias of interfaces[iface]) {
-          if (alias.family === "IPv4" && !alias.internal) {
-            return alias.address;
-          }
-        }
-      }
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-    }
-  }
-
   // New function to fetch points
   async function fetchPoints(owner) {
     try {
@@ -79,7 +61,7 @@ export function createHeader(grid, screen, messageForHeader) {
     screen.render();
   }
 
-  const bigText = grid.set(0, 0, 1, 7, blessed.box, {
+  const bigText = grid.set(0, 0, 1, 9, blessed.box, {
     content: `{center}{bold}B u i d l G u i d l  C l i e n t{/bold}{/center}\n{center}{cyan-fg}${messageForHeader}{/cyan-fg}{/center}`,
     tags: true,
     align: "center",
@@ -117,79 +99,8 @@ export function createHeader(grid, screen, messageForHeader) {
   //   });
   // });
 
-  let ipAddressBoxContent = `{center}{bold}Local IP: Fetching...{/bold}\n{center}{bold}Public IP: Fetching...{/bold}{/center}`;
-
-  // Create the IP address box
-  const ipAddressBox = grid.set(0, 7, 1, 2, blessed.box, {
-    content: ipAddressBoxContent,
-    tags: true,
-    align: "center",
-    valign: "top",
-    style: {
-      fg: "white",
-      border: {
-        fg: "cyan",
-      },
-    },
-  });
-
-  let rpcStatusMessage = "";
-  let showIPAddresses = true;
-  let lastToggleTime = Date.now();
-
-  function updateWSStatusMessage() {
-    // Update the RPC status message
-    if (owner !== null) {
-      if (isConnected(process.pid)) {
-        rpcStatusMessage =
-          "{center}{green-fg}RPC Server Connected{/green-fg}{/center}";
-      } else {
-        rpcStatusMessage =
-          "{center}{red-fg}RPC Server Disconnected{/red-fg}{/center}";
-      }
-    }
-
-    const ipAddressLines = ipAddressBoxContent
-      .split("\n")
-      .slice(0, 2)
-      .join("\n");
-    const currentTime = Date.now();
-
-    if (owner !== null && ipAddressBox.height < 5) {
-      if (currentTime - lastToggleTime >= 10000) {
-        showIPAddresses = !showIPAddresses;
-        lastToggleTime = currentTime;
-      }
-
-      const contentToShow = showIPAddresses ? ipAddressLines : rpcStatusMessage;
-      ipAddressBox.setContent(contentToShow);
-    } else {
-      // If height is 5 or more, show all information
-      ipAddressBox.setContent(`${ipAddressLines}\n${rpcStatusMessage}`);
-    }
-
-    screen.render();
-  }
-
-  // Update the IP address fetching part
-  Promise.all([getIPAddress(), getPublicIPAddress()]).then(
-    ([localIP, publicIP]) => {
-      ipAddressBoxContent = `{center}{bold}Local IP: ${localIP}{/bold}\n{center}{bold}Public IP: ${publicIP}{/bold}{/center}`;
-      updateWSStatusMessage(); // Call this to add the initial RPC status
-      screen.render();
-    }
-  );
-
   updatePointsAndBranchDisplay();
   setInterval(updatePointsAndBranchDisplay, 1 * 60 * 1000); // Every 1 minute
-  setInterval(updateWSStatusMessage, 1000); // Check every second for smoother transitions
 
-  // Add resize event listener
-  screen.on("resize", () => {
-    // Force an immediate update after resize
-    lastToggleTime = Date.now() - 10000;
-    updateWSStatusMessage();
-  });
-
-  return { bigText, ipAddressBox };
+  return { bigText };
 }
