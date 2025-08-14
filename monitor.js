@@ -2,7 +2,7 @@ import path from "path";
 import blessed from "blessed";
 import contrib from "blessed-contrib";
 import { debugToFile } from "./helpers.js";
-import { createSystemStatsGauge } from "./monitor_components/systemStatsGauge.js";
+
 import { createPeerCountGauge } from "./monitor_components/peerCountGauge.js";
 import { createCpuLine } from "./monitor_components/cpuLine.js";
 import { createNetworkLine } from "./monitor_components/networkLine.js";
@@ -175,7 +175,7 @@ function setupUI(
 
   const executionLog = createExecutionLog(grid, executionClientLabel, screen);
   const consensusLog = createConsensusLog(grid, consensusClientLabel, screen);
-  const systemStatsGauge = createSystemStatsGauge(grid, installDir);
+
   const peerCountGauge = createPeerCountGauge(grid);
   const cpuLine = createCpuLine(grid, screen);
   const networkLine = createNetworkLine(grid, screen);
@@ -203,7 +203,7 @@ function setupUI(
   screen.append(cpuLine);
   screen.append(networkLine);
   screen.append(diskLine);
-  screen.append(systemStatsGauge);
+
   screen.append(peerCountGauge);
 
   if (executionClientGlobal == "geth") {
@@ -218,12 +218,6 @@ function setupUI(
       let executionLogGap = consensusLog.top - executionLogBottom - 1;
       if (executionLogGap != 0) {
         executionLog.height = executionLog.height + executionLogGap;
-      }
-
-      let peerCountGaugeBottom = peerCountGauge.top + peerCountGauge.height - 1;
-      let peerCountGaugeGap = systemStatsGauge.top - peerCountGaugeBottom - 1;
-      if (peerCountGaugeGap != 0) {
-        peerCountGauge.height = peerCountGauge.height + peerCountGaugeGap;
       }
 
       let consensusLogBottom = consensusLog.top + consensusLog.height - 1;
@@ -270,13 +264,6 @@ function setupUI(
         if (rpcInfoBoxGap != 0) {
           rpcInfoBox.height = rpcInfoBox.height + rpcInfoBoxGap;
         }
-      }
-
-      let systemStatsGaugeBottom =
-        systemStatsGauge.top + systemStatsGauge.height - 1;
-      let systemStatsGaugeGap = cpuLine.top - systemStatsGaugeBottom - 1;
-      if (systemStatsGaugeGap != 0) {
-        systemStatsGauge.height = systemStatsGauge.height + systemStatsGaugeGap;
       }
 
       let cpuLineBottom = cpuLine.top + cpuLine.height - 1;
@@ -353,13 +340,6 @@ function setupUI(
       let peerCountGaugeGap = screen.width - peerCountGaugeRight - 1;
       if (peerCountGaugeGap != 0) {
         peerCountGauge.width = peerCountGauge.width + peerCountGaugeGap;
-      }
-
-      let systemStatsGaugeRight =
-        systemStatsGauge.left + systemStatsGauge.width - 1;
-      let systemStatsGaugeGap = screen.width - systemStatsGaugeRight - 1;
-      if (systemStatsGaugeGap != 0) {
-        systemStatsGauge.width = systemStatsGauge.width + systemStatsGaugeGap;
       }
 
       let cpuLineRight = cpuLine.left + cpuLine.width - 1;
