@@ -71,33 +71,8 @@ export function createHeader(grid, screen, messageForHeader) {
       border: {
         fg: "cyan",
       },
-      // hover: {
-      //   fg: "cyan",
-      // },
     },
-    // mouse: true,
-    // clickable: true,
   });
-
-  // bigText.on("click", function () {
-  //   const url = "https://client.buidlguidl.com"; // Replace with your desired URL
-  //   let command;
-  //   switch (process.platform) {
-  //     case "darwin":
-  //       command = `open ${url}`;
-  //       break;
-  //     case "win32":
-  //       command = `start ${url}`;
-  //       break;
-  //     default:
-  //       command = `xdg-open ${url}`;
-  //   }
-  //   exec(command, (error) => {
-  //     if (error) {
-  //       debugToFile(`Error opening URL: ${error}`);
-  //     }
-  //   });
-  // });
 
   updatePointsAndBranchDisplay();
   setInterval(updatePointsAndBranchDisplay, 1 * 60 * 1000); // Every 1 minute

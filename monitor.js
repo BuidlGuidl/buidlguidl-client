@@ -4,7 +4,7 @@ import contrib from "blessed-contrib";
 import { debugToFile } from "./helpers.js";
 
 import { createPeerCountGauge } from "./monitor_components/peerCountGauge.js";
-import { createCpuLine } from "./monitor_components/cpuLine.js";
+
 import { createNetworkLine } from "./monitor_components/networkLine.js";
 import { createDiskLine } from "./monitor_components/diskLine.js";
 import { createRethStageGauge } from "./monitor_components/rethStageGauge.js";
@@ -177,7 +177,7 @@ function setupUI(
   const consensusLog = createConsensusLog(grid, consensusClientLabel, screen);
 
   const peerCountGauge = createPeerCountGauge(grid);
-  const cpuLine = createCpuLine(grid, screen);
+
   const networkLine = createNetworkLine(grid, screen);
   const diskLine = createDiskLine(grid, screen, installDir);
 
@@ -196,7 +196,7 @@ function setupUI(
 
   screen.append(executionLog);
   screen.append(consensusLog);
-  screen.append(cpuLine);
+
   screen.append(networkLine);
   screen.append(diskLine);
 
@@ -216,16 +216,10 @@ function setupUI(
         executionLog.height = executionLog.height + executionLogGap;
       }
 
-      let consensusLogBottom = consensusLog.top + consensusLog.height - 1;
-      let consensusLogGap = cpuLine.top - consensusLogBottom - 1;
-      if (consensusLogGap != 0) {
-        consensusLog.height = consensusLog.height + consensusLogGap;
-      }
-
       if (screen.children.includes(rethStageGauge)) {
         let rethStageGaugeBottom =
           rethStageGauge.top + rethStageGauge.height - 1;
-        let rethStageGaugeGap = cpuLine.top - rethStageGaugeBottom - 1;
+        let rethStageGaugeGap = screen.height - rethStageGaugeBottom - 1;
         if (rethStageGaugeGap != 0) {
           rethStageGauge.height = rethStageGauge.height + rethStageGaugeGap;
         }
@@ -234,7 +228,7 @@ function setupUI(
       if (screen.children.includes(gethStageGauge)) {
         let gethStageGaugeBottom =
           gethStageGauge.top + gethStageGauge.height - 1;
-        let gethStageGaugeGap = cpuLine.top - gethStageGaugeBottom - 1;
+        let gethStageGaugeGap = screen.height - gethStageGaugeBottom - 1;
         if (gethStageGaugeGap != 0) {
           gethStageGauge.height = gethStageGauge.height + gethStageGaugeGap;
         }
@@ -260,12 +254,6 @@ function setupUI(
         if (rpcInfoBoxGap != 0) {
           rpcInfoBox.height = rpcInfoBox.height + rpcInfoBoxGap;
         }
-      }
-
-      let cpuLineBottom = cpuLine.top + cpuLine.height - 1;
-      let cpuLineGap = screen.height - cpuLineBottom - 1;
-      if (cpuLineGap != 0) {
-        cpuLine.height = cpuLine.height + cpuLineGap;
       }
 
       let networkLineBottom = networkLine.top + networkLine.height - 1;
@@ -326,12 +314,6 @@ function setupUI(
         peerCountGauge.width = peerCountGauge.width + peerCountGaugeGap;
       }
 
-      let cpuLineRight = cpuLine.left + cpuLine.width - 1;
-      let cpuLineGap = networkLine.left - cpuLineRight - 1;
-      if (cpuLineGap != 0) {
-        cpuLine.width = cpuLine.width + cpuLineGap;
-      }
-
       let networkLineRight = networkLine.left + networkLine.width - 1;
       let networkLineGap = diskLine.left - networkLineRight - 1;
       if (networkLineGap != 0) {
@@ -354,7 +336,6 @@ function setupUI(
     // fixBottomMargins(screen);
     // fixRightMargins(screen);
 
-    cpuLine.emit("attach");
     networkLine.emit("attach");
     diskLine.emit("attach");
 
@@ -365,7 +346,6 @@ function setupUI(
     // fixBottomMargins(screen);
     // fixRightMargins(screen);
 
-    cpuLine.emit("attach");
     networkLine.emit("attach");
     diskLine.emit("attach");
     executionLog.emit("attach");
