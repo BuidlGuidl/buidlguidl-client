@@ -12,7 +12,7 @@ import { createGethStageGauge } from "./monitor_components/gethStageGauge.js";
 import { createChainInfoBox } from "./monitor_components/chainInfoBox.js";
 import { createRpcInfoBox } from "./monitor_components/rpcInfoBox.js";
 import { createExecutionLog } from "./monitor_components/executionLog.js";
-import { createStatusBox } from "./monitor_components/statusBox.js";
+
 import { installDir } from "./commandLineOptions.js";
 
 import {
@@ -32,7 +32,6 @@ import { createHeader } from "./monitor_components/header.js";
 let executionClientGlobal;
 let consensusClientGlobal;
 
-export let statusBox = null;
 export let chainInfoBox = null;
 export let rpcInfoBox = null;
 export let screen = null;
@@ -181,7 +180,7 @@ function setupUI(
   const cpuLine = createCpuLine(grid, screen);
   const networkLine = createNetworkLine(grid, screen);
   const diskLine = createDiskLine(grid, screen, installDir);
-  statusBox = createStatusBox(grid);
+
   chainInfoBox = createChainInfoBox(grid);
   rpcInfoBox = createRpcInfoBox(grid);
 
@@ -206,7 +205,7 @@ function setupUI(
   screen.append(diskLine);
   screen.append(systemStatsGauge);
   screen.append(peerCountGauge);
-  screen.append(statusBox);
+
   if (executionClientGlobal == "geth") {
     screen.append(gethStageGauge);
   } else if (executionClientGlobal == "reth") {
@@ -219,12 +218,6 @@ function setupUI(
       let executionLogGap = consensusLog.top - executionLogBottom - 1;
       if (executionLogGap != 0) {
         executionLog.height = executionLog.height + executionLogGap;
-      }
-
-      let statusBoxBottom = statusBox.top + statusBox.height - 1;
-      let statusBoxGap = peerCountGauge.top - statusBoxBottom - 1;
-      if (statusBoxGap != 0) {
-        statusBox.height = statusBox.height + statusBoxGap;
       }
 
       let peerCountGaugeBottom = peerCountGauge.top + peerCountGauge.height - 1;
@@ -320,12 +313,6 @@ function setupUI(
       let ipAddressBoxGap = screen.width - ipAddressBoxRight - 1;
       if (ipAddressBoxGap != 0) {
         ipAddressBox.width = ipAddressBox.width + ipAddressBoxGap;
-      }
-
-      let statusBoxRight = statusBox.left + statusBox.width - 1;
-      let statusBoxGap = screen.width - statusBoxRight - 1;
-      if (statusBoxGap != 0) {
-        statusBox.width = statusBox.width + statusBoxGap;
       }
 
       if (screen.children.includes(rethStageGauge)) {

@@ -19,8 +19,8 @@ import { checkIn } from "../webSocketConnection.js";
 import fetch from "node-fetch";
 import { getDiskUsage } from "../getSystemStats.js";
 import { populateChainInfoBox } from "./chainInfoBox.js";
-import { updateStatusBox } from "./statusBox.js";
-import { screen, statusBox, chainInfoBox } from "../monitor.js";
+
+import { screen, chainInfoBox } from "../monitor.js";
 
 import { getVersionNumber } from "../ethereum_client_scripts/install.js";
 
@@ -33,18 +33,6 @@ let gethStageProgress = [
 
 // Store Reth version at module level
 let rethVersion = null;
-// Add a counter to track block numbers
-let blockCounter = 0;
-let lastBlockNumber = null; // Track the last block we processed
-let isFetchingLatestBlock = false; // Mutex flag to prevent parallel fetches
-let cachedLatestBlock = null; // Cache for the latest block
-let lastFetchTime = 0; // Track when we last fetched the latest block
-let lastFetchedForBlock = null; // Track which block number we last fetched for
-let lastFetchPromise = null; // Store the promise for the latest fetch
-
-// Add these at the module level (top of file or before synchronizeAndUpdateWidgets)
-let lastIsFollowingChainHead = true;
-let lastLatestBlock = null;
 
 // Function to initialize Reth version
 function initRethVersion() {
@@ -221,8 +209,6 @@ export function setupLogStreaming(
     }
   });
 }
-
-let statusMessage = "INITIALIZING...";
 
 async function getRethSyncMetrics() {
   return new Promise((resolve) => {
@@ -786,7 +772,7 @@ async function setupUpdateMechanism() {
   if (isSyncing) {
     // When syncing, update every 5 seconds
     currentUpdateInterval = setInterval(
-      () => updateChainWidgets(statusBox, chainInfoBox, screen),
+      () => updateChainWidgets(chainInfoBox, screen),
       5000
     );
   } else {
@@ -795,7 +781,7 @@ async function setupUpdateMechanism() {
       currentBlockWatcher = await localClient.watchBlocks(
         {
           onBlock: () => {
-            updateChainWidgets(statusBox, chainInfoBox, screen);
+            updateChainWidgets(chainInfoBox, screen);
           },
         },
         (error) => {
@@ -830,154 +816,9 @@ async function checkNetworkConnectivity() {
   }
 }
 
-export async function synchronizeAndUpdateWidgets(installDir) {
+async function updateChainWidgets(chainInfoBox, screen) {
   try {
-    // Check for network connectivity
-    await checkNetworkConnectivity();
-
-    // Get disk usage
-    const diskUsagePercent = await getDiskUsage(installDir);
-
-    // Check if disk usage is critical
-    if (diskUsagePercent >= 97) {
-      return "{red-fg}DISK SPACE LOW{/red-fg}";
-    }
-
-    const { isSyncing, syncingStatus } = await calcSyncingStatus(
-      executionClient
-    );
-
-    if (executionClient == "geth") {
-      if (syncingStatus) {
-        const currentBlock = parseInt(syncingStatus.currentBlock, 16);
-        const highestBlock = parseInt(syncingStatus.highestBlock, 16);
-
-        if (currentBlock === 0 && highestBlock === 0) {
-          statusMessage = `SYNC IN PROGRESS`;
-        } else {
-          statusMessage = `SYNC IN PROGRESS\nCurrent Block: ${currentBlock.toLocaleString()}\nHighest Block: ${highestBlock.toLocaleString()}`;
-        }
-      } else {
-        const blockNumber = await localClient.getBlockNumber();
-
-        // Only increment block counter once per block
-        if (lastBlockNumber !== blockNumber) {
-          blockCounter++;
-          lastBlockNumber = blockNumber;
-        }
-
-        let isFollowingChainHead;
-        let latestBlock;
-
-        // Only use the 10-block optimization if we are following chain head
-        let shouldCheckLatestBlock = lastIsFollowingChainHead
-          ? blockCounter % 10 === 0
-          : true;
-        if (lastLatestBlock === null) {
-          shouldCheckLatestBlock = true; // Always fetch on startup or if we have no mainnet block
-        }
-
-        if (shouldCheckLatestBlock) {
-          try {
-            latestBlock = await fetchLatestBlockWithMutex();
-            isFollowingChainHead =
-              latestBlock !== null &&
-              (blockNumber >= latestBlock || blockNumber === latestBlock - 1n); // Use 1n for BigInt
-            lastLatestBlock = latestBlock;
-            lastIsFollowingChainHead = isFollowingChainHead;
-          } catch (error) {
-            debugToFile(`Error fetching latest block: ${error}`);
-            isFollowingChainHead = true; // fallback
-            lastIsFollowingChainHead = isFollowingChainHead;
-            lastLatestBlock = null;
-          }
-        } else {
-          // Use last known state
-          isFollowingChainHead = lastIsFollowingChainHead;
-          latestBlock = lastLatestBlock;
-        }
-
-        // Set status message
-        if (isFollowingChainHead) {
-          statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
-        } else {
-          statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${
-            latestBlock ? latestBlock.toLocaleString() : "Unknown"
-          }`;
-        }
-      }
-    } else if (executionClient == "reth") {
-      if (isSyncing) {
-        statusMessage = `SYNC IN PROGRESS`;
-        await parseAndPopulateRethMetrics();
-      } else if (isSyncing === false) {
-        const blockNumber = await localClient.getBlockNumber();
-
-        // Only increment block counter once per block
-        if (lastBlockNumber !== blockNumber) {
-          blockCounter++;
-          lastBlockNumber = blockNumber;
-        }
-
-        let isFollowingChainHead;
-        let latestBlock;
-
-        // Only use the 10-block optimization if we are following chain head
-        let shouldCheckLatestBlock = lastIsFollowingChainHead
-          ? blockCounter % 10 === 0
-          : true;
-        if (lastLatestBlock === null) {
-          shouldCheckLatestBlock = true; // Always fetch on startup or if we have no mainnet block
-        }
-
-        if (shouldCheckLatestBlock) {
-          try {
-            latestBlock = await fetchLatestBlockWithMutex();
-            isFollowingChainHead =
-              latestBlock !== null &&
-              (blockNumber >= latestBlock || blockNumber === latestBlock - 1n); // Use 1n for BigInt
-            lastLatestBlock = latestBlock;
-            lastIsFollowingChainHead = isFollowingChainHead;
-          } catch (error) {
-            debugToFile(`Error fetching latest block: ${error}`);
-            isFollowingChainHead = true; // fallback
-            lastIsFollowingChainHead = isFollowingChainHead;
-            lastLatestBlock = null;
-          }
-        } else {
-          // Use last known state
-          isFollowingChainHead = lastIsFollowingChainHead;
-          latestBlock = lastLatestBlock;
-        }
-
-        // Set status message
-        if (isFollowingChainHead) {
-          statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
-        } else {
-          statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${
-            latestBlock ? latestBlock.toLocaleString() : "Unknown"
-          }`;
-        }
-      }
-    }
-
-    return statusMessage;
-  } catch (error) {
-    debugToFile(`synchronizeAndUpdateWidgets error: ${error}`);
-    if (error.message === "No network connection") {
-      return "{red-fg}NO NETWORK CONNECTION{/red-fg}";
-    }
-    return "";
-  }
-}
-
-async function updateChainWidgets(statusBox, chainInfoBox, screen) {
-  try {
-    await Promise.all([
-      updateStatusBox(statusBox),
-      updateChainInfoBox(chainInfoBox, screen),
-    ]);
-
+    await updateChainInfoBox(chainInfoBox, screen);
     screen.render();
   } catch (error) {
     debugToFile(`updateWidgets(): ${error}`);
@@ -992,52 +833,6 @@ async function updateChainInfoBox(chainInfoBox, screen) {
   } catch (error) {
     debugToFile(`updateChainInfoBox(): ${error}`);
   }
-}
-
-// Function to fetch the latest block with mutex protection
-async function fetchLatestBlockWithMutex() {
-  // If there's already a fetch in progress, return that promise
-  if (lastFetchPromise) {
-    return lastFetchPromise;
-  }
-
-  // If we have a cached value that's less than 5 seconds old, use it
-  const now = Date.now();
-  if (cachedLatestBlock !== null && now - lastFetchTime < 5000) {
-    return cachedLatestBlock;
-  }
-
-  // Start a new fetch
-  isFetchingLatestBlock = true;
-
-  // Create a new promise for this fetch
-  lastFetchPromise = (async () => {
-    try {
-      const latestBlock = await mainnetClient.getBlockNumber();
-      cachedLatestBlock = latestBlock;
-      lastFetchTime = now;
-      lastFetchedForBlock = lastBlockNumber;
-      return latestBlock;
-    } catch (error) {
-      debugToFile(`Error fetching latest block: ${error}`);
-      // If we have a cached value, use it as fallback
-      if (cachedLatestBlock !== null) {
-        debugToFile(
-          `Using cached latestBlock as fallback: ${cachedLatestBlock}`
-        );
-        return cachedLatestBlock;
-      }
-      return null;
-    } finally {
-      isFetchingLatestBlock = false;
-      // Clear the promise after a short delay to allow other calls to reuse it
-      setTimeout(() => {
-        lastFetchPromise = null;
-      }, 100);
-    }
-  })();
-
-  return lastFetchPromise;
 }
 
 // Initialize the update mechanism
