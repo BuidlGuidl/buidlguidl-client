@@ -9,7 +9,7 @@ import { debugToFile } from "../helpers.js";
 let systemStatsGauge;
 
 export function createSystemStatsGauge(grid, installDir) {
-  systemStatsGauge = grid.set(5, 8, 2, 1, blessed.box, {
+  systemStatsGauge = grid.set(4, 8, 3, 1, blessed.box, {
     label: "System Stats",
     stroke: "green",
     fill: "white",
