@@ -193,7 +193,7 @@ function setupUI(
     rethStageGauge = createRethStageGauge(grid);
   }
 
-  const { pic, bigText, ipAddressBox } = createHeader(
+  const { bigText, ipAddressBox } = createHeader(
     grid,
     screen,
     messageForHeader
@@ -400,8 +400,8 @@ function setupUI(
   screen.render();
 
   setTimeout(() => {
-    fixBottomMargins(screen);
-    fixRightMargins(screen);
+    // fixBottomMargins(screen);
+    // fixRightMargins(screen);
 
     cpuLine.emit("attach");
     networkLine.emit("attach");
@@ -411,8 +411,8 @@ function setupUI(
   }, 250);
 
   screen.on("resize", () => {
-    fixBottomMargins(screen);
-    fixRightMargins(screen);
+    // fixBottomMargins(screen);
+    // fixRightMargins(screen);
 
     cpuLine.emit("attach");
     networkLine.emit("attach");

@@ -1,18 +1,12 @@
 import blessed from "blessed";
 import os from "os";
 import axios from "axios";
-import path from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
 import { debugToFile } from "../helpers.js";
 import { execSync } from "child_process";
 import { getPublicIPAddress } from "../getSystemStats.js";
 import { owner } from "../commandLineOptions.js";
 import { isConnected } from "../webSocketConnection.js";
 import BASE_URL from "../config.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 export function createHeader(grid, screen, messageForHeader) {
   // Function to get the local IP address
@@ -85,50 +79,7 @@ export function createHeader(grid, screen, messageForHeader) {
     screen.render();
   }
 
-  let pic, logo;
-  try {
-    pic = grid.set(0, 0, 1, 2, blessed.box, {
-      border: false,
-      valign: "top",
-      padding: { top: 0, bottom: 0, left: 0, right: 0 },
-      align: "center",
-    });
-
-    const renderLogo = () => {
-      const logoHeight = pic.height * 1.1; // Use the height of the pic box
-      const logoWidth = logoHeight + logoHeight * 1.5; // Adjust width as needed
-      const leftPosition = Math.floor((pic.width - logoWidth) / 2);
-
-      // If logo already exists, remove it before adding a new one
-      if (logo) {
-        pic.remove(logo);
-      }
-
-      logo = blessed.image({
-        parent: pic,
-        file: path.join(__dirname, "pixelBgLogo.png"),
-        type: "ansi", // or "overlay" depending on your terminal capabilities
-        width: logoWidth,
-        height: logoHeight,
-        left: leftPosition,
-        top: -1,
-      });
-
-      pic.screen.render(); // Rerender the screen after updating the logo
-    };
-
-    // Initial render
-    renderLogo();
-
-    // Listen for resize events and rerender the logo
-    pic.screen.on("resize", () => {
-      renderLogo();
-    });
-  } catch (err) {
-    debugToFile(`pic: ${err}`);
-  }
-
-  const bigText = grid.set(0, 2, 1, 5, blessed.box, {
+  const bigText = grid.set(0, 0, 1, 7, blessed.box, {
     content: `{center}{bold}B u i d l G u i d l  C l i e n t{/bold}{/center}\n{center}{cyan-fg}${messageForHeader}{/cyan-fg}{/center}`,
     tags: true,
     align: "center",
@@ -240,5 +191,5 @@ export function createHeader(grid, screen, messageForHeader) {
     updateWSStatusMessage();
   });
 
-  return { pic, bigText, ipAddressBox };
+  return { bigText, ipAddressBox };
 }
