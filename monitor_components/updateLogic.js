@@ -21,7 +21,7 @@ import { getDiskUsage } from "../getSystemStats.js";
 import { populateChainInfoBox } from "./chainInfoBox.js";
 import { updateStatusBox } from "./statusBox.js";
 import { screen, statusBox, chainInfoBox } from "../monitor.js";
-import { updateBandwidthBox } from "./bandwidthGauge.js";
+
 import { getVersionNumber } from "../ethereum_client_scripts/install.js";
 
 const progress = loadProgress();
@@ -822,8 +822,6 @@ setInterval(async () => {
   }
 }, 30000);
 
-setInterval(() => updateBandwidthBox(screen), 2000);
-
 async function checkNetworkConnectivity() {
   try {
     await fetch("https://www.google.com", { mode: "no-cors", timeout: 5000 });
@@ -1055,5 +1053,3 @@ setInterval(async () => {
     setupUpdateMechanism();
   }
 }, 30000);
-
-setInterval(() => updateBandwidthBox(screen), 2000);

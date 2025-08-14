@@ -21,12 +21,6 @@ import {
 } from "./monitor_components/helperFunctions.js";
 
 import {
-  createBandwidthBox,
-  setBandwidthBox,
-  startBandwidthMonitoring,
-} from "./monitor_components/bandwidthGauge.js";
-
-import {
   setupLogStreaming,
   showHideRethWidgets,
   showHideGethWidgets,
@@ -188,7 +182,6 @@ function setupUI(
   const networkLine = createNetworkLine(grid, screen);
   const diskLine = createDiskLine(grid, screen, installDir);
   statusBox = createStatusBox(grid);
-  const bandwidthBox = createBandwidthBox(grid);
   chainInfoBox = createChainInfoBox(grid);
   rpcInfoBox = createRpcInfoBox(grid);
 
@@ -214,15 +207,11 @@ function setupUI(
   screen.append(systemStatsGauge);
   screen.append(peerCountGauge);
   screen.append(statusBox);
-  screen.append(bandwidthBox);
   if (executionClientGlobal == "geth") {
     screen.append(gethStageGauge);
   } else if (executionClientGlobal == "reth") {
     screen.append(rethStageGauge);
   }
-
-  setBandwidthBox(bandwidthBox);
-  startBandwidthMonitoring(screen);
 
   function fixBottomMargins(screen) {
     try {
@@ -239,15 +228,9 @@ function setupUI(
       }
 
       let peerCountGaugeBottom = peerCountGauge.top + peerCountGauge.height - 1;
-      let peerCountGaugeGap = bandwidthBox.top - peerCountGaugeBottom - 1;
+      let peerCountGaugeGap = systemStatsGauge.top - peerCountGaugeBottom - 1;
       if (peerCountGaugeGap != 0) {
         peerCountGauge.height = peerCountGauge.height + peerCountGaugeGap;
-      }
-
-      let bandwidthBoxBottom = bandwidthBox.top + bandwidthBox.height - 1;
-      let bandwidthBoxGap = systemStatsGauge.top - bandwidthBoxBottom - 1;
-      if (bandwidthBoxGap != 0) {
-        bandwidthBox.height = bandwidthBox.height + bandwidthBoxGap;
       }
 
       let consensusLogBottom = consensusLog.top + consensusLog.height - 1;
@@ -383,12 +366,6 @@ function setupUI(
       let peerCountGaugeGap = screen.width - peerCountGaugeRight - 1;
       if (peerCountGaugeGap != 0) {
         peerCountGauge.width = peerCountGauge.width + peerCountGaugeGap;
-      }
-
-      let bandwidthBoxRight = bandwidthBox.left + bandwidthBox.width - 1;
-      let bandwidthBoxGap = screen.width - bandwidthBoxRight - 1;
-      if (bandwidthBoxGap != 0) {
-        bandwidthBox.width = bandwidthBox.width + bandwidthBoxGap;
       }
 
       let systemStatsGaugeRight =
