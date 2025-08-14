@@ -155,7 +155,6 @@ function setupUI(
 ) {
   screen = blessed.screen();
   suppressMouseOutput(screen);
-  // const grid = new contrib.grid({ rows: 9, cols: 10, screen: screen });
   const grid = new contrib.grid({ rows: 9, cols: 9, screen: screen });
 
   let executionClientLabel;
@@ -216,10 +215,16 @@ function setupUI(
         executionLog.height = executionLog.height + executionLogGap;
       }
 
+      let consensusLogBottom = consensusLog.top + consensusLog.height - 1;
+      let consensusLogGap = peerCountGauge.top - consensusLogBottom - 1;
+      if (consensusLogGap != 0) {
+        consensusLog.height = consensusLog.height + consensusLogGap;
+      }
+
       if (screen.children.includes(rethStageGauge)) {
         let rethStageGaugeBottom =
           rethStageGauge.top + rethStageGauge.height - 1;
-        let rethStageGaugeGap = screen.height - rethStageGaugeBottom - 1;
+        let rethStageGaugeGap = peerCountGauge.top - rethStageGaugeBottom - 1;
         if (rethStageGaugeGap != 0) {
           rethStageGauge.height = rethStageGauge.height + rethStageGaugeGap;
         }
@@ -238,23 +243,23 @@ function setupUI(
 
       if (screen.children.includes(chainInfoBox)) {
         let chainInfoBoxBottom = chainInfoBox.top + chainInfoBox.height - 1;
-        if (screen.children.includes(rpcInfoBox)) {
-          chainInfoBoxGap = rpcInfoBox.top - chainInfoBoxBottom - 1;
-        } else {
-          chainInfoBoxGap = diskLine.top - chainInfoBoxBottom - 1;
-        }
+        // if (screen.children.includes(rpcInfoBox)) {
+        //   chainInfoBoxGap = rpcInfoBox.top - chainInfoBoxBottom - 1;
+        // } else {
+        chainInfoBoxGap = diskLine.top - chainInfoBoxBottom - 1;
+        // }
         if (chainInfoBoxGap != 0) {
           chainInfoBox.height = chainInfoBox.height + chainInfoBoxGap;
         }
       }
 
-      if (screen.children.includes(rpcInfoBox)) {
-        let rpcInfoBoxBottom = rpcInfoBox.top + rpcInfoBox.height - 1;
-        let rpcInfoBoxGap = diskLine.top - rpcInfoBoxBottom - 1;
-        if (rpcInfoBoxGap != 0) {
-          rpcInfoBox.height = rpcInfoBox.height + rpcInfoBoxGap;
-        }
-      }
+      // if (screen.children.includes(rpcInfoBox)) {
+      //   let rpcInfoBoxBottom = rpcInfoBox.top + rpcInfoBox.height - 1;
+      //   let rpcInfoBoxGap = diskLine.top - rpcInfoBoxBottom - 1;
+      //   if (rpcInfoBoxGap != 0) {
+      //     rpcInfoBox.height = rpcInfoBox.height + rpcInfoBoxGap;
+      //   }
+      // }
 
       let networkLineBottom = networkLine.top + networkLine.height - 1;
       let networkLineGap = screen.height - networkLineBottom - 1;
@@ -267,6 +272,12 @@ function setupUI(
       if (diskLineGap != 0) {
         diskLine.height = diskLine.height + diskLineGap;
       }
+
+      let peerCountGaugeBottom = peerCountGauge.top + peerCountGauge.height - 1;
+      let peerCountGaugeGap = screen.height - peerCountGaugeBottom - 1;
+      if (peerCountGaugeGap != 0) {
+        peerCountGauge.height = peerCountGauge.height + peerCountGaugeGap;
+      }
     } catch (error) {
       debugToFile(`fixBottomMargins(): ${error}`);
     }
@@ -277,7 +288,7 @@ function setupUI(
       if (screen.children.includes(rethStageGauge)) {
         let rethStageGaugeRight =
           rethStageGauge.left + rethStageGauge.width - 1;
-        let rethStageGaugeGap = peerCountGauge.left - rethStageGaugeRight - 1;
+        let rethStageGaugeGap = screen.width - rethStageGaugeRight - 1;
         if (rethStageGaugeGap != 0) {
           rethStageGauge.width = rethStageGauge.width + rethStageGaugeGap;
         }
@@ -286,7 +297,7 @@ function setupUI(
       if (screen.children.includes(gethStageGauge)) {
         let gethStageGaugeRight =
           gethStageGauge.left + gethStageGauge.width - 1;
-        let gethStageGaugeGap = peerCountGauge.left - gethStageGaugeRight - 1;
+        let gethStageGaugeGap = screen.width - gethStageGaugeRight - 1;
         if (gethStageGaugeGap != 0) {
           gethStageGauge.width = gethStageGauge.width + gethStageGaugeGap;
         }
@@ -294,19 +305,19 @@ function setupUI(
 
       if (screen.children.includes(chainInfoBox)) {
         let chainInfoBoxRight = chainInfoBox.left + chainInfoBox.width - 1;
-        let chainInfoBoxGap = peerCountGauge.left - chainInfoBoxRight - 1;
+        let chainInfoBoxGap = screen.width - chainInfoBoxRight - 1;
         if (chainInfoBoxGap != 0) {
           chainInfoBox.width = chainInfoBox.width + chainInfoBoxGap;
         }
       }
 
-      if (screen.children.includes(rpcInfoBox)) {
-        let rpcInfoBoxRight = rpcInfoBox.left + rpcInfoBox.width - 1;
-        let rpcInfoBoxGap = peerCountGauge.left - rpcInfoBoxRight - 1;
-        if (rpcInfoBoxGap != 0) {
-          rpcInfoBox.width = rpcInfoBox.width + rpcInfoBoxGap;
-        }
-      }
+      // if (screen.children.includes(rpcInfoBox)) {
+      //   let rpcInfoBoxRight = rpcInfoBox.left + rpcInfoBox.width - 1;
+      //   let rpcInfoBoxGap = peerCountGauge.left - rpcInfoBoxRight - 1;
+      //   if (rpcInfoBoxGap != 0) {
+      //     rpcInfoBox.width = rpcInfoBox.width + rpcInfoBoxGap;
+      //   }
+      // }
 
       let peerCountGaugeRight = peerCountGauge.left + peerCountGauge.width - 1;
       let peerCountGaugeGap = screen.width - peerCountGaugeRight - 1;
@@ -321,7 +332,8 @@ function setupUI(
       }
 
       let diskLineRight = diskLine.left + diskLine.width - 1;
-      let diskLineGap = screen.width - diskLineRight - 1;
+      // let diskLineGap = screen.width - diskLineRight - 1;
+      let diskLineGap = peerCountGauge.left - diskLineRight - 1;
       if (diskLineGap != 0) {
         diskLine.width = diskLine.width + diskLineGap;
       }
@@ -333,8 +345,8 @@ function setupUI(
   screen.render();
 
   setTimeout(() => {
-    // fixBottomMargins(screen);
-    // fixRightMargins(screen);
+    fixBottomMargins(screen);
+    fixRightMargins(screen);
 
     networkLine.emit("attach");
     diskLine.emit("attach");
@@ -343,8 +355,8 @@ function setupUI(
   }, 250);
 
   screen.on("resize", () => {
-    // fixBottomMargins(screen);
-    // fixRightMargins(screen);
+    fixBottomMargins(screen);
+    fixRightMargins(screen);
 
     networkLine.emit("attach");
     diskLine.emit("attach");
