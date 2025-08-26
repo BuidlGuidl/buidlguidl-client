@@ -123,14 +123,14 @@ export function createHeader(grid, screen, messageForHeader) {
     }
 
     if (owner !== null) {
-      const pendingBreadDisplay = pendingBread !== null ? pendingBread : "0";
+      const pendingBreadDisplay = pendingBread !== null ? pendingBread : "0.00";
       const breadDisplay =
-        bread !== null ? Math.floor(parseFloat(bread)).toString() : "0";
+        bread !== null ? parseFloat(bread).toFixed(2) : "0.00";
 
       bigText.setContent(
         `{center}{bold}B u i d l G u i d l  C l i e n t{/bold}{/center}\n` +
           `{center}Branch: ${currentBranch} (${commitHash}){/center}\n` +
-          `{center}{cyan-fg}Owner: ${owner}{/cyan-fg} | {green-fg}Pending Bread: ${pendingBreadDisplay}{/green-fg} | {green-fg}Bread: ${breadDisplay}{/green-fg}{/center}\n` +
+          `{center}{cyan-fg}Owner: ${owner}{/cyan-fg} | {purple-fg}Pending Bread: ${pendingBreadDisplay}{/purple-fg} | {green-fg}Bread: ${breadDisplay}{/green-fg}{/center}\n` +
           `{center}{cyan-fg}${messageForHeader}{/cyan-fg}{/center}`
       );
     } else {
