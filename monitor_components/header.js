@@ -130,7 +130,7 @@ export function createHeader(grid, screen, messageForHeader) {
       bigText.setContent(
         `{center}{bold}B u i d l G u i d l  C l i e n t{/bold}{/center}\n` +
           `{center}Branch: ${currentBranch} (${commitHash}){/center}\n` +
-          `{center}{cyan-fg}Owner: ${owner}{/cyan-fg} | {purple-fg}Pending Bread: ${pendingBreadDisplay}{/purple-fg} | {green-fg}Bread: ${breadDisplay}{/green-fg}{/center}\n` +
+          `{center}{cyan-fg}Owner: ${owner}{/cyan-fg} | {magenta-fg}Pending Bread: ${pendingBreadDisplay}{/magenta-fg} | {green-fg}Bread: ${breadDisplay}{/green-fg}{/center}\n` +
           `{center}{cyan-fg}${messageForHeader}{/cyan-fg}{/center}`
       );
     } else {
