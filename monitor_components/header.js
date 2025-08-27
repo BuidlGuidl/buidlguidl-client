@@ -23,6 +23,9 @@ export function createHeader(grid, screen, messageForHeader) {
   let currentBranch = "unknown";
   let commitHash = "unknown";
 
+  // ENS address cache to avoid re-resolving
+  const ensAddressCache = new Map();
+
   // Function to get the local IP address
   async function getIPAddress() {
     while (true) {
@@ -38,11 +41,52 @@ export function createHeader(grid, screen, messageForHeader) {
     }
   }
 
+  // Helper function to resolve ENS to address with caching
+  async function resolveEnsToAddress(ensName) {
+    // Check cache first
+    if (ensAddressCache.has(ensName)) {
+      return ensAddressCache.get(ensName);
+    }
+
+    try {
+      const resolvedAddress = await mainnetPublicClient.getEnsAddress({
+        name: ensName,
+      });
+
+      if (resolvedAddress) {
+        // Cache the resolved address
+        ensAddressCache.set(ensName, resolvedAddress);
+        return resolvedAddress;
+      } else {
+        debugToFile(`Could not resolve ENS name: ${ensName}`);
+        return null;
+      }
+    } catch (error) {
+      debugToFile(`Error resolving ENS name ${ensName}: ${error}`);
+      return null;
+    }
+  }
+
   // New function to fetch pending bread
   async function fetchPendingBread(owner) {
     try {
+      if (!owner) return null;
+
+      let resolvedAddress = owner;
+
+      // Check if owner is an ENS name and resolve it
+      if (owner.endsWith(".eth")) {
+        resolvedAddress = await resolveEnsToAddress(owner);
+        if (!resolvedAddress) {
+          return null;
+        }
+      } else if (!isAddress(owner)) {
+        debugToFile(`Invalid address format: ${owner}`);
+        return null;
+      }
+
       const response = await axios.get(
-        `https://${BASE_URL}:48546/yourpendingbread?owner=${owner}`
+        `https://${BASE_URL}:48546/yourpendingbread?owner=${resolvedAddress}`
       );
       return response.data.bread;
     } catch (error) {
@@ -57,18 +101,10 @@ export function createHeader(grid, screen, messageForHeader) {
 
       let resolvedAddress = owner;
 
-      // Resolve ENS name if needed
+      // Check if owner is an ENS name and resolve it using the shared cache
       if (owner.endsWith(".eth")) {
-        try {
-          resolvedAddress = await mainnetPublicClient.getEnsAddress({
-            name: owner,
-          });
-          if (!resolvedAddress) {
-            debugToFile(`Could not resolve ENS name: ${owner}`);
-            return null;
-          }
-        } catch (error) {
-          debugToFile(`Error resolving ENS name ${owner}: ${error}`);
+        resolvedAddress = await resolveEnsToAddress(owner);
+        if (!resolvedAddress) {
           return null;
         }
       } else if (!isAddress(owner)) {
