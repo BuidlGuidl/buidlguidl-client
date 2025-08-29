@@ -26,6 +26,10 @@ export function createHeader(grid, screen, messageForHeader) {
   // ENS address cache to avoid re-resolving
   const ensAddressCache = new Map();
 
+  // Spinner animation state
+  const spinnerFrames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+  let currentSpinnerFrame = 0;
+
   // Function to get the local IP address
   async function getIPAddress() {
     while (true) {
@@ -147,6 +151,10 @@ export function createHeader(grid, screen, messageForHeader) {
     }
   }
 
+  // Store bread data for efficient updates
+  let lastPendingBread = null;
+  let lastBread = null;
+
   // Function to update only bread amounts (called every minute)
   async function updateBreadDisplay() {
     let pendingBread = null;
@@ -158,15 +166,26 @@ export function createHeader(grid, screen, messageForHeader) {
       bread = await fetchBread(owner);
     }
 
+    // Store the fetched data for spinner updates
+    lastPendingBread = pendingBread;
+    lastBread = bread;
+
+    updateHeaderContent();
+  }
+
+  // Function to update header content with current data (for spinner animation)
+  function updateHeaderContent() {
     if (owner !== null) {
-      const pendingBreadDisplay = pendingBread !== null ? pendingBread : "0.00";
+      const pendingBreadDisplay =
+        lastPendingBread !== null ? lastPendingBread : "0.00";
       const breadDisplay =
-        bread !== null ? parseFloat(bread).toFixed(2) : "0.00";
+        lastBread !== null ? parseFloat(lastBread).toFixed(2) : "0.00";
+      const spinner = spinnerFrames[currentSpinnerFrame];
 
       bigText.setContent(
         `{center}{bold}B u i d l G u i d l  C l i e n t{/bold}{/center}\n` +
           `{center}Branch: ${currentBranch} (${commitHash}){/center}\n` +
-          `{center}{cyan-fg}Owner: ${owner}{/cyan-fg} | {magenta-fg}Bread Baking: ${pendingBreadDisplay}{/magenta-fg} | {green-fg}Bread: ${breadDisplay}{/green-fg}{/center}\n` +
+          `{center}{cyan-fg} ${owner}{/cyan-fg} | {magenta-fg}${spinner} Bread Baking: ${pendingBreadDisplay}{/magenta-fg} | {green-fg}Bread: ${breadDisplay}{/green-fg}{/center}\n` +
           `{center}{cyan-fg}${messageForHeader}{/cyan-fg}{/center}`
       );
     } else {
@@ -177,6 +196,14 @@ export function createHeader(grid, screen, messageForHeader) {
       );
     }
     screen.render();
+  }
+
+  // Function to update spinner animation only
+  function updateSpinner() {
+    if (owner !== null) {
+      currentSpinnerFrame = (currentSpinnerFrame + 1) % spinnerFrames.length;
+      updateHeaderContent();
+    }
   }
 
   let pic, logo;
@@ -327,7 +354,8 @@ export function createHeader(grid, screen, messageForHeader) {
   initializeBranchInfo();
 
   updateBreadDisplay();
-  setInterval(updateBreadDisplay, 1 * 5 * 1000); // Every 1 minute
+  setInterval(updateBreadDisplay, 5 * 60 * 1000); // Every 5 minutes (bread data)
+  setInterval(updateSpinner, 150); // Spinner animation every 150ms
   setInterval(updateWSStatusMessage, 1000); // Check every second for smoother transitions
 
   // Add resize event listener
