@@ -5,7 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { debugToFile } from "../helpers.js";
-import { execSync } from "child_process";
+import { execSync, exec } from "child_process";
 import { getPublicIPAddress } from "../getSystemStats.js";
 import { owner } from "../commandLineOptions.js";
 import { isConnected } from "../webSocketConnection.js";
@@ -259,33 +259,40 @@ export function createHeader(grid, screen, messageForHeader) {
       border: {
         fg: "cyan",
       },
-      // hover: {
-      //   fg: "cyan",
-      // },
+      ...(owner !== null && {
+        hover: {
+          bold: true,
+        },
+      }),
     },
-    // mouse: true,
-    // clickable: true,
+    mouse: owner !== null,
+    clickable: owner !== null,
   });
 
-  // bigText.on("click", function () {
-  //   const url = "https://client.buidlguidl.com"; // Replace with your desired URL
-  //   let command;
-  //   switch (process.platform) {
-  //     case "darwin":
-  //       command = `open ${url}`;
-  //       break;
-  //     case "win32":
-  //       command = `start ${url}`;
-  //       break;
-  //     default:
-  //       command = `xdg-open ${url}`;
-  //   }
-  //   exec(command, (error) => {
-  //     if (error) {
-  //       debugToFile(`Error opening URL: ${error}`);
-  //     }
-  //   });
-  // });
+  bigText.on("click", function () {
+    // Only handle click if owner is set
+    if (owner === null) {
+      return;
+    }
+
+    const url = "https://bread.buidlguidl.com"; // Replace with your desired URL
+    let command;
+    switch (process.platform) {
+      case "darwin":
+        command = `open ${url}`;
+        break;
+      case "win32":
+        command = `start ${url}`;
+        break;
+      default:
+        command = `xdg-open ${url}`;
+    }
+    exec(command, (error) => {
+      if (error) {
+        debugToFile(`Error opening URL: ${error}`);
+      }
+    });
+  });
 
   let ipAddressBoxContent = `{center}{bold}Local IP: Fetching...{/bold}\n{center}{bold}Public IP: Fetching...{/bold}{/center}`;
 
