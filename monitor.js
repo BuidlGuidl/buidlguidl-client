@@ -112,15 +112,6 @@ export async function initializeMonitoring(
       // );
     }, 3000);
 
-    setInterval(() => {
-      showHideRethWidgets(
-        screen,
-        components.rethStageGauge,
-        components.chainInfoBox,
-        components.rpcInfoBox
-      );
-    }, 5000);
-
     setupLogStreaming(
       executionClientGlobal,
       logFilePathExecution,
