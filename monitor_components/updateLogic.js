@@ -769,6 +769,11 @@ export async function showHideGethWidgets(
           screen.append(rpcInfoBox);
           debugToFile(`Added RPC info box to screen`);
         }
+
+        // Update chain info box content if it's visible
+        if (screen.children.includes(chainInfoBox)) {
+          await populateChainInfoBox();
+        }
       }
     } else {
       debugToFile(
@@ -815,6 +820,23 @@ let currentUpdateInterval = null;
 let currentBlockWatcher = null;
 
 async function setupUpdateMechanism() {
+  // For geth, only update status box - widget switching is handled by monitor.js
+  if (executionClient === "geth") {
+    debugToFile(
+      "Setting up geth status-only updates - widget switching handled by monitor.js"
+    );
+
+    // Clean up any existing intervals
+    if (currentUpdateInterval) {
+      clearInterval(currentUpdateInterval);
+      currentUpdateInterval = null;
+    }
+
+    // Set up status box only updates every 2 seconds
+    currentUpdateInterval = setInterval(() => updateStatusBox(statusBox), 2000);
+    return;
+  }
+
   const { isSyncing } = await calcSyncingStatus(executionClient);
 
   // Clean up existing update mechanism
@@ -1090,19 +1112,3 @@ async function fetchLatestBlockWithMutex() {
 
   return lastFetchPromise;
 }
-
-// Initialize the update mechanism
-setupUpdateMechanism();
-
-// Check for syncing status changes every 30 seconds
-setInterval(async () => {
-  const { isSyncing } = await calcSyncingStatus(executionClient);
-  const isCurrentlySyncing = currentUpdateInterval !== null;
-
-  // Only update the mechanism if the syncing status has changed
-  if (isSyncing !== isCurrentlySyncing) {
-    setupUpdateMechanism();
-  }
-}, 30000);
-
-setInterval(() => updateBandwidthBox(screen), 2000);
