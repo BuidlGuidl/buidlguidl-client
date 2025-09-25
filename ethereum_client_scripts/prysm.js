@@ -80,6 +80,8 @@ const consensusArgs = [
   "127.0.0.1",
   "--monitoring-port",
   "5054",
+  "--log-level",
+  "warn", // Reduces verbose sync error messages
   // "--peer",
   // "enr:-MK4QFKbF8xjEtSUT8mGKGHujC-NrlgX_-FPF0PuMmeZYzuePneu7Kf78RMhY0XyDOMb9mfOd7GwS_XSeC1LeCM81tyGAZIRObQZh2F0dG5ldHOIABgAAAAAAACEZXRoMpBqlaGpBQAAAP__________gmlkgnY0gmlwhAoAAEiJc2VjcDI1NmsxoQIxBPPTLz6I7hjG94FZDpSfm4UzdJPKjs2zB7OmGCs2dIhzeW5jbmV0cwCDdGNwghueg3VkcIIbOQ",
 ];
