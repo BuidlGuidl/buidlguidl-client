@@ -46,6 +46,11 @@ let lastFetchPromise = null; // Store the promise for the latest fetch
 let lastIsFollowingChainHead = true;
 let lastLatestBlock = null;
 
+// Geth widget hysteresis variables to prevent flickering
+let lastGethSyncStatus = null;
+let gethSyncStatusStableCount = 0;
+const GETH_STABILITY_THRESHOLD = 3; // Require 3 consistent readings before switching widgets
+
 // Function to initialize Reth version
 function initRethVersion() {
   if (rethVersion === null) {
@@ -703,28 +708,72 @@ export async function showHideGethWidgets(
   rpcInfoBox
 ) {
   try {
-    const syncingStatus = await getEthSyncingStatus();
+    const currentSyncStatus = await getEthSyncingStatus();
 
-    if (syncingStatus) {
-      if (!screen.children.includes(gethStageGauge)) {
-        screen.append(gethStageGauge);
-      }
-      if (screen.children.includes(chainInfoBox)) {
-        screen.remove(chainInfoBox);
-      }
-      if (screen.children.includes(rpcInfoBox)) {
-        screen.remove(rpcInfoBox);
+    // Convert to boolean for consistent comparison (syncingStatus can be object or false)
+    const isSyncing = !!currentSyncStatus;
+
+    // Handle initial state where lastGethSyncStatus was null
+    if (lastGethSyncStatus === null) {
+      lastGethSyncStatus = isSyncing;
+      gethSyncStatusStableCount = 0;
+      debugToFile(`Initial geth sync status set to: ${isSyncing}`);
+      return;
+    }
+
+    // Check if sync status has changed from last check
+    if (isSyncing !== lastGethSyncStatus) {
+      // Status changed, reset stability counter
+      gethSyncStatusStableCount = 0;
+      lastGethSyncStatus = isSyncing;
+      debugToFile(
+        `Geth sync status changed to: ${isSyncing}, resetting stability counter`
+      );
+      return; // Don't change widgets yet, wait for stable reading
+    }
+
+    // Status is same as last check, increment stability counter
+    gethSyncStatusStableCount++;
+
+    // Only change widgets after status has been stable for threshold checks
+    if (gethSyncStatusStableCount >= GETH_STABILITY_THRESHOLD) {
+      debugToFile(
+        `Geth sync status stable for ${gethSyncStatusStableCount} checks, applying widget changes`
+      );
+
+      if (isSyncing) {
+        // Show geth stage gauge, hide chain info
+        if (!screen.children.includes(gethStageGauge)) {
+          screen.append(gethStageGauge);
+          debugToFile(`Added geth stage gauge to screen`);
+        }
+        if (screen.children.includes(chainInfoBox)) {
+          screen.remove(chainInfoBox);
+          debugToFile(`Removed chain info box from screen`);
+        }
+        if (screen.children.includes(rpcInfoBox)) {
+          screen.remove(rpcInfoBox);
+          debugToFile(`Removed RPC info box from screen`);
+        }
+      } else {
+        // Show chain info, hide geth stage gauge
+        if (screen.children.includes(gethStageGauge)) {
+          screen.remove(gethStageGauge);
+          debugToFile(`Removed geth stage gauge from screen`);
+        }
+        if (!screen.children.includes(chainInfoBox)) {
+          screen.append(chainInfoBox);
+          debugToFile(`Added chain info box to screen`);
+        }
+        if (!screen.children.includes(rpcInfoBox) && owner) {
+          screen.append(rpcInfoBox);
+          debugToFile(`Added RPC info box to screen`);
+        }
       }
     } else {
-      if (screen.children.includes(gethStageGauge)) {
-        screen.remove(gethStageGauge);
-      }
-      if (!screen.children.includes(chainInfoBox)) {
-        screen.append(chainInfoBox);
-      }
-      if (!screen.children.includes(rpcInfoBox) && owner) {
-        screen.append(rpcInfoBox);
-      }
+      debugToFile(
+        `Geth sync status stable count: ${gethSyncStatusStableCount}/${GETH_STABILITY_THRESHOLD}, waiting...`
+      );
     }
   } catch (error) {
     debugToFile(`showHideGethWidgets(): ${error}`);
