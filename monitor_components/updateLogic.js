@@ -45,6 +45,7 @@ let lastFetchPromise = null; // Store the promise for the latest fetch
 // Add these at the module level (top of file or before synchronizeAndUpdateWidgets)
 let lastIsFollowingChainHead = true;
 let lastLatestBlock = null;
+let lastSyncModeMainnetFetchTime = 0; // Track when we last fetched mainnet block during sync
 
 // Remove hysteresis - no longer needed after fixing competing intervals
 
@@ -859,7 +860,57 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         if (currentBlock === 0 && highestBlock === 0) {
           statusMessage = `SYNC IN PROGRESS`;
         } else {
-          statusMessage = `SYNC IN PROGRESS\nCurrent Block: ${currentBlock.toLocaleString()}\nHighest Block: ${highestBlock.toLocaleString()}`;
+          // Check if we're effectively caught up by comparing with actual mainnet block
+          try {
+            // Only increment block counter once per block for sync mode too
+            if (lastBlockNumber !== currentBlock) {
+              blockCounter++;
+              lastBlockNumber = currentBlock;
+            }
+
+            let actualLatestBlock;
+            // During sync mode, use time-based fetching instead of block-based to avoid excessive API calls
+            // since currentBlock can increase very rapidly during fast sync
+            const now = Date.now();
+            const timeSinceLastSyncFetch = now - lastSyncModeMainnetFetchTime;
+            let shouldCheckLatestBlock = timeSinceLastSyncFetch >= 120000; // 2 minutes = 120,000ms
+
+            if (lastLatestBlock === null) {
+              shouldCheckLatestBlock = true; // Always fetch on startup
+            }
+
+            if (shouldCheckLatestBlock) {
+              actualLatestBlock = await fetchLatestBlockWithMutex();
+              lastLatestBlock = actualLatestBlock;
+              lastSyncModeMainnetFetchTime = now; // Update the last fetch time for sync mode
+            } else {
+              actualLatestBlock = lastLatestBlock;
+            }
+
+            // If current block is close to actual mainnet block, we're effectively synced
+            const isEffectivelySynced =
+              actualLatestBlock !== null &&
+              (currentBlock >= Number(actualLatestBlock) ||
+                currentBlock >= Number(actualLatestBlock) - 1);
+
+            if (isEffectivelySynced) {
+              // Transition to following chain head even though eth_syncing returns an object
+              lastIsFollowingChainHead = true;
+              statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${currentBlock.toLocaleString()}`;
+            } else {
+              // Still syncing, but show real mainnet block instead of stale highestBlock
+              lastIsFollowingChainHead = false;
+              statusMessage = `SYNC IN PROGRESS\nCurrent Block: ${currentBlock.toLocaleString()}\nMainnet Block: ${
+                actualLatestBlock
+                  ? Number(actualLatestBlock).toLocaleString()
+                  : highestBlock.toLocaleString()
+              }`;
+            }
+          } catch (error) {
+            debugToFile(`Error during sync status check: ${error}`);
+            // Fallback to original logic if mainnet fetch fails
+            statusMessage = `SYNC IN PROGRESS\nCurrent Block: ${currentBlock.toLocaleString()}\nHighest Block: ${highestBlock.toLocaleString()}`;
+          }
         }
       } else {
         const blockNumber = await localClient.getBlockNumber();
