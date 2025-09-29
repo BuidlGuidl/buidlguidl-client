@@ -41,7 +41,10 @@ function showHelp() {
   console.log(
     "  -e, --executionclient <client>            Specify the execution client ('reth' or 'geth')"
   );
-  console.log("                                            Default: reth\n");
+  console.log("                                            Default: reth");
+  console.log(
+    "                                            Note: geth is only supported on Ubuntu/Linux\n"
+  );
   console.log(
     "  -c, --consensusclient <client>            Specify the consensus client ('lighthouse' or 'prysm')"
   );
@@ -136,6 +139,15 @@ if (fs.existsSync(optionsFilePath)) {
     installDir = options.installDir;
     owner = options.owner;
     optionsLoaded = true;
+
+    // Check if loaded geth option is being used on macOS (not supported)
+    if (executionClient === "geth" && os.platform() === "darwin") {
+      console.log("");
+      console.log("❌ Error: Geth is currently not supported on macOS.");
+      console.log("🔄 Please use 'reth' as your execution client instead:");
+      console.log("");
+      process.exit(1);
+    }
   } catch (error) {
     debugToFile(`Failed to load options from file: ${error}`);
   }
@@ -202,6 +214,15 @@ if (!optionsLoaded) {
       );
       process.exit(1);
     }
+  }
+
+  // Check if geth is being used on macOS (not supported)
+  if (executionClient === "geth" && os.platform() === "darwin") {
+    console.log("");
+    console.log("❌ Error: Geth is currently not supported on macOS.");
+    console.log("🔄 Please use 'reth' as your execution client instead:");
+    console.log("");
+    process.exit(1);
   }
 
   if (argv.archive) {
