@@ -45,6 +45,9 @@ let lastFetchPromise = null; // Store the promise for the latest fetch
 // Add these at the module level (top of file or before synchronizeAndUpdateWidgets)
 let lastIsFollowingChainHead = true;
 let lastLatestBlock = null;
+let lastSyncModeMainnetFetchTime = 0; // Track when we last fetched mainnet block during sync
+
+// Remove hysteresis - no longer needed after fixing competing intervals
 
 // Function to initialize Reth version
 function initRethVersion() {
@@ -696,6 +699,64 @@ export async function showHideRethWidgets(
   }
 }
 
+// Helper function to determine if Geth is effectively synced
+async function isGethEffectivelySynced() {
+  try {
+    const syncingStatus = await getEthSyncingStatus();
+
+    // If eth_syncing returns false, we're definitely synced
+    if (!syncingStatus) {
+      return true;
+    }
+
+    // If we get a sync object, check if we're effectively caught up
+    const currentBlock = parseInt(syncingStatus.currentBlock, 16);
+    const highestBlock = parseInt(syncingStatus.highestBlock, 16);
+
+    // If both are 0, we're still initializing
+    if (currentBlock === 0 && highestBlock === 0) {
+      return false;
+    }
+
+    // Compare with actual mainnet block to determine if effectively synced
+    try {
+      let actualLatestBlock;
+      const now = Date.now();
+      const timeSinceLastSyncFetch = now - lastSyncModeMainnetFetchTime;
+      let shouldCheckLatestBlock = timeSinceLastSyncFetch >= 120000; // 2 minutes
+
+      if (lastLatestBlock === null) {
+        shouldCheckLatestBlock = true; // Always fetch on startup
+      }
+
+      if (shouldCheckLatestBlock) {
+        actualLatestBlock = await fetchLatestBlockWithMutex();
+        lastLatestBlock = actualLatestBlock;
+        lastSyncModeMainnetFetchTime = now;
+      } else {
+        actualLatestBlock = lastLatestBlock;
+      }
+
+      // If current block is close to actual mainnet block, we're effectively synced
+      const isEffectivelySynced =
+        actualLatestBlock !== null &&
+        (currentBlock >= Number(actualLatestBlock) ||
+          currentBlock >= Number(actualLatestBlock) - 1);
+
+      return isEffectivelySynced;
+    } catch (error) {
+      debugToFile(
+        `Error checking mainnet block in isGethEffectivelySynced: ${error}`
+      );
+      // Fallback: if we can't check mainnet, assume still syncing if we have a sync object
+      return false;
+    }
+  } catch (error) {
+    debugToFile(`isGethEffectivelySynced(): ${error}`);
+    return false; // Default to syncing on error
+  }
+}
+
 export async function showHideGethWidgets(
   screen,
   gethStageGauge,
@@ -703,9 +764,10 @@ export async function showHideGethWidgets(
   rpcInfoBox
 ) {
   try {
-    const syncingStatus = await getEthSyncingStatus();
+    const isEffectivelySynced = await isGethEffectivelySynced();
 
-    if (syncingStatus) {
+    // Show stage gauge if still syncing, hide if effectively synced
+    if (!isEffectivelySynced) {
       if (!screen.children.includes(gethStageGauge)) {
         screen.append(gethStageGauge);
       }
@@ -857,7 +919,57 @@ export async function synchronizeAndUpdateWidgets(installDir) {
         if (currentBlock === 0 && highestBlock === 0) {
           statusMessage = `SYNC IN PROGRESS`;
         } else {
-          statusMessage = `SYNC IN PROGRESS\nCurrent Block: ${currentBlock.toLocaleString()}\nHighest Block: ${highestBlock.toLocaleString()}`;
+          // Check if we're effectively caught up by comparing with actual mainnet block
+          try {
+            // Only increment block counter once per block for sync mode too
+            if (lastBlockNumber !== currentBlock) {
+              blockCounter++;
+              lastBlockNumber = currentBlock;
+            }
+
+            let actualLatestBlock;
+            // During sync mode, use time-based fetching instead of block-based to avoid excessive API calls
+            // since currentBlock can increase very rapidly during fast sync
+            const now = Date.now();
+            const timeSinceLastSyncFetch = now - lastSyncModeMainnetFetchTime;
+            let shouldCheckLatestBlock = timeSinceLastSyncFetch >= 120000; // 2 minutes = 120,000ms
+
+            if (lastLatestBlock === null) {
+              shouldCheckLatestBlock = true; // Always fetch on startup
+            }
+
+            if (shouldCheckLatestBlock) {
+              actualLatestBlock = await fetchLatestBlockWithMutex();
+              lastLatestBlock = actualLatestBlock;
+              lastSyncModeMainnetFetchTime = now; // Update the last fetch time for sync mode
+            } else {
+              actualLatestBlock = lastLatestBlock;
+            }
+
+            // If current block is close to actual mainnet block, we're effectively synced
+            const isEffectivelySynced =
+              actualLatestBlock !== null &&
+              (currentBlock >= Number(actualLatestBlock) ||
+                currentBlock >= Number(actualLatestBlock) - 1);
+
+            if (isEffectivelySynced) {
+              // Transition to following chain head even though eth_syncing returns an object
+              lastIsFollowingChainHead = true;
+              statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${currentBlock.toLocaleString()}`;
+            } else {
+              // Still syncing, but show real mainnet block instead of stale highestBlock
+              lastIsFollowingChainHead = false;
+              statusMessage = `SYNC IN PROGRESS\nCurrent Block: ${currentBlock.toLocaleString()}\nMainnet Block: ${
+                actualLatestBlock
+                  ? Number(actualLatestBlock).toLocaleString()
+                  : highestBlock.toLocaleString()
+              }`;
+            }
+          } catch (error) {
+            debugToFile(`Error during sync status check: ${error}`);
+            // Fallback to original logic if mainnet fetch fails
+            statusMessage = `SYNC IN PROGRESS\nCurrent Block: ${currentBlock.toLocaleString()}\nHighest Block: ${highestBlock.toLocaleString()}`;
+          }
         }
       } else {
         const blockNumber = await localClient.getBlockNumber();
@@ -1041,19 +1153,3 @@ async function fetchLatestBlockWithMutex() {
 
   return lastFetchPromise;
 }
-
-// Initialize the update mechanism
-setupUpdateMechanism();
-
-// Check for syncing status changes every 30 seconds
-setInterval(async () => {
-  const { isSyncing } = await calcSyncingStatus(executionClient);
-  const isCurrentlySyncing = currentUpdateInterval !== null;
-
-  // Only update the mechanism if the syncing status has changed
-  if (isSyncing !== isCurrentlySyncing) {
-    setupUpdateMechanism();
-  }
-}, 30000);
-
-setInterval(() => updateBandwidthBox(screen), 2000);

@@ -5,16 +5,31 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { debugToFile } from "../helpers.js";
-import { execSync } from "child_process";
+import { execSync, exec } from "child_process";
 import { getPublicIPAddress } from "../getSystemStats.js";
 import { owner } from "../commandLineOptions.js";
 import { isConnected } from "../webSocketConnection.js";
-import BASE_URL from "../config.js";
+import { BASE_URL, BREAD_CONTRACT_ADDRESS } from "../config.js";
+import { basePublicClient } from "../chain_utills/basePublicClient.js";
+import { mainnetPublicClient } from "../chain_utills/mainnetPublicClient.js";
+import { breadContractAbi } from "../chain_utills/breadContractAbi.js";
+import { isAddress, formatUnits } from "viem";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 export function createHeader(grid, screen, messageForHeader) {
+  // Store branch info once on startup
+  let currentBranch = "unknown";
+  let commitHash = "unknown";
+
+  // ENS address cache to avoid re-resolving
+  const ensAddressCache = new Map();
+
+  // Spinner animation state
+  const spinnerFrames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+  let currentSpinnerFrame = 0;
+
   // Function to get the local IP address
   async function getIPAddress() {
     while (true) {
@@ -30,49 +45,147 @@ export function createHeader(grid, screen, messageForHeader) {
     }
   }
 
-  // New function to fetch points
-  async function fetchPoints(owner) {
+  // Helper function to resolve ENS to address with caching
+  async function resolveEnsToAddress(ensName) {
+    // Check cache first
+    if (ensAddressCache.has(ensName)) {
+      return ensAddressCache.get(ensName);
+    }
+
     try {
-      const response = await axios.get(
-        `https://${BASE_URL}:48546/yourpoints?owner=${owner}`
-      );
-      return response.data.points;
+      const resolvedAddress = await mainnetPublicClient.getEnsAddress({
+        name: ensName,
+      });
+
+      if (resolvedAddress) {
+        // Cache the resolved address
+        ensAddressCache.set(ensName, resolvedAddress);
+        return resolvedAddress;
+      } else {
+        debugToFile(`Could not resolve ENS name: ${ensName}`);
+        return null;
+      }
     } catch (error) {
-      debugToFile(`Error fetching points: ${error}`);
+      debugToFile(`Error resolving ENS name ${ensName}: ${error}`);
       return null;
     }
   }
 
-  // New function to get the current Git branch
-  function getCurrentBranch() {
+  // New function to fetch pending bread
+  async function fetchPendingBread(owner) {
     try {
-      return execSync("git rev-parse --abbrev-ref HEAD").toString().trim();
+      if (!owner) return null;
+
+      let resolvedAddress = owner;
+
+      // Check if owner is an ENS name and resolve it
+      if (owner.endsWith(".eth")) {
+        resolvedAddress = await resolveEnsToAddress(owner);
+        if (!resolvedAddress) {
+          return null;
+        }
+      } else if (!isAddress(owner)) {
+        debugToFile(`Invalid address format: ${owner}`);
+        return null;
+      }
+
+      const response = await axios.get(
+        `https://${BASE_URL}:48546/yourpendingbread?owner=${resolvedAddress}`
+      );
+      return response.data.bread;
+    } catch (error) {
+      debugToFile(`Error fetching pending bread: ${error}`);
+      return null;
+    }
+  }
+
+  async function fetchBread(owner) {
+    try {
+      if (!owner) return null;
+
+      let resolvedAddress = owner;
+
+      // Check if owner is an ENS name and resolve it using the shared cache
+      if (owner.endsWith(".eth")) {
+        resolvedAddress = await resolveEnsToAddress(owner);
+        if (!resolvedAddress) {
+          return null;
+        }
+      } else if (!isAddress(owner)) {
+        debugToFile(`Invalid address format: ${owner}`);
+        return null;
+      }
+
+      // Get bread balance from the contract
+      const balance = await basePublicClient.readContract({
+        address: BREAD_CONTRACT_ADDRESS,
+        abi: breadContractAbi,
+        functionName: "balanceOf",
+        args: [resolvedAddress],
+      });
+
+      // Convert from wei to readable format (assuming 18 decimals)
+      return formatUnits(balance, 18);
+    } catch (error) {
+      debugToFile(`Error fetching bread balance: ${error}`);
+      return null;
+    }
+  }
+
+  // Function to get git branch info once on startup
+  function initializeBranchInfo() {
+    try {
+      currentBranch = execSync("git rev-parse --abbrev-ref HEAD")
+        .toString()
+        .trim();
     } catch (error) {
       debugToFile(`Error getting current branch: ${error}`);
-      return "unknown";
+      currentBranch = "unknown";
     }
-  }
 
-  // Updated function to get the full Git commit hash
-  function getCurrentCommitHash() {
     try {
-      return execSync("git rev-parse HEAD").toString().trim();
+      commitHash = execSync("git rev-parse HEAD").toString().trim();
     } catch (error) {
       debugToFile(`Error getting current commit hash: ${error}`);
-      return "unknown";
+      commitHash = "unknown";
     }
   }
 
-  // Updated function to update bigText with points, branch name, and commit hash
-  async function updatePointsAndBranchDisplay() {
-    const points = await fetchPoints(owner);
-    const currentBranch = getCurrentBranch();
-    const commitHash = getCurrentCommitHash();
+  // Store bread data for efficient updates
+  let lastPendingBread = null;
+  let lastBread = null;
+
+  // Function to update only bread amounts (called every minute)
+  async function updateBreadDisplay() {
+    let pendingBread = null;
+    let bread = null;
+
+    // Only fetch bread amounts if owner is set
     if (owner !== null) {
+      pendingBread = await fetchPendingBread(owner);
+      bread = await fetchBread(owner);
+    }
+
+    // Store the fetched data for spinner updates
+    lastPendingBread = pendingBread;
+    lastBread = bread;
+
+    updateHeaderContent();
+  }
+
+  // Function to update header content with current data (for spinner animation)
+  function updateHeaderContent() {
+    if (owner !== null) {
+      const pendingBreadDisplay =
+        lastPendingBread !== null ? lastPendingBread : "0.00";
+      const breadDisplay =
+        lastBread !== null ? parseFloat(lastBread).toFixed(2) : "0.00";
+      const spinner = spinnerFrames[currentSpinnerFrame];
+
       bigText.setContent(
         `{center}{bold}B u i d l G u i d l  C l i e n t{/bold}{/center}\n` +
           `{center}Branch: ${currentBranch} (${commitHash}){/center}\n` +
-          `{center}{cyan-fg}Owner: ${owner}{/cyan-fg} | {green-fg}Credits: ${points}{/green-fg}{/center}\n` +
+          `{center}{cyan-fg} ${owner}{/cyan-fg} | {magenta-fg}${spinner} Bread Baking: ${pendingBreadDisplay}{/magenta-fg} | {green-fg}Bread: ${breadDisplay}{/green-fg}{/center}\n` +
           `{center}{cyan-fg}${messageForHeader}{/cyan-fg}{/center}`
       );
     } else {
@@ -83,6 +196,14 @@ export function createHeader(grid, screen, messageForHeader) {
       );
     }
     screen.render();
+  }
+
+  // Function to update spinner animation only
+  function updateSpinner() {
+    if (owner !== null) {
+      currentSpinnerFrame = (currentSpinnerFrame + 1) % spinnerFrames.length;
+      updateHeaderContent();
+    }
   }
 
   let pic, logo;
@@ -138,33 +259,40 @@ export function createHeader(grid, screen, messageForHeader) {
       border: {
         fg: "cyan",
       },
-      // hover: {
-      //   fg: "cyan",
-      // },
+      ...(owner !== null && {
+        hover: {
+          bold: true,
+        },
+      }),
     },
-    // mouse: true,
-    // clickable: true,
+    mouse: owner !== null,
+    clickable: owner !== null,
   });
 
-  // bigText.on("click", function () {
-  //   const url = "https://client.buidlguidl.com"; // Replace with your desired URL
-  //   let command;
-  //   switch (process.platform) {
-  //     case "darwin":
-  //       command = `open ${url}`;
-  //       break;
-  //     case "win32":
-  //       command = `start ${url}`;
-  //       break;
-  //     default:
-  //       command = `xdg-open ${url}`;
-  //   }
-  //   exec(command, (error) => {
-  //     if (error) {
-  //       debugToFile(`Error opening URL: ${error}`);
-  //     }
-  //   });
-  // });
+  bigText.on("click", function () {
+    // Only handle click if owner is set
+    if (owner === null) {
+      return;
+    }
+
+    const url = "https://bread.buidlguidl.com"; // Replace with your desired URL
+    let command;
+    switch (process.platform) {
+      case "darwin":
+        command = `open ${url}`;
+        break;
+      case "win32":
+        command = `start ${url}`;
+        break;
+      default:
+        command = `xdg-open ${url}`;
+    }
+    exec(command, (error) => {
+      if (error) {
+        debugToFile(`Error opening URL: ${error}`);
+      }
+    });
+  });
 
   let ipAddressBoxContent = `{center}{bold}Local IP: Fetching...{/bold}\n{center}{bold}Public IP: Fetching...{/bold}{/center}`;
 
@@ -229,8 +357,12 @@ export function createHeader(grid, screen, messageForHeader) {
     }
   );
 
-  updatePointsAndBranchDisplay();
-  setInterval(updatePointsAndBranchDisplay, 1 * 60 * 1000); // Every 1 minute
+  // Initialize branch info once on startup
+  initializeBranchInfo();
+
+  updateBreadDisplay();
+  setInterval(updateBreadDisplay, 5 * 60 * 1000); // Every 5 minutes (bread data)
+  setInterval(updateSpinner, 150); // Spinner animation every 150ms
   setInterval(updateWSStatusMessage, 1000); // Check every second for smoother transitions
 
   // Add resize event listener

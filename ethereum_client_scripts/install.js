@@ -5,8 +5,8 @@ import os from "os";
 import { installDir } from "../commandLineOptions.js";
 import { debugToFile } from "./../helpers.js";
 
-export const latestGethVer = "1.15.11";
-export const latestRethVer = "1.6.0";
+export const latestGethVer = "1.16.3";
+export const latestRethVer = "1.8.1";
 export const latestLighthouseVer = "7.1.0";
 
 export function installMacLinuxClient(clientName, platform) {
@@ -17,6 +17,7 @@ export function installMacLinuxClient(clientName, platform) {
     "1.14.12": "293a300d",
     "1.15.10": "2bf8a789",
     "1.15.11": "36b2371c",
+    "1.16.3": "d818a9af",
   };
 
   const configs = {

@@ -54,6 +54,8 @@ const execution = pty.spawn(
     "0.0.0.0",
     "--http.api",
     "eth,net,admin",
+    "--http.corsdomain",
+    "*",
     "--authrpc.addr",
     "127.0.0.1",
     "--authrpc.port",

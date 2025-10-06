@@ -25,10 +25,11 @@
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "systeminformation": "^5.22.8",
-    "viem": "^2.13.3",
+    "viem": "^2.31.3",
     "ws": "^8.15.0"
   },
   "optionalDependencies": {
     "osx-temperature-sensor": "^1.0.8"
-  }
+  },
+  "packageManager": "yarn@1.22.22"
 }
