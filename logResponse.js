@@ -227,7 +227,10 @@ export function logEnhancedRequest(
           : String(response || "");
 
       // Create enhanced log line with additional metrics
-      // Format: datetime | epoch | totalMs | preAxiosMs | axiosMs | postProcessMs | method | requestSize | responseSize | networkRx | networkTx | networkErrors | networkDropped | executionPeers | consensusPeers | params | response
+      // Format: datetime | epoch | totalMs | preAxiosMs | axiosMs | postProcessMs | method | requestSize | responseSize | networkRx (bytes) | networkTx (bytes) | networkErrors | networkDropped | executionPeers | consensusPeers | params | response
+      // preAxiosMs: Time spent on setup/preparation before making the HTTP call to your local node
+      // axiosMs: Time for the actual HTTP request to localhost:8545
+      // postProcessMs: Time spent after getting the response from your node but before sending it back to the client
       let logLine = `${datetime} | ${epoch} | ${totalMs} | ${preAxiosMs} | ${axiosMs} | ${postProcessMs} | ${method} | ${requestSize} | ${responseSize}`;
 
       // Add network stats if available
