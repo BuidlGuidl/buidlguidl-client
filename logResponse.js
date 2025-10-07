@@ -3,6 +3,7 @@ import path from "path";
 import si from "systeminformation";
 import { installDir } from "./commandLineOptions.js";
 import { BASE_URL } from "./config.js";
+import { debugToFile } from "./helpers.js";
 import {
   getExecutionPeers,
   getConsensusPeers,
@@ -144,30 +145,51 @@ async function performTracerouteAnalysis() {
       command = `traceroute -m 10 -w 2 ${BASE_URL}`;
     }
 
-    const { stdout } = await execAsync(command, {
+    debugToFile(`Attempting traceroute: ${command}`);
+
+    const { stdout, stderr } = await execAsync(command, {
       timeout: 15000, // Increased timeout
     });
+
+    debugToFile(`Traceroute stdout: ${stdout}`);
+    if (stderr) {
+      debugToFile(`Traceroute stderr: ${stderr}`);
+    }
 
     // Count hops (lines with hop numbers)
     const lines = stdout.split("\n");
     const hopLines = lines.filter((line) => /^\s*\d+/.test(line));
 
+    debugToFile(`Found ${hopLines.length} hop lines`);
     return hopLines.length > 0 ? hopLines.length : -1;
   } catch (error) {
+    debugToFile(`Traceroute failed: ${error.message}`);
+
     // If traceroute fails, try a simpler approach with ping
     try {
       const { exec } = await import("child_process");
       const { promisify } = await import("util");
       const execAsync = promisify(exec);
 
+      const pingCommand = `ping -c 1 -t 10 ${BASE_URL}`;
+      debugToFile(`Attempting ping fallback: ${pingCommand}`);
+
       // Use ping to test connectivity (much more reliable)
-      const { stdout } = await execAsync(`ping -c 1 -t 10 ${BASE_URL}`, {
+      const { stdout, stderr } = await execAsync(pingCommand, {
         timeout: 5000,
       });
 
+      debugToFile(`Ping stdout: ${stdout}`);
+      if (stderr) {
+        debugToFile(`Ping stderr: ${stderr}`);
+      }
+
       // If ping succeeds, return 0 to indicate "reachable but hop count unknown"
-      return stdout.includes("bytes from") ? 0 : -1;
+      const isReachable = stdout.includes("bytes from");
+      debugToFile(`Ping result: ${isReachable ? "reachable" : "unreachable"}`);
+      return isReachable ? 0 : -1;
     } catch (pingError) {
+      debugToFile(`Ping also failed: ${pingError.message}`);
       // Both traceroute and ping failed
       return -1;
     }
@@ -185,19 +207,23 @@ async function getCachedSystemMetrics() {
     now - cachedMetrics.lastSystemUpdate > SYSTEM_CACHE_INTERVAL
   ) {
     try {
-      // Measure DNS resolution time for a known host
+      // Measure DNS resolution time for the actual RPC endpoint
       const dnsStart = Date.now();
       try {
         await import("dns").then((dns) => {
           return new Promise((resolve, reject) => {
-            dns.lookup("google.com", (err, address) => {
+            dns.lookup(BASE_URL, (err, address) => {
               if (err) reject(err);
               else resolve(address);
             });
           });
         });
         var dnsTime = Date.now() - dnsStart;
+        debugToFile(`DNS resolution for ${BASE_URL}: ${dnsTime}ms`);
       } catch (dnsError) {
+        debugToFile(
+          `DNS resolution failed for ${BASE_URL}: ${dnsError.message}`
+        );
         var dnsTime = -1; // DNS resolution failed
       }
 
@@ -376,7 +402,7 @@ export function logEnhancedRequest(
       // socketProcessingMs: Socket.IO internal processing overhead
       // wsLatency: WebSocket connection latency (ping/pong time)
       // socketToHandlerMs: Time from Socket.IO message receipt to handler start
-      // dnsResolutionMs: DNS resolution time for any lookups
+      // dnsResolutionMs: DNS resolution time for RPC endpoint (>0=time in ms, -1=failed)
       // eventLoopDelay: Node.js event loop delay measurement
       // socketQueueDepth: Number of queued messages in Socket.IO
       // connectionStable: Connection stability indicator (1=stable, 0=unstable)
