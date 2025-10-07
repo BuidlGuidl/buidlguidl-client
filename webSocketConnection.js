@@ -17,7 +17,7 @@ import axios from "axios";
 import fs from "fs";
 import path from "path";
 import { BASE_URL } from "./config.js";
-import { logRequest } from "./logResponse.js";
+import { logRequest, logEnhancedRequest } from "./logResponse.js";
 
 let socketId;
 export let checkIn;
@@ -167,14 +167,18 @@ export function initializeWebSocketConnection(wsConfig) {
       });
 
       socket.on("rpc_request", async (request, callback) => {
-        // Record the start time for logging
-        const requestStartTime = new Date();
+        // Record timing points for enhanced logging
+        const requestStart = Date.now();
+        const requestStartTime = new Date(requestStart); // Keep for backward compatibility
 
         populateRpcInfoBox(request.method);
 
         const targetUrl = "http://localhost:8545";
 
         try {
+          // Record pre-axios timestamp
+          const preAxios = Date.now();
+
           const rpcResponse = await axios.post(targetUrl, {
             jsonrpc: "2.0",
             method: request.method,
@@ -182,19 +186,33 @@ export function initializeWebSocketConnection(wsConfig) {
             id: request.id,
           });
 
-          // Calculate elapsed time
-          const elapsedMs = Date.now() - requestStartTime.getTime();
+          // Record post-axios timestamp
+          const postAxios = Date.now();
 
-          // Log the request asynchronously (non-blocking)
-          logRequest(
-            requestStartTime,
-            elapsedMs,
+          // Send response immediately to minimize latency
+          callback(rpcResponse.data);
+
+          // Record response sent timestamp
+          const responseSent = Date.now();
+
+          // Calculate elapsed time for backward compatibility
+          const elapsedMs = responseSent - requestStart;
+
+          // Enhanced logging (async, non-blocking)
+          const timingData = {
+            requestStart,
+            preAxios,
+            postAxios,
+            responseSent,
+          };
+
+          logEnhancedRequest(
+            timingData,
             request.method,
             request.params,
-            rpcResponse.data
+            rpcResponse.data,
+            wsConfig
           );
-
-          callback(rpcResponse.data);
         } catch (error) {
           debugToFile("Error returning RPC response:", error);
 
@@ -208,19 +226,28 @@ export function initializeWebSocketConnection(wsConfig) {
             id: request.id,
           };
 
-          // Calculate elapsed time for error case
-          const elapsedMs = Date.now() - requestStartTime.getTime();
+          // Send error response immediately
+          callback(errorResponse);
 
-          // Log the error response asynchronously (non-blocking)
-          logRequest(
-            requestStartTime,
-            elapsedMs,
+          // Record response sent timestamp for error case
+          const responseSent = Date.now();
+          const elapsedMs = responseSent - requestStart;
+
+          // Enhanced logging for error case (async, non-blocking)
+          const timingData = {
+            requestStart,
+            preAxios: requestStart, // No axios call made in error case
+            postAxios: requestStart,
+            responseSent,
+          };
+
+          logEnhancedRequest(
+            timingData,
             request.method,
             request.params,
-            errorResponse
+            errorResponse,
+            wsConfig
           );
-
-          callback(errorResponse);
         }
       });
 
