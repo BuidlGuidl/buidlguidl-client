@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import si from "systeminformation";
 import { installDir } from "./commandLineOptions.js";
+import { BASE_URL } from "./config.js";
 import {
   getExecutionPeers,
   getConsensusPeers,
@@ -20,13 +21,23 @@ if (!fs.existsSync(logDir)) {
 let cachedMetrics = {
   networkStats: null,
   peerCounts: null,
+  socketMetrics: null,
+  systemMetrics: null,
   lastNetworkUpdate: 0,
   lastPeerUpdate: 0,
+  lastSocketUpdate: 0,
+  lastSystemUpdate: 0,
 };
 
 // Cache update intervals (in milliseconds)
 const NETWORK_CACHE_INTERVAL = 2000; // 2 seconds
 const PEER_CACHE_INTERVAL = 5000; // 5 seconds
+const SOCKET_CACHE_INTERVAL = 1000; // 1 second for socket metrics
+const SYSTEM_CACHE_INTERVAL = 1000; // 1 second for system metrics
+
+// Global variables for tracking metrics
+let lastEventLoopCheck = Date.now();
+let eventLoopDelayHistory = [];
 
 /**
  * Get network statistics with caching to avoid performance impact
@@ -41,26 +52,18 @@ async function getCachedNetworkStats() {
     try {
       // Run this asynchronously and don't block if it fails
       const networkStats = await si.networkStats();
-      const networkInterfaces = await si.networkInterfaces();
 
-      let totalRx = 0,
-        totalTx = 0,
-        totalErrors = 0,
+      let totalErrors = 0,
         totalDropped = 0;
 
       networkStats.forEach((iface) => {
-        totalRx += iface.rx_bytes || 0;
-        totalTx += iface.tx_bytes || 0;
         totalErrors += (iface.rx_errors || 0) + (iface.tx_errors || 0);
         totalDropped += (iface.rx_dropped || 0) + (iface.tx_dropped || 0);
       });
 
       cachedMetrics.networkStats = {
-        totalRx,
-        totalTx,
         totalErrors,
         totalDropped,
-        interfaceCount: networkInterfaces.length,
       };
       cachedMetrics.lastNetworkUpdate = now;
     } catch (error) {
@@ -97,6 +100,109 @@ async function getCachedPeerCounts(executionClient, consensusClient) {
   }
 
   return cachedMetrics.peerCounts;
+}
+
+/**
+ * Measure event loop delay
+ */
+function measureEventLoopDelay() {
+  const start = Date.now();
+  setImmediate(() => {
+    const delay = Date.now() - start;
+    eventLoopDelayHistory.push(delay);
+
+    // Keep only last 10 measurements
+    if (eventLoopDelayHistory.length > 10) {
+      eventLoopDelayHistory.shift();
+    }
+  });
+
+  // Return average of recent measurements
+  if (eventLoopDelayHistory.length === 0) return 0;
+  return Math.round(
+    eventLoopDelayHistory.reduce((a, b) => a + b, 0) /
+      eventLoopDelayHistory.length
+  );
+}
+
+/**
+ * Perform traceroute analysis to key endpoints
+ */
+async function performTracerouteAnalysis() {
+  try {
+    const { exec } = await import("child_process");
+    const { promisify } = await import("util");
+    const execAsync = promisify(exec);
+
+    // Quick traceroute to BuidlGuidl endpoint (limit to 10 hops for speed)
+    const { stdout } = await execAsync(`traceroute -m 10 -w 2 ${BASE_URL}`, {
+      timeout: 10000,
+    });
+
+    // Count hops (lines with hop numbers)
+    const lines = stdout.split("\n");
+    const hopLines = lines.filter((line) => /^\s*\d+/.test(line));
+
+    return hopLines.length;
+  } catch (error) {
+    // Traceroute failed or timed out
+    return -1;
+  }
+}
+
+/**
+ * Get cached system metrics (DNS, event loop, etc.)
+ */
+async function getCachedSystemMetrics() {
+  const now = Date.now();
+
+  if (
+    !cachedMetrics.systemMetrics ||
+    now - cachedMetrics.lastSystemUpdate > SYSTEM_CACHE_INTERVAL
+  ) {
+    try {
+      // Measure DNS resolution time for a known host
+      const dnsStart = Date.now();
+      try {
+        await import("dns").then((dns) => {
+          return new Promise((resolve, reject) => {
+            dns.lookup("google.com", (err, address) => {
+              if (err) reject(err);
+              else resolve(address);
+            });
+          });
+        });
+        var dnsTime = Date.now() - dnsStart;
+      } catch (dnsError) {
+        var dnsTime = -1; // DNS resolution failed
+      }
+
+      // Perform traceroute analysis (less frequently)
+      let traceHops = cachedMetrics.systemMetrics?.traceHops || 0;
+      if (
+        !cachedMetrics.systemMetrics ||
+        now - cachedMetrics.lastSystemUpdate > 60000
+      ) {
+        traceHops = await performTracerouteAnalysis();
+      }
+
+      cachedMetrics.systemMetrics = {
+        dnsResolutionMs: dnsTime,
+        eventLoopDelay: measureEventLoopDelay(),
+        traceHops,
+      };
+      cachedMetrics.lastSystemUpdate = now;
+    } catch (error) {
+      cachedMetrics.systemMetrics = {
+        dnsResolutionMs: -1,
+        eventLoopDelay: 0,
+        traceHops: -1,
+        error: true,
+      };
+    }
+  }
+
+  return cachedMetrics.systemMetrics;
 }
 
 /**
@@ -209,6 +315,9 @@ export function logEnhancedRequest(
       // Get cached network stats (non-blocking)
       const networkStats = await getCachedNetworkStats();
 
+      // Get cached system metrics (non-blocking)
+      const systemMetrics = await getCachedSystemMetrics();
+
       // Get cached peer counts (non-blocking)
       let peerCounts = null;
       if (wsConfig) {
@@ -228,17 +337,58 @@ export function logEnhancedRequest(
           : String(response || "");
 
       // Create enhanced log line with additional metrics
-      // Format: datetime | epoch | totalMs | preAxiosMs | axiosMs | postProcessMs | method | requestSize | responseSize | networkRx (bytes) | networkTx (bytes) | networkErrors | networkDropped (packets) | executionPeers | consensusPeers | params | response
-      // preAxiosMs: Time spent on setup/preparation before making the HTTP call to your local node
-      // axiosMs: Time for the actual HTTP request to localhost:8545
-      // postProcessMs: Time spent after getting the response from your node but before sending it back to the client
-      let logLine = `${datetime} | ${epoch} | ${totalMs} | ${preAxiosMs} | ${axiosMs} | ${postProcessMs} | ${method} | ${requestSize} | ${responseSize}`;
+      // Format: datetime | epoch | method | requestSize | responseSize | totalMs | preAxiosMs | axiosMs | postProcessMs | socketProcessingMs | wsLatency | socketToHandlerMs | dnsResolutionMs | eventLoopDelay | socketQueueDepth | connectionStable | networkErrors | networkDropped | executionPeers | consensusPeers | traceHops | params | response
+      //
+      // Field Descriptions:
+      // datetime: Request timestamp in YYYY-MM-DD HH:MM:SS format
+      // epoch: Request timestamp in milliseconds since epoch
+      // method: RPC method name (e.g., eth_getBlockByNumber)
+      // requestSize: Size of request parameters in bytes
+      // responseSize: Size of response data in bytes
+      // totalMs: Total time from request received to response sent
+      // preAxiosMs: Time for setup work (populateRpcInfoBox, variable assignments)
+      // axiosMs: Time for HTTP call to localhost:8545 (your local node)
+      // postProcessMs: Time for callback execution and response sending
+      // socketProcessingMs: Socket.IO internal processing overhead
+      // wsLatency: WebSocket connection latency (ping/pong time)
+      // socketToHandlerMs: Time from Socket.IO message receipt to handler start
+      // dnsResolutionMs: DNS resolution time for any lookups
+      // eventLoopDelay: Node.js event loop delay measurement
+      // socketQueueDepth: Number of queued messages in Socket.IO
+      // connectionStable: Connection stability indicator (1=stable, 0=unstable)
+      // networkErrors: Total network errors across all interfaces
+      // networkDropped: Total dropped packets across all interfaces
+      // executionPeers: Number of execution client peers
+      // consensusPeers: Number of consensus client peers
+      // traceHops: Network hops or key hop timing information
+      // params: Request parameters (JSON)
+      // response: Response data (JSON)
+      // Extract timing data passed from webSocketConnection.js
+      const socketProcessingMs = timingData.socketProcessingMs || 0; // Socket.IO internal processing overhead
+      const wsLatency = timingData.wsLatency || 0; // WebSocket connection latency (ping/pong time)
+      const socketToHandlerMs = timingData.socketToHandlerMs || 0; // Time from Socket.IO message receipt to handler start
+      const socketQueueDepth = timingData.socketQueueDepth || 0; // Number of queued messages in Socket.IO
+      const connectionStable = timingData.connectionStable || 0; // Connection stability indicator (1=stable, 0=unstable)
+
+      // Get system metrics
+      const dnsResolutionMs =
+        systemMetrics && !systemMetrics.error
+          ? systemMetrics.dnsResolutionMs
+          : -1;
+      const eventLoopDelay =
+        systemMetrics && !systemMetrics.error
+          ? systemMetrics.eventLoopDelay
+          : 0;
+      const traceHops =
+        systemMetrics && !systemMetrics.error ? systemMetrics.traceHops : -1;
+
+      let logLine = `${datetime} | ${epoch} | ${method} | ${requestSize} | ${responseSize} | ${totalMs} | ${preAxiosMs} | ${axiosMs} | ${postProcessMs} | ${socketProcessingMs} | ${wsLatency} | ${socketToHandlerMs} | ${dnsResolutionMs} | ${eventLoopDelay} | ${socketQueueDepth} | ${connectionStable}`;
 
       // Add network stats if available
       if (networkStats && !networkStats.error) {
-        logLine += ` | ${networkStats.totalRx} | ${networkStats.totalTx} | ${networkStats.totalErrors} | ${networkStats.totalDropped}`;
+        logLine += ` | ${networkStats.totalErrors} | ${networkStats.totalDropped}`;
       } else {
-        logLine += ` | 0 | 0 | 0 | 0`;
+        logLine += ` | 0 | 0`;
       }
 
       // Add peer counts if available
@@ -248,8 +398,8 @@ export function logEnhancedRequest(
         logLine += ` | 0 | 0`;
       }
 
-      // Add params and response
-      logLine += ` | ${paramsStr} | ${responseStr}\n`;
+      // Add trace hops and params/response
+      logLine += ` | ${traceHops} | ${paramsStr} | ${responseStr}\n`;
 
       // Append to log file asynchronously
       fs.appendFile(LOG_FILE_PATH, logLine, (err) => {

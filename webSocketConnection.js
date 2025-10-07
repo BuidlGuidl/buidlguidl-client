@@ -24,6 +24,17 @@ export let checkIn;
 let socket;
 const connectionStatus = new Map();
 
+// Socket.IO metrics tracking
+let socketMetrics = {
+  lastPingTime: 0,
+  lastPongTime: 0,
+  wsLatency: 0,
+  connectionStarts: 0,
+  disconnections: 0,
+  queueDepth: 0,
+  lastConnectionTime: 0,
+};
+
 export function isConnected(pid) {
   return connectionStatus.get(pid) || false;
 }
@@ -159,6 +170,13 @@ export function initializeWebSocketConnection(wsConfig) {
         connectionStatus.set(process.pid, true);
         updateConnectionStatusFile(true);
         clearTimeout(reconnectTimeout);
+
+        // Track connection metrics
+        socketMetrics.connectionStarts++;
+        socketMetrics.lastConnectionTime = Date.now();
+
+        // Start WebSocket latency monitoring
+        startWebSocketLatencyMonitoring();
       });
 
       socket.on("init", (id) => {
@@ -167,9 +185,20 @@ export function initializeWebSocketConnection(wsConfig) {
       });
 
       socket.on("rpc_request", async (request, callback) => {
+        // Track queue depth (approximate)
+        socketMetrics.queueDepth++;
+
         // Record timing points for enhanced logging
         const requestStart = Date.now();
         const requestStartTime = new Date(requestStart); // Keep for backward compatibility
+
+        // Calculate socketToHandlerMs - this measures the delay you're concerned about!
+        // The request object should have a timestamp from when Socket.IO received it
+        const socketReceivedTime = request._socketReceivedTime || requestStart;
+        const socketToHandlerMs = requestStart - socketReceivedTime;
+
+        // Measure Socket.IO processing overhead (time from socket receive to our handler)
+        const socketProcessingStart = Date.now();
 
         // Record pre-axios timestamp (before any processing)
         const preAxios = Date.now();
@@ -198,8 +227,14 @@ export function initializeWebSocketConnection(wsConfig) {
           // Record response sent timestamp
           const responseSent = Date.now();
 
+          // Decrement queue depth
+          socketMetrics.queueDepth = Math.max(0, socketMetrics.queueDepth - 1);
+
           // Calculate elapsed time for backward compatibility
           const elapsedMs = responseSent - requestStart;
+
+          // Calculate socket processing overhead
+          const socketProcessingMs = preAxios - socketProcessingStart;
 
           // Enhanced logging (async, non-blocking)
           const timingData = {
@@ -208,6 +243,11 @@ export function initializeWebSocketConnection(wsConfig) {
             axiosStart,
             postAxios,
             responseSent,
+            socketToHandlerMs,
+            socketProcessingMs,
+            wsLatency: socketMetrics.wsLatency,
+            socketQueueDepth: socketMetrics.queueDepth,
+            connectionStable: calculateConnectionStability(),
           };
 
           logEnhancedRequest(
@@ -235,7 +275,14 @@ export function initializeWebSocketConnection(wsConfig) {
 
           // Record response sent timestamp for error case
           const responseSent = Date.now();
+
+          // Decrement queue depth
+          socketMetrics.queueDepth = Math.max(0, socketMetrics.queueDepth - 1);
+
           const elapsedMs = responseSent - requestStart;
+
+          // Calculate socket processing overhead for error case
+          const socketProcessingMs = preAxios - socketProcessingStart;
 
           // Enhanced logging for error case (async, non-blocking)
           const timingData = {
@@ -244,6 +291,11 @@ export function initializeWebSocketConnection(wsConfig) {
             axiosStart: requestStart, // No axios call made in error case
             postAxios: requestStart,
             responseSent,
+            socketToHandlerMs,
+            socketProcessingMs,
+            wsLatency: socketMetrics.wsLatency,
+            socketQueueDepth: socketMetrics.queueDepth,
+            connectionStable: calculateConnectionStability(),
           };
 
           logEnhancedRequest(
@@ -262,6 +314,9 @@ export function initializeWebSocketConnection(wsConfig) {
         connectionStatus.set(process.pid, false);
         updateConnectionStatusFile(false);
         debugToFile("Disconnected from Socket.IO server");
+
+        // Track disconnection
+        socketMetrics.disconnections++;
       });
 
       socket.on("connect_error", (error) => {
@@ -570,4 +625,49 @@ function getNodeInfo() {
       }
     });
   });
+}
+
+/**
+ * Start WebSocket latency monitoring using ping/pong
+ */
+function startWebSocketLatencyMonitoring() {
+  if (!socket) return;
+
+  // Send ping every 30 seconds
+  const pingInterval = setInterval(() => {
+    if (socket && socket.connected) {
+      socketMetrics.lastPingTime = Date.now();
+      socket.emit("ping", socketMetrics.lastPingTime);
+    } else {
+      clearInterval(pingInterval);
+    }
+  }, 30000);
+
+  // Listen for pong responses
+  socket.on("pong", (timestamp) => {
+    socketMetrics.lastPongTime = Date.now();
+    if (timestamp === socketMetrics.lastPingTime) {
+      socketMetrics.wsLatency =
+        socketMetrics.lastPongTime - socketMetrics.lastPingTime;
+    }
+  });
+}
+
+/**
+ * Calculate connection stability indicator
+ */
+function calculateConnectionStability() {
+  const now = Date.now();
+  const timeSinceLastConnection = now - socketMetrics.lastConnectionTime;
+
+  // Consider connection stable if:
+  // - Connected for more than 60 seconds
+  // - No recent disconnections relative to connection time
+  if (timeSinceLastConnection > 60000) {
+    const disconnectionRate =
+      socketMetrics.disconnections / (timeSinceLastConnection / 60000); // per minute
+    return disconnectionRate < 0.1 ? 1 : 0; // Stable if less than 0.1 disconnections per minute
+  }
+
+  return 0; // Not stable if recently connected
 }
