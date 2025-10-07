@@ -134,19 +134,43 @@ async function performTracerouteAnalysis() {
     const { promisify } = await import("util");
     const execAsync = promisify(exec);
 
-    // Quick traceroute to BuidlGuidl endpoint (limit to 10 hops for speed)
-    const { stdout } = await execAsync(`traceroute -m 10 -w 2 ${BASE_URL}`, {
-      timeout: 10000,
+    // Try different traceroute commands based on platform
+    let command;
+    if (process.platform === "darwin") {
+      // macOS - use traceroute with different flags
+      command = `traceroute -m 10 -w 2000 -q 1 ${BASE_URL}`;
+    } else {
+      // Linux - standard traceroute
+      command = `traceroute -m 10 -w 2 ${BASE_URL}`;
+    }
+
+    const { stdout } = await execAsync(command, {
+      timeout: 15000, // Increased timeout
     });
 
     // Count hops (lines with hop numbers)
     const lines = stdout.split("\n");
     const hopLines = lines.filter((line) => /^\s*\d+/.test(line));
 
-    return hopLines.length;
+    return hopLines.length > 0 ? hopLines.length : -1;
   } catch (error) {
-    // Traceroute failed or timed out
-    return -1;
+    // If traceroute fails, try a simpler approach with ping
+    try {
+      const { exec } = await import("child_process");
+      const { promisify } = await import("util");
+      const execAsync = promisify(exec);
+
+      // Use ping to test connectivity (much more reliable)
+      const { stdout } = await execAsync(`ping -c 1 -t 10 ${BASE_URL}`, {
+        timeout: 5000,
+      });
+
+      // If ping succeeds, return 0 to indicate "reachable but hop count unknown"
+      return stdout.includes("bytes from") ? 0 : -1;
+    } catch (pingError) {
+      // Both traceroute and ping failed
+      return -1;
+    }
   }
 }
 
@@ -360,7 +384,7 @@ export function logEnhancedRequest(
       // networkDropped: Total dropped packets across all interfaces
       // executionPeers: Number of execution client peers
       // consensusPeers: Number of consensus client peers
-      // traceHops: Network hops or key hop timing information
+      // traceHops: Network hops to BuidlGuidl endpoint (>0=actual hops, 0=reachable but unknown, -1=unreachable/failed)
       // params: Request parameters (JSON)
       // response: Response data (JSON)
       // Extract timing data passed from webSocketConnection.js
