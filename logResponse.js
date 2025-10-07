@@ -135,17 +135,43 @@ async function performTracerouteAnalysis() {
     const { promisify } = await import("util");
     const execAsync = promisify(exec);
 
+    // Since the watchdog endpoint works on pool.mainnet.rpc.buidlguidl.com:48547,
+    // resolve this hostname to IP for traceroute (IPs always work for traceroute)
+    const watchdogHostname = "pool.mainnet.rpc.buidlguidl.com";
+    let targetHost = watchdogHostname;
+
+    try {
+      const dns = await import("dns");
+      const { address } = await new Promise((resolve, reject) => {
+        dns.lookup(watchdogHostname, (err, address) => {
+          if (err) reject(err);
+          else resolve({ address });
+        });
+      });
+
+      if (address) {
+        targetHost = address;
+        debugToFile(
+          `Resolved ${watchdogHostname} to ${address} for traceroute`
+        );
+      }
+    } catch (dnsError) {
+      debugToFile(`DNS resolution failed, using hostname: ${dnsError.message}`);
+    }
+
     // Try different traceroute commands based on platform
     let command;
     if (process.platform === "darwin") {
       // macOS - use traceroute with different flags
-      command = `traceroute -m 10 -w 2000 -q 1 ${BASE_URL}`;
+      command = `traceroute -m 10 -w 2000 -q 1 ${targetHost}`;
     } else {
       // Linux - standard traceroute
-      command = `traceroute -m 10 -w 2 ${BASE_URL}`;
+      command = `traceroute -m 10 -w 2 ${targetHost}`;
     }
 
-    debugToFile(`Attempting traceroute: ${command}`);
+    debugToFile(
+      `Attempting traceroute to ${targetHost} (same machine as watchdog): ${command}`
+    );
 
     const { stdout, stderr } = await execAsync(command, {
       timeout: 15000, // Increased timeout
@@ -171,8 +197,8 @@ async function performTracerouteAnalysis() {
       const { promisify } = await import("util");
       const execAsync = promisify(exec);
 
-      const pingCommand = `ping -c 1 -t 10 ${BASE_URL}`;
-      debugToFile(`Attempting ping fallback: ${pingCommand}`);
+      const pingCommand = `ping -c 1 -t 10 ${targetHost}`;
+      debugToFile(`Attempting ping fallback to ${targetHost}: ${pingCommand}`);
 
       // Use ping to test connectivity (much more reliable)
       const { stdout, stderr } = await execAsync(pingCommand, {
