@@ -171,13 +171,16 @@ export function initializeWebSocketConnection(wsConfig) {
         const requestStart = Date.now();
         const requestStartTime = new Date(requestStart); // Keep for backward compatibility
 
+        // Record pre-axios timestamp (before any processing)
+        const preAxios = Date.now();
+
         populateRpcInfoBox(request.method);
 
         const targetUrl = "http://localhost:8545";
 
         try {
-          // Record pre-axios timestamp
-          const preAxios = Date.now();
+          // Record axios start timestamp (after setup work)
+          const axiosStart = Date.now();
 
           const rpcResponse = await axios.post(targetUrl, {
             jsonrpc: "2.0",
@@ -202,6 +205,7 @@ export function initializeWebSocketConnection(wsConfig) {
           const timingData = {
             requestStart,
             preAxios,
+            axiosStart,
             postAxios,
             responseSent,
           };
@@ -236,7 +240,8 @@ export function initializeWebSocketConnection(wsConfig) {
           // Enhanced logging for error case (async, non-blocking)
           const timingData = {
             requestStart,
-            preAxios: requestStart, // No axios call made in error case
+            preAxios: requestStart, // No processing done in error case
+            axiosStart: requestStart, // No axios call made in error case
             postAxios: requestStart,
             responseSent,
           };

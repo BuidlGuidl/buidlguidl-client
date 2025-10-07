@@ -186,13 +186,14 @@ export function logEnhancedRequest(
   // Use setImmediate to ensure this runs asynchronously and doesn't block the response
   setImmediate(async () => {
     try {
-      const { requestStart, preAxios, postAxios, responseSent } = timingData;
+      const { requestStart, preAxios, axiosStart, postAxios, responseSent } =
+        timingData;
 
       // Calculate timing breakdowns
       const totalMs = responseSent - requestStart;
-      const preAxiosMs = preAxios - requestStart;
-      const axiosMs = postAxios - preAxios;
-      const postProcessMs = responseSent - postAxios;
+      const preAxiosMs = axiosStart - preAxios; // Time for setup work (populateRpcInfoBox, etc.)
+      const axiosMs = postAxios - axiosStart; // Time for actual HTTP call
+      const postProcessMs = responseSent - postAxios; // Time for callback and response sending
 
       // Calculate sizes (fast operations)
       const requestSize = getByteSize(params);
@@ -227,7 +228,7 @@ export function logEnhancedRequest(
           : String(response || "");
 
       // Create enhanced log line with additional metrics
-      // Format: datetime | epoch | totalMs | preAxiosMs | axiosMs | postProcessMs | method | requestSize | responseSize | networkRx (bytes) | networkTx (bytes) | networkErrors | networkDropped | executionPeers | consensusPeers | params | response
+      // Format: datetime | epoch | totalMs | preAxiosMs | axiosMs | postProcessMs | method | requestSize | responseSize | networkRx (bytes) | networkTx (bytes) | networkErrors | networkDropped (packets) | executionPeers | consensusPeers | params | response
       // preAxiosMs: Time spent on setup/preparation before making the HTTP call to your local node
       // axiosMs: Time for the actual HTTP request to localhost:8545
       // postProcessMs: Time spent after getting the response from your node but before sending it back to the client
