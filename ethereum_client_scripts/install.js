@@ -5,7 +5,7 @@ import os from "os";
 import { installDir } from "../commandLineOptions.js";
 import { debugToFile } from "./../helpers.js";
 
-export const latestGethVer = "1.16.3";
+export const latestGethVer = "1.16.5";
 export const latestRethVer = "1.8.1";
 export const latestLighthouseVer = "7.1.0";
 
