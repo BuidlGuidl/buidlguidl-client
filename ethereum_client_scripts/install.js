@@ -18,6 +18,7 @@ export function installMacLinuxClient(clientName, platform) {
     "1.15.10": "2bf8a789",
     "1.15.11": "36b2371c",
     "1.16.3": "d818a9af",
+    "1.16.5": "737ffd1b",
   };
 
   const configs = {
