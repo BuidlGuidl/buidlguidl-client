@@ -148,7 +148,7 @@ export function getVersionNumber(client) {
 
     if (client === "reth") {
       versionMatch = versionOutput.match(
-        /Reth(?:-ethereum-cli)? Version: (\d+\.\d+\.\d+)/
+        /[Rr]eth(?:-ethereum-cli)? Version: (\d+\.\d+\.\d+)/
       );
     } else if (client === "lighthouse") {
       versionMatch = versionOutput.match(/Lighthouse v(\d+\.\d+\.\d+)/);
