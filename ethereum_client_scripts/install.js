@@ -7,7 +7,7 @@ import { debugToFile } from "./../helpers.js";
 
 export const latestGethVer = "1.16.7";
 export const latestRethVer = "1.8.2";
-export const latestLighthouseVer = "7.1.0";
+export const latestLighthouseVer = "8.0.0";
 
 export function installMacLinuxClient(clientName, platform) {
   const arch = os.arch();
@@ -27,13 +27,13 @@ export function installMacLinuxClient(clientName, platform) {
       x64: {
         geth: `geth-darwin-amd64-${latestGethVer}-${gethHash[latestGethVer]}`,
         reth: `reth-v${latestRethVer}-x86_64-apple-darwin`,
-        lighthouse: `lighthouse-v${latestLighthouseVer}-x86_64-apple-darwin`,
+        lighthouse: `lighthouse-v${latestLighthouseVer}-aarch64-apple-darwin`,
         prysm: "prysm.sh",
       },
       arm64: {
         geth: `geth-darwin-arm64-${latestGethVer}-${gethHash[latestGethVer]}`,
         reth: `reth-v${latestRethVer}-aarch64-apple-darwin`,
-        lighthouse: `lighthouse-v${latestLighthouseVer}-x86_64-apple-darwin`,
+        lighthouse: `lighthouse-v${latestLighthouseVer}-aarch64-apple-darwin`,
         prysm: "prysm.sh",
       },
     },
