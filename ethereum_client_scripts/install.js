@@ -6,7 +6,7 @@ import { installDir } from "../commandLineOptions.js";
 import { debugToFile } from "./../helpers.js";
 
 export const latestGethVer = "1.16.5";
-export const latestRethVer = "1.8.2";
+export const latestRethVer = "1.9.0";
 export const latestLighthouseVer = "7.1.0";
 
 export function installMacLinuxClient(clientName, platform) {
@@ -148,7 +148,7 @@ export function getVersionNumber(client) {
 
     if (client === "reth") {
       versionMatch = versionOutput.match(
-        /reth(?:-ethereum-cli)? Version: (\d+\.\d+\.\d+)/
+        /Reth(?:-ethereum-cli)? Version: (\d+\.\d+\.\d+)/
       );
     } else if (client === "lighthouse") {
       versionMatch = versionOutput.match(/Lighthouse v(\d+\.\d+\.\d+)/);
