@@ -30,7 +30,6 @@ let executionPeerPort = 30303;
 let consensusPeerPorts = [null, null];
 let consensusCheckpoint = null;
 let owner = null;
-let tgAlertToken = null;
 
 const filename = fileURLToPath(import.meta.url);
 let installDir = dirname(filename);
@@ -81,13 +80,7 @@ function showHelp() {
     "                                            Default: buidlguidl-client/ethereum_clients\n"
   );
   console.log(
-    "  -o, --owner <eth address>                 Specify a owner eth address to opt in to the points system and distributed RPC network\n"
-  );
-  console.log(
-    "      --tg-alert-token <token>              Specify a Telegram alert token to receive notifications when clients crash"
-  );
-  console.log(
-    "                                            Message /start to @BG_Client_Alert_Bot on Telegram to create or show your token\n"
+    "  -o, --owner <eth address>                 Specify a owner eth address to opt in to the points system, distributed RPC network, and Telegram alerts\n"
   );
   console.log(
     "      --update                              Update the execution and consensus clients to the latest version."
@@ -119,7 +112,6 @@ function saveOptionsToFile() {
     consensusCheckpoint,
     installDir,
     owner,
-    tgAlertToken,
   };
   fs.writeFileSync(optionsFilePath, JSON.stringify(options), "utf8");
 }
@@ -146,7 +138,6 @@ if (fs.existsSync(optionsFilePath)) {
     consensusCheckpoint = options.consensusCheckpoint;
     installDir = options.installDir;
     owner = options.owner;
-    tgAlertToken = options.tgAlertToken;
     optionsLoaded = true;
 
     // Check if loaded geth option is being used on macOS (not supported)
@@ -199,7 +190,6 @@ if (!optionsLoaded) {
       "directory",
       "o",
       "owner",
-      "tg-alert-token",
     ],
     alias: {
       e: "executionclient",
@@ -291,10 +281,6 @@ if (!optionsLoaded) {
     owner = argv.owner;
   }
 
-  if (argv["tg-alert-token"]) {
-    tgAlertToken = argv["tg-alert-token"];
-  }
-
   if (argv.update) {
     // Get list of installed clients from directory
     const clientsDir = join(installDir, "ethereum_clients");
@@ -378,7 +364,6 @@ export {
   consensusCheckpoint,
   installDir,
   owner,
-  tgAlertToken,
   saveOptionsToFile,
   deleteOptionsFile,
 };

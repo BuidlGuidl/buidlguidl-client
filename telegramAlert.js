@@ -1,41 +1,38 @@
 import axios from "axios";
 import { debugToFile } from "./helpers.js";
 
-// Get alert server URL from environment variable with fallback
-const ALERT_SERVER = "http://stage.rpc.buidlguidl.com:3000";
-
-let TG_ALERT_TOKEN = null;
+let TG_ALERT_IDENTIFIER = null;
 
 /**
- * Set the Telegram alert token
- * @param {string} token - The telegram alert token
+ * Set the Telegram alert identifier (ENS name or Ethereum address)
+ * @param {string} identifier - The ENS name or Ethereum address
  */
-export function setTelegramAlertToken(token) {
-  TG_ALERT_TOKEN = token;
+export function setTelegramAlertIdentifier(identifier) {
+  TG_ALERT_IDENTIFIER = identifier;
 }
 
 /**
- * Get the current Telegram alert token
- * @returns {string|null} The current telegram alert token
+ * Get the current Telegram alert identifier
+ * @returns {string|null} The current telegram alert identifier
  */
-export function getTelegramAlertToken() {
-  return TG_ALERT_TOKEN;
+export function getTelegramAlertIdentifier() {
+  return TG_ALERT_IDENTIFIER;
 }
 
 /**
  * Send a Telegram alert via the alert server
- * @param {string} alertType - Type of alert (e.g., 'client_crash', 'warning', 'info')
+ * @param {string} alertType - Type of alert (e.g., 'crash', 'warning', 'info')
  * @param {string} message - The alert message to send
  */
 export async function sendTelegramAlert(alertType, message) {
-  if (!TG_ALERT_TOKEN) {
-    debugToFile("sendTelegramAlert(): No Telegram alert token configured");
+  if (!TG_ALERT_IDENTIFIER) {
+    debugToFile("sendTelegramAlert(): No Telegram alert identifier configured");
     return;
   }
 
   try {
-    await axios.post(`${ALERT_SERVER}/api/alert`, {
-      token: TG_ALERT_TOKEN,
+    await axios.post("https://stage.rpc.buidlguidl.com:3000/api/alert", {
+      ens: TG_ALERT_IDENTIFIER, // Works with ENS or address
       message: message,
       alertType: alertType,
     });

@@ -16,11 +16,13 @@ import {
   consensusCheckpoint,
   installDir,
   owner,
-  tgAlertToken,
   saveOptionsToFile,
   deleteOptionsFile,
 } from "./commandLineOptions.js";
-import { setTelegramAlertToken, sendTelegramAlert } from "./telegramAlert.js";
+import {
+  setTelegramAlertIdentifier,
+  sendTelegramAlert,
+} from "./telegramAlert.js";
 import {
   fetchBGExecutionPeers,
   configureBGExecutionPeers,
@@ -365,10 +367,9 @@ let runsClient = false;
 
 createJwtSecret(jwtDir);
 
-// Initialize Telegram alert token if provided
-if (tgAlertToken) {
-  setTelegramAlertToken(tgAlertToken);
-  console.log("✅ Telegram alerts enabled");
+// Initialize Telegram alert identifier if owner is provided
+if (owner) {
+  setTelegramAlertIdentifier(owner);
 }
 
 const executionClientVer = getVersionNumber(executionClient);
