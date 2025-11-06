@@ -69,6 +69,7 @@ You can opt in to the BuidlGuidl distributed RPC system and earn [BuidlGuidl Bre
 
 &nbsp;
 You can also opt-in to receive Telegram alerts for client crashes when --owner is set. To do so, message /start to @BG_Client_Alert_Bot on Telegram.
+
 &nbsp;
 &nbsp;
 
