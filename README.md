@@ -62,11 +62,13 @@ Omitting the --archive flag will make the execution clients perform a pruned syn
 &nbsp;
 &nbsp;
 
-You can opt in to the BuidlGuidl distributed RPC system and earn credits for serving RPC requests to the BuidlGuidl network by passing your eth address to the --owner (-o) option:
+You can opt in to the BuidlGuidl distributed RPC system and earn [BuidlGuidl Bread](https://bread.buidlguidl.com/) for serving RPC requests to the BuidlGuidl network by passing your eth address to the --owner (-o) option:
   ```bash
   node index.js --owner <your ENS name or eth address>
   ```
 
+&nbsp;
+You can also opt-in to receive Telegram alerts for client crashes when --owner is set. To do so, message /start to @BG_Client_Alert_Bot on Telegram.
 &nbsp;
 &nbsp;
 
