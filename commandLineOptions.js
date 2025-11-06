@@ -84,7 +84,10 @@ function showHelp() {
     "  -o, --owner <eth address>                 Specify a owner eth address to opt in to the points system and distributed RPC network\n"
   );
   console.log(
-    "      --tg-alert-token <token>              Specify a Telegram alert token to receive notifications when clients crash\n"
+    "      --tg-alert-token <token>              Specify a Telegram alert token to receive notifications when clients crash"
+  );
+  console.log(
+    "                                            Message /start to @BG_Client_Alert_Bot on Telegram to create or show your token\n"
   );
   console.log(
     "      --update                              Update the execution and consensus clients to the latest version."
