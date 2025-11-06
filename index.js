@@ -283,8 +283,9 @@ async function startClient(clientName, executionType, installDir) {
   child.on("exit", (code) => {
     console.log(`🫡 ${clientName} process exited with code ${code}`);
 
-    // Send telegram alert if client crashed (non-zero exit code)
-    if (code !== 0 && code !== null) {
+    // Send telegram alert if client exited unexpectedly (not user-initiated shutdown)
+    // Only send alert if isExiting is false, meaning the user didn't close the script
+    if (!isExiting && code !== null) {
       const machineId = os.hostname();
       const clientNameCapitalized =
         clientName.charAt(0).toUpperCase() + clientName.slice(1);
