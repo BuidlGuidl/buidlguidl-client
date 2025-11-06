@@ -16,9 +16,11 @@ import {
   consensusCheckpoint,
   installDir,
   owner,
+  tgAlertToken,
   saveOptionsToFile,
   deleteOptionsFile,
 } from "./commandLineOptions.js";
+import { setTelegramAlertToken, sendTelegramAlert } from "./telegramAlert.js";
 import {
   fetchBGExecutionPeers,
   configureBGExecutionPeers,
@@ -280,6 +282,20 @@ async function startClient(clientName, executionType, installDir) {
 
   child.on("exit", (code) => {
     console.log(`🫡 ${clientName} process exited with code ${code}`);
+
+    // Send telegram alert if client crashed (non-zero exit code)
+    if (code !== 0 && code !== null) {
+      const machineId = os.hostname();
+      const clientNameCapitalized =
+        clientName.charAt(0).toUpperCase() + clientName.slice(1);
+      const alertMessage = `🔴 ${clientNameCapitalized} crashed on ${machineId} with exit code ${code}!`;
+      sendTelegramAlert("crash", alertMessage).catch((err) => {
+        debugToFile(
+          `startClient(): Failed to send crash alert - ${err.message}`
+        );
+      });
+    }
+
     if (clientName === "geth" || clientName === "reth") {
       executionExited = true;
     } else if (clientName === "prysm" || clientName === "lighthouse") {
@@ -347,6 +363,12 @@ let messageForHeader = "";
 let runsClient = false;
 
 createJwtSecret(jwtDir);
+
+// Initialize Telegram alert token if provided
+if (tgAlertToken) {
+  setTelegramAlertToken(tgAlertToken);
+  console.log("✅ Telegram alerts enabled");
+}
 
 const executionClientVer = getVersionNumber(executionClient);
 const consensusClientVer = getVersionNumber(consensusClient);
