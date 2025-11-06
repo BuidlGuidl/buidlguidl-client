@@ -119,7 +119,8 @@ Use the --help (-h) option to see all command line options:
   -d, --directory <path>                    Specify ethereum client executable, database, and logs directory
                                             Default: buidlguidl-client/ethereum_clients
 
-  -o, --owner <eth address>                 Specify a owner eth address to opt in to the points system and distributed RPC network
+  -o, --owner <eth address>                 Specify a owner eth address to opt in to the points system, distributed RPC network, and Telegram alerts
+                                            To set up Telegram alerts for clients crashes, message /start to @BG_Client_Alert_Bot on Telegram
 
       --update                              Update the execution and consensus clients to the latest version.
                                             Latest versions: Reth: 1.0.0, Geth: 1.14.12, Lighthouse: 5.3.0, (Prysm is handled by its executable automatically)
