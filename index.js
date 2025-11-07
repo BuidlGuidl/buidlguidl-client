@@ -20,6 +20,10 @@ import {
   deleteOptionsFile,
 } from "./commandLineOptions.js";
 import {
+  setTelegramAlertIdentifier,
+  sendTelegramAlert,
+} from "./telegramAlert.js";
+import {
   fetchBGExecutionPeers,
   configureBGExecutionPeers,
   fetchBGConsensusPeers,
@@ -280,6 +284,21 @@ async function startClient(clientName, executionType, installDir) {
 
   child.on("exit", (code) => {
     console.log(`🫡 ${clientName} process exited with code ${code}`);
+
+    // Send telegram alert if client exited unexpectedly (not user-initiated shutdown)
+    // Only send alert if isExiting is false, meaning the user didn't close the script
+    if (!isExiting && code !== null) {
+      const machineId = os.hostname();
+      const clientNameCapitalized =
+        clientName.charAt(0).toUpperCase() + clientName.slice(1);
+      const alertMessage = `🔴 ${clientNameCapitalized} crashed on ${machineId} with exit code ${code}!`;
+      sendTelegramAlert("crash", alertMessage).catch((err) => {
+        debugToFile(
+          `startClient(): Failed to send crash alert - ${err.message}`
+        );
+      });
+    }
+
     if (clientName === "geth" || clientName === "reth") {
       executionExited = true;
     } else if (clientName === "prysm" || clientName === "lighthouse") {
@@ -347,6 +366,11 @@ let messageForHeader = "";
 let runsClient = false;
 
 createJwtSecret(jwtDir);
+
+// Initialize Telegram alert identifier if owner is provided
+if (owner) {
+  setTelegramAlertIdentifier(owner);
+}
 
 const executionClientVer = getVersionNumber(executionClient);
 const consensusClientVer = getVersionNumber(consensusClient);

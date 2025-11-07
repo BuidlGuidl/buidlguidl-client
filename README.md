@@ -62,10 +62,13 @@ Omitting the --archive flag will make the execution clients perform a pruned syn
 &nbsp;
 &nbsp;
 
-You can opt in to the BuidlGuidl distributed RPC system and earn credits for serving RPC requests to the BuidlGuidl network by passing your eth address to the --owner (-o) option:
+You can opt in to the BuidlGuidl distributed RPC system and earn [BuidlGuidl Bread](https://bread.buidlguidl.com/) for serving RPC requests to the BuidlGuidl network by passing your eth address to the --owner (-o) option:
   ```bash
   node index.js --owner <your ENS name or eth address>
   ```
+
+&nbsp;
+You can also opt-in to receive Telegram alerts for client crashes when --owner is set. To do so, message /start to @BG_Client_Alert_Bot on Telegram.
 
 &nbsp;
 &nbsp;
@@ -119,7 +122,8 @@ Use the --help (-h) option to see all command line options:
   -d, --directory <path>                    Specify ethereum client executable, database, and logs directory
                                             Default: buidlguidl-client/ethereum_clients
 
-  -o, --owner <eth address>                 Specify a owner eth address to opt in to the points system and distributed RPC network
+  -o, --owner <eth address>                 Specify a owner eth address to opt in to the points system, distributed RPC network, and Telegram alerts
+                                            To set up Telegram alerts for clients crashes, message /start to @BG_Client_Alert_Bot on Telegram
 
       --update                              Update the execution and consensus clients to the latest version.
                                             Latest versions: Reth: 1.0.0, Geth: 1.14.12, Lighthouse: 5.3.0, (Prysm is handled by its executable automatically)
