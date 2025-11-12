@@ -219,6 +219,10 @@ async function startClient(clientName, executionType, installDir) {
     clientArgs.push("--executionpeerport", executionPeerPort);
     clientArgs.push("--executiontype", executionType);
     clientCommand = path.join(__dirname, "ethereum_client_scripts/reth.js");
+  } else if (clientName === "erigon") {
+    clientArgs.push("--executionpeerport", executionPeerPort);
+    clientArgs.push("--executiontype", executionType);
+    clientCommand = path.join(__dirname, "ethereum_client_scripts/erigon.js");
   } else if (clientName === "prysm") {
     bgConsensusPeers = await fetchBGConsensusPeers();
     bgConsensusAddrs = await configureBGConsensusPeers(consensusClient);
@@ -276,7 +280,11 @@ async function startClient(clientName, executionType, installDir) {
     env: { ...process.env, INSTALL_DIR: installDir },
   });
 
-  if (clientName === "geth" || clientName === "reth") {
+  if (
+    clientName === "geth" ||
+    clientName === "reth" ||
+    clientName === "erigon"
+  ) {
     executionChild = child;
   } else if (clientName === "prysm" || clientName === "lighthouse") {
     consensusChild = child;
@@ -299,7 +307,11 @@ async function startClient(clientName, executionType, installDir) {
       });
     }
 
-    if (clientName === "geth" || clientName === "reth") {
+    if (
+      clientName === "geth" ||
+      clientName === "reth" ||
+      clientName === "erigon"
+    ) {
       executionExited = true;
     } else if (clientName === "prysm" || clientName === "lighthouse") {
       consensusExited = true;

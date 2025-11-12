@@ -14,6 +14,7 @@ import {
 } from "./viemClients.js";
 import { exec } from "child_process";
 import { populateRethStageGauge } from "./rethStageGauge.js";
+import { populateErigonStageGauge } from "./erigonStageGauge.js";
 import { populateGethStageGauge } from "./gethStageGauge.js";
 import { checkIn } from "../webSocketConnection.js";
 import fetch from "node-fetch";
@@ -179,7 +180,7 @@ export function setupLogStreaming(
           }
 
           // Check for new block
-          if (client == "geth" || client == "reth") {
+          if (client == "geth" || client == "reth" || client == "erigon") {
             const blockNumberMatch = line.match(/block=(\d+)/);
             if (blockNumberMatch) {
               const currentBlockNumber = parseInt(blockNumberMatch[1], 10);
@@ -258,6 +259,21 @@ let stagePercentages = {
   transactionLookupPercent: 0,
   indexStorageHistoryPercent: 0,
   indexAccountHistoryPercent: 0,
+  finishPercent: 0,
+};
+
+let erigonStagePercentages = {
+  headersPercent: 0,
+  bodiesPercent: 0,
+  sendersPercent: 0,
+  executionPercent: 0,
+  hashstatePercent: 0,
+  intermediatehashesPercent: 0,
+  accounthistoryindexPercent: 0,
+  storagehistoryindexPercent: 0,
+  logindexPercent: 0,
+  calltracesPercent: 0,
+  txlookupPercent: 0,
   finishPercent: 0,
 };
 
@@ -653,6 +669,92 @@ async function parseAndPopulateRethMetrics() {
   populateRethStageGauge(Object.values(stagePercentages));
 }
 
+// Erigon metrics functions
+let erigonVersion = null;
+
+function initErigonVersion() {
+  if (erigonVersion === null) {
+    erigonVersion = getVersionNumber("erigon");
+  }
+  return erigonVersion;
+}
+
+async function getErigonSyncMetrics() {
+  return new Promise((resolve) => {
+    exec(
+      "curl -s 127.0.0.1:9001/debug/metrics/prometheus | grep -E 'sync_stage_progress|sync_execution_stage'",
+      (error, stdout, stderr) => {
+        if (error || stderr) {
+          // If there's an error (likely because Erigon is no longer running), return an empty string
+          resolve("");
+        } else {
+          resolve(stdout.trim()); // Return the output as a string
+        }
+      }
+    );
+  });
+}
+
+async function parseAndPopulateErigonMetrics() {
+  const erigonSyncMetrics = await getErigonSyncMetrics();
+
+  // Initialize Erigon version if not already done
+  initErigonVersion();
+
+  // If metrics are empty (likely because Erigon is shutting down), don't process further
+  if (!erigonSyncMetrics) {
+    return;
+  }
+
+  // Helper function to round progress values > 0.99 to 1.0
+  const roundProgress = (progress) => {
+    return progress > 0.99 ? 1 : progress;
+  };
+
+  // Erigon uses sync_stage_progress metrics
+  // Format: sync_stage_progress{stage="<StageName>"} <current_block> <target_block>
+  // We need to parse these and calculate percentages
+
+  const stageNames = [
+    "Headers",
+    "Bodies",
+    "Senders",
+    "Execution",
+    "HashState",
+    "IntermediateHashes",
+    "AccountHistoryIndex",
+    "StorageHistoryIndex",
+    "LogIndex",
+    "CallTraces",
+    "TxLookup",
+    "Finish",
+  ];
+
+  for (const stageName of stageNames) {
+    const regex = new RegExp(
+      `sync_stage_progress\\{stage="${stageName}"\\}\\s+(\\d+)\\s+(\\d+)`
+    );
+    const match = erigonSyncMetrics.match(regex);
+
+    if (match) {
+      const current = parseInt(match[1], 10);
+      const target = parseInt(match[2], 10);
+
+      if (target > 0) {
+        erigonStagePercentages[stageName.toLowerCase() + "Percent"] =
+          roundProgress(current / target);
+      } else {
+        erigonStagePercentages[stageName.toLowerCase() + "Percent"] = 0;
+      }
+    } else {
+      erigonStagePercentages[stageName.toLowerCase() + "Percent"] = 0;
+    }
+  }
+
+  // Populate the Erigon stage gauge with the percentages
+  populateErigonStageGauge(Object.values(erigonStagePercentages));
+}
+
 function checkAllStagesComplete(percentages) {
   const values = Object.values(percentages);
   const allOnes = values.every((percent) => percent === 1);
@@ -696,6 +798,45 @@ export async function showHideRethWidgets(
     }
   } catch (error) {
     debugToFile(`showHideRethWidgets(): ${error}`);
+  }
+}
+
+export async function showHideErigonWidgets(
+  screen,
+  erigonStageGauge,
+  chainInfoBox,
+  rpcInfoBox
+) {
+  try {
+    const syncingStatus = await getEthSyncingStatus();
+
+    // debugToFile(`syncingStatus: ${JSON.stringify(syncingStatus, null, 2)}`);
+
+    const allStagesComplete = checkAllStagesComplete(erigonStagePercentages);
+
+    if (syncingStatus && !allStagesComplete) {
+      if (!screen.children.includes(erigonStageGauge)) {
+        screen.append(erigonStageGauge);
+      }
+      if (screen.children.includes(chainInfoBox)) {
+        screen.remove(chainInfoBox);
+      }
+      if (screen.children.includes(rpcInfoBox)) {
+        screen.remove(rpcInfoBox);
+      }
+    } else {
+      if (screen.children.includes(erigonStageGauge)) {
+        screen.remove(erigonStageGauge);
+      }
+      if (!screen.children.includes(chainInfoBox)) {
+        screen.append(chainInfoBox);
+      }
+      if (!screen.children.includes(rpcInfoBox) && owner) {
+        screen.append(rpcInfoBox);
+      }
+    }
+  } catch (error) {
+    debugToFile(`showHideErigonWidgets(): ${error}`);
   }
 }
 
@@ -1024,6 +1165,59 @@ export async function synchronizeAndUpdateWidgets(installDir) {
       if (isSyncing) {
         statusMessage = `SYNC IN PROGRESS`;
         await parseAndPopulateRethMetrics();
+      } else if (isSyncing === false) {
+        const blockNumber = await localClient.getBlockNumber();
+
+        // Only increment block counter once per block
+        if (lastBlockNumber !== blockNumber) {
+          blockCounter++;
+          lastBlockNumber = blockNumber;
+        }
+
+        let isFollowingChainHead;
+        let latestBlock;
+
+        // Only use the 10-block optimization if we are following chain head
+        let shouldCheckLatestBlock = lastIsFollowingChainHead
+          ? blockCounter % 10 === 0
+          : true;
+        if (lastLatestBlock === null) {
+          shouldCheckLatestBlock = true; // Always fetch on startup or if we have no mainnet block
+        }
+
+        if (shouldCheckLatestBlock) {
+          try {
+            latestBlock = await fetchLatestBlockWithMutex();
+            isFollowingChainHead =
+              latestBlock !== null &&
+              (blockNumber >= latestBlock || blockNumber === latestBlock - 1n); // Use 1n for BigInt
+            lastLatestBlock = latestBlock;
+            lastIsFollowingChainHead = isFollowingChainHead;
+          } catch (error) {
+            debugToFile(`Error fetching latest block: ${error}`);
+            isFollowingChainHead = true; // fallback
+            lastIsFollowingChainHead = isFollowingChainHead;
+            lastLatestBlock = null;
+          }
+        } else {
+          // Use last known state
+          isFollowingChainHead = lastIsFollowingChainHead;
+          latestBlock = lastLatestBlock;
+        }
+
+        // Set status message
+        if (isFollowingChainHead) {
+          statusMessage = `FOLLOWING CHAIN HEAD\nCurrent Block: ${blockNumber.toLocaleString()}`;
+        } else {
+          statusMessage = `CATCHING UP TO HEAD\nLocal Block:   ${blockNumber.toLocaleString()}\nMainnet Block: ${
+            latestBlock ? latestBlock.toLocaleString() : "Unknown"
+          }`;
+        }
+      }
+    } else if (executionClient == "erigon") {
+      if (isSyncing) {
+        statusMessage = `SYNC IN PROGRESS`;
+        await parseAndPopulateErigonMetrics();
       } else if (isSyncing === false) {
         const blockNumber = await localClient.getBlockNumber();
 

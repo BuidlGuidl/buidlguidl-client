@@ -11,6 +11,7 @@ import {
   removeClient,
   latestGethVer,
   latestRethVer,
+  latestErigonVer,
   latestLighthouseVer,
 } from "./ethereum_client_scripts/install.js";
 import { debugToFile } from "./helpers.js";
@@ -39,11 +40,11 @@ const optionsFilePath = join(installDir, "options.json");
 function showHelp() {
   console.log("");
   console.log(
-    "  -e, --executionclient <client>            Specify the execution client ('reth' or 'geth')"
+    "  -e, --executionclient <client>            Specify the execution client ('reth', 'geth', or 'erigon')"
   );
   console.log("                                            Default: reth");
   console.log(
-    "                                            Note: geth is only supported on Ubuntu/Linux\n"
+    "                                            Note: geth and erigon are only supported on Ubuntu/Linux\n"
   );
   console.log(
     "  -c, --consensusclient <client>            Specify the consensus client ('lighthouse' or 'prysm')"
@@ -89,7 +90,7 @@ function showHelp() {
     "      --update                              Update the execution and consensus clients to the latest version."
   );
   console.log(
-    `                                            Latest versions: Reth: ${latestRethVer}, Geth: ${latestGethVer}, Lighthouse: ${latestLighthouseVer}, (Prysm is handled by its executable automatically)\n`
+    `                                            Latest versions: Reth: ${latestRethVer}, Geth: ${latestGethVer}, Erigon: ${latestErigonVer}, Lighthouse: ${latestLighthouseVer}, (Prysm is handled by its executable automatically)\n`
   );
   console.log(
     "  -h, --help                                Display this help message and exit"
@@ -143,11 +144,24 @@ if (fs.existsSync(optionsFilePath)) {
     owner = options.owner;
     optionsLoaded = true;
 
-    // Check if loaded geth option is being used on macOS (not supported)
+    // Check if loaded geth or erigon option is being used on macOS (not supported)
     if (executionClient === "geth" && os.platform() === "darwin") {
       console.log("");
       console.log("❌ Error: Geth is currently not supported on macOS.");
       console.log("🔄 Please use 'reth' as your execution client instead:");
+      console.log("");
+      process.exit(1);
+    }
+
+    if (executionClient === "erigon" && os.platform() === "darwin") {
+      console.log("");
+      console.log(
+        "❌ Error: Erigon v3.2.2 does not provide pre-compiled macOS binaries."
+      );
+      console.log("🔄 Please use 'reth' as your execution client instead:");
+      console.log(
+        "   Or build Erigon from source: https://github.com/erigontech/erigon"
+      );
       console.log("");
       process.exit(1);
     }
@@ -211,19 +225,36 @@ if (!optionsLoaded) {
 
   if (argv.executionclient) {
     executionClient = argv.executionclient;
-    if (executionClient !== "reth" && executionClient !== "geth") {
+    if (
+      executionClient !== "reth" &&
+      executionClient !== "geth" &&
+      executionClient !== "erigon"
+    ) {
       console.log(
-        "Invalid option for --executionclient (-e). Use 'reth' or 'geth'."
+        "Invalid option for --executionclient (-e). Use 'reth', 'geth', or 'erigon'."
       );
       process.exit(1);
     }
   }
 
-  // Check if geth is being used on macOS (not supported)
+  // Check if geth or erigon is being used on macOS (not supported)
   if (executionClient === "geth" && os.platform() === "darwin") {
     console.log("");
     console.log("❌ Error: Geth is currently not supported on macOS.");
     console.log("🔄 Please use 'reth' as your execution client instead:");
+    console.log("");
+    process.exit(1);
+  }
+
+  if (executionClient === "erigon" && os.platform() === "darwin") {
+    console.log("");
+    console.log(
+      "❌ Error: Erigon v3.2.2 does not provide pre-compiled macOS binaries."
+    );
+    console.log("🔄 Please use 'reth' as your execution client instead:");
+    console.log(
+      "   Or build Erigon from source: https://github.com/erigontech/erigon"
+    );
     console.log("");
     process.exit(1);
   }

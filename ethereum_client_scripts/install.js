@@ -7,6 +7,7 @@ import { debugToFile } from "./../helpers.js";
 
 export const latestGethVer = "1.16.7";
 export const latestRethVer = "1.9.1";
+export const latestErigonVer = "3.2.2";
 export const latestLighthouseVer = "8.0.0";
 
 export function installMacLinuxClient(clientName, platform) {
@@ -41,12 +42,14 @@ export function installMacLinuxClient(clientName, platform) {
       x64: {
         geth: `geth-linux-amd64-${latestGethVer}-${gethHash[latestGethVer]}`,
         reth: `reth-v${latestRethVer}-x86_64-unknown-linux-gnu`,
+        erigon: `erigon_v${latestErigonVer}_linux_amd64`,
         lighthouse: `lighthouse-v${latestLighthouseVer}-x86_64-unknown-linux-gnu`,
         prysm: "prysm.sh",
       },
       arm64: {
         geth: `geth-linux-arm64-${latestGethVer}-${gethHash[latestGethVer]}`,
         reth: `reth-v${latestRethVer}-aarch64-unknown-linux-gnu`,
+        erigon: `erigon_v${latestErigonVer}_linux_arm64`,
         lighthouse: `lighthouse-v${latestLighthouseVer}-aarch64-unknown-linux-gnu`,
         prysm: "prysm.sh",
       },
@@ -71,6 +74,7 @@ export function installMacLinuxClient(clientName, platform) {
     const downloadUrls = {
       geth: `https://gethstore.blob.core.windows.net/builds/${fileName}.tar.gz`,
       reth: `https://github.com/paradigmxyz/reth/releases/download/v${latestRethVer}/${fileName}.tar.gz`,
+      erigon: `https://github.com/erigontech/erigon/releases/download/v${latestErigonVer}/${fileName}.tar.gz`,
       lighthouse: `https://github.com/sigp/lighthouse/releases/download/v${latestLighthouseVer}/${fileName}.tar.gz`,
       prysm:
         "https://raw.githubusercontent.com/prysmaticlabs/prysm/master/prysm.sh",
@@ -100,6 +104,17 @@ export function installMacLinuxClient(clientName, platform) {
         execSync(`cd "${clientDir}" && rm -r "${fileName}"`, {
           stdio: "inherit",
         });
+      } else if (clientName === "erigon") {
+        // Erigon extracts to a directory, move the binary up
+        execSync(
+          `cd "${clientDir}" && mv ${fileName}/erigon . && chmod +x erigon`,
+          {
+            stdio: "inherit",
+          }
+        );
+        execSync(`cd "${clientDir}" && rm -r "${fileName}"`, {
+          stdio: "inherit",
+        });
       }
 
       console.log(`Cleaning up ${clientName} directory.`);
@@ -119,7 +134,12 @@ export function getVersionNumber(client) {
   let versionOutput;
   let versionMatch;
 
-  if (client === "reth" || client === "lighthouse" || client === "geth") {
+  if (
+    client === "reth" ||
+    client === "lighthouse" ||
+    client === "geth" ||
+    client === "erigon"
+  ) {
     argument = "--version";
   } else if (client === "prysm") {
     argument = "beacon-chain --version";
@@ -155,6 +175,8 @@ export function getVersionNumber(client) {
       versionMatch = versionOutput.match(/Lighthouse v(\d+\.\d+\.\d+)/);
     } else if (client === "geth") {
       versionMatch = versionOutput.match(/geth version (\d+\.\d+\.\d+)/);
+    } else if (client === "erigon") {
+      versionMatch = versionOutput.match(/erigon version (\d+\.\d+\.\d+)/i);
     } else if (client === "prysm") {
       versionMatch = versionOutput.match(/beacon-chain-v(\d+\.\d+\.\d+)-/);
     }
@@ -181,6 +203,8 @@ export function compareClientVersions(client, installedVersion) {
     latestVersion = latestRethVer;
   } else if (client === "geth") {
     latestVersion = latestGethVer;
+  } else if (client === "erigon") {
+    latestVersion = latestErigonVer;
   } else if (client === "lighthouse") {
     latestVersion = latestLighthouseVer;
   }

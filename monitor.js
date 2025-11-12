@@ -8,6 +8,7 @@ import { createCpuLine } from "./monitor_components/cpuLine.js";
 import { createNetworkLine } from "./monitor_components/networkLine.js";
 import { createDiskLine } from "./monitor_components/diskLine.js";
 import { createRethStageGauge } from "./monitor_components/rethStageGauge.js";
+import { createErigonStageGauge } from "./monitor_components/erigonStageGauge.js";
 import { createGethStageGauge } from "./monitor_components/gethStageGauge.js";
 import { createChainInfoBox } from "./monitor_components/chainInfoBox.js";
 import { createRpcInfoBox } from "./monitor_components/rpcInfoBox.js";
@@ -29,6 +30,7 @@ import {
 import {
   setupLogStreaming,
   showHideRethWidgets,
+  showHideErigonWidgets,
   showHideGethWidgets,
 } from "./monitor_components/updateLogic.js";
 
@@ -129,6 +131,15 @@ export async function initializeMonitoring(
           components.rpcInfoBox
         );
       }, 5000);
+    } else if (executionClient == "erigon") {
+      setInterval(() => {
+        showHideErigonWidgets(
+          screen,
+          components.erigonStageGauge,
+          components.chainInfoBox,
+          components.rpcInfoBox
+        );
+      }, 5000);
     } else if (executionClient == "geth") {
       setInterval(() => {
         showHideGethWidgets(
@@ -163,6 +174,8 @@ function setupUI(
     executionClientLabel = `Geth v${executionClientVer}`;
   } else if (executionClientGlobal == "reth") {
     executionClientLabel = `Reth v${executionClientVer}`;
+  } else if (executionClientGlobal == "erigon") {
+    executionClientLabel = `Erigon v${executionClientVer}`;
   }
 
   if (consensusClientGlobal == "prysm") {
@@ -183,12 +196,14 @@ function setupUI(
   chainInfoBox = createChainInfoBox(grid);
   rpcInfoBox = createRpcInfoBox(grid);
 
-  let gethStageGauge, rethStageGauge;
+  let gethStageGauge, rethStageGauge, erigonStageGauge;
 
   if (executionClientGlobal == "geth") {
     gethStageGauge = createGethStageGauge(grid);
   } else if (executionClientGlobal == "reth") {
     rethStageGauge = createRethStageGauge(grid);
+  } else if (executionClientGlobal == "erigon") {
+    erigonStageGauge = createErigonStageGauge(grid);
   }
 
   const { pic, bigText, ipAddressBox } = createHeader(
@@ -210,6 +225,8 @@ function setupUI(
     screen.append(gethStageGauge);
   } else if (executionClientGlobal == "reth") {
     screen.append(rethStageGauge);
+  } else if (executionClientGlobal == "erigon") {
+    screen.append(erigonStageGauge);
   }
 
   setBandwidthBox(bandwidthBox);
@@ -253,6 +270,16 @@ function setupUI(
         let rethStageGaugeGap = cpuLine.top - rethStageGaugeBottom - 1;
         if (rethStageGaugeGap != 0) {
           rethStageGauge.height = rethStageGauge.height + rethStageGaugeGap;
+        }
+      }
+
+      if (screen.children.includes(erigonStageGauge)) {
+        let erigonStageGaugeBottom =
+          erigonStageGauge.top + erigonStageGauge.height - 1;
+        let erigonStageGaugeGap = cpuLine.top - erigonStageGaugeBottom - 1;
+        if (erigonStageGaugeGap != 0) {
+          erigonStageGauge.height =
+            erigonStageGauge.height + erigonStageGaugeGap;
         }
       }
 
@@ -342,6 +369,16 @@ function setupUI(
         let rethStageGaugeGap = peerCountGauge.left - rethStageGaugeRight - 1;
         if (rethStageGaugeGap != 0) {
           rethStageGauge.width = rethStageGauge.width + rethStageGaugeGap;
+        }
+      }
+
+      if (screen.children.includes(erigonStageGauge)) {
+        let erigonStageGaugeRight =
+          erigonStageGauge.left + erigonStageGauge.width - 1;
+        let erigonStageGaugeGap =
+          peerCountGauge.left - erigonStageGaugeRight - 1;
+        if (erigonStageGaugeGap != 0) {
+          erigonStageGauge.width = erigonStageGauge.width + erigonStageGaugeGap;
         }
       }
 
@@ -454,6 +491,7 @@ function setupUI(
       consensusLog,
       gethStageGauge,
       rethStageGauge,
+      erigonStageGauge,
       chainInfoBox,
       rpcInfoBox,
     },
