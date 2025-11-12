@@ -919,6 +919,19 @@ async function calcSyncingStatus(executionClient) {
         isSyncing = false;
       }
       // If none of the conditions are met, isSyncing remains false
+    } else if (executionClient === "erigon") {
+      // Check if syncingStatus is an object (syncing) or false (not syncing)
+      const isNodeSyncing = syncingStatus !== false;
+
+      const allStagesComplete = checkAllStagesComplete(erigonStagePercentages);
+      const allStagesZero = Object.keys(erigonStagePercentages).length === 0;
+
+      if (isNodeSyncing || allStagesZero) {
+        isSyncing = true;
+      } else if (allStagesComplete) {
+        isSyncing = false;
+      }
+      // If none of the conditions are met, isSyncing remains false
     } else if (executionClient === "geth") {
       isSyncing = !!syncingStatus; // Convert to boolean
     }

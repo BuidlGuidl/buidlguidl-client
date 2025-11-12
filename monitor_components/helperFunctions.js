@@ -40,9 +40,13 @@ export function getLatestLogFile(dir, client) {
       logFiles = files.filter(
         (file) => file.startsWith("lighthouse_") && file.endsWith(".log")
       );
+    } else if (client === "erigon") {
+      logFiles = files.filter(
+        (file) => file.startsWith("erigon_") && file.endsWith(".log")
+      );
     } else {
       debugToFile(
-        `getLatestLogFile(): Invalid client specified. Must be 'geth', 'reth', 'prysm', or 'lighthouse'.`,
+        `getLatestLogFile(): Invalid client specified. Must be 'geth', 'reth', 'erigon', 'prysm', or 'lighthouse'.`,
         () => {}
       );
     }
