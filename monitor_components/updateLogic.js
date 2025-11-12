@@ -179,6 +179,11 @@ export function setupLogStreaming(
             saveChainDlProgress(line);
           }
 
+          // Parse Erigon sync progress from logs
+          if (client == "erigon") {
+            parseErigonSyncProgress(line);
+          }
+
           // Check for new block
           if (client == "geth" || client == "reth" || client == "erigon") {
             const blockNumberMatch = line.match(/block=(\d+)/);
@@ -262,20 +267,36 @@ let stagePercentages = {
   finishPercent: 0,
 };
 
-let erigonStagePercentages = {
-  headersPercent: 0,
-  bodiesPercent: 0,
-  sendersPercent: 0,
-  executionPercent: 0,
-  hashstatePercent: 0,
-  intermediatehashesPercent: 0,
-  accounthistoryindexPercent: 0,
-  storagehistoryindexPercent: 0,
-  logindexPercent: 0,
-  calltracesPercent: 0,
-  txlookupPercent: 0,
-  finishPercent: 0,
-};
+// Erigon stage tracking - dynamically populated from logs
+// Tracks: { stageIndex: { name: "OtterSync", percent: 0.1376, totalStages: 6 } }
+let erigonStagePercentages = {};
+let erigonTotalStages = 6; // Default, will be updated from logs
+
+// Function to parse Erigon log lines for sync progress
+function parseErigonSyncProgress(line) {
+  // Format: [X/Y StageName] Syncing ... data="percentage% - size"
+  // Example: [1/6 OtterSync] Syncing ... data="13.76% - 133.9GB/973.5GB"
+  const stageMatch = line.match(/\[(\d+)\/(\d+)\s+([^\]]+)\]/);
+  const dataMatch = line.match(/data="([\d.]+)%/);
+
+  if (stageMatch && dataMatch) {
+    const stageIndex = parseInt(stageMatch[1], 10);
+    const totalStages = parseInt(stageMatch[2], 10);
+    const stageName = stageMatch[3].trim();
+    const percent = parseFloat(dataMatch[1]) / 100;
+
+    erigonTotalStages = totalStages;
+    erigonStagePercentages[stageIndex] = {
+      name: stageName,
+      percent: percent,
+      totalStages: totalStages,
+    };
+
+    return true; // Indicate we found sync progress
+  }
+
+  return false;
+}
 
 // Add this function before initRethVersion
 function compareVersions(version1, version2) {
@@ -679,86 +700,30 @@ function initErigonVersion() {
   return erigonVersion;
 }
 
-async function getErigonSyncMetrics() {
-  return new Promise((resolve) => {
-    exec(
-      "curl -s 127.0.0.1:9001/debug/metrics/prometheus | grep -E 'sync_stage_progress|sync_execution_stage'",
-      (error, stdout, stderr) => {
-        if (error || stderr) {
-          // If there's an error (likely because Erigon is no longer running), return an empty string
-          resolve("");
-        } else {
-          resolve(stdout.trim()); // Return the output as a string
-        }
-      }
-    );
-  });
-}
-
 async function parseAndPopulateErigonMetrics() {
-  const erigonSyncMetrics = await getErigonSyncMetrics();
-
   // Initialize Erigon version if not already done
   initErigonVersion();
 
-  // If metrics are empty (likely because Erigon is shutting down), don't process further
-  if (!erigonSyncMetrics) {
-    return;
+  // Pass the full erigonStagePercentages object to the gauge
+  // It will extract stage names and percentages
+  if (Object.keys(erigonStagePercentages).length > 0) {
+    populateErigonStageGauge(erigonStagePercentages);
   }
-
-  // Helper function to round progress values > 0.99 to 1.0
-  const roundProgress = (progress) => {
-    return progress > 0.99 ? 1 : progress;
-  };
-
-  // Erigon uses sync_stage_progress metrics
-  // Format: sync_stage_progress{stage="<StageName>"} <current_block> <target_block>
-  // We need to parse these and calculate percentages
-
-  const stageNames = [
-    "Headers",
-    "Bodies",
-    "Senders",
-    "Execution",
-    "HashState",
-    "IntermediateHashes",
-    "AccountHistoryIndex",
-    "StorageHistoryIndex",
-    "LogIndex",
-    "CallTraces",
-    "TxLookup",
-    "Finish",
-  ];
-
-  for (const stageName of stageNames) {
-    const regex = new RegExp(
-      `sync_stage_progress\\{stage="${stageName}"\\}\\s+(\\d+)\\s+(\\d+)`
-    );
-    const match = erigonSyncMetrics.match(regex);
-
-    if (match) {
-      const current = parseInt(match[1], 10);
-      const target = parseInt(match[2], 10);
-
-      if (target > 0) {
-        erigonStagePercentages[stageName.toLowerCase() + "Percent"] =
-          roundProgress(current / target);
-      } else {
-        erigonStagePercentages[stageName.toLowerCase() + "Percent"] = 0;
-      }
-    } else {
-      erigonStagePercentages[stageName.toLowerCase() + "Percent"] = 0;
-    }
-  }
-
-  // Populate the Erigon stage gauge with the percentages
-  populateErigonStageGauge(Object.values(erigonStagePercentages));
 }
 
 function checkAllStagesComplete(percentages) {
+  // Handle new Erigon format: { stageIndex: { name, percent, totalStages } }
   const values = Object.values(percentages);
-  const allOnes = values.every((percent) => percent === 1);
-  const allZeros = values.every((percent) => percent === 0);
+
+  if (values.length === 0) {
+    return false; // No data yet
+  }
+
+  // Extract percent values from stage objects
+  const percents = values.map((stage) => stage.percent || stage);
+
+  const allOnes = percents.every((percent) => percent >= 1);
+  const allZeros = percents.every((percent) => percent === 0);
   return allOnes || allZeros;
 }
 

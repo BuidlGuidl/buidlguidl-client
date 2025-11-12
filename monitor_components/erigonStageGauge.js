@@ -31,27 +31,12 @@ export function createErigonStageGauge(grid) {
   return erigonStageGauge;
 }
 
-export function populateErigonStageGauge(stagePercentages) {
+export function populateErigonStageGauge(stageData) {
   try {
     // Initialize Erigon version if not already done
     initErigonVersion();
 
-    // Erigon sync stages
-    const stageNames = [
-      "HEADERS",
-      "BODIES",
-      "SENDERS",
-      "EXECUTION",
-      "HASH STATE",
-      "INTERMEDIATE HASHES",
-      "ACCOUNT HIST INDEX",
-      "STORAGE HIST INDEX",
-      "LOG INDEX",
-      "CALL TRACES",
-      "TX LOOKUP",
-      "FINISH",
-    ];
-
+    // stageData format: { stageIndex: { name: "OtterSync", percent: 0.1376, totalStages: 6 } }
     const boxWidth = erigonStageGauge.width - 9;
     const boxHeight = erigonStageGauge.height - 2; // Subtracting 2 for border
 
@@ -59,25 +44,38 @@ export function populateErigonStageGauge(stagePercentages) {
       let content = "";
       const maxItems = Math.floor(boxHeight / 2);
 
+      // Sort stages by index
+      const sortedIndices = Object.keys(stageData)
+        .map(Number)
+        .sort((a, b) => a - b);
+
       // Display stages based on available space
-      let startIndex = 0;
-      let endIndex = Math.min(stagePercentages.length, maxItems);
+      let endIndex = Math.min(sortedIndices.length, maxItems);
 
       if (boxHeight >= 24) {
-        endIndex = stagePercentages.length;
+        endIndex = sortedIndices.length;
       }
 
-      for (let i = startIndex; i < endIndex; i++) {
-        let percentComplete = stagePercentages[i];
+      for (let i = 0; i < endIndex; i++) {
+        const stageIndex = sortedIndices[i];
+        const stage = stageData[stageIndex];
+
+        if (!stage) continue;
+
+        let percentComplete = stage.percent;
         if (percentComplete > 1) {
           percentComplete = 1;
         }
+
         const filledBars = Math.max(0, Math.floor(boxWidth * percentComplete));
         const emptyBars = Math.max(0, boxWidth - filledBars);
         const bar = "█".repeat(filledBars) + " ".repeat(emptyBars);
         const percentString = `${Math.floor(percentComplete * 100)}%`;
 
-        content += `${stageNames[i]}\n[${bar}] ${percentString}\n`;
+        // Use the stage name from logs, converted to uppercase for consistency
+        const stageName = stage.name.toUpperCase();
+
+        content += `[${stageIndex}/${stage.totalStages}] ${stageName}\n[${bar}] ${percentString}\n`;
       }
 
       erigonStageGauge.setContent(content.trim());
