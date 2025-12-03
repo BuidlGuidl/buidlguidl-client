@@ -71,6 +71,15 @@ const execution = pty.spawn(
     "--metrics",
     "--metrics.addr",
     "127.0.0.1",
+    "--ws",
+    "--ws.api",
+    "eth,net,admin",
+    "--ws.origins",
+    "*",
+    "--ws.addr",
+    "127.0.0.1",
+    "--ws.port",
+    "8546"  
   ],
   {
     name: "xterm-color",
