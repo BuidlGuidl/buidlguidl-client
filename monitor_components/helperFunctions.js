@@ -99,12 +99,12 @@ export function loadProgress() {
 export function formatLogLines(line, client) {
   // Erigon-specific highlighting - MUST be done FIRST before other rules modify the line
   if (client === "erigon") {
-    // Highlight square bracket messages after datetime in orange
+    // Highlight square bracket messages after datetime in blue
     // Pattern: INFO[12-03|19:23:15.272] [4/6 Execution] or [p2p] or [agg]
     // Match all consecutive [...] patterns after the datetime
     line = line.replace(
       /^(INFO|WARN|ERROR)(\[[\d-]+\|[\d:.]+\])\s+((?:\[[^\]]+\])+)/,
-      "$1$2 {bold}{#FFA500-fg}$3{/}"
+      "$1$2 {bold}{blue-fg}$3{/}"
     );
   }
 
