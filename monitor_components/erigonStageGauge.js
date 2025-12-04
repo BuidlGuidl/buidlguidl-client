@@ -36,35 +36,29 @@ export function populateErigonStageGauge(stageData) {
     // Initialize Erigon version if not already done
     initErigonVersion();
 
-    // stageData format: { stageIndex: { name: "OtterSync", percent: 0.1376, totalStages: 6 } }
+    // Define the three main Erigon stages (always displayed)
+    // Stage indices from logs: 1=OtterSync, 3=Senders, 4=Execution
+    const stageNames = ["OTTERSYNC", "SENDERS", "EXECUTION"];
+    const stageIndices = [1, 3, 4]; // Map to actual Erigon stage numbers
+
     const boxWidth = erigonStageGauge.width - 9;
     const boxHeight = erigonStageGauge.height - 2; // Subtracting 2 for border
 
     if (boxWidth > 0 && boxHeight > 0) {
       let content = "";
-      const maxItems = Math.floor(boxHeight / 2);
 
-      // Sort stages by index
-      const sortedIndices = Object.keys(stageData)
-        .map(Number)
-        .sort((a, b) => a - b);
-
-      // Display stages based on available space
-      let endIndex = Math.min(sortedIndices.length, maxItems);
-
-      if (boxHeight >= 24) {
-        endIndex = sortedIndices.length;
-      }
-
-      for (let i = 0; i < endIndex; i++) {
-        const stageIndex = sortedIndices[i];
+      // Always display all three stages
+      for (let i = 0; i < stageNames.length; i++) {
+        const stageIndex = stageIndices[i];
         const stage = stageData[stageIndex];
-
-        if (!stage) continue;
-
-        let percentComplete = stage.percent;
-        if (percentComplete > 1) {
-          percentComplete = 1;
+        
+        // Default to 0% if stage hasn't started yet
+        let percentComplete = 0;
+        if (stage && stage.percent !== undefined) {
+          percentComplete = stage.percent;
+          if (percentComplete > 1) {
+            percentComplete = 1;
+          }
         }
 
         const filledBars = Math.max(0, Math.floor(boxWidth * percentComplete));
@@ -72,10 +66,7 @@ export function populateErigonStageGauge(stageData) {
         const bar = "█".repeat(filledBars) + " ".repeat(emptyBars);
         const percentString = `${Math.floor(percentComplete * 100)}%`;
 
-        // Use the stage name from logs, converted to uppercase for consistency
-        const stageName = stage.name.toUpperCase();
-
-        content += `[${stageIndex}/${stage.totalStages}] ${stageName}\n[${bar}] ${percentString}\n`;
+        content += `${stageNames[i]}\n[${bar}] ${percentString}\n`;
       }
 
       erigonStageGauge.setContent(content.trim());
