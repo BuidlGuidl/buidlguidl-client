@@ -97,6 +97,17 @@ export function loadProgress() {
 }
 
 export function formatLogLines(line, client) {
+  // Erigon-specific highlighting - MUST be done FIRST before other rules modify the line
+  if (client === "erigon") {
+    // Highlight square bracket messages after datetime in orange
+    // Pattern: INFO[12-03|19:23:15.272] [4/6 Execution] or [p2p] or [agg]
+    // Match all consecutive [...] patterns after the datetime
+    line = line.replace(
+      /^(INFO|WARN|ERROR)(\[[\d-]+\|[\d:.]+\])\s+((?:\[[^\]]+\])+)/,
+      "$1$2 {bold}{#FFA500-fg}$3{/}"
+    );
+  }
+
   // Define words which should be highlighted in exec and consensus logs
   const highlightRules = [
     { word: "INFO", style: "{bold}{green-fg}" },
@@ -127,16 +138,8 @@ export function formatLogLines(line, client) {
     line = line.replace(regex, `${rule.style}$1{/}`);
   });
 
-  // Erigon-specific highlighting
+  // Client-specific highlighting for key-value pairs
   if (client === "erigon") {
-    // Highlight square bracket messages after datetime in orange
-    // Pattern: INFO[12-03|19:23:15.272] [4/6 Execution] or [p2p] or [agg]
-    // Match all consecutive [...] patterns after the datetime
-    line = line.replace(
-      /^(INFO|WARN|ERROR)(\[[\d-]+\|[\d:.]+\])\s+((?:\[[^\]]+\])+)/,
-      "$1$2 {bold}{#FFA500-fg}$3{/}"
-    );
-
     // Highlight hyphenated words followed by "=" in green (instead of just the last part)
     line = line.replace(/\b([\w-]+)(?==)/g, "{bold}{green-fg}$1{/}");
   } else {
