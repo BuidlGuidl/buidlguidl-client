@@ -131,12 +131,12 @@ export function formatLogLines(line, client) {
   if (client === "erigon") {
     // Highlight square bracket messages after datetime in orange
     // Pattern: INFO[12-03|19:23:15.272] [4/6 Execution] or [p2p] or [agg]
-    // Match all [...] patterns after the datetime [...] pattern
+    // Match all consecutive [...] patterns after the datetime
     line = line.replace(
-      /^(INFO|WARN|ERROR)(\[[\d-]+\|[\d:.]+\])\s+(\[.+?\](?:\[.+?\])*)/,
-      '$1$2 {bold}{#FFA500-fg}$3{/}'
+      /^(INFO|WARN|ERROR)(\[[\d-]+\|[\d:.]+\])\s+((?:\[[^\]]+\])+)/,
+      "$1$2 {bold}{#FFA500-fg}$3{/}"
     );
-    
+
     // Highlight hyphenated words followed by "=" in green (instead of just the last part)
     line = line.replace(/\b([\w-]+)(?==)/g, "{bold}{green-fg}$1{/}");
   } else {
