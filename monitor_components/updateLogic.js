@@ -286,6 +286,11 @@ let erigonExecutionTracking = {
   isComputingTrie: false,
 };
 
+// Track OtterSync phase - ignore header-chain, only track remaining snapshots
+let erigonOtterSyncTracking = {
+  inSnapshotsPhase: false, // Only track after "remaining snapshots" message
+};
+
 // Function to parse Erigon log lines for sync progress
 function parseErigonSyncProgress(line) {
   // Match the stage header: [X/Y StageName]
@@ -305,10 +310,22 @@ function parseErigonSyncProgress(line) {
   
   // Parse based on stage type
   if (stageName === "OtterSync") {
+    // Check if we've entered the snapshots phase (the real sync)
+    if (line.includes("remaining snapshots")) {
+      erigonOtterSyncTracking.inSnapshotsPhase = true;
+    }
+    
     // Pattern: [1/6 OtterSync] Syncing ... data="XX.XX% - size"
+    // Only track progress during the snapshots phase (not header-chain phase)
     const dataMatch = line.match(/data="([\d.]+)%/);
-    if (dataMatch) {
+    if (dataMatch && erigonOtterSyncTracking.inSnapshotsPhase) {
       percent = parseFloat(dataMatch[1]) / 100;
+      updated = true;
+    }
+    
+    // Handle completion
+    if (line.includes("DONE") && erigonOtterSyncTracking.inSnapshotsPhase) {
+      percent = 1.0;
       updated = true;
     }
   }
