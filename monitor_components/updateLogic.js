@@ -163,7 +163,7 @@ export function setupLogStreaming(
 
         newRl.on("line", async (line) => {
           globalLine = line;
-          logBuffer.push(formatLogLines(line));
+          logBuffer.push(formatLogLines(line, client));
 
           ensureBufferFillsWidget();
 
@@ -295,26 +295,26 @@ let erigonOtterSyncTracking = {
 function parseErigonSyncProgress(line) {
   // Match the stage header: [X/Y StageName]
   const stageMatch = line.match(/\[(\d+)\/(\d+)\s+([^\]]+)\]/);
-  
+
   if (!stageMatch) return false;
-  
+
   const stageIndex = parseInt(stageMatch[1], 10);
   const totalStages = parseInt(stageMatch[2], 10);
   const stageName = stageMatch[3].trim();
-  
+
   let percent = null;
   let updated = false;
-  
+
   // Update total stages count
   erigonTotalStages = totalStages;
-  
+
   // Parse based on stage type
   if (stageName === "OtterSync") {
     // Check if we've entered the snapshots phase (the real sync)
     if (line.includes("remaining snapshots")) {
       erigonOtterSyncTracking.inSnapshotsPhase = true;
     }
-    
+
     // Pattern: [1/6 OtterSync] Syncing ... data="XX.XX% - size"
     // Only track progress during the snapshots phase (not header-chain phase)
     const dataMatch = line.match(/data="([\d.]+)%/);
@@ -322,130 +322,152 @@ function parseErigonSyncProgress(line) {
       percent = parseFloat(dataMatch[1]) / 100;
       updated = true;
     }
-    
+
     // Handle completion
     if (line.includes("DONE") && erigonOtterSyncTracking.inSnapshotsPhase) {
       percent = 1.0;
       updated = true;
     }
-  }
-  else if (stageName === "Senders") {
+  } else if (stageName === "Senders") {
     // Pattern: [3/6 Senders] Started from=XXXX to=YYYY
     const sendersMatch = line.match(/Started\s+from=(\d+)\s+to=(\d+)/);
     if (sendersMatch) {
       const fromBlock = parseInt(sendersMatch[1], 10);
       const toBlock = parseInt(sendersMatch[2], 10);
-      
+
       // Initialize start block on first occurrence
       if (erigonSendersTracking.startBlock === null) {
         erigonSendersTracking.startBlock = fromBlock;
       }
-      
+
       // Update current and target blocks
       erigonSendersTracking.currentBlock = toBlock;
       erigonSendersTracking.targetBlock = toBlock;
-      
+
       // Calculate progress - use the highest to block seen as the moving target
       // Since we see incremental ranges, we can estimate progress
       // For now, we'll track the progression and calculate relative progress
-      if (erigonSendersTracking.startBlock !== null && erigonSendersTracking.currentBlock !== null) {
+      if (
+        erigonSendersTracking.startBlock !== null &&
+        erigonSendersTracking.currentBlock !== null
+      ) {
         // We'll calculate progress based on the block range progression
         // Note: This is an approximation since we don't know the final target initially
-        const processedBlocks = erigonSendersTracking.currentBlock - erigonSendersTracking.startBlock;
-        
+        const processedBlocks =
+          erigonSendersTracking.currentBlock - erigonSendersTracking.startBlock;
+
         // Estimate: assume we're progressing towards chain tip
         // For now, show relative progress based on 5000-block increments (typical range size)
         // We'll set this to a value between 0 and 1 based on progression
         const rangeSize = 5000; // Typical range from logs
         const rangesProcessed = Math.floor(processedBlocks / rangeSize);
-        
+
         // Cap at 95% until we see "DONE" or completion message
         percent = Math.min(0.95, rangesProcessed * 0.1); // Incremental progress
-        
+
         // Better approach: if we have execution data, use that to estimate total
-        if (erigonExecutionTracking.targetBlock && erigonExecutionTracking.targetBlock > erigonSendersTracking.startBlock) {
-          const totalBlocks = erigonExecutionTracking.targetBlock - erigonSendersTracking.startBlock;
-          const processed = erigonSendersTracking.currentBlock - erigonSendersTracking.startBlock;
+        if (
+          erigonExecutionTracking.targetBlock &&
+          erigonExecutionTracking.targetBlock > erigonSendersTracking.startBlock
+        ) {
+          const totalBlocks =
+            erigonExecutionTracking.targetBlock -
+            erigonSendersTracking.startBlock;
+          const processed =
+            erigonSendersTracking.currentBlock -
+            erigonSendersTracking.startBlock;
           percent = Math.min(0.99, processed / totalBlocks);
         }
-        
+
         updated = true;
       }
     }
-    
+
     // Handle completion message
     if (line.includes("Recovery") || line.includes("DONE")) {
       // Set to 100% on completion indicators
-      if (erigonStagePercentages[stageIndex] && erigonStagePercentages[stageIndex].percent > 0.9) {
+      if (
+        erigonStagePercentages[stageIndex] &&
+        erigonStagePercentages[stageIndex].percent > 0.9
+      ) {
         percent = 1.0;
         updated = true;
       }
     }
-  }
-  else if (stageName === "Execution") {
+  } else if (stageName === "Execution") {
     // Pattern 1: [4/6 Execution] serial starting from=XXXX to=YYYY
     const startingMatch = line.match(/serial starting\s+from=(\d+)\s+to=(\d+)/);
     if (startingMatch) {
       const fromBlock = parseInt(startingMatch[1], 10);
       const toBlock = parseInt(startingMatch[2], 10);
-      
+
       // Initialize or update start block
-      if (erigonExecutionTracking.startBlock === null || fromBlock < erigonExecutionTracking.startBlock) {
+      if (
+        erigonExecutionTracking.startBlock === null ||
+        fromBlock < erigonExecutionTracking.startBlock
+      ) {
         erigonExecutionTracking.startBlock = fromBlock;
       }
-      
+
       // Update target block
       erigonExecutionTracking.targetBlock = toBlock;
-      
+
       // Reset trie computing flag
       erigonExecutionTracking.isComputingTrie = false;
-      
+
       updated = true;
     }
-    
+
     // Pattern 2: [4/6 Execution] serial executed blk=XXXX
     const executedMatch = line.match(/serial executed\s+blk=(\d+)/);
     if (executedMatch) {
       const currentBlock = parseInt(executedMatch[1], 10);
       erigonExecutionTracking.currentBlock = currentBlock;
-      
+
       // Calculate percentage if we have the range
-      if (erigonExecutionTracking.startBlock !== null && 
-          erigonExecutionTracking.targetBlock !== null &&
-          !erigonExecutionTracking.isComputingTrie) {
-        const totalBlocks = erigonExecutionTracking.targetBlock - erigonExecutionTracking.startBlock;
-        const processedBlocks = currentBlock - erigonExecutionTracking.startBlock;
-        
+      if (
+        erigonExecutionTracking.startBlock !== null &&
+        erigonExecutionTracking.targetBlock !== null &&
+        !erigonExecutionTracking.isComputingTrie
+      ) {
+        const totalBlocks =
+          erigonExecutionTracking.targetBlock -
+          erigonExecutionTracking.startBlock;
+        const processedBlocks =
+          currentBlock - erigonExecutionTracking.startBlock;
+
         // Cap at 95% until we see "done" or move to trie computation
         percent = Math.min(0.95, Math.max(0, processedBlocks / totalBlocks));
         updated = true;
       }
     }
-    
+
     // Pattern 3: [4/6 Execution][agg] computing trie progress=XXXk/YYYk
-    const trieMatch = line.match(/\[agg\] computing trie\s+progress=([\d.]+)k\/([\d.]+)k/);
+    const trieMatch = line.match(
+      /\[agg\] computing trie\s+progress=([\d.]+)k\/([\d.]+)k/
+    );
     if (trieMatch) {
       const currentK = parseFloat(trieMatch[1]);
       const totalK = parseFloat(trieMatch[2]);
-      
+
       erigonExecutionTracking.isComputingTrie = true;
-      
+
       // Trie computation is the final phase, map it to 95-100%
       const triePercent = currentK / totalK;
-      percent = 0.95 + (triePercent * 0.05);
+      percent = 0.95 + triePercent * 0.05;
       updated = true;
     }
-    
+
     // Pattern 4: [4/6 Execution] serial done or DONE
     if (line.includes("serial done") || line.includes("DONE")) {
       percent = 1.0;
       updated = true;
-      
+
       // Reset tracking for this range
       erigonExecutionTracking.isComputingTrie = false;
     }
   }
-  
+
   // Update the stage percentages if we parsed something
   if (updated && percent !== null) {
     erigonStagePercentages[stageIndex] = {
@@ -454,7 +476,7 @@ function parseErigonSyncProgress(line) {
       totalStages: totalStages,
     };
   }
-  
+
   return updated;
 }
 

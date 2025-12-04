@@ -96,7 +96,7 @@ export function loadProgress() {
   };
 }
 
-export function formatLogLines(line) {
+export function formatLogLines(line, client) {
   // Define words which should be highlighted in exec and consensus logs
   const highlightRules = [
     { word: "INFO", style: "{bold}{green-fg}" },
@@ -127,8 +127,22 @@ export function formatLogLines(line) {
     line = line.replace(regex, `${rule.style}$1{/}`);
   });
 
-  // Highlight words followed by "=" in green
-  line = line.replace(/\b(\w+)(?==)/g, "{bold}{green-fg}$1{/}");
+  // Erigon-specific highlighting
+  if (client === "erigon") {
+    // Highlight square bracket messages after datetime in orange
+    // Pattern: INFO[12-03|19:23:15.272] [4/6 Execution] or [p2p] or [agg]
+    // Match all [...] patterns after the datetime [...] pattern
+    line = line.replace(
+      /^(INFO|WARN|ERROR)(\[[\d-]+\|[\d:.]+\])\s+(\[.+?\](?:\[.+?\])*)/,
+      '$1$2 {bold}{#FFA500-fg}$3{/}'
+    );
+    
+    // Highlight hyphenated words followed by "=" in green (instead of just the last part)
+    line = line.replace(/\b([\w-]+)(?==)/g, "{bold}{green-fg}$1{/}");
+  } else {
+    // For other clients, highlight only words (non-hyphenated) followed by "=" in green
+    line = line.replace(/\b(\w+)(?==)/g, "{bold}{green-fg}$1{/}");
+  }
 
   // Highlight words followed by ":" and surrounded by spaces in bold blue
   line = line.replace(/\s(\w+):\s/g, " {bold}{blue-fg}$1:{/} ");
