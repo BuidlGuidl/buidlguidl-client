@@ -178,10 +178,14 @@ export function initializeWebSocketConnection(wsConfig) {
             id: request.id,
           });
 
+          // Delay response by 1 second for timeout testing
+          await new Promise((resolve) => setTimeout(resolve, 1000));
           callback(rpcResponse.data);
         } catch (error) {
           debugToFile("Error returning RPC response:", error);
 
+          // Delay error response by 1 second for timeout testing
+          await new Promise((resolve) => setTimeout(resolve, 1000));
           callback({
             jsonrpc: "2.0",
             error: {
