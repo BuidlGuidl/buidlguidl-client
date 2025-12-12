@@ -412,8 +412,22 @@ if (!isAlreadyRunning()) {
 
     // Give users time to see the selected checkpoint URL before logs start
     if (selectedCheckpointUrl) {
-      console.log("⏳ Starting clients in 5 seconds...\n");
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      const spinnerFrames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+      const startDelay = 10000; // 10 seconds
+      const updateInterval = 100; // Update spinner every 100ms
+      const totalFrames = startDelay / updateInterval;
+
+      process.stdout.write("\n⏳ Starting clients in 10 seconds ");
+
+      for (let i = 0; i < totalFrames; i++) {
+        const spinnerChar = spinnerFrames[i % spinnerFrames.length];
+        process.stdout.write(
+          `\r⏳ Starting clients in 10 seconds ${spinnerChar}`
+        );
+        await new Promise((resolve) => setTimeout(resolve, updateInterval));
+      }
+
+      process.stdout.write("\r⏳ Starting clients in 10 seconds ✓\n\n");
     }
   } else {
     console.log(

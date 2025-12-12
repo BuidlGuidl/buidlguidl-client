@@ -268,6 +268,9 @@ export async function selectCheckpointUrlForLighthouse(
     ...successfulResults.filter((r) => r.slotAge !== null).map((r) => r.slotAge)
   );
 
+  // Define "current" threshold: within 10 slots of the best
+  const CURRENT_THRESHOLD = 10;
+
   // Log results for user visibility
   results.forEach((result) => {
     if (result.success) {
@@ -277,7 +280,7 @@ export async function selectCheckpointUrlForLighthouse(
 
       if (result.slotAge === null) {
         slotAgeDisplay = "✅ Online";
-      } else if (result.slotAge === minSlotAge) {
+      } else if (result.slotAge - minSlotAge <= CURRENT_THRESHOLD) {
         slotAgeDisplay = "✅ Current";
       } else {
         slotAgeDisplay = `❌ ${result.slotAge} slots behind`;
@@ -292,9 +295,9 @@ export async function selectCheckpointUrlForLighthouse(
     }
   });
 
-  // Step 1: Filter for URLs at minimum slot age (most current)
+  // Step 1: Filter for URLs within current threshold (most current)
   let currentUrls = successfulResults.filter(
-    (r) => r.slotAge !== null && r.slotAge === minSlotAge
+    (r) => r.slotAge !== null && r.slotAge - minSlotAge <= CURRENT_THRESHOLD
   );
 
   // Step 2: Sort by response time (fastest first)
@@ -393,6 +396,9 @@ export async function selectCheckpointUrlForPrysm(
     ...successfulResults.filter((r) => r.slotAge !== null).map((r) => r.slotAge)
   );
 
+  // Define "current" threshold: within 10 slots of the best
+  const CURRENT_THRESHOLD = 10;
+
   // Log results for user visibility
   results.forEach((result) => {
     if (result.success) {
@@ -402,7 +408,7 @@ export async function selectCheckpointUrlForPrysm(
 
       if (result.slotAge === null) {
         slotAgeDisplay = "✅ Online";
-      } else if (result.slotAge === minSlotAge) {
+      } else if (result.slotAge - minSlotAge <= CURRENT_THRESHOLD) {
         slotAgeDisplay = "✅ Current";
       } else {
         slotAgeDisplay = `❌ ${result.slotAge} slots behind`;
@@ -417,9 +423,9 @@ export async function selectCheckpointUrlForPrysm(
     }
   });
 
-  // Step 1: Filter for URLs at minimum slot age (most current)
+  // Step 1: Filter for URLs within current threshold (most current)
   let currentUrls = successfulResults.filter(
-    (r) => r.slotAge !== null && r.slotAge === minSlotAge
+    (r) => r.slotAge !== null && r.slotAge - minSlotAge <= CURRENT_THRESHOLD
   );
 
   // Step 2: Sort by response time (fastest first)
