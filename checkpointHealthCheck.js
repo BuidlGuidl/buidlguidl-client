@@ -109,21 +109,10 @@ async function checkCheckpointHealth(url, timeout = 5000) {
     // Slot is at data.message.slot based on test results
     const slot = parseInt(data?.data?.message?.slot) || null;
 
-    // If we got slot data, calculate health score with freshness
+    // If we got slot data, calculate slot age
     if (slot) {
       const currentSlot = getCurrentSlot();
       const slotAge = currentSlot - slot;
-
-      // Calculate freshness score (newer is better)
-      const freshnessScore = Math.max(0, 100 - slotAge / 100);
-
-      // Calculate response time score (faster is better)
-      // 0ms = 100, 500ms = 75, 1000ms = 50, 2000ms = 0
-      const responseTimeScore = Math.max(0, 100 - responseTime / 20);
-
-      // Combined health score (70% response time, 30% freshness)
-      // Prioritize fast servers since slow response times cause failures
-      const healthScore = responseTimeScore * 0.6 + freshnessScore * 0.4;
 
       return {
         url,
@@ -131,21 +120,17 @@ async function checkCheckpointHealth(url, timeout = 5000) {
         responseTime,
         slot,
         slotAge,
-        healthScore,
         error: null,
       };
     }
 
-    // No slot data (version endpoint fallback) - score based on response time only
-    const responseTimeScore = Math.max(0, 100 - responseTime / 20);
-
+    // No slot data (version endpoint fallback)
     return {
       url,
       success: true,
       responseTime,
       slot: null,
       slotAge: null,
-      healthScore: responseTimeScore,
       error: null,
     };
   } catch (error) {
@@ -163,6 +148,7 @@ async function checkCheckpointHealth(url, timeout = 5000) {
 
 /**
  * Check if Lighthouse database exists
+ * Supports custom install directories provided via --directory flag
  */
 function lighthouseDatabaseExists(installDir) {
   const beaconDbPath = path.join(
@@ -188,6 +174,7 @@ function lighthouseDatabaseExists(installDir) {
 
 /**
  * Check if Prysm database exists
+ * Supports custom install directories provided via --directory flag
  */
 function prysmDatabaseExists(installDir) {
   const beaconDbPath = path.join(
@@ -247,16 +234,14 @@ export async function selectCheckpointUrlForLighthouse(
 
   // Run health checks on all checkpoint URLs
   console.log(`\n🏥 Testing ${CHECKPOINT_URLS.length} checkpoint URLs...`);
-  console.log("   (checking response time and data freshness)\n");
+  console.log("   (selecting fastest server with current data)\n");
 
   const results = await Promise.all(
     CHECKPOINT_URLS.map((url) => checkCheckpointHealth(url))
   );
 
-  // Filter successful results and sort by health score
-  const successfulResults = results
-    .filter((r) => r.success)
-    .sort((a, b) => b.healthScore - a.healthScore);
+  // Filter successful results
+  const successfulResults = results.filter((r) => r.success);
 
   // Log results for user visibility
   results.forEach((result) => {
@@ -266,9 +251,11 @@ export async function selectCheckpointUrlForLighthouse(
       const slotAgeDisplay =
         result.slotAge === null
           ? "✅ Online"
-          : result.slotAge < 100
+          : result.slotAge === 0
           ? "✅ Current"
-          : `⚠️  ${result.slotAge} slots behind`;
+          : result.slotAge < 100
+          ? `⚠️  ${result.slotAge} slots behind`
+          : `❌ ${result.slotAge} slots behind`;
       console.log(
         `  ✓ ${urlDisplay.padEnd(45)} ${responseDisplay} ${slotAgeDisplay}`
       );
@@ -287,18 +274,44 @@ export async function selectCheckpointUrlForLighthouse(
     throw new Error("No accessible checkpoint URLs found");
   }
 
+  // Step 1: Filter for current URLs (0 slots behind or very close)
+  let currentUrls = successfulResults.filter(
+    (r) => r.slotAge !== null && r.slotAge <= 5
+  );
+
+  // Step 2: Sort by response time (fastest first)
+  if (currentUrls.length > 0) {
+    currentUrls.sort((a, b) => a.responseTime - b.responseTime);
+    const bestUrl = currentUrls[0];
+
+    console.log(`\n🎯 Selected: ${bestUrl.url}`);
+    console.log(
+      `   Response time: ${bestUrl.responseTime}ms | Slot age: ${bestUrl.slotAge} slots\n`
+    );
+
+    debugToFile(
+      `Lighthouse: Selected checkpoint URL: ${bestUrl.url} (${bestUrl.responseTime}ms, ${bestUrl.slotAge} slots behind)`
+    );
+
+    return bestUrl.url;
+  }
+
+  // Fallback: No perfectly current URLs, use fastest available
+  successfulResults.sort((a, b) => a.responseTime - b.responseTime);
   const bestUrl = successfulResults[0];
-  console.log(`\n🎯 Selected: ${bestUrl.url}`);
+
+  console.log(`\n⚠️  No fully synced checkpoint URLs found`);
+  console.log(`🎯 Selected fastest available: ${bestUrl.url}`);
   console.log(
-    `   Response time: ${
-      bestUrl.responseTime
-    }ms | Health score: ${bestUrl.healthScore.toFixed(1)}/100\n`
+    `   Response time: ${bestUrl.responseTime}ms${
+      bestUrl.slotAge !== null ? ` | ${bestUrl.slotAge} slots behind` : ""
+    }\n`
   );
 
   debugToFile(
-    `Lighthouse: Selected checkpoint URL: ${
-      bestUrl.url
-    } (score: ${bestUrl.healthScore.toFixed(1)})`
+    `Lighthouse: Selected checkpoint URL (fallback): ${bestUrl.url} (${
+      bestUrl.responseTime
+    }ms${bestUrl.slotAge !== null ? `, ${bestUrl.slotAge} slots behind` : ""})`
   );
 
   return bestUrl.url;
@@ -340,16 +353,14 @@ export async function selectCheckpointUrlForPrysm(
 
   // Run health checks on all checkpoint URLs
   console.log(`\n🏥 Testing ${CHECKPOINT_URLS.length} checkpoint URLs...`);
-  console.log("   (checking response time and data freshness)\n");
+  console.log("   (selecting fastest server with current data)\n");
 
   const results = await Promise.all(
     CHECKPOINT_URLS.map((url) => checkCheckpointHealth(url))
   );
 
-  // Filter successful results and sort by health score
-  const successfulResults = results
-    .filter((r) => r.success)
-    .sort((a, b) => b.healthScore - a.healthScore);
+  // Filter successful results
+  const successfulResults = results.filter((r) => r.success);
 
   // Log results for user visibility
   results.forEach((result) => {
@@ -359,9 +370,11 @@ export async function selectCheckpointUrlForPrysm(
       const slotAgeDisplay =
         result.slotAge === null
           ? "✅ Online"
-          : result.slotAge < 100
+          : result.slotAge === 0
           ? "✅ Current"
-          : `⚠️  ${result.slotAge} slots behind`;
+          : result.slotAge < 100
+          ? `⚠️  ${result.slotAge} slots behind`
+          : `❌ ${result.slotAge} slots behind`;
       console.log(
         `  ✓ ${urlDisplay.padEnd(45)} ${responseDisplay} ${slotAgeDisplay}`
       );
@@ -380,18 +393,44 @@ export async function selectCheckpointUrlForPrysm(
     throw new Error("No accessible checkpoint URLs found");
   }
 
+  // Step 1: Filter for current URLs (0 slots behind or very close)
+  let currentUrls = successfulResults.filter(
+    (r) => r.slotAge !== null && r.slotAge <= 5
+  );
+
+  // Step 2: Sort by response time (fastest first)
+  if (currentUrls.length > 0) {
+    currentUrls.sort((a, b) => a.responseTime - b.responseTime);
+    const bestUrl = currentUrls[0];
+
+    console.log(`\n🎯 Selected: ${bestUrl.url}`);
+    console.log(
+      `   Response time: ${bestUrl.responseTime}ms | Slot age: ${bestUrl.slotAge} slots\n`
+    );
+
+    debugToFile(
+      `Prysm: Selected checkpoint URL: ${bestUrl.url} (${bestUrl.responseTime}ms, ${bestUrl.slotAge} slots behind)`
+    );
+
+    return bestUrl.url;
+  }
+
+  // Fallback: No perfectly current URLs, use fastest available
+  successfulResults.sort((a, b) => a.responseTime - b.responseTime);
   const bestUrl = successfulResults[0];
-  console.log(`\n🎯 Selected: ${bestUrl.url}`);
+
+  console.log(`\n⚠️  No fully synced checkpoint URLs found`);
+  console.log(`🎯 Selected fastest available: ${bestUrl.url}`);
   console.log(
-    `   Response time: ${
-      bestUrl.responseTime
-    }ms | Health score: ${bestUrl.healthScore.toFixed(1)}/100\n`
+    `   Response time: ${bestUrl.responseTime}ms${
+      bestUrl.slotAge !== null ? ` | ${bestUrl.slotAge} slots behind` : ""
+    }\n`
   );
 
   debugToFile(
-    `Prysm: Selected checkpoint URL: ${
-      bestUrl.url
-    } (score: ${bestUrl.healthScore.toFixed(1)})`
+    `Prysm: Selected checkpoint URL (fallback): ${bestUrl.url} (${
+      bestUrl.responseTime
+    }ms${bestUrl.slotAge !== null ? `, ${bestUrl.slotAge} slots behind` : ""})`
   );
 
   return bestUrl.url;
