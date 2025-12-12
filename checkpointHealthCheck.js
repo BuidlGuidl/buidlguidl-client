@@ -121,8 +121,9 @@ async function checkCheckpointHealth(url, timeout = 5000) {
       // 0ms = 100, 500ms = 75, 1000ms = 50, 2000ms = 0
       const responseTimeScore = Math.max(0, 100 - responseTime / 20);
 
-      // Combined health score (40% response time, 60% freshness)
-      const healthScore = responseTimeScore * 0.4 + freshnessScore * 0.6;
+      // Combined health score (70% response time, 30% freshness)
+      // Prioritize fast servers since slow response times cause failures
+      const healthScore = responseTimeScore * 0.6 + freshnessScore * 0.4;
 
       return {
         url,
