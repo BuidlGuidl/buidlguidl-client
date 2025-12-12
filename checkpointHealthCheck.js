@@ -31,29 +31,55 @@ function getCurrentSlot() {
 
 /**
  * Check health of a single checkpoint URL
+ * Performs 5 checks and averages the response time for accuracy
  */
-async function checkCheckpointHealth(url, timeout = 5000) {
-  const startTime = Date.now();
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
+async function checkCheckpointHealth(url, timeout = 5000, numChecks = 5) {
+  const responseTimes = [];
+  let slot = null;
+  let slotAge = null;
+  let lastError = null;
 
-  try {
-    // Based on testing, /eth/v2/beacon/blocks/finalized works on ALL checkpoint servers
-    // Try primary endpoint first, then fallback to version check
-    let response = null;
-    let lastError = null;
+  // Perform multiple checks to get average response time
+  for (let i = 0; i < numChecks; i++) {
+    const startTime = Date.now();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-    // Try primary endpoint: /eth/v2/beacon/blocks/finalized
     try {
-      response = await fetch(`${url}/eth/v2/beacon/blocks/finalized`, {
-        signal: controller.signal,
-        headers: { Accept: "application/json" },
-      });
+      // Based on testing, /eth/v2/beacon/blocks/finalized works on ALL checkpoint servers
+      // Try primary endpoint first, then fallback to version check
+      let response = null;
 
-      if (!response.ok) {
-        lastError = `HTTP ${response.status}`;
+      // Try primary endpoint: /eth/v2/beacon/blocks/finalized
+      try {
+        response = await fetch(`${url}/eth/v2/beacon/blocks/finalized`, {
+          signal: controller.signal,
+          headers: { Accept: "application/json" },
+        });
 
-        // If primary fails, try fallback: /eth/v1/node/version
+        if (!response.ok) {
+          lastError = `HTTP ${response.status}`;
+
+          // If primary fails, try fallback: /eth/v1/node/version
+          try {
+            response = await fetch(`${url}/eth/v1/node/version`, {
+              signal: controller.signal,
+              headers: { Accept: "application/json" },
+            });
+
+            if (!response.ok) {
+              lastError = `HTTP ${response.status}`;
+              response = null;
+            }
+          } catch (err) {
+            lastError = err.message;
+            response = null;
+          }
+        }
+      } catch (err) {
+        lastError = err.message;
+
+        // Try fallback on primary error
         try {
           response = await fetch(`${url}/eth/v1/node/version`, {
             signal: controller.signal,
@@ -64,86 +90,69 @@ async function checkCheckpointHealth(url, timeout = 5000) {
             lastError = `HTTP ${response.status}`;
             response = null;
           }
-        } catch (err) {
-          lastError = err.message;
+        } catch (fallbackErr) {
+          lastError = fallbackErr.message;
           response = null;
         }
       }
-    } catch (err) {
-      lastError = err.message;
 
-      // Try fallback on primary error
-      try {
-        response = await fetch(`${url}/eth/v1/node/version`, {
-          signal: controller.signal,
-          headers: { Accept: "application/json" },
-        });
+      clearTimeout(timeoutId);
 
-        if (!response.ok) {
-          lastError = `HTTP ${response.status}`;
-          response = null;
-        }
-      } catch (fallbackErr) {
-        lastError = fallbackErr.message;
-        response = null;
+      if (!response) {
+        // If any check fails, return failure immediately
+        return {
+          url,
+          success: false,
+          error: lastError || "Connection failed",
+          responseTime: null,
+          slot: null,
+          slotAge: null,
+        };
       }
-    }
 
-    clearTimeout(timeoutId);
+      const responseTime = Date.now() - startTime;
+      responseTimes.push(responseTime);
 
-    if (!response) {
+      // Only parse slot data on first successful check
+      if (i === 0) {
+        const data = await response.json();
+
+        // Extract slot number from /eth/v2/beacon/blocks/finalized response
+        // Slot is at data.message.slot based on test results
+        slot = parseInt(data?.data?.message?.slot) || null;
+
+        // If we got slot data, calculate slot age
+        if (slot) {
+          const currentSlot = getCurrentSlot();
+          slotAge = currentSlot - slot;
+        }
+      }
+    } catch (error) {
+      clearTimeout(timeoutId);
       return {
         url,
         success: false,
-        error: lastError || "Connection failed",
+        error: error.name === "AbortError" ? "Timeout" : error.message,
         responseTime: null,
         slot: null,
         slotAge: null,
       };
     }
-
-    const responseTime = Date.now() - startTime;
-    const data = await response.json();
-
-    // Extract slot number from /eth/v2/beacon/blocks/finalized response
-    // Slot is at data.message.slot based on test results
-    const slot = parseInt(data?.data?.message?.slot) || null;
-
-    // If we got slot data, calculate slot age
-    if (slot) {
-      const currentSlot = getCurrentSlot();
-      const slotAge = currentSlot - slot;
-
-      return {
-        url,
-        success: true,
-        responseTime,
-        slot,
-        slotAge,
-        error: null,
-      };
-    }
-
-    // No slot data (version endpoint fallback)
-    return {
-      url,
-      success: true,
-      responseTime,
-      slot: null,
-      slotAge: null,
-      error: null,
-    };
-  } catch (error) {
-    clearTimeout(timeoutId);
-    return {
-      url,
-      success: false,
-      error: error.name === "AbortError" ? "Timeout" : error.message,
-      responseTime: null,
-      slot: null,
-      slotAge: null,
-    };
   }
+
+  // Calculate average response time
+  const avgResponseTime = Math.round(
+    responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length
+  );
+
+  return {
+    url,
+    success: true,
+    responseTime: avgResponseTime,
+    slot,
+    slotAge,
+    error: null,
+  };
 }
 
 /**
@@ -234,7 +243,9 @@ export async function selectCheckpointUrlForLighthouse(
 
   // Run health checks on all checkpoint URLs
   console.log(`\n🏥 Testing ${CHECKPOINT_URLS.length} checkpoint URLs...`);
-  console.log("   (selecting fastest server with current data)\n");
+  console.log(
+    "   (5 checks per URL, selecting fastest server with most current data)\n"
+  );
 
   const results = await Promise.all(
     CHECKPOINT_URLS.map((url) => checkCheckpointHealth(url))
@@ -242,28 +253,6 @@ export async function selectCheckpointUrlForLighthouse(
 
   // Filter successful results
   const successfulResults = results.filter((r) => r.success);
-
-  // Log results for user visibility
-  results.forEach((result) => {
-    if (result.success) {
-      const urlDisplay = result.url.replace("https://", "");
-      const responseDisplay = `${result.responseTime}ms`.padEnd(8);
-      const slotAgeDisplay =
-        result.slotAge === null
-          ? "✅ Online"
-          : result.slotAge === 0
-          ? "✅ Current"
-          : result.slotAge < 100
-          ? `⚠️  ${result.slotAge} slots behind`
-          : `❌ ${result.slotAge} slots behind`;
-      console.log(
-        `  ✓ ${urlDisplay.padEnd(45)} ${responseDisplay} ${slotAgeDisplay}`
-      );
-    } else {
-      const urlDisplay = result.url.replace("https://", "");
-      console.log(`  ✗ ${urlDisplay.padEnd(45)} ${result.error}`);
-    }
-  });
 
   if (successfulResults.length === 0) {
     console.log("\n❌ No checkpoint URLs are accessible!");
@@ -274,9 +263,38 @@ export async function selectCheckpointUrlForLighthouse(
     throw new Error("No accessible checkpoint URLs found");
   }
 
-  // Step 1: Filter for current URLs (0 slots behind or very close)
+  // Find the minimum slot age (most current data available)
+  const minSlotAge = Math.min(
+    ...successfulResults.filter((r) => r.slotAge !== null).map((r) => r.slotAge)
+  );
+
+  // Log results for user visibility
+  results.forEach((result) => {
+    if (result.success) {
+      const urlDisplay = result.url.replace("https://", "");
+      const responseDisplay = `${result.responseTime}ms`.padEnd(8);
+      let slotAgeDisplay;
+
+      if (result.slotAge === null) {
+        slotAgeDisplay = "✅ Online";
+      } else if (result.slotAge === minSlotAge) {
+        slotAgeDisplay = "✅ Current";
+      } else {
+        slotAgeDisplay = `❌ ${result.slotAge} slots behind`;
+      }
+
+      console.log(
+        `  ✓ ${urlDisplay.padEnd(45)} ${responseDisplay} ${slotAgeDisplay}`
+      );
+    } else {
+      const urlDisplay = result.url.replace("https://", "");
+      console.log(`  ✗ ${urlDisplay.padEnd(45)} ${result.error}`);
+    }
+  });
+
+  // Step 1: Filter for URLs at minimum slot age (most current)
   let currentUrls = successfulResults.filter(
-    (r) => r.slotAge !== null && r.slotAge <= 5
+    (r) => r.slotAge !== null && r.slotAge === minSlotAge
   );
 
   // Step 2: Sort by response time (fastest first)
@@ -286,32 +304,29 @@ export async function selectCheckpointUrlForLighthouse(
 
     console.log(`\n🎯 Selected: ${bestUrl.url}`);
     console.log(
-      `   Response time: ${bestUrl.responseTime}ms | Slot age: ${bestUrl.slotAge} slots\n`
+      `   Response time: ${bestUrl.responseTime}ms (avg of 5 checks)`
     );
+    console.log(`   Data freshness: ${bestUrl.slotAge} slots behind current\n`);
 
     debugToFile(
-      `Lighthouse: Selected checkpoint URL: ${bestUrl.url} (${bestUrl.responseTime}ms, ${bestUrl.slotAge} slots behind)`
+      `Lighthouse: Selected checkpoint URL: ${bestUrl.url} (${bestUrl.responseTime}ms avg, ${bestUrl.slotAge} slots behind)`
     );
 
     return bestUrl.url;
   }
 
-  // Fallback: No perfectly current URLs, use fastest available
+  // Fallback: No slot data available, use fastest URL
   successfulResults.sort((a, b) => a.responseTime - b.responseTime);
   const bestUrl = successfulResults[0];
 
-  console.log(`\n⚠️  No fully synced checkpoint URLs found`);
+  console.log(`\n⚠️  No slot data available from checkpoint URLs`);
   console.log(`🎯 Selected fastest available: ${bestUrl.url}`);
   console.log(
-    `   Response time: ${bestUrl.responseTime}ms${
-      bestUrl.slotAge !== null ? ` | ${bestUrl.slotAge} slots behind` : ""
-    }\n`
+    `   Response time: ${bestUrl.responseTime}ms (avg of 5 checks)\n`
   );
 
   debugToFile(
-    `Lighthouse: Selected checkpoint URL (fallback): ${bestUrl.url} (${
-      bestUrl.responseTime
-    }ms${bestUrl.slotAge !== null ? `, ${bestUrl.slotAge} slots behind` : ""})`
+    `Lighthouse: Selected checkpoint URL (fallback): ${bestUrl.url} (${bestUrl.responseTime}ms avg, no slot data)`
   );
 
   return bestUrl.url;
@@ -353,7 +368,9 @@ export async function selectCheckpointUrlForPrysm(
 
   // Run health checks on all checkpoint URLs
   console.log(`\n🏥 Testing ${CHECKPOINT_URLS.length} checkpoint URLs...`);
-  console.log("   (selecting fastest server with current data)\n");
+  console.log(
+    "   (5 checks per URL, selecting fastest server with most current data)\n"
+  );
 
   const results = await Promise.all(
     CHECKPOINT_URLS.map((url) => checkCheckpointHealth(url))
@@ -361,28 +378,6 @@ export async function selectCheckpointUrlForPrysm(
 
   // Filter successful results
   const successfulResults = results.filter((r) => r.success);
-
-  // Log results for user visibility
-  results.forEach((result) => {
-    if (result.success) {
-      const urlDisplay = result.url.replace("https://", "");
-      const responseDisplay = `${result.responseTime}ms`.padEnd(8);
-      const slotAgeDisplay =
-        result.slotAge === null
-          ? "✅ Online"
-          : result.slotAge === 0
-          ? "✅ Current"
-          : result.slotAge < 100
-          ? `⚠️  ${result.slotAge} slots behind`
-          : `❌ ${result.slotAge} slots behind`;
-      console.log(
-        `  ✓ ${urlDisplay.padEnd(45)} ${responseDisplay} ${slotAgeDisplay}`
-      );
-    } else {
-      const urlDisplay = result.url.replace("https://", "");
-      console.log(`  ✗ ${urlDisplay.padEnd(45)} ${result.error}`);
-    }
-  });
 
   if (successfulResults.length === 0) {
     console.log("\n❌ No checkpoint URLs are accessible!");
@@ -393,9 +388,38 @@ export async function selectCheckpointUrlForPrysm(
     throw new Error("No accessible checkpoint URLs found");
   }
 
-  // Step 1: Filter for current URLs (0 slots behind or very close)
+  // Find the minimum slot age (most current data available)
+  const minSlotAge = Math.min(
+    ...successfulResults.filter((r) => r.slotAge !== null).map((r) => r.slotAge)
+  );
+
+  // Log results for user visibility
+  results.forEach((result) => {
+    if (result.success) {
+      const urlDisplay = result.url.replace("https://", "");
+      const responseDisplay = `${result.responseTime}ms`.padEnd(8);
+      let slotAgeDisplay;
+
+      if (result.slotAge === null) {
+        slotAgeDisplay = "✅ Online";
+      } else if (result.slotAge === minSlotAge) {
+        slotAgeDisplay = "✅ Current";
+      } else {
+        slotAgeDisplay = `❌ ${result.slotAge} slots behind`;
+      }
+
+      console.log(
+        `  ✓ ${urlDisplay.padEnd(45)} ${responseDisplay} ${slotAgeDisplay}`
+      );
+    } else {
+      const urlDisplay = result.url.replace("https://", "");
+      console.log(`  ✗ ${urlDisplay.padEnd(45)} ${result.error}`);
+    }
+  });
+
+  // Step 1: Filter for URLs at minimum slot age (most current)
   let currentUrls = successfulResults.filter(
-    (r) => r.slotAge !== null && r.slotAge <= 5
+    (r) => r.slotAge !== null && r.slotAge === minSlotAge
   );
 
   // Step 2: Sort by response time (fastest first)
@@ -405,32 +429,29 @@ export async function selectCheckpointUrlForPrysm(
 
     console.log(`\n🎯 Selected: ${bestUrl.url}`);
     console.log(
-      `   Response time: ${bestUrl.responseTime}ms | Slot age: ${bestUrl.slotAge} slots\n`
+      `   Response time: ${bestUrl.responseTime}ms (avg of 5 checks)`
     );
+    console.log(`   Data freshness: ${bestUrl.slotAge} slots behind current\n`);
 
     debugToFile(
-      `Prysm: Selected checkpoint URL: ${bestUrl.url} (${bestUrl.responseTime}ms, ${bestUrl.slotAge} slots behind)`
+      `Prysm: Selected checkpoint URL: ${bestUrl.url} (${bestUrl.responseTime}ms avg, ${bestUrl.slotAge} slots behind)`
     );
 
     return bestUrl.url;
   }
 
-  // Fallback: No perfectly current URLs, use fastest available
+  // Fallback: No slot data available, use fastest URL
   successfulResults.sort((a, b) => a.responseTime - b.responseTime);
   const bestUrl = successfulResults[0];
 
-  console.log(`\n⚠️  No fully synced checkpoint URLs found`);
+  console.log(`\n⚠️  No slot data available from checkpoint URLs`);
   console.log(`🎯 Selected fastest available: ${bestUrl.url}`);
   console.log(
-    `   Response time: ${bestUrl.responseTime}ms${
-      bestUrl.slotAge !== null ? ` | ${bestUrl.slotAge} slots behind` : ""
-    }\n`
+    `   Response time: ${bestUrl.responseTime}ms (avg of 5 checks)\n`
   );
 
   debugToFile(
-    `Prysm: Selected checkpoint URL (fallback): ${bestUrl.url} (${
-      bestUrl.responseTime
-    }ms${bestUrl.slotAge !== null ? `, ${bestUrl.slotAge} slots behind` : ""})`
+    `Prysm: Selected checkpoint URL (fallback): ${bestUrl.url} (${bestUrl.responseTime}ms avg, no slot data)`
   );
 
   return bestUrl.url;
