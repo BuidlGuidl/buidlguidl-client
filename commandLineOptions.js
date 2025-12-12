@@ -65,13 +65,13 @@ function showHelp() {
     "                                            lighthouse defaults: 9000,9001. prysm defaults: 12000,13000\n"
   );
   console.log(
-    "  -cc, --consensuscheckpoint <url>          Specify the consensus checkpoint server URL"
+    "  -cc, --consensuscheckpoint <url>          Specify a custom consensus checkpoint server URL"
   );
   console.log(
-    "                                            Lighthouse default: https://mainnet-checkpoint-sync.stakely.io/"
+    "                                            If not provided, the fastest and most current checkpoint server will be automatically"
   );
   console.log(
-    "                                            Prysm default: https://mainnet-checkpoint-sync.attestant.io/\n"
+    "                                            selected from 8 public servers (see: https://eth-clients.github.io/checkpoint-sync-endpoints)\n"
   );
   console.log(
     "  -d, --directory <path>                    Specify ethereum client executable, database, and logs directory"
