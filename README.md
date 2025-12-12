@@ -115,9 +115,9 @@ Use the --help (-h) option to see all command line options:
   -cp, --consensuspeerports <port>,<port>   Specify the execution peer ports (must be two comma-separated numbers)
                                             lighthouse defaults: 9000,9001. prysm defaults: 12000,13000
 
-  -cc, --consensuscheckpoint <url>          Specify the consensus checkpoint server URL
-                                            Lighthouse default: https://mainnet-checkpoint-sync.stakely.io/
-                                            Prysm default: https://mainnet-checkpoint-sync.attestant.io/
+  -cc, --consensuscheckpoint <url>          Specify a custom consensus checkpoint server URL
+                                            If not provided, the fastest and most current checkpoint server will be automatically
+                                            selected from 8 public servers (see: https://eth-clients.github.io/checkpoint-sync-endpoints)
 
   -d, --directory <path>                    Specify ethereum client executable, database, and logs directory
                                             Default: buidlguidl-client/ethereum_clients
