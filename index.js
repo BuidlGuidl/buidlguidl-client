@@ -409,6 +409,12 @@ if (!isAlreadyRunning()) {
         null
       );
     }
+
+    // Give users time to see the selected checkpoint URL before logs start
+    if (selectedCheckpointUrl) {
+      console.log("⏳ Starting clients in 5 seconds...\n");
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    }
   } else {
     console.log(
       `\n✅ Using user-provided checkpoint URL: ${selectedCheckpointUrl}`

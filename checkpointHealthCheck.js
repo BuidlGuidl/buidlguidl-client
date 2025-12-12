@@ -16,7 +16,6 @@ const CHECKPOINT_URLS = [
 
 // Current Ethereum slot time (12 seconds per slot, 32 slots per epoch)
 const SECONDS_PER_SLOT = 12;
-const SLOTS_PER_EPOCH = 32;
 const ETHEREUM_GENESIS_TIMESTAMP = 1606824023; // Dec 1, 2020
 
 /**
@@ -35,24 +34,68 @@ function getCurrentSlot() {
  */
 async function checkCheckpointHealth(url, timeout = 5000) {
   const startTime = Date.now();
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    // Based on testing, /eth/v2/beacon/blocks/finalized works on ALL checkpoint servers
+    // Try primary endpoint first, then fallback to version check
+    let response = null;
+    let lastError = null;
 
-    // Try to fetch the finalized checkpoint header
-    const response = await fetch(`${url}/eth/v1/beacon/headers/finalized`, {
-      signal: controller.signal,
-      headers: { Accept: "application/json" },
-    });
+    // Try primary endpoint: /eth/v2/beacon/blocks/finalized
+    try {
+      response = await fetch(`${url}/eth/v2/beacon/blocks/finalized`, {
+        signal: controller.signal,
+        headers: { Accept: "application/json" },
+      });
+
+      if (!response.ok) {
+        lastError = `HTTP ${response.status}`;
+
+        // If primary fails, try fallback: /eth/v1/node/version
+        try {
+          response = await fetch(`${url}/eth/v1/node/version`, {
+            signal: controller.signal,
+            headers: { Accept: "application/json" },
+          });
+
+          if (!response.ok) {
+            lastError = `HTTP ${response.status}`;
+            response = null;
+          }
+        } catch (err) {
+          lastError = err.message;
+          response = null;
+        }
+      }
+    } catch (err) {
+      lastError = err.message;
+
+      // Try fallback on primary error
+      try {
+        response = await fetch(`${url}/eth/v1/node/version`, {
+          signal: controller.signal,
+          headers: { Accept: "application/json" },
+        });
+
+        if (!response.ok) {
+          lastError = `HTTP ${response.status}`;
+          response = null;
+        }
+      } catch (fallbackErr) {
+        lastError = fallbackErr.message;
+        response = null;
+      }
+    }
 
     clearTimeout(timeoutId);
 
-    if (!response.ok) {
+    if (!response) {
       return {
         url,
         success: false,
-        error: `HTTP ${response.status}`,
+        error: lastError || "Connection failed",
         responseTime: null,
         slot: null,
         slotAge: null,
@@ -62,31 +105,50 @@ async function checkCheckpointHealth(url, timeout = 5000) {
     const responseTime = Date.now() - startTime;
     const data = await response.json();
 
-    // Extract slot number from the finalized checkpoint
-    const slot = parseInt(data?.data?.header?.message?.slot || 0);
-    const currentSlot = getCurrentSlot();
-    const slotAge = currentSlot - slot;
+    // Extract slot number from /eth/v2/beacon/blocks/finalized response
+    // Slot is at data.message.slot based on test results
+    const slot = parseInt(data?.data?.message?.slot) || null;
 
-    // Calculate freshness score (newer is better)
-    const freshnessScore = Math.max(0, 100 - slotAge / 100);
+    // If we got slot data, calculate health score with freshness
+    if (slot) {
+      const currentSlot = getCurrentSlot();
+      const slotAge = currentSlot - slot;
 
-    // Calculate response time score (faster is better)
-    // 0ms = 100, 500ms = 75, 1000ms = 50, 2000ms = 0
+      // Calculate freshness score (newer is better)
+      const freshnessScore = Math.max(0, 100 - slotAge / 100);
+
+      // Calculate response time score (faster is better)
+      // 0ms = 100, 500ms = 75, 1000ms = 50, 2000ms = 0
+      const responseTimeScore = Math.max(0, 100 - responseTime / 20);
+
+      // Combined health score (40% response time, 60% freshness)
+      const healthScore = responseTimeScore * 0.4 + freshnessScore * 0.6;
+
+      return {
+        url,
+        success: true,
+        responseTime,
+        slot,
+        slotAge,
+        healthScore,
+        error: null,
+      };
+    }
+
+    // No slot data (version endpoint fallback) - score based on response time only
     const responseTimeScore = Math.max(0, 100 - responseTime / 20);
-
-    // Combined health score (40% response time, 60% freshness)
-    const healthScore = responseTimeScore * 0.4 + freshnessScore * 0.6;
 
     return {
       url,
       success: true,
       responseTime,
-      slot,
-      slotAge,
-      healthScore,
+      slot: null,
+      slotAge: null,
+      healthScore: responseTimeScore,
       error: null,
     };
   } catch (error) {
+    clearTimeout(timeoutId);
     return {
       url,
       success: false,
@@ -201,7 +263,9 @@ export async function selectCheckpointUrlForLighthouse(
       const urlDisplay = result.url.replace("https://", "");
       const responseDisplay = `${result.responseTime}ms`.padEnd(8);
       const slotAgeDisplay =
-        result.slotAge < 100
+        result.slotAge === null
+          ? "✅ Online"
+          : result.slotAge < 100
           ? "✅ Current"
           : `⚠️  ${result.slotAge} slots behind`;
       console.log(
@@ -292,7 +356,9 @@ export async function selectCheckpointUrlForPrysm(
       const urlDisplay = result.url.replace("https://", "");
       const responseDisplay = `${result.responseTime}ms`.padEnd(8);
       const slotAgeDisplay =
-        result.slotAge < 100
+        result.slotAge === null
+          ? "✅ Online"
+          : result.slotAge < 100
           ? "✅ Current"
           : `⚠️  ${result.slotAge} slots behind`;
       console.log(
