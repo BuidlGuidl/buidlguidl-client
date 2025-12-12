@@ -31,6 +31,10 @@ import {
 } from "./ethereum_client_scripts/configureBGPeers.js";
 import { getVersionNumber } from "./ethereum_client_scripts/install.js";
 import { debugToFile } from "./helpers.js";
+import {
+  selectCheckpointUrlForLighthouse,
+  selectCheckpointUrlForPrysm,
+} from "./checkpointHealthCheck.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -207,7 +211,12 @@ process.on("unhandledRejection", (reason, promise) => {
 let bgConsensusPeers = [];
 let bgConsensusAddrs;
 
-async function startClient(clientName, executionType, installDir) {
+async function startClient(
+  clientName,
+  executionType,
+  installDir,
+  checkpointUrl = null
+) {
   let clientCommand,
     clientArgs = [];
 
@@ -231,8 +240,8 @@ async function startClient(clientName, executionType, installDir) {
       clientArgs.push("--bgconsensusaddrs", bgConsensusAddrs);
     }
 
-    if (consensusCheckpoint != null) {
-      clientArgs.push("--consensuscheckpoint", consensusCheckpoint);
+    if (checkpointUrl != null) {
+      clientArgs.push("--consensuscheckpoint", checkpointUrl);
     }
 
     clientArgs.push("--consensuspeerports", consensusPeerPorts);
@@ -250,8 +259,8 @@ async function startClient(clientName, executionType, installDir) {
       clientArgs.push("--bgconsensusaddrs", bgConsensusAddrs);
     }
 
-    if (consensusCheckpoint != null) {
-      clientArgs.push("--consensuscheckpoint", consensusCheckpoint);
+    if (checkpointUrl != null) {
+      clientArgs.push("--consensuscheckpoint", checkpointUrl);
     }
     clientArgs.push("--consensuspeerports", consensusPeerPorts);
 
@@ -386,8 +395,34 @@ if (!isAlreadyRunning()) {
   deleteOptionsFile();
   createLockFile();
 
+  // Select best checkpoint URL if user didn't provide one
+  let selectedCheckpointUrl = consensusCheckpoint;
+  if (!selectedCheckpointUrl) {
+    if (consensusClient === "lighthouse") {
+      selectedCheckpointUrl = await selectCheckpointUrlForLighthouse(
+        installDir,
+        null
+      );
+    } else if (consensusClient === "prysm") {
+      selectedCheckpointUrl = await selectCheckpointUrlForPrysm(
+        installDir,
+        null
+      );
+    }
+  } else {
+    console.log(
+      `\n✅ Using user-provided checkpoint URL: ${selectedCheckpointUrl}`
+    );
+    console.log("   (skipping health checks per user request)\n");
+  }
+
   await startClient(executionClient, executionType, installDir);
-  await startClient(consensusClient, executionType, installDir);
+  await startClient(
+    consensusClient,
+    executionType,
+    installDir,
+    selectedCheckpointUrl
+  );
 
   if (owner !== null) {
     initializeWebSocketConnection(wsConfig);

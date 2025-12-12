@@ -7,7 +7,7 @@ import { stripAnsiCodes, getFormattedDateTime } from "../helpers.js";
 import minimist from "minimist";
 
 let installDir = os.homedir();
-let consensusCheckpoint = "https://mainnet-checkpoint-sync.attestant.io/";
+let consensusCheckpoint = null;
 let bgConsensusAddrs;
 
 const argv = minimist(process.argv.slice(2));
@@ -69,8 +69,6 @@ const consensusArgs = [
   "http://localhost:8551",
   "--grpc-gateway-host=0.0.0.0",
   "--grpc-gateway-port=5052",
-  `--checkpoint-sync-url=${consensusCheckpoint}`,
-  `--genesis-beacon-api-url=${consensusCheckpoint}`,
   "--datadir",
   path.join(installDir, "ethereum_clients", "prysm", "database"),
   "--accept-terms-of-use=true",
@@ -83,6 +81,19 @@ const consensusArgs = [
   // "--peer",
   // "enr:-MK4QFKbF8xjEtSUT8mGKGHujC-NrlgX_-FPF0PuMmeZYzuePneu7Kf78RMhY0XyDOMb9mfOd7GwS_XSeC1LeCM81tyGAZIRObQZh2F0dG5ldHOIABgAAAAAAACEZXRoMpBqlaGpBQAAAP__________gmlkgnY0gmlwhAoAAEiJc2VjcDI1NmsxoQIxBPPTLz6I7hjG94FZDpSfm4UzdJPKjs2zB7OmGCs2dIhzeW5jbmV0cwCDdGNwghueg3VkcIIbOQ",
 ];
+
+// Only add checkpoint-sync-url if provided by parent process
+if (consensusCheckpoint) {
+  consensusArgs.push(
+    `--checkpoint-sync-url=${consensusCheckpoint}`,
+    `--genesis-beacon-api-url=${consensusCheckpoint}`
+  );
+  debugToFile(`Prysm: Using checkpoint-sync-url: ${consensusCheckpoint}`);
+} else {
+  debugToFile(
+    "Prysm: Starting without checkpoint-sync-url (database exists or not needed)"
+  );
+}
 
 if (argv.bgconsensusaddrs) {
   bgConsensusAddrs.forEach((peer) => {

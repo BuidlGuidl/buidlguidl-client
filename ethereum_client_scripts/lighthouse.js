@@ -7,7 +7,7 @@ import { stripAnsiCodes, getFormattedDateTime } from "../helpers.js";
 import minimist from "minimist";
 
 let installDir = os.homedir();
-let consensusCheckpoint = "https://mainnet-checkpoint-sync.stakely.io/";
+let consensusCheckpoint = null;
 let bgConsensusPeers;
 let bgConsensusAddrs;
 
@@ -78,10 +78,6 @@ const consensusArgs = [
   consensusPeerPorts[1],
   "--execution-endpoint",
   "http://localhost:8551",
-  "--checkpoint-sync-url",
-  consensusCheckpoint,
-  "--checkpoint-sync-url-timeout",
-  "1200",
   "--datadir",
   path.join(installDir, "ethereum_clients", "lighthouse", "database"),
   "--execution-jwt",
@@ -97,6 +93,21 @@ const consensusArgs = [
   "--disable-upnp", // There is currently a bug in the p2p-lib that causes panics with this enabled
   "--disable-enr-auto-update", // This is causing a loop of ENR updates that crashes lighthouse
 ];
+
+// Only add checkpoint-sync-url if provided by parent process
+if (consensusCheckpoint) {
+  consensusArgs.push(
+    "--checkpoint-sync-url",
+    consensusCheckpoint,
+    "--checkpoint-sync-url-timeout",
+    "1200"
+  );
+  debugToFile(`Lighthouse: Using checkpoint-sync-url: ${consensusCheckpoint}`);
+} else {
+  debugToFile(
+    "Lighthouse: Starting without checkpoint-sync-url (database exists or not needed)"
+  );
+}
 
 if (argv.bgconsensuspeers) {
   debugToFile(`Lighthouse: Added Trusted BG Peers: ${bgConsensusPeers}`);
