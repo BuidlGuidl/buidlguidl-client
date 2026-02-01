@@ -1,6 +1,7 @@
 import { createPublicClient, http } from "viem";
 import { mainnet } from "viem/chains";
 import { BASE_URL } from "../config.js";
+import { debugToFile } from "../helpers.js";
 
 export const localClient = createPublicClient({
   name: "localClient",

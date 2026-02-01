@@ -1,5 +1,5 @@
 import blessed from "blessed";
-import { exec } from "child_process";
+import fetch from "node-fetch";
 import { debugToFile } from "../helpers.js";
 import { localClient } from "./viemClients.js";
 import { executionClient, consensusClient } from "../commandLineOptions.js";
@@ -54,39 +54,53 @@ export async function getConsensusPeers(consensusClient) {
   } else if (consensusClient == "lighthouse") {
     searchString = "libp2p_peers";
   }
-  return new Promise((resolve) => {
-    exec(
-      `curl -s http://localhost:5054/metrics | grep -E '^${searchString} '`,
-      (error, stdout, stderr) => {
-        if (error || stderr) {
-          // debugToFile(`getConsensusPeers(): ${error || stderr}`);
-          return resolve(null);
-        }
 
-        const parts = stdout.trim().split(" ");
-        if (parts.length === 2 && parts[0] === searchString) {
+  try {
+    const response = await fetch("http://localhost:5054/metrics", {
+      timeout: 5000,
+    });
+    const text = await response.text();
+
+    // Find the line that starts with our search string
+    const lines = text.split("\n");
+    for (const line of lines) {
+      if (line.startsWith(searchString + " ")) {
+        const parts = line.trim().split(" ");
+        if (parts.length === 2) {
           const peerCount = parseInt(parts[1], 10);
-          resolve(peerCount);
-        } else {
-          resolve(null);
+          return peerCount;
         }
       }
-    );
-  });
+    }
+    return null;
+  } catch (error) {
+    // debugToFile(`getConsensusPeers(): ${error}`);
+    return null;
+  }
 }
 
 export async function getBGExecutionPeers() {
   try {
-    const curlCommand = `curl -s -X POST --data '{"jsonrpc":"2.0","method":"admin_peers","params":[],"id":1}' -H "Content-Type: application/json" http://localhost:8545`;
-
-    const response = await new Promise((resolve, reject) => {
-      exec(curlCommand, (error, stdout, stderr) => {
-        if (error) reject(error);
-        else resolve(stdout);
-      });
+    const response = await fetch("http://localhost:8545", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        method: "admin_peers",
+        params: [],
+        id: 1,
+      }),
+      timeout: 5000,
     });
 
-    const parsedResponse = JSON.parse(response);
+    const parsedResponse = await response.json();
+
+    // Check if result exists and is an array
+    if (!parsedResponse.result || !Array.isArray(parsedResponse.result)) {
+      // debugToFile(`getBGExecutionPeers(): No result or not an array: ${JSON.stringify(parsedResponse)}`);
+      return 0;
+    }
+
     const peerIds = parsedResponse.result.map((peer) =>
       peer.id.replace(/^0x/, "")
     );
@@ -119,16 +133,17 @@ export async function getBGConsensusPeers() {
     //   `getBGConsensusPeers(): bgConsensusPeers: ${bgConsensusPeers}\n`
     // );
 
-    const curlCommand = `curl -s http://localhost:5052/eth/v1/node/peers`;
-
-    const response = await new Promise((resolve, reject) => {
-      exec(curlCommand, (error, stdout, stderr) => {
-        if (error) reject(error);
-        else resolve(stdout);
-      });
+    const response = await fetch("http://localhost:5052/eth/v1/node/peers", {
+      timeout: 5000,
     });
 
-    const parsedResponse = JSON.parse(response);
+    const parsedResponse = await response.json();
+
+    // Check if data exists and is an array
+    if (!parsedResponse.data || !Array.isArray(parsedResponse.data)) {
+      return 0;
+    }
+
     const connectedPeers = parsedResponse.data
       .filter((peer) => peer.state === "connected")
       .map((peer) => peer.peer_id);

@@ -12,7 +12,6 @@ import {
   localClient,
   getEthSyncingStatus,
 } from "./viemClients.js";
-import { exec } from "child_process";
 import { populateRethStageGauge } from "./rethStageGauge.js";
 import { populateGethStageGauge } from "./gethStageGauge.js";
 import { checkIn } from "../webSocketConnection.js";
@@ -228,19 +227,25 @@ export function setupLogStreaming(
 let statusMessage = "INITIALIZING...";
 
 async function getRethSyncMetrics() {
-  return new Promise((resolve) => {
-    exec(
-      "curl -s 127.0.0.1:9001 | grep -E '^reth_sync_entities_processed|^reth_sync_entities_total'",
-      (error, stdout, stderr) => {
-        if (error || stderr) {
-          // If there's an error (likely because Reth is no longer running), return an empty string
-          resolve("");
-        } else {
-          resolve(stdout.trim()); // Return the output as a string
-        }
-      }
-    );
-  });
+  try {
+    const response = await fetch("http://127.0.0.1:9001", { timeout: 5000 });
+    const text = await response.text();
+
+    // Filter lines that match our patterns (equivalent to grep -E)
+    const lines = text
+      .split("\n")
+      .filter(
+        (line) =>
+          line.startsWith("reth_sync_entities_processed") ||
+          line.startsWith("reth_sync_entities_total")
+      );
+
+    return lines.join("\n");
+  } catch (error) {
+    // If there's an error (likely because Reth is no longer running or metrics not ready), return empty string
+    debugToFile(`getRethSyncMetrics error: ${error.message}`);
+    return "";
+  }
 }
 
 let largestToBlock = 0;
@@ -655,9 +660,10 @@ async function parseAndPopulateRethMetrics() {
 
 function checkAllStagesComplete(percentages) {
   const values = Object.values(percentages);
+  // Only consider complete when all stages are at 100% (value of 1)
+  // All zeros means we're initializing/syncing, NOT complete
   const allOnes = values.every((percent) => percent === 1);
-  const allZeros = values.every((percent) => percent === 0);
-  return allOnes || allZeros;
+  return allOnes;
 }
 
 export async function showHideRethWidgets(
@@ -668,12 +674,24 @@ export async function showHideRethWidgets(
 ) {
   try {
     const syncingStatus = await getEthSyncingStatus();
-
-    // debugToFile(`syncingStatus: ${JSON.stringify(syncingStatus, null, 2)}`);
-
     const allStagesComplete = checkAllStagesComplete(stagePercentages);
+    const allStagesZero = Object.values(stagePercentages).every(
+      (percent) => percent === 0
+    );
 
-    if (syncingStatus && !allStagesComplete) {
+    // Reth returns false for eth_syncing during initial pipeline sync (Headers, Bodies, etc.)
+    // It only returns a sync object during "live sync" after pipeline completes.
+    // So we must use stage percentages as the primary sync indicator for reth.
+    const stagesInProgress = !allStagesComplete && !allStagesZero;
+
+    debugToFile(
+      `showHideRethWidgets: syncingStatus=${
+        syncingStatus !== false
+      }, allStagesComplete=${allStagesComplete}, stagesInProgress=${stagesInProgress}`
+    );
+
+    // Show stage gauge if eth_syncing returns object OR stages are actively in progress
+    if (syncingStatus || stagesInProgress) {
       if (!screen.children.includes(rethStageGauge)) {
         screen.append(rethStageGauge);
       }
@@ -807,12 +825,14 @@ async function calcSyncingStatus(executionClient) {
         (percent) => percent === 0
       );
 
-      if (isNodeSyncing || allStagesZero) {
+      // Reth returns false for eth_syncing during initial pipeline sync.
+      // Stages in progress means we're syncing even if eth_syncing returns false.
+      const stagesInProgress = !allStagesComplete && !allStagesZero;
+
+      if (isNodeSyncing || allStagesZero || stagesInProgress) {
         isSyncing = true;
-      } else if (allStagesComplete) {
-        isSyncing = false;
       }
-      // If none of the conditions are met, isSyncing remains false
+      // Only consider synced when all stages are complete (100%)
     } else if (executionClient === "geth") {
       isSyncing = !!syncingStatus; // Convert to boolean
     }
