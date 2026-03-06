@@ -31,6 +31,22 @@ export function createRethStageGauge(grid) {
   return rethStageGauge;
 }
 
+// Helper function to compare versions
+function compareVersions(version1, version2) {
+  const v1Parts = version1.split(".").map(Number);
+  const v2Parts = version2.split(".").map(Number);
+
+  for (let i = 0; i < Math.max(v1Parts.length, v2Parts.length); i++) {
+    const v1 = v1Parts[i] || 0;
+    const v2 = v2Parts[i] || 0;
+
+    if (v1 > v2) return 1;
+    if (v1 < v2) return -1;
+  }
+
+  return 0;
+}
+
 export function populateRethStageGauge(stagePercentages) {
   try {
     let stageNames;
@@ -38,7 +54,24 @@ export function populateRethStageGauge(stagePercentages) {
     // Initialize Reth version if not already done
     initRethVersion();
 
-    if (rethVersion >= "1.3.4") {
+    // Reth 1.11.1+ removed PruneSenderRecovery stage, has 13 stages total
+    if (compareVersions(rethVersion, "1.11.1") >= 0) {
+      stageNames = [
+        "HEADERS",
+        "BODIES",
+        "SENDER RECOVERY",
+        "EXECUTION",
+        "MERKLE UNWIND",
+        "ACCOUNT HASHING",
+        "STORAGE HASHING",
+        "MERKLE EXECUTE",
+        "TRANSACTION LOOKUP",
+        "INDEX STORAGE HIST",
+        "INDEX ACCOUNT HIST",
+        "PRUNE",
+        "FINISH",
+      ];
+    } else if (compareVersions(rethVersion, "1.3.4") >= 0) {
       stageNames = [
         "HEADERS",
         "BODIES",

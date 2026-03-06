@@ -616,7 +616,24 @@ async function parseAndPopulateRethMetrics() {
   }
 
   // Update stagePercentages object based on Reth version
-  if (compareVersions(rethVersion, "1.3.4") >= 0) {
+  // Reth 1.11.1+ removed PruneSenderRecovery stage, has 13 stages total
+  if (compareVersions(rethVersion, "1.11.1") >= 0) {
+    stagePercentages = {
+      headersPercent,
+      bodiesPercent,
+      senderRecoveryPercent,
+      executionPercent,
+      merkleUnwindPercent,
+      accountHashingPercent,
+      storageHashingPercent,
+      merkleExecutePercent,
+      transactionLookupPercent,
+      indexStorageHistoryPercent,
+      indexAccountHistoryPercent,
+      prunePercent,
+      finishPercent,
+    };
+  } else if (compareVersions(rethVersion, "1.3.4") >= 0) {
     stagePercentages = {
       headersPercent,
       bodiesPercent,
