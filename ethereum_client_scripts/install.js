@@ -5,7 +5,7 @@ import os from "os";
 import { installDir } from "../commandLineOptions.js";
 import { debugToFile } from "./../helpers.js";
 
-export const latestGethVer = "1.16.7";
+export const latestGethVer = "1.17.1";
 export const latestRethVer = "1.11.1";
 export const latestLighthouseVer = "8.1.1";
 
@@ -20,6 +20,7 @@ export function installMacLinuxClient(clientName, platform) {
     "1.16.3": "d818a9af",
     "1.16.5": "737ffd1b",
     "1.16.7": "b9f3a3d9",
+    "1.17.1": "16783c16",
   };
 
   const configs = {
@@ -57,7 +58,7 @@ export function installMacLinuxClient(clientName, platform) {
   const clientDir = path.join(installDir, "ethereum_clients", clientName);
   const clientScript = path.join(
     clientDir,
-    clientName === "prysm" ? "prysm.sh" : clientName
+    clientName === "prysm" ? "prysm.sh" : clientName,
   );
 
   if (!fs.existsSync(clientScript)) {
@@ -80,13 +81,13 @@ export function installMacLinuxClient(clientName, platform) {
       console.log("Downloading Prysm.");
       execSync(
         `cd "${clientDir}" && curl -L -O -# ${downloadUrls.prysm} && chmod +x prysm.sh`,
-        { stdio: "inherit" }
+        { stdio: "inherit" },
       );
     } else {
       console.log(`Downloading ${clientName}.`);
       execSync(
         `cd "${clientDir}" && curl -L -O -# ${downloadUrls[clientName]}`,
-        { stdio: "inherit" }
+        { stdio: "inherit" },
       );
       console.log(`Uncompressing ${clientName}.`);
       execSync(`cd "${clientDir}" && tar -xzvf "${fileName}.tar.gz"`, {
@@ -130,7 +131,7 @@ export function getVersionNumber(client) {
       installDir,
       "ethereum_clients",
       `${client}`,
-      client === "prysm" ? `${client}.sh` : `${client}`
+      client === "prysm" ? `${client}.sh` : `${client}`,
     );
   } else if (platform === "win32") {
     console.log("getVersionNumber() for windows is yet not implemented");
@@ -143,13 +144,13 @@ export function getVersionNumber(client) {
       {
         encoding: "utf-8",
         stdio: ["pipe", "pipe", "ignore"],
-      }
+      },
     );
     versionOutput = versionCommand.trim();
 
     if (client === "reth") {
       versionMatch = versionOutput.match(
-        /[Rr]eth(?:-ethereum-cli)? Version: (\d+\.\d+\.\d+)/
+        /[Rr]eth(?:-ethereum-cli)? Version: (\d+\.\d+\.\d+)/,
       );
     } else if (client === "lighthouse") {
       versionMatch = versionOutput.match(/Lighthouse v(\d+\.\d+\.\d+)/);
