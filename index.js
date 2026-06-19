@@ -30,6 +30,7 @@ import {
   configureBGConsensusPeers,
 } from "./ethereum_client_scripts/configureBGPeers.js";
 import { getVersionNumber } from "./ethereum_client_scripts/install.js";
+import { ensureRethSnapshot } from "./ethereum_client_scripts/rethSnapshot.js";
 import { debugToFile } from "./helpers.js";
 import {
   selectCheckpointUrlForLighthouse,
@@ -394,6 +395,26 @@ const wsConfig = {
 if (!isAlreadyRunning()) {
   deleteOptionsFile();
   createLockFile();
+
+  // BLOCKING: if reth needs a database snapshot, download it now — before the
+  // monitoring dashboard launches — so the user sees reth's native download
+  // output on the terminal instead of having the TUI immediately cover it up.
+  if (executionClient === "reth") {
+    try {
+      await ensureRethSnapshot({ installDir, executionType });
+    } catch (err) {
+      if (isExiting) process.exit(0);
+      isExiting = true; // prevent the exit handler from re-running handleExit
+      console.error(`\n❌ reth snapshot download failed: ${err.message}`);
+      console.error(
+        "   reth was not started. Re-run the client to resume/retry the snapshot.\n"
+      );
+      debugToFile(`ensureRethSnapshot(): ${err.message}`);
+      deleteOptionsFile();
+      removeLockFile();
+      process.exit(1);
+    }
+  }
 
   // Select best checkpoint URL if user didn't provide one
   let selectedCheckpointUrl = consensusCheckpoint;

@@ -4,6 +4,7 @@ import os from "os";
 import path from "path";
 import { debugToFile } from "../helpers.js";
 import { stripAnsiCodes, getFormattedDateTime } from "../helpers.js";
+import { getRethDatadir } from "./rethSnapshot.js";
 import minimist from "minimist";
 
 let installDir = os.homedir();
@@ -29,6 +30,10 @@ if (["darwin", "linux"].includes(platform)) {
 } else if (platform === "win32") {
   rethCommand = path.join(installDir, "ethereum_clients", "reth", "reth.exe");
 }
+
+// Shared datadir definition (also used by the snapshot download in
+// rethSnapshot.js) so a custom `--directory` can never make them diverge.
+const datadir = getRethDatadir(installDir);
 
 const logFilePath = path.join(
   installDir,
@@ -61,7 +66,7 @@ const execution = pty.spawn(
     "--authrpc.port",
     "8551",
     "--datadir",
-    path.join(installDir, "ethereum_clients", "reth", "database"),
+    datadir,
     "--authrpc.jwtsecret",
     `${jwtPath}`,
     "--metrics",
