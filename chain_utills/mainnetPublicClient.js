@@ -3,5 +3,11 @@ import { mainnet } from "viem/chains";
 
 export const mainnetPublicClient = createPublicClient({
   chain: mainnet,
-  transport: http("https://mainnet.rpc.buidlguidl.com"),
+  transport: http("https://mainnet.rpc.buidlguidl.com", {
+    fetchOptions: {
+      headers: {
+        Origin: "buidlguidl-client",
+      },
+    },
+  }),
 });
