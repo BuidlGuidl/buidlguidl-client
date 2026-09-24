@@ -172,18 +172,37 @@ export function initializeWebSocketConnection(wsConfig) {
         populateRpcInfoBox(request.method);
 
         const targetUrl = "http://localhost:8545";
+        // Well under the pool's Socket.IO message limit, so an oversized
+        // response becomes a JSON-RPC error here instead of disconnecting us.
+        const maxResponseBytes = 32e6;
 
         try {
-          const rpcResponse = await axios.post(targetUrl, {
-            jsonrpc: "2.0",
-            method: request.method,
-            params: request.params,
-            id: request.id,
-          });
+          const rpcResponse = await axios.post(
+            targetUrl,
+            {
+              jsonrpc: "2.0",
+              method: request.method,
+              params: request.params,
+              id: request.id,
+            },
+            { maxContentLength: maxResponseBytes }
+          );
 
           callback(rpcResponse.data);
         } catch (error) {
           debugToFile("Error returning RPC response:", error);
+
+          if (error.message?.startsWith("maxContentLength size")) {
+            callback({
+              jsonrpc: "2.0",
+              error: {
+                code: -32603,
+                message: `Response exceeds node limit of ${maxResponseBytes} bytes`,
+              },
+              id: request.id,
+            });
+            return;
+          }
 
           callback({
             jsonrpc: "2.0",
