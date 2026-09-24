@@ -17,6 +17,7 @@ import axios from "axios";
 import fs from "fs";
 import path from "path";
 import { BASE_URL } from "./config.js";
+import { readRethReceiptFloor } from "./ethereum_client_scripts/rethReceiptFloor.js";
 
 let socketId;
 export let checkIn;
@@ -48,6 +49,8 @@ export function initializeWebSocketConnection(wsConfig) {
   let lastCheckInTime = 0;
   let lastCheckedBlockNumber = -1;
   const minCheckInInterval = 60000; // Minimum 60 seconds between check-ins
+  // Fixed once known (set by the snapshot the node synced from); null until then.
+  let receiptFloor = null;
 
   const git = simpleGit();
 
@@ -302,6 +305,13 @@ export function initializeWebSocketConnection(wsConfig) {
         socket_id: socketId || "",
         owner: owner,
       };
+
+      if (wsConfig.executionClient === "reth") {
+        if (receiptFloor === null) {
+          receiptFloor = readRethReceiptFloor(installDir);
+        }
+        params.receipt_floor = receiptFloor;
+      }
 
       // debugToFile(`Checkin() params: ${JSON.stringify(params)}`);
 
