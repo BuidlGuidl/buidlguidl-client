@@ -17,7 +17,8 @@ import axios from "axios";
 import fs from "fs";
 import path from "path";
 import { BASE_URL } from "./config.js";
-import { readRethReceiptFloor } from "./ethereum_client_scripts/rethReceiptFloor.js";
+import { readRethSegmentFloor } from "./ethereum_client_scripts/rethReceiptFloor.js";
+import { readRethStateHistory } from "./ethereum_client_scripts/rethStateHistory.js";
 
 let socketId;
 export let checkIn;
@@ -49,8 +50,35 @@ export function initializeWebSocketConnection(wsConfig) {
   let lastCheckInTime = 0;
   let lastCheckedBlockNumber = -1;
   const minCheckInInterval = 60000; // Minimum 60 seconds between check-ins
-  // Fixed once known (set by the snapshot the node synced from); null until then.
-  let receiptFloor = null;
+  // Reth history reported on every check-in so the pool can route old-block
+  // and old-state requests. Read from disk at startup and every 6 hours, never
+  // inside checkIn() (which runs every block). A failed read keeps the last
+  // good value; null means unknown.
+  const rethHistoryRefreshInterval = 6 * 60 * 60 * 1000;
+  const rethHistory = {
+    receipt_floor: null,
+    body_floor: null,
+    state_history: null,
+  };
+  const rethHistoryReaders = {
+    receipt_floor: () => readRethSegmentFloor(installDir, "receipts"),
+    body_floor: () => readRethSegmentFloor(installDir, "transactions"),
+    state_history: () => readRethStateHistory(installDir),
+  };
+  function refreshRethHistory() {
+    for (const [field, read] of Object.entries(rethHistoryReaders)) {
+      try {
+        const value = read();
+        if (value !== undefined) rethHistory[field] = value;
+      } catch (err) {
+        debugToFile(`refreshRethHistory(${field}): ${err.message}`);
+      }
+    }
+  }
+  if (wsConfig.executionClient === "reth") {
+    refreshRethHistory();
+    setInterval(refreshRethHistory, rethHistoryRefreshInterval);
+  }
 
   const git = simpleGit();
 
@@ -326,10 +354,9 @@ export function initializeWebSocketConnection(wsConfig) {
       };
 
       if (wsConfig.executionClient === "reth") {
-        if (receiptFloor === null) {
-          receiptFloor = readRethReceiptFloor(installDir);
-        }
-        params.receipt_floor = receiptFloor;
+        params.receipt_floor = rethHistory.receipt_floor;
+        params.body_floor = rethHistory.body_floor;
+        params.state_history = rethHistory.state_history;
       }
 
       // debugToFile(`Checkin() params: ${JSON.stringify(params)}`);
