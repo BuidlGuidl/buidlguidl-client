@@ -84,9 +84,9 @@ const execution = pty.spawn(
     "10000",
     "--rpc.max-logs-per-response",
     "10000",
-    "--prune.bodies.pre-merge",
-    "--prune.receipts.before",
-    "15537394",
+    ...(executionType === "archive"
+      ? []
+      : ["--prune.bodies.pre-merge", "--prune.receipts.before", "15537394"]),
   ],
   {
     name: "xterm-color",
