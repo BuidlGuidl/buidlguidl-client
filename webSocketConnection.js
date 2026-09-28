@@ -17,6 +17,8 @@ import axios from "axios";
 import fs from "fs";
 import path from "path";
 import { BASE_URL } from "./config.js";
+import { readRethSegmentFloor } from "./ethereum_client_scripts/rethReceiptFloor.js";
+import { readRethStateHistory } from "./ethereum_client_scripts/rethStateHistory.js";
 
 let socketId;
 export let checkIn;
@@ -48,6 +50,41 @@ export function initializeWebSocketConnection(wsConfig) {
   let lastCheckInTime = 0;
   let lastCheckedBlockNumber = -1;
   const minCheckInInterval = 60000; // Minimum 60 seconds between check-ins
+  // Reth history reported on every check-in so the pool can route old-block
+  // and old-state requests. Read from disk at startup and every 6 hours
+  // (every 60 seconds while any value is still null), never inside checkIn()
+  // (which runs every block). A failed read keeps the last good value; null
+  // means unknown.
+  const rethHistoryRefreshInterval = 6 * 60 * 60 * 1000;
+  const rethHistoryRetryInterval = 60 * 1000;
+  const rethHistory = {
+    receipt_floor: null,
+    body_floor: null,
+    state_history: null,
+  };
+  const rethHistoryReaders = {
+    receipt_floor: () => readRethSegmentFloor(installDir, "receipts"),
+    body_floor: () => readRethSegmentFloor(installDir, "transactions"),
+    state_history: () => readRethStateHistory(installDir),
+  };
+  function refreshRethHistory() {
+    for (const [field, read] of Object.entries(rethHistoryReaders)) {
+      try {
+        const value = read();
+        if (value !== undefined) rethHistory[field] = value;
+      } catch (err) {
+        debugToFile(`refreshRethHistory(${field}): ${err.message}`);
+      }
+    }
+    const anyUnknown = Object.values(rethHistory).some((v) => v === null);
+    setTimeout(
+      refreshRethHistory,
+      anyUnknown ? rethHistoryRetryInterval : rethHistoryRefreshInterval
+    );
+  }
+  if (wsConfig.executionClient === "reth") {
+    refreshRethHistory();
+  }
 
   const git = simpleGit();
 
@@ -169,18 +206,37 @@ export function initializeWebSocketConnection(wsConfig) {
         populateRpcInfoBox(request.method);
 
         const targetUrl = "http://localhost:8545";
+        // Well under the pool's Socket.IO message limit, so an oversized
+        // response becomes a JSON-RPC error here instead of disconnecting us.
+        const maxResponseBytes = 32e6;
 
         try {
-          const rpcResponse = await axios.post(targetUrl, {
-            jsonrpc: "2.0",
-            method: request.method,
-            params: request.params,
-            id: request.id,
-          });
+          const rpcResponse = await axios.post(
+            targetUrl,
+            {
+              jsonrpc: "2.0",
+              method: request.method,
+              params: request.params,
+              id: request.id,
+            },
+            { maxContentLength: maxResponseBytes }
+          );
 
           callback(rpcResponse.data);
         } catch (error) {
           debugToFile("Error returning RPC response:", error);
+
+          if (error.message?.startsWith("maxContentLength size")) {
+            callback({
+              jsonrpc: "2.0",
+              error: {
+                code: -32603,
+                message: `Response exceeds node limit of ${maxResponseBytes} bytes`,
+              },
+              id: request.id,
+            });
+            return;
+          }
 
           callback({
             jsonrpc: "2.0",
@@ -302,6 +358,12 @@ export function initializeWebSocketConnection(wsConfig) {
         socket_id: socketId || "",
         owner: owner,
       };
+
+      if (wsConfig.executionClient === "reth") {
+        params.receipt_floor = rethHistory.receipt_floor;
+        params.body_floor = rethHistory.body_floor;
+        params.state_history = rethHistory.state_history;
+      }
 
       // debugToFile(`Checkin() params: ${JSON.stringify(params)}`);
 

@@ -79,11 +79,12 @@ function hasExistingChainData(datadir) {
   );
 }
 
-// Remove only the snapshot's target directories (never the whole datadir and
-// never the marker). Only ever called when we know there is no synced db to
-// protect (fresh install or recovering a partial/forced download).
+// Remove only the snapshot's targets (never the whole datadir and never the
+// marker) — the same set `reth download --force` clears. Only ever called when
+// we know there is no synced db to protect (fresh install or recovering a
+// partial/forced download).
 function wipeSnapshotTargets(datadir) {
-  for (const sub of ["db", "static_files"]) {
+  for (const sub of ["db", "static_files", "rocksdb", "reth.toml"]) {
     const dir = path.join(datadir, sub);
     try {
       if (fs.existsSync(dir)) {
@@ -95,7 +96,7 @@ function wipeSnapshotTargets(datadir) {
   }
 }
 
-function logFreeSpace(datadir) {
+function logFreeSpace(datadir, executionType) {
   try {
     if (typeof fs.statfsSync === "function") {
       const stats = fs.statfsSync(datadir);
@@ -103,7 +104,9 @@ function logFreeSpace(datadir) {
       console.log(
         `   Free space at datadir: ${freeGb.toFixed(
           0
-        )} GB (a full reth snapshot needs well over 1 TB).`
+        )} GB (a ${executionType} reth snapshot needs ${
+          executionType === "archive" ? "about 3 TB" : "well over 1 TB"
+        }).`
       );
     }
   } catch (err) {
@@ -114,7 +117,7 @@ function logFreeSpace(datadir) {
 // Spawn `reth download` with inherited stdio so reth's own progress output owns
 // the terminal. Resolves ONLY on a clean exit code 0; completion is detected by
 // the exit code, never by parsing output.
-function runSnapshotDownload(installDir, datadir) {
+function runSnapshotDownload(installDir, datadir, executionType) {
   return new Promise((resolve, reject) => {
     const rethCommand = getRethCommand(installDir);
 
@@ -124,12 +127,19 @@ function runSnapshotDownload(installDir, datadir) {
     console.log(
       "   must finish before reth and the dashboard start. Do not interrupt.\n"
     );
-    logFreeSpace(datadir);
+    logFreeSpace(datadir, executionType);
     console.log("");
 
     const download = spawn(
       rethCommand,
-      ["download", "--datadir", datadir, "--chain", "mainnet", "--full"],
+      [
+        "download",
+        "--datadir",
+        datadir,
+        "--chain",
+        "mainnet",
+        executionType === "archive" ? "--archive" : "--full",
+      ],
       {
         stdio: "inherit",
         cwd: process.env.HOME,
@@ -177,20 +187,22 @@ export async function ensureRethSnapshot({ installDir, executionType }) {
     return;
   }
 
-  // The published snapshot is a `--full` snapshot; it cannot seed an archive
-  // node, so archive nodes always sync from scratch.
-  if (executionType === "archive") {
-    console.log(
-      "\n[bg] Archive node selected; skipping full snapshot download (not compatible with archive sync).\n"
-    );
-    return;
-  }
-
   const marker = readSnapshotMarker(datadir);
   const forced = override === "force";
 
   // Fast path: snapshot already applied (or stamped for a pre-existing db).
+  // Markers written before archive snapshots were supported have no
+  // executionType; those were all full.
   if (!forced && marker?.state === "complete") {
+    const markerType = marker.executionType || "full";
+    if (markerType !== executionType) {
+      console.log(
+        `\n[bg] WARNING: this reth database was set up as a ${markerType} node but ${executionType} was requested.`
+      );
+      console.log(
+        "[bg] The existing database will not be changed. To switch, delete the reth database directory or set RETH_SNAPSHOT=force.\n"
+      );
+    }
     return;
   }
 
@@ -204,7 +216,10 @@ export async function ensureRethSnapshot({ installDir, executionType }) {
     console.log(
       "[bg] Skipping snapshot download to avoid clobbering it.\n"
     );
-    writeSnapshotMarker(datadir, "complete", { reason: "preexisting-database" });
+    writeSnapshotMarker(datadir, "complete", {
+      reason: "preexisting-database",
+      executionType,
+    });
     return;
   }
 
@@ -220,8 +235,14 @@ export async function ensureRethSnapshot({ installDir, executionType }) {
     wipeSnapshotTargets(datadir);
   }
 
-  writeSnapshotMarker(datadir, "in_progress", { startedAt: getFormattedDateTime() });
-  await runSnapshotDownload(installDir, datadir);
-  writeSnapshotMarker(datadir, "complete", { completedAt: getFormattedDateTime() });
+  writeSnapshotMarker(datadir, "in_progress", {
+    startedAt: getFormattedDateTime(),
+    executionType,
+  });
+  await runSnapshotDownload(installDir, datadir, executionType);
+  writeSnapshotMarker(datadir, "complete", {
+    completedAt: getFormattedDateTime(),
+    executionType,
+  });
   console.log("\n✅ reth snapshot download complete. Starting reth.\n");
 }
