@@ -51,10 +51,12 @@ export function initializeWebSocketConnection(wsConfig) {
   let lastCheckedBlockNumber = -1;
   const minCheckInInterval = 60000; // Minimum 60 seconds between check-ins
   // Reth history reported on every check-in so the pool can route old-block
-  // and old-state requests. Read from disk at startup and every 6 hours, never
-  // inside checkIn() (which runs every block). A failed read keeps the last
-  // good value; null means unknown.
+  // and old-state requests. Read from disk at startup and every 6 hours
+  // (every 60 seconds while any value is still null), never inside checkIn()
+  // (which runs every block). A failed read keeps the last good value; null
+  // means unknown.
   const rethHistoryRefreshInterval = 6 * 60 * 60 * 1000;
+  const rethHistoryRetryInterval = 60 * 1000;
   const rethHistory = {
     receipt_floor: null,
     body_floor: null,
@@ -74,10 +76,14 @@ export function initializeWebSocketConnection(wsConfig) {
         debugToFile(`refreshRethHistory(${field}): ${err.message}`);
       }
     }
+    const anyUnknown = Object.values(rethHistory).some((v) => v === null);
+    setTimeout(
+      refreshRethHistory,
+      anyUnknown ? rethHistoryRetryInterval : rethHistoryRefreshInterval
+    );
   }
   if (wsConfig.executionClient === "reth") {
     refreshRethHistory();
-    setInterval(refreshRethHistory, rethHistoryRefreshInterval);
   }
 
   const git = simpleGit();
