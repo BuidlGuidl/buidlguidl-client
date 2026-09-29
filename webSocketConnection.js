@@ -202,52 +202,34 @@ export function initializeWebSocketConnection(wsConfig) {
         debugToFile(`Socket ID: ${socketId}`);
       });
 
-      socket.on("rpc_request", async (request, callback) => {
+      // TEST-ONLY BRANCH (staging-fail-test): simulates a failing node for pool testing; NEVER merge.
+      let getLogsDisconnectTimer = null;
+      socket.on("rpc_request", (request, callback) => {
         populateRpcInfoBox(request.method);
 
-        const targetUrl = "http://localhost:8545";
-        // Well under the pool's Socket.IO message limit, so an oversized
-        // response becomes a JSON-RPC error here instead of disconnecting us.
-        const maxResponseBytes = 32e6;
-
-        try {
-          const rpcResponse = await axios.post(
-            targetUrl,
-            {
-              jsonrpc: "2.0",
-              method: request.method,
-              params: request.params,
-              id: request.id,
-            },
-            { maxContentLength: maxResponseBytes }
-          );
-
-          callback(rpcResponse.data);
-        } catch (error) {
-          debugToFile("Error returning RPC response:", error);
-
-          if (error.message?.startsWith("maxContentLength size")) {
-            callback({
-              jsonrpc: "2.0",
-              error: {
-                code: -32603,
-                message: `Response exceeds node limit of ${maxResponseBytes} bytes`,
-              },
-              id: request.id,
-            });
-            return;
-          }
-
+        if (request.method !== "eth_getLogs") {
           callback({
             jsonrpc: "2.0",
-            error: {
-              code: -70000,
-              message: "Internal node error",
-              data: error.message,
-            },
             id: request.id,
+            error: { code: -70000, message: "Internal node error" },
           });
+          return;
         }
+
+        // eth_getLogs: never answer. 20 s after the first unanswered one, drop
+        // the pool connection, then reconnect 30 s later and start over.
+        if (getLogsDisconnectTimer) return;
+        getLogsDisconnectTimer = setTimeout(() => {
+          debugToFile(
+            "staging-fail-test: disconnecting from pool 20 s after unanswered eth_getLogs"
+          );
+          socket.disconnect();
+          setTimeout(() => {
+            debugToFile("staging-fail-test: reconnecting to pool");
+            getLogsDisconnectTimer = null;
+            socket.connect();
+          }, 30000);
+        }, 20000);
       });
 
       socket.on("disconnect", () => {
