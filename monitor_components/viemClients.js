@@ -6,6 +6,8 @@ export const localClient = createPublicClient({
   name: "localClient",
   chain: mainnet,
   transport: http("http://localhost:8545"),
+  // viem's default for mainnet is 4 s, which delays check-ins by ~2 s on average.
+  pollingInterval: 1000,
 });
 
 export const mainnetClient = createPublicClient({
