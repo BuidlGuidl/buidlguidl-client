@@ -139,6 +139,11 @@ async function watchdog() {
   lastBlockAt = now;
 }
 
+/** "ws" or "poll" while watching, null when stopped or not started yet. */
+export function getBlockWatchMode() {
+  return mode;
+}
+
 /**
  * Calls onBlock(block) for each new block the local node imports.
  * Returns a function that stops this listener.
