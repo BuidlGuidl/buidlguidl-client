@@ -86,6 +86,49 @@ export function initializeWebSocketConnection(wsConfig) {
     refreshRethHistory();
   }
 
+  // System stats and peer counts change slowly and take tens to hundreds of
+  // ms to gather (df, a curl of the consensus metrics page), so they're read
+  // on their own timer and checkIn() sends the latest values instead of making
+  // every block check-in wait for them. A failed read keeps the last good
+  // value; null means never read.
+  const nodeStatsRefreshInterval = 15 * 1000;
+  const nodeStats = {
+    cpuUsage: null,
+    memoryUsage: null,
+    diskUsage: null,
+    macAddress: null,
+    executionPeers: null,
+    consensusPeers: null,
+  };
+  const nodeStatsReaders = {
+    cpuUsage: () => getCpuUsage(),
+    memoryUsage: () => getMemoryUsage(),
+    diskUsage: () => getDiskUsage(installDir),
+    macAddress: () => getMacAddress(),
+    executionPeers: () => getExecutionPeers(wsConfig.executionClient),
+    consensusPeers: () => getConsensusPeers(wsConfig.consensusClient),
+  };
+  async function refreshNodeStats() {
+    await Promise.all(
+      Object.entries(nodeStatsReaders).map(async ([field, read]) => {
+        try {
+          const value = await read();
+          if (value !== null && value !== undefined) nodeStats[field] = value;
+        } catch (err) {
+          debugToFile(`refreshNodeStats(${field}): ${err}`);
+        }
+      })
+    );
+  }
+  function scheduleNodeStatsRefresh() {
+    setTimeout(async () => {
+      await refreshNodeStats();
+      scheduleNodeStatsRefresh();
+    }, nodeStatsRefreshInterval);
+  }
+  const nodeStatsReady = refreshNodeStats();
+  scheduleNodeStatsRefresh();
+
   const git = simpleGit();
 
   // Run getGitInfo() once and store the result
@@ -274,7 +317,7 @@ export function initializeWebSocketConnection(wsConfig) {
 
   connectWebSocket();
 
-  checkIn = async function (force = false, blockNumber = null) {
+  checkIn = async function (force = false, blockNumber = null, blockHash = null) {
     // debugToFile(`checkIn() called`);
     const now = Date.now();
     if (!force && now - lastCheckInTime < minCheckInInterval) {
@@ -304,12 +347,16 @@ export function initializeWebSocketConnection(wsConfig) {
       wsConfig.consensusClient + " v" + wsConfig.consensusClientVer;
 
     let possibleBlockNumber = currentBlockNumber;
-    let possibleBlockHash;
-    try {
-      const block = await localClient.getBlock(possibleBlockNumber);
-      possibleBlockHash = block.hash;
-    } catch (error) {
-      debugToFile(`Failed to get block hash: ${error}`);
+    let possibleBlockHash = blockHash;
+    if (!possibleBlockHash) {
+      try {
+        const block = await localClient.getBlock({
+          blockNumber: possibleBlockNumber,
+        });
+        possibleBlockHash = block.hash;
+      } catch (error) {
+        debugToFile(`Failed to get block hash: ${error}`);
+      }
     }
 
     let enode = await getEnodeWithRetry();
@@ -326,13 +373,25 @@ export function initializeWebSocketConnection(wsConfig) {
     // debugToFile(`Checkin() enr: ${enr}`);
     // debugToFile(`Checkin() Peer ID: ${peer_id}`);
 
+    // Only waits on the first check-in, before any stats have been read.
+    await nodeStatsReady;
+
     try {
-      const cpuUsage = await getCpuUsage();
-      const memoryUsage = await getMemoryUsage();
-      const diskUsage = await getDiskUsage(installDir);
-      const macAddress = await getMacAddress();
-      const executionPeers = await getExecutionPeers(wsConfig.executionClient);
-      const consensusPeers = await getConsensusPeers(wsConfig.consensusClient);
+      const {
+        cpuUsage,
+        memoryUsage,
+        diskUsage,
+        macAddress,
+        executionPeers,
+        consensusPeers,
+      } = nodeStats;
+      const missingStats = Object.keys(nodeStats).filter(
+        (field) => nodeStats[field] === null
+      );
+      if (missingStats.length > 0) {
+        debugToFile(`checkIn() skipped, no value yet for: ${missingStats}`);
+        return;
+      }
 
       // Use the stored gitInfo instead of calling getGitInfo()
       const params = {
@@ -404,7 +463,7 @@ export function initializeWebSocketConnection(wsConfig) {
     {
       onBlock: (block) => {
         if (block.number > 0) {
-          checkIn(true, block.number); // Check in with new block
+          checkIn(true, block.number, block.hash); // Check in with new block
           scheduleNextCheckIn(); // Reset the timer
         }
       },
