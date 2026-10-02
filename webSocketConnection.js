@@ -3,6 +3,7 @@ import os from "os";
 import { debugToFile } from "./helpers.js";
 import { getMemoryUsage, getCpuUsage, getDiskUsage } from "./getSystemStats.js";
 import { localClient } from "./monitor_components/viemClients.js";
+import { watchLocalBlocks } from "./monitor_components/blockWatcher.js";
 import { installDir, consensusPeerPorts, owner } from "./commandLineOptions.js";
 import {
   getConsensusPeers,
@@ -458,20 +459,31 @@ export function initializeWebSocketConnection(wsConfig) {
   // Initial timer setup
   scheduleNextCheckIn();
 
-  // Set up block listener
-  localClient.watchBlocks(
-    {
-      onBlock: (block) => {
-        if (block.number > 0) {
-          checkIn(true, block.number, block.hash); // Check in with new block
-          scheduleNextCheckIn(); // Reset the timer
-        }
-      },
-    },
-    (error) => {
-      debugToFile(`Error in block watcher: ${error}`);
-    }
-  );
+  // Check in on every new block. At the chain tip blocks are ~12 s apart and
+  // each one is sent right away; while syncing, newHeads can fire many times a
+  // second, so check-ins are spaced at least minBlockCheckInGap apart and only
+  // the latest block waiting is sent.
+  const minBlockCheckInGap = 1000;
+  let lastBlockCheckInAt = 0;
+  let pendingBlock = null;
+  let blockCheckInTimer = null;
+  watchLocalBlocks((block) => {
+    if (!(block.number > 0)) return;
+    pendingBlock = block;
+    if (blockCheckInTimer) return;
+    const wait = Math.max(
+      0,
+      lastBlockCheckInAt + minBlockCheckInGap - Date.now()
+    );
+    blockCheckInTimer = setTimeout(() => {
+      const { number, hash } = pendingBlock;
+      pendingBlock = null;
+      blockCheckInTimer = null;
+      lastBlockCheckInAt = Date.now();
+      checkIn(true, number, hash); // Check in with new block
+      scheduleNextCheckIn(); // Reset the timer
+    }, wait);
+  });
 
   setInterval(() => {
     try {

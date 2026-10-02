@@ -16,6 +16,7 @@ import { exec } from "child_process";
 import { populateRethStageGauge } from "./rethStageGauge.js";
 import { populateGethStageGauge } from "./gethStageGauge.js";
 import { checkIn } from "../webSocketConnection.js";
+import { watchLocalBlocks } from "./blockWatcher.js";
 import fetch from "node-fetch";
 import { getDiskUsage } from "../getSystemStats.js";
 import { populateChainInfoBox } from "./chainInfoBox.js";
@@ -853,12 +854,7 @@ async function setupUpdateMechanism() {
     currentUpdateInterval = null;
   }
   if (currentBlockWatcher) {
-    try {
-      // Remove the check for unsubscribe method since it will never exist
-      debugToFile("Block watcher cleanup - no unsubscribe needed");
-    } catch (error) {
-      debugToFile(`Error cleaning up block watcher: ${error}`);
-    }
+    currentBlockWatcher(); // Stop listening
     currentBlockWatcher = null;
   }
 
@@ -870,20 +866,9 @@ async function setupUpdateMechanism() {
     );
   } else {
     // When not syncing, update only on new blocks
-    try {
-      currentBlockWatcher = await localClient.watchBlocks(
-        {
-          onBlock: () => {
-            updateChainWidgets(statusBox, chainInfoBox, screen);
-          },
-        },
-        (error) => {
-          debugToFile(`Error in block watcher: ${error}`);
-        }
-      );
-    } catch (error) {
-      debugToFile(`Error setting up block watcher: ${error}`);
-    }
+    currentBlockWatcher = watchLocalBlocks(() => {
+      updateChainWidgets(statusBox, chainInfoBox, screen);
+    });
   }
 }
 
