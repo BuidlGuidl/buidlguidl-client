@@ -3,7 +3,10 @@ import os from "os";
 import { debugToFile } from "./helpers.js";
 import { getMemoryUsage, getCpuUsage, getDiskUsage } from "./getSystemStats.js";
 import { localClient } from "./monitor_components/viemClients.js";
-import { watchLocalBlocks } from "./monitor_components/blockWatcher.js";
+import {
+  watchLocalBlocks,
+  onBlockWatcherReconnect,
+} from "./monitor_components/blockWatcher.js";
 import {
   installDir,
   consensusPeerPorts,
@@ -99,26 +102,37 @@ export function initializeWebSocketConnection(wsConfig) {
 
   // RPC namespaces the execution client serves on 8545, reported on every
   // check-in so the pool can route methods only to nodes that serve them. They
-  // only change when the execution client restarts with different flags, so
-  // they're probed at startup and every 10 minutes (every 60 seconds while
-  // unknown), never inside checkIn(). A failed probe keeps the last good
-  // value; null means unknown.
-  const rpcModulesRefreshInterval = 10 * 60 * 1000;
+  // can only change when the execution client restarts with different flags,
+  // so they're probed at startup and again whenever the block watcher
+  // reconnects (every restart causes one), never inside checkIn(). A probe
+  // that can't reach the node retries every 60 seconds and keeps the last
+  // good value meanwhile; null means unknown.
   const rpcModulesRetryInterval = 60 * 1000;
   let rpcModules = null;
-  async function refreshRpcModules() {
+  let rpcModulesRetryTimer = null;
+  async function refreshRpcModules(reason) {
+    clearTimeout(rpcModulesRetryTimer);
+    rpcModulesRetryTimer = null;
+    let modules = null;
     try {
-      const modules = await probeRpcModules();
-      if (modules) rpcModules = modules;
+      modules = await probeRpcModules();
     } catch (err) {
       debugToFile(`refreshRpcModules(): ${err.message}`);
     }
-    setTimeout(
-      refreshRpcModules,
-      rpcModules ? rpcModulesRefreshInterval : rpcModulesRetryInterval
-    );
+    if (modules) {
+      if (modules.join() !== rpcModules?.join()) {
+        debugToFile(`rpc_modules (${reason}): ${modules.join(",")}`);
+      }
+      rpcModules = modules;
+    } else if (!rpcModulesRetryTimer) {
+      rpcModulesRetryTimer = setTimeout(
+        () => refreshRpcModules("retry"),
+        rpcModulesRetryInterval
+      );
+    }
   }
-  refreshRpcModules();
+  refreshRpcModules("start");
+  onBlockWatcherReconnect((reason) => refreshRpcModules(reason));
 
   // System stats and peer counts change slowly and take tens to hundreds of
   // ms to gather (df, a curl of the consensus metrics page), so they're read

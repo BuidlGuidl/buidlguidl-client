@@ -32,13 +32,31 @@ let lastBlockNumber = null;
 let lastBlockAt = 0;
 let lastWsAttemptAt = 0;
 let restarting = false;
+let pollFailing = false; // Polling has errored since its last block
+const reconnectListeners = new Set();
 // Bumped on every restart so errors from an old, already-replaced socket
 // (its close event can arrive after the restart) don't trigger another one.
 let generation = 0;
 
+// Called after blocks resume following an interruption, which is what an
+// execution client restart looks like from here.
+function notifyReconnect(reason) {
+  for (const listener of reconnectListeners) {
+    try {
+      listener(reason);
+    } catch (error) {
+      debugToFile(`blockWatcher reconnect listener error: ${error}`);
+    }
+  }
+}
+
 function handleBlock(block) {
   // viem passes undefined if its getBlock for a newHeads header failed.
   if (!block || block.number == null) return;
+  if (mode === "poll" && pollFailing) {
+    pollFailing = false;
+    notifyReconnect("polling recovered");
+  }
   lastBlockNumber = block.number;
   lastBlockAt = Date.now();
   for (const listener of listeners) {
@@ -78,6 +96,7 @@ async function resetWsSocket() {
 async function restart(reason, tryWs = true) {
   if (restarting || listeners.size === 0) return;
   restarting = true;
+  const previousMode = mode;
   try {
     stopWatcher();
     const thisGeneration = ++generation;
@@ -104,12 +123,18 @@ async function restart(reason, tryWs = true) {
         onBlock: handleBlock,
         onError: (error) => {
           debugToFile(`blockWatcher polling error: ${error}`);
+          pollFailing = true;
         },
       });
       mode = "poll";
     }
     lastBlockAt = Date.now();
+    pollFailing = false;
     debugToFile(`blockWatcher (${reason}): watching blocks via ${mode}`);
+    // A WebSocket retry that failed and stayed on polling isn't a reconnect.
+    if (reason !== "start" && !(previousMode === "poll" && mode === "poll")) {
+      notifyReconnect(reason);
+    }
   } finally {
     restarting = false;
   }
@@ -137,6 +162,17 @@ async function watchdog() {
     debugToFile(`blockWatcher watchdog: ${error}`);
   }
   lastBlockAt = now;
+}
+
+/**
+ * Calls listener(reason) whenever the watcher reconnects after an
+ * interruption: a WebSocket error or re-subscribe, or polling recovering
+ * after errors. Every execution client restart causes one of these. Returns a
+ * function that removes the listener.
+ */
+export function onBlockWatcherReconnect(listener) {
+  reconnectListeners.add(listener);
+  return () => reconnectListeners.delete(listener);
 }
 
 /** "ws" or "poll" while watching, null when stopped or not started yet. */
