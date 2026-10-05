@@ -175,6 +175,7 @@ export function initializeWebSocketConnection(wsConfig) {
     }, nodeStatsRefreshInterval);
   }
   const nodeStatsReady = refreshNodeStats();
+  let lastMissingStats = "";
   scheduleNodeStatsRefresh();
 
   const git = simpleGit();
@@ -421,7 +422,9 @@ export function initializeWebSocketConnection(wsConfig) {
     // debugToFile(`Checkin() enr: ${enr}`);
     // debugToFile(`Checkin() Peer ID: ${peer_id}`);
 
-    // Only waits on the first check-in, before any stats have been read.
+    // Only waits on the first check-in, until the first stats read finishes.
+    // Stats that are still unknown after it are sent empty: a missing peer
+    // count or MAC address must not stop the node checking in.
     await nodeStatsReady;
 
     try {
@@ -433,27 +436,32 @@ export function initializeWebSocketConnection(wsConfig) {
         executionPeers,
         consensusPeers,
       } = nodeStats;
-      const missingStats = Object.keys(nodeStats).filter(
-        (field) => nodeStats[field] === null
-      );
-      if (missingStats.length > 0) {
-        debugToFile(`checkIn() skipped, no value yet for: ${missingStats}`);
-        return;
+      const missingStats = Object.keys(nodeStats)
+        .filter((field) => nodeStats[field] === null)
+        .join(",");
+      if (missingStats !== lastMissingStats) {
+        if (missingStats) {
+          debugToFile(`checkIn(): no value yet for ${missingStats}, sent empty`);
+        }
+        lastMissingStats = missingStats;
       }
+      const statString = (value) => (value === null ? "" : `${value}`);
 
       // Use the stored gitInfo instead of calling getGitInfo()
       const params = {
+        // No MAC address gives "<hostname>-null-...", the ID such nodes have
+        // always had, so the pool still recognizes them.
         id: `${os.hostname()}-${macAddress}-${os.platform()}-${os.arch()}`,
         node_version: `${process.version}`,
         execution_client: executionClientResponse,
         consensus_client: consensusClientResponse,
-        cpu_usage: `${cpuUsage.toFixed(1)}`,
-        memory_usage: `${memoryUsage}`,
-        storage_usage: `${diskUsage}`,
+        cpu_usage: cpuUsage === null ? "" : cpuUsage.toFixed(1),
+        memory_usage: statString(memoryUsage),
+        storage_usage: statString(diskUsage),
         block_number: possibleBlockNumber ? possibleBlockNumber.toString() : "",
         block_hash: possibleBlockHash ? possibleBlockHash : "",
-        execution_peers: executionPeers.toString(),
-        consensus_peers: consensusPeers.toString(),
+        execution_peers: statString(executionPeers),
+        consensus_peers: statString(consensusPeers),
         git_branch: gitInfo.branch,
         last_commit: gitInfo.lastCommitDate,
         commit_hash: gitInfo.commitHash,
