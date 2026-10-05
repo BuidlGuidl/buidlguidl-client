@@ -4,7 +4,16 @@ import { debugToFile } from "./helpers.js";
 import { getMemoryUsage, getCpuUsage, getDiskUsage } from "./getSystemStats.js";
 import { localClient } from "./monitor_components/viemClients.js";
 import { watchLocalBlocks } from "./monitor_components/blockWatcher.js";
-import { installDir, consensusPeerPorts, owner } from "./commandLineOptions.js";
+import {
+  installDir,
+  consensusPeerPorts,
+  owner,
+  executionClient,
+} from "./commandLineOptions.js";
+import {
+  getExecutionIpcPath,
+  executionIpcRequest,
+} from "./ethereum_client_scripts/executionIpc.js";
 import {
   getConsensusPeers,
   getExecutionPeers,
@@ -621,24 +630,8 @@ function getConsensusPeerID() {
 }
 
 function getNodeInfo() {
-  return new Promise((resolve, reject) => {
-    const command = `curl -s -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"admin_nodeInfo","params":[],"id":1}' http://localhost:8545`;
-
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        reject(`Error executing curl command: ${error}`);
-        return null;
-      }
-      if (stderr) {
-        reject(`Curl command stderr: ${stderr}`);
-        return null;
-      }
-      try {
-        const response = JSON.parse(stdout);
-        resolve(response.result);
-      } catch (parseError) {
-        reject(`Error parsing JSON response: ${parseError}`);
-      }
-    });
-  });
+  return executionIpcRequest(
+    getExecutionIpcPath(executionClient, installDir),
+    "admin_nodeInfo"
+  );
 }

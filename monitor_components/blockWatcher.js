@@ -4,7 +4,7 @@ import { localClient } from "./viemClients.js";
 import { debugToFile } from "../helpers.js";
 
 // New blocks come from an eth_subscribe newHeads subscription on the node's
-// WebSocket RPC, so a block is seen as soon as the node imports it instead of
+// WebSocket RPC (same port as HTTP), so a block is seen as soon as the node imports it instead of
 // on the next poll. viem doesn't re-subscribe after its socket reconnects and
 // doesn't fall back to polling when the socket is down, so this module handles
 // both: on a socket error, or when the node's head moves but no block arrived,
@@ -17,7 +17,7 @@ const localWsClient = createPublicClient({
   name: "localWsClient",
   chain: mainnet,
   // Reconnects are done below, with a re-subscribe.
-  transport: webSocket("ws://127.0.0.1:8546", { reconnect: false }),
+  transport: webSocket("ws://127.0.0.1:8545", { reconnect: false }),
 });
 
 const watchdogInterval = 15 * 1000;

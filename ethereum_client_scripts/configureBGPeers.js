@@ -1,7 +1,12 @@
 import fetch from "node-fetch";
 import { getPublicIPAddress } from "../getSystemStats.js";
 import { debugToFile } from "../helpers.js";
-import { executionPeerPort } from "../commandLineOptions.js";
+import {
+  executionPeerPort,
+  executionClient,
+  installDir,
+} from "../commandLineOptions.js";
+import { getExecutionIpcPath, executionIpcRequest } from "./executionIpc.js";
 import os from "os";
 import { getMacAddress } from "../getSystemStats.js";
 import { consensusClient } from "../commandLineOptions.js";
@@ -36,54 +41,18 @@ export async function fetchBGExecutionPeers() {
 }
 
 export async function configureBGExecutionPeers(bgPeers) {
-  try {
-    for (const enode of bgPeers) {
-      const curlCommandAddPeer = `curl -s -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","id":1,"method":"admin_addPeer","params":["${enode}"]}' http://localhost:8545`;
-      const curlCommandAddTrustedPeer = `curl -s -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","id":1,"method":"admin_addTrustedPeer","params":["${enode}"]}' http://localhost:8545`;
-
-      const { exec } = await import("child_process");
-
-      exec(curlCommandAddPeer, (error, stdout, stderr) => {
-        if (error) {
-          debugToFile(
-            `configureBGExecutionPeers(): AddPeer: Error executing curl command: ${error}`
-          );
-          return;
-        }
-        if (stderr) {
-          debugToFile(
-            `configureBGExecutionPeers(): AddPeer: Curl command stderr: ${stderr}`
-          );
-          return;
-        }
-        debugToFile(
-          `configureBGExecutionPeers(): AddPeer: Curl command stdout: ${stdout}`
-        );
-      });
-
-      exec(curlCommandAddTrustedPeer, (error, stdout, stderr) => {
-        if (error) {
-          debugToFile(
-            `configureBGExecutionPeers(): AddTrustedPeer: Error executing curl command: ${error}`
-          );
-          return;
-        }
-        if (stderr) {
-          debugToFile(
-            `configureBGExecutionPeers(): AddTrustedPeer: Curl command stderr: ${stderr}`
-          );
-          return;
-        }
-        debugToFile(
-          `configureBGExecutionPeers(): AddTrustedPeer: Curl command stdout: ${stdout}`
-        );
-      });
-    }
-  } catch (error) {
-    debugToFile(
-      `configureBGExecutionPeers() error: ${error.message}\nStack: ${error.stack}`
-    );
-  }
+  const ipcPath = getExecutionIpcPath(executionClient, installDir);
+  const requests = bgPeers.flatMap((enode) =>
+    ["admin_addPeer", "admin_addTrustedPeer"].map(async (method) => {
+      try {
+        const result = await executionIpcRequest(ipcPath, method, [enode]);
+        debugToFile(`configureBGExecutionPeers(): ${method} ${enode}: ${result}`);
+      } catch (error) {
+        debugToFile(`configureBGExecutionPeers(): ${enode}: ${error.message}`);
+      }
+    })
+  );
+  await Promise.all(requests);
 }
 
 export async function fetchBGConsensusPeers() {
