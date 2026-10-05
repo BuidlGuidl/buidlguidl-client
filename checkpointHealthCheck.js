@@ -19,6 +19,19 @@ const SECONDS_PER_SLOT = 12;
 const ETHEREUM_GENESIS_TIMESTAMP = 1606824023; // Dec 1, 2020
 
 /**
+ * Validate a user-supplied checkpoint URL to mitigate SSRF.
+ * Only well-formed http/https URLs are allowed before being passed to fetch().
+ */
+function isValidCheckpointUrl(url) {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:" || parsed.protocol === "http:";
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
  * Calculate the expected current slot number
  */
 function getCurrentSlot() {
@@ -231,8 +244,17 @@ export async function selectCheckpointUrlForLighthouse(
 
   console.log("📦 No existing database found - checkpoint sync required");
 
-  // If user provided a checkpoint URL, use it without validation
+  // If user provided a checkpoint URL, validate it before use
   if (userProvidedUrl) {
+    if (!isValidCheckpointUrl(userProvidedUrl)) {
+      console.log(`❌ Invalid checkpoint URL: ${userProvidedUrl}`);
+      console.log("   URL must be a well-formed http or https URL.\n");
+      debugToFile(
+        `Lighthouse: Rejected invalid user-provided checkpoint URL: ${userProvidedUrl}`
+      );
+      throw new Error("Invalid checkpoint URL provided");
+    }
+
     console.log(`✅ Using user-provided checkpoint URL: ${userProvidedUrl}`);
     console.log("   (skipping health checks per user request)\n");
     debugToFile(
@@ -359,8 +381,17 @@ export async function selectCheckpointUrlForPrysm(
 
   console.log("📦 No existing database found - checkpoint sync required");
 
-  // If user provided a checkpoint URL, use it without validation
+  // If user provided a checkpoint URL, validate it before use
   if (userProvidedUrl) {
+    if (!isValidCheckpointUrl(userProvidedUrl)) {
+      console.log(`❌ Invalid checkpoint URL: ${userProvidedUrl}`);
+      console.log("   URL must be a well-formed http or https URL.\n");
+      debugToFile(
+        `Prysm: Rejected invalid user-provided checkpoint URL: ${userProvidedUrl}`
+      );
+      throw new Error("Invalid checkpoint URL provided");
+    }
+
     console.log(`✅ Using user-provided checkpoint URL: ${userProvidedUrl}`);
     console.log("   (skipping health checks per user request)\n");
     debugToFile(
