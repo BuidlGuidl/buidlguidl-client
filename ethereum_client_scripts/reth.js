@@ -62,7 +62,7 @@ const execution = pty.spawn(
     // port), so reth requires the same address and API list for both. `admin`
     // stays off the network; the client uses it over IPC (--ipcpath).
     "--http.api",
-    "eth,net",
+    "eth,net,web3",
     "--http.corsdomain",
     "*",
     "--authrpc.addr",
@@ -77,7 +77,7 @@ const execution = pty.spawn(
     "127.0.0.1:9001",
     "--ws",
     "--ws.api",
-    "eth,net",
+    "eth,net,web3",
     "--ws.origins",
     "*",
     "--ws.addr",

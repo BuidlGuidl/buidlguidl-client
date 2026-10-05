@@ -62,7 +62,7 @@ const execution = pty.spawn(
     // uses it over IPC (--ipcpath). `engine` is served only on the
     // JWT-protected auth port.
     "--http.api",
-    "eth,net",
+    "eth,net,web3",
     "--http.addr",
     "0.0.0.0",
     "--http.port",
@@ -78,7 +78,7 @@ const execution = pty.spawn(
     "127.0.0.1",
     "--ws",
     "--ws.api",
-    "eth,net",
+    "eth,net,web3",
     "--ws.origins",
     "*",
     "--ws.addr",
