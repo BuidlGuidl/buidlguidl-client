@@ -29,6 +29,7 @@ import path from "path";
 import { BASE_URL } from "./config.js";
 import { readRethSegmentFloor } from "./ethereum_client_scripts/rethReceiptFloor.js";
 import { readRethStateHistory } from "./ethereum_client_scripts/rethStateHistory.js";
+import { probeRpcModules } from "./ethereum_client_scripts/rpcModules.js";
 
 let socketId;
 export let checkIn;
@@ -95,6 +96,29 @@ export function initializeWebSocketConnection(wsConfig) {
   if (wsConfig.executionClient === "reth") {
     refreshRethHistory();
   }
+
+  // RPC namespaces the execution client serves on 8545, reported on every
+  // check-in so the pool can route methods only to nodes that serve them. They
+  // only change when the execution client restarts with different flags, so
+  // they're probed at startup and every 10 minutes (every 60 seconds while
+  // unknown), never inside checkIn(). A failed probe keeps the last good
+  // value; null means unknown.
+  const rpcModulesRefreshInterval = 10 * 60 * 1000;
+  const rpcModulesRetryInterval = 60 * 1000;
+  let rpcModules = null;
+  async function refreshRpcModules() {
+    try {
+      const modules = await probeRpcModules();
+      if (modules) rpcModules = modules;
+    } catch (err) {
+      debugToFile(`refreshRpcModules(): ${err.message}`);
+    }
+    setTimeout(
+      refreshRpcModules,
+      rpcModules ? rpcModulesRefreshInterval : rpcModulesRetryInterval
+    );
+  }
+  refreshRpcModules();
 
   // System stats and peer counts change slowly and take tens to hundreds of
   // ms to gather (df, a curl of the consensus metrics page), so they're read
@@ -426,6 +450,7 @@ export function initializeWebSocketConnection(wsConfig) {
         consensus_udp_port: consensusPeerPorts[1].toString(),
         socket_id: socketId || "",
         owner: owner,
+        rpc_modules: rpcModules,
       };
 
       if (wsConfig.executionClient === "reth") {
