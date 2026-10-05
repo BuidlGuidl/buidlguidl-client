@@ -5,6 +5,7 @@ import path from "path";
 import { debugToFile } from "../helpers.js";
 import { stripAnsiCodes, getFormattedDateTime } from "../helpers.js";
 import minimist from "minimist";
+import { getExecutionIpcPath } from "./executionIpc.js";
 
 let installDir = os.homedir();
 
@@ -56,8 +57,12 @@ const execution = pty.spawn(
     "--discovery.port",
     executionPeerPort,
     "--http",
+    // HTTP and WebSocket share 8545 (Interfold ciphernodes need both on one
+    // port) with the same API list. `admin` stays off the network; the client
+    // uses it over IPC (--ipcpath). `engine` is served only on the
+    // JWT-protected auth port.
     "--http.api",
-    "eth,net,engine,admin",
+    "eth,net,web3",
     "--http.addr",
     "0.0.0.0",
     "--http.port",
@@ -73,13 +78,15 @@ const execution = pty.spawn(
     "127.0.0.1",
     "--ws",
     "--ws.api",
-    "eth,net,admin",
+    "eth,net,web3",
     "--ws.origins",
     "*",
     "--ws.addr",
-    "127.0.0.1",
+    "0.0.0.0",
     "--ws.port",
-    "8546"  
+    "8545",
+    "--ipcpath",
+    getExecutionIpcPath("geth", installDir),
   ],
   {
     name: "xterm-color",

@@ -9,6 +9,7 @@ import { execSync, exec } from "child_process";
 import { getPublicIPAddress } from "../getSystemStats.js";
 import { owner } from "../commandLineOptions.js";
 import { isConnected } from "../webSocketConnection.js";
+import { getBlockWatchMode } from "./blockWatcher.js";
 import { BASE_URL, BREAD_CONTRACT_ADDRESS } from "../config.js";
 import { basePublicClient } from "../chain_utills/basePublicClient.js";
 import { mainnetPublicClient } from "../chain_utills/mainnetPublicClient.js";
@@ -326,23 +327,42 @@ export function createHeader(grid, screen, messageForHeader) {
       }
     }
 
+    // How new blocks reach this client: a WebSocket newHeads subscription, or
+    // HTTP polling while the node's WebSocket RPC is unavailable.
+    const blockWatchMode = getBlockWatchMode();
+    let blockWatchMessage = "";
+    if (blockWatchMode === "ws") {
+      blockWatchMessage =
+        "{center}{green-fg}Block Updates: WebSocket{/green-fg}{/center}";
+    } else if (blockWatchMode === "poll") {
+      blockWatchMessage =
+        "{center}{yellow-fg}Block Updates: Polling{/yellow-fg}{/center}";
+    }
+    const statusLines = [rpcStatusMessage, blockWatchMessage]
+      .filter(Boolean)
+      .join("\n");
+
     const ipAddressLines = ipAddressBoxContent
       .split("\n")
       .slice(0, 2)
       .join("\n");
     const currentTime = Date.now();
 
-    if (owner !== null && ipAddressBox.height < 5) {
+    // The box has two border rows; the IP addresses take two lines.
+    const statusLineCount = statusLines ? statusLines.split("\n").length : 0;
+    if (statusLineCount > 0 && ipAddressBox.height - 2 < 2 + statusLineCount) {
       if (currentTime - lastToggleTime >= 10000) {
         showIPAddresses = !showIPAddresses;
         lastToggleTime = currentTime;
       }
 
-      const contentToShow = showIPAddresses ? ipAddressLines : rpcStatusMessage;
+      const contentToShow = showIPAddresses ? ipAddressLines : statusLines;
       ipAddressBox.setContent(contentToShow);
     } else {
-      // If height is 5 or more, show all information
-      ipAddressBox.setContent(`${ipAddressLines}\n${rpcStatusMessage}`);
+      // Tall enough to show all information
+      ipAddressBox.setContent(
+        statusLines ? `${ipAddressLines}\n${statusLines}` : ipAddressLines
+      );
     }
 
     screen.render();

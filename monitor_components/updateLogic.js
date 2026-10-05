@@ -16,6 +16,7 @@ import { exec } from "child_process";
 import { populateRethStageGauge } from "./rethStageGauge.js";
 import { populateGethStageGauge } from "./gethStageGauge.js";
 import { checkIn } from "../webSocketConnection.js";
+import { watchLocalBlocks } from "./blockWatcher.js";
 import fetch from "node-fetch";
 import { getDiskUsage } from "../getSystemStats.js";
 import { populateChainInfoBox } from "./chainInfoBox.js";
@@ -226,6 +227,26 @@ export function setupLogStreaming(
 }
 
 let statusMessage = "INITIALIZING...";
+
+// Whether reth publishes per-stage sync metrics at all. Reth only publishes them
+// once its sync pipeline runs, and a synced node restarted near the chain head
+// never runs it, so their absence doesn't mean syncing. Returns true or false,
+// or null if the metrics page couldn't be read (reth down or starting).
+async function rethPublishesStageMetrics() {
+  try {
+    const response = await fetch("http://127.0.0.1:9001", {
+      signal: AbortSignal.timeout(5000),
+    });
+    const text = await response.text();
+    return /^reth_sync_entities_(processed|total)\{/m.test(text);
+  } catch (error) {
+    return null;
+  }
+}
+// Set once reth's metrics page was read with no stage metrics while not
+// syncing; cleared when eth_syncing reports a sync, which is when the
+// pipeline (and its metrics) can start.
+let rethStageMetricsAbsent = false;
 
 async function getRethSyncMetrics() {
   return new Promise((resolve) => {
@@ -824,8 +845,18 @@ async function calcSyncingStatus(executionClient) {
         (percent) => percent === 0
       );
 
-      if (isNodeSyncing || allStagesZero) {
+      if (isNodeSyncing) {
+        rethStageMetricsAbsent = false;
         isSyncing = true;
+      } else if (allStagesZero) {
+        // All zero is either an initial sync starting (stage metrics present,
+        // no progress yet) or a synced node whose reth hasn't published stage
+        // metrics since it started (no pipeline run). Only the first is syncing.
+        if (!rethStageMetricsAbsent) {
+          rethStageMetricsAbsent =
+            (await rethPublishesStageMetrics()) === false;
+        }
+        isSyncing = !rethStageMetricsAbsent;
       } else if (allStagesComplete) {
         isSyncing = false;
       }
@@ -853,12 +884,7 @@ async function setupUpdateMechanism() {
     currentUpdateInterval = null;
   }
   if (currentBlockWatcher) {
-    try {
-      // Remove the check for unsubscribe method since it will never exist
-      debugToFile("Block watcher cleanup - no unsubscribe needed");
-    } catch (error) {
-      debugToFile(`Error cleaning up block watcher: ${error}`);
-    }
+    currentBlockWatcher(); // Stop listening
     currentBlockWatcher = null;
   }
 
@@ -870,20 +896,9 @@ async function setupUpdateMechanism() {
     );
   } else {
     // When not syncing, update only on new blocks
-    try {
-      currentBlockWatcher = await localClient.watchBlocks(
-        {
-          onBlock: () => {
-            updateChainWidgets(statusBox, chainInfoBox, screen);
-          },
-        },
-        (error) => {
-          debugToFile(`Error in block watcher: ${error}`);
-        }
-      );
-    } catch (error) {
-      debugToFile(`Error setting up block watcher: ${error}`);
-    }
+    currentBlockWatcher = watchLocalBlocks(() => {
+      updateChainWidgets(statusBox, chainInfoBox, screen);
+    });
   }
 }
 

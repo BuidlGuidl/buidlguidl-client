@@ -3,7 +3,20 @@ import os from "os";
 import { debugToFile } from "./helpers.js";
 import { getMemoryUsage, getCpuUsage, getDiskUsage } from "./getSystemStats.js";
 import { localClient } from "./monitor_components/viemClients.js";
-import { installDir, consensusPeerPorts, owner } from "./commandLineOptions.js";
+import {
+  watchLocalBlocks,
+  onBlockWatcherReconnect,
+} from "./monitor_components/blockWatcher.js";
+import {
+  installDir,
+  consensusPeerPorts,
+  owner,
+  executionClient,
+} from "./commandLineOptions.js";
+import {
+  getExecutionIpcPath,
+  executionIpcRequest,
+} from "./ethereum_client_scripts/executionIpc.js";
 import {
   getConsensusPeers,
   getExecutionPeers,
@@ -19,6 +32,7 @@ import path from "path";
 import { BASE_URL } from "./config.js";
 import { readRethSegmentFloor } from "./ethereum_client_scripts/rethReceiptFloor.js";
 import { readRethStateHistory } from "./ethereum_client_scripts/rethStateHistory.js";
+import { probeRpcModules } from "./ethereum_client_scripts/rpcModules.js";
 
 let socketId;
 export let checkIn;
@@ -85,6 +99,83 @@ export function initializeWebSocketConnection(wsConfig) {
   if (wsConfig.executionClient === "reth") {
     refreshRethHistory();
   }
+
+  // RPC namespaces the execution client serves on 8545, reported on every
+  // check-in so the pool can route methods only to nodes that serve them. They
+  // can only change when the execution client restarts with different flags,
+  // so they're probed at startup and again whenever the block watcher
+  // reconnects (every restart causes one), never inside checkIn(). A probe
+  // that can't reach the node retries every 60 seconds and keeps the last
+  // good value meanwhile; null means unknown.
+  const rpcModulesRetryInterval = 60 * 1000;
+  let rpcModules = null;
+  let rpcModulesRetryTimer = null;
+  async function refreshRpcModules(reason) {
+    clearTimeout(rpcModulesRetryTimer);
+    rpcModulesRetryTimer = null;
+    let modules = null;
+    try {
+      modules = await probeRpcModules();
+    } catch (err) {
+      debugToFile(`refreshRpcModules(): ${err.message}`);
+    }
+    if (modules) {
+      if (modules.join() !== rpcModules?.join()) {
+        debugToFile(`rpc_modules (${reason}): ${modules.join(",")}`);
+      }
+      rpcModules = modules;
+    } else if (!rpcModulesRetryTimer) {
+      rpcModulesRetryTimer = setTimeout(
+        () => refreshRpcModules("retry"),
+        rpcModulesRetryInterval
+      );
+    }
+  }
+  refreshRpcModules("start");
+  onBlockWatcherReconnect((reason) => refreshRpcModules(reason));
+
+  // System stats and peer counts change slowly and take tens to hundreds of
+  // ms to gather (df, a curl of the consensus metrics page), so they're read
+  // on their own timer and checkIn() sends the latest values instead of making
+  // every block check-in wait for them. A failed read keeps the last good
+  // value; null means never read.
+  const nodeStatsRefreshInterval = 15 * 1000;
+  const nodeStats = {
+    cpuUsage: null,
+    memoryUsage: null,
+    diskUsage: null,
+    macAddress: null,
+    executionPeers: null,
+    consensusPeers: null,
+  };
+  const nodeStatsReaders = {
+    cpuUsage: () => getCpuUsage(),
+    memoryUsage: () => getMemoryUsage(),
+    diskUsage: () => getDiskUsage(installDir),
+    macAddress: () => getMacAddress(),
+    executionPeers: () => getExecutionPeers(wsConfig.executionClient),
+    consensusPeers: () => getConsensusPeers(wsConfig.consensusClient),
+  };
+  async function refreshNodeStats() {
+    await Promise.all(
+      Object.entries(nodeStatsReaders).map(async ([field, read]) => {
+        try {
+          const value = await read();
+          if (value !== null && value !== undefined) nodeStats[field] = value;
+        } catch (err) {
+          debugToFile(`refreshNodeStats(${field}): ${err}`);
+        }
+      })
+    );
+  }
+  function scheduleNodeStatsRefresh() {
+    setTimeout(async () => {
+      await refreshNodeStats();
+      scheduleNodeStatsRefresh();
+    }, nodeStatsRefreshInterval);
+  }
+  const nodeStatsReady = refreshNodeStats();
+  scheduleNodeStatsRefresh();
 
   const git = simpleGit();
 
@@ -274,7 +365,7 @@ export function initializeWebSocketConnection(wsConfig) {
 
   connectWebSocket();
 
-  checkIn = async function (force = false, blockNumber = null) {
+  checkIn = async function (force = false, blockNumber = null, blockHash = null) {
     // debugToFile(`checkIn() called`);
     const now = Date.now();
     if (!force && now - lastCheckInTime < minCheckInInterval) {
@@ -304,12 +395,16 @@ export function initializeWebSocketConnection(wsConfig) {
       wsConfig.consensusClient + " v" + wsConfig.consensusClientVer;
 
     let possibleBlockNumber = currentBlockNumber;
-    let possibleBlockHash;
-    try {
-      const block = await localClient.getBlock(possibleBlockNumber);
-      possibleBlockHash = block.hash;
-    } catch (error) {
-      debugToFile(`Failed to get block hash: ${error}`);
+    let possibleBlockHash = blockHash;
+    if (!possibleBlockHash) {
+      try {
+        const block = await localClient.getBlock({
+          blockNumber: possibleBlockNumber,
+        });
+        possibleBlockHash = block.hash;
+      } catch (error) {
+        debugToFile(`Failed to get block hash: ${error}`);
+      }
     }
 
     let enode = await getEnodeWithRetry();
@@ -326,13 +421,25 @@ export function initializeWebSocketConnection(wsConfig) {
     // debugToFile(`Checkin() enr: ${enr}`);
     // debugToFile(`Checkin() Peer ID: ${peer_id}`);
 
+    // Only waits on the first check-in, before any stats have been read.
+    await nodeStatsReady;
+
     try {
-      const cpuUsage = await getCpuUsage();
-      const memoryUsage = await getMemoryUsage();
-      const diskUsage = await getDiskUsage(installDir);
-      const macAddress = await getMacAddress();
-      const executionPeers = await getExecutionPeers(wsConfig.executionClient);
-      const consensusPeers = await getConsensusPeers(wsConfig.consensusClient);
+      const {
+        cpuUsage,
+        memoryUsage,
+        diskUsage,
+        macAddress,
+        executionPeers,
+        consensusPeers,
+      } = nodeStats;
+      const missingStats = Object.keys(nodeStats).filter(
+        (field) => nodeStats[field] === null
+      );
+      if (missingStats.length > 0) {
+        debugToFile(`checkIn() skipped, no value yet for: ${missingStats}`);
+        return;
+      }
 
       // Use the stored gitInfo instead of calling getGitInfo()
       const params = {
@@ -357,6 +464,7 @@ export function initializeWebSocketConnection(wsConfig) {
         consensus_udp_port: consensusPeerPorts[1].toString(),
         socket_id: socketId || "",
         owner: owner,
+        rpc_modules: rpcModules,
       };
 
       if (wsConfig.executionClient === "reth") {
@@ -399,20 +507,31 @@ export function initializeWebSocketConnection(wsConfig) {
   // Initial timer setup
   scheduleNextCheckIn();
 
-  // Set up block listener
-  localClient.watchBlocks(
-    {
-      onBlock: (block) => {
-        if (block.number > 0) {
-          checkIn(true, block.number); // Check in with new block
-          scheduleNextCheckIn(); // Reset the timer
-        }
-      },
-    },
-    (error) => {
-      debugToFile(`Error in block watcher: ${error}`);
-    }
-  );
+  // Check in on every new block. At the chain tip blocks are ~12 s apart and
+  // each one is sent right away; while syncing, newHeads can fire many times a
+  // second, so check-ins are spaced at least minBlockCheckInGap apart and only
+  // the latest block waiting is sent.
+  const minBlockCheckInGap = 1000;
+  let lastBlockCheckInAt = 0;
+  let pendingBlock = null;
+  let blockCheckInTimer = null;
+  watchLocalBlocks((block) => {
+    if (!(block.number > 0)) return;
+    pendingBlock = block;
+    if (blockCheckInTimer) return;
+    const wait = Math.max(
+      0,
+      lastBlockCheckInAt + minBlockCheckInGap - Date.now()
+    );
+    blockCheckInTimer = setTimeout(() => {
+      const { number, hash } = pendingBlock;
+      pendingBlock = null;
+      blockCheckInTimer = null;
+      lastBlockCheckInAt = Date.now();
+      checkIn(true, number, hash); // Check in with new block
+      scheduleNextCheckIn(); // Reset the timer
+    }, wait);
+  });
 
   setInterval(() => {
     try {
@@ -550,24 +669,8 @@ function getConsensusPeerID() {
 }
 
 function getNodeInfo() {
-  return new Promise((resolve, reject) => {
-    const command = `curl -s -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"admin_nodeInfo","params":[],"id":1}' http://localhost:8545`;
-
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        reject(`Error executing curl command: ${error}`);
-        return null;
-      }
-      if (stderr) {
-        reject(`Curl command stderr: ${stderr}`);
-        return null;
-      }
-      try {
-        const response = JSON.parse(stdout);
-        resolve(response.result);
-      } catch (parseError) {
-        reject(`Error parsing JSON response: ${parseError}`);
-      }
-    });
-  });
+  return executionIpcRequest(
+    getExecutionIpcPath(executionClient, installDir),
+    "admin_nodeInfo"
+  );
 }

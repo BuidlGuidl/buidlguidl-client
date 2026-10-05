@@ -2,7 +2,15 @@ import blessed from "blessed";
 import { exec } from "child_process";
 import { debugToFile } from "../helpers.js";
 import { localClient } from "./viemClients.js";
-import { executionClient, consensusClient } from "../commandLineOptions.js";
+import {
+  executionClient,
+  consensusClient,
+  installDir,
+} from "../commandLineOptions.js";
+import {
+  getExecutionIpcPath,
+  executionIpcRequest,
+} from "../ethereum_client_scripts/executionIpc.js";
 import { bgExecutionPeers, bgConsensusPeers } from "../index.js";
 
 let peerCountGauge;
@@ -77,17 +85,11 @@ export async function getConsensusPeers(consensusClient) {
 
 export async function getBGExecutionPeers() {
   try {
-    const curlCommand = `curl -s -X POST --data '{"jsonrpc":"2.0","method":"admin_peers","params":[],"id":1}' -H "Content-Type: application/json" http://localhost:8545`;
-
-    const response = await new Promise((resolve, reject) => {
-      exec(curlCommand, (error, stdout, stderr) => {
-        if (error) reject(error);
-        else resolve(stdout);
-      });
-    });
-
-    const parsedResponse = JSON.parse(response);
-    const peerIds = parsedResponse.result.map((peer) =>
+    const peers = await executionIpcRequest(
+      getExecutionIpcPath(executionClient, installDir),
+      "admin_peers"
+    );
+    const peerIds = peers.map((peer) =>
       peer.id.replace(/^0x/, "")
     );
 
