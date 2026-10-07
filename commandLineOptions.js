@@ -25,6 +25,7 @@ debugToFile(
 /// Set default command line option values
 let executionClient = "reth";
 let executionType = "full";
+let debugTrace = false;
 let consensusClient = "lighthouse";
 let executionPeerPort = 30303;
 let consensusPeerPorts = [null, null];
@@ -53,6 +54,12 @@ function showHelp() {
   );
   console.log(
     "       --archive                            Perform an archive sync for the execution client\n"
+  );
+  console.log(
+    "       --debug-trace                        Also serve the debug and trace RPC namespaces on port 8545 (off by default)"
+  );
+  console.log(
+    "                                            Note: trace is reth only; these calls can be heavy\n"
   );
   console.log(
     "  -ep, --executionpeerport <port>           Specify the execution peer port (must be a number)"
@@ -115,6 +122,7 @@ function saveOptionsToFile() {
     consensusCheckpoint,
     installDir,
     owner,
+    debugTrace,
   };
   fs.writeFileSync(optionsFilePath, JSON.stringify(options), "utf8");
 }
@@ -141,6 +149,7 @@ if (fs.existsSync(optionsFilePath)) {
     consensusCheckpoint = options.consensusCheckpoint;
     installDir = options.installDir;
     owner = options.owner;
+    debugTrace = options.debugTrace === true;
     optionsLoaded = true;
 
     // Check if loaded geth option is being used on macOS (not supported)
@@ -201,7 +210,7 @@ if (!optionsLoaded) {
       o: "owner",
       h: "help",
     },
-    boolean: ["h", "help", "update", "archive"],
+    boolean: ["h", "help", "update", "archive", "debug-trace"],
     unknown: (option) => {
       console.log(`Invalid option: ${option}`);
       showHelp();
@@ -230,6 +239,10 @@ if (!optionsLoaded) {
 
   if (argv.archive) {
     executionType = "archive";
+  }
+
+  if (argv["debug-trace"]) {
+    debugTrace = true;
   }
 
   if (argv.consensusclient) {
@@ -361,6 +374,7 @@ if (!optionsLoaded) {
 export {
   executionClient,
   executionType,
+  debugTrace,
   consensusClient,
   executionPeerPort,
   consensusPeerPorts,

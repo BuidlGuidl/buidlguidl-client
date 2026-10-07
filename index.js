@@ -10,6 +10,7 @@ import { initializeWebSocketConnection } from "./webSocketConnection.js";
 import {
   executionClient,
   executionType,
+  debugTrace,
   consensusClient,
   executionPeerPort,
   consensusPeerPorts,
@@ -224,10 +225,12 @@ async function startClient(
   if (clientName === "geth") {
     clientArgs.push("--executionpeerport", executionPeerPort);
     clientArgs.push("--executiontype", executionType);
+    if (debugTrace) clientArgs.push("--debugtrace");
     clientCommand = path.join(__dirname, "ethereum_client_scripts/geth.js");
   } else if (clientName === "reth") {
     clientArgs.push("--executionpeerport", executionPeerPort);
     clientArgs.push("--executiontype", executionType);
+    if (debugTrace) clientArgs.push("--debugtrace");
     clientCommand = path.join(__dirname, "ethereum_client_scripts/reth.js");
   } else if (clientName === "prysm") {
     bgConsensusPeers = await fetchBGConsensusPeers();
