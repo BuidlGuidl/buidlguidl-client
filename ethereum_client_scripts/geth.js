@@ -14,6 +14,8 @@ const argv = minimist(process.argv.slice(2));
 const executionPeerPort = argv.executionpeerport;
 
 const executionType = argv.executiontype;
+// Opt-in (--debug-trace): adds debug to the public API list.
+const rpcApi = argv.debugtrace ? "eth,net,web3,debug" : "eth,net,web3";
 debugToFile(`From geth.js: executionType: ${executionType}`);
 
 // Check if a different install directory was provided via the `--directory` option
@@ -62,7 +64,7 @@ const execution = pty.spawn(
     // uses it over IPC (--ipcpath). `engine` is served only on the
     // JWT-protected auth port.
     "--http.api",
-    "eth,net,web3",
+    rpcApi,
     "--http.addr",
     "0.0.0.0",
     "--http.port",
@@ -78,7 +80,7 @@ const execution = pty.spawn(
     "127.0.0.1",
     "--ws",
     "--ws.api",
-    "eth,net,web3",
+    rpcApi,
     "--ws.origins",
     "*",
     "--ws.addr",

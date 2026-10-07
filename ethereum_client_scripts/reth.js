@@ -15,6 +15,8 @@ const argv = minimist(process.argv.slice(2));
 const executionPeerPort = argv.executionpeerport;
 
 const executionType = argv.executiontype;
+// Opt-in (--debug-trace): adds debug,trace to the public API list.
+const rpcApi = argv.debugtrace ? "eth,net,web3,debug,trace" : "eth,net,web3";
 
 // Check if a different install directory was provided via the `--directory` option
 if (argv.directory) {
@@ -62,7 +64,7 @@ const execution = pty.spawn(
     // port), so reth requires the same address and API list for both. `admin`
     // stays off the network; the client uses it over IPC (--ipcpath).
     "--http.api",
-    "eth,net,web3",
+    rpcApi,
     "--http.corsdomain",
     "*",
     "--authrpc.addr",
@@ -77,7 +79,7 @@ const execution = pty.spawn(
     "127.0.0.1:9001",
     "--ws",
     "--ws.api",
-    "eth,net,web3",
+    rpcApi,
     "--ws.origins",
     "*",
     "--ws.addr",

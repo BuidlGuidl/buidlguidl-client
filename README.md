@@ -59,6 +59,11 @@ Use the --archive flag to perform an archive sync for the execution client:
 
 Omitting the --archive flag will make the execution clients perform a pruned sync that will give you full access to data from the last 10,064 blocks for Reth or the last 128 blocks for Geth.
 
+Use the --debug-trace flag to also serve the debug and trace RPC namespaces on port 8545 (trace is Reth only). It's off by default. Only turn it on if you need these calls (e.g. transaction simulation): anyone who can reach port 8545 can use them, and they can be heavy.
+  ```bash
+  node index.js --archive --debug-trace
+  ```
+
 &nbsp;
 &nbsp;
 
@@ -108,6 +113,9 @@ Use the --help (-h) option to see all command line options:
                                             Default: lighthouse
 
        --archive                            Perform an archive sync for the execution client
+
+       --debug-trace                        Also serve the debug and trace RPC namespaces on port 8545 (off by default)
+                                            Note: trace is reth only; these calls can be heavy
 
   -ep, --executionpeerport <port>           Specify the execution peer port (must be a number)
                                             Default: 30303
