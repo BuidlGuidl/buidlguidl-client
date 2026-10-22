@@ -114,23 +114,6 @@ function logFreeSpace(datadir, executionType) {
   }
 }
 
-// The Interfold ciphernode replays contract logs from its oldest deploy block
-// (BondingRegistry, 25,473,398), so receipts must reach back that far or its
-// eth_getLogs calls fail with "4444: pruned history unavailable". `--full`
-// fetches receipts for only the snapshot's last 10,064 blocks and can't be
-// combined with --with-receipts-since, so its components are listed here
-// instead: state + headers (always included), transactions since the merge,
-// state history for the last 10,064 blocks, and receipts from the start of the
-// 50k-block file that holds 25,473,398 (~16 GB more than --full).
-const RETH_FULL_SNAPSHOT_ARGS = [
-  "--with-txs-since",
-  "15537394",
-  "--with-state-history-distance",
-  "10064",
-  "--with-receipts-since",
-  "25450000",
-];
-
 // Spawn `reth download` with inherited stdio so reth's own progress output owns
 // the terminal. Resolves ONLY on a clean exit code 0; completion is detected by
 // the exit code, never by parsing output.
@@ -155,9 +138,7 @@ function runSnapshotDownload(installDir, datadir, executionType) {
         datadir,
         "--chain",
         "mainnet",
-        ...(executionType === "archive"
-          ? ["--archive"]
-          : RETH_FULL_SNAPSHOT_ARGS),
+        executionType === "archive" ? "--archive" : "--full",
       ],
       {
         stdio: "inherit",
