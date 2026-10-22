@@ -11,6 +11,7 @@ import {
   executionClient,
   executionType,
   debugTrace,
+  addInterfoldReceipts,
   consensusClient,
   executionPeerPort,
   consensusPeerPorts,
@@ -32,6 +33,7 @@ import {
 } from "./ethereum_client_scripts/configureBGPeers.js";
 import { getVersionNumber } from "./ethereum_client_scripts/install.js";
 import { ensureRethSnapshot } from "./ethereum_client_scripts/rethSnapshot.js";
+import { restoreRethReceipts } from "./ethereum_client_scripts/rethReceiptRestore.js";
 import { debugToFile } from "./helpers.js";
 import {
   selectCheckpointUrlForLighthouse,
@@ -416,6 +418,32 @@ if (!isAlreadyRunning()) {
       deleteOptionsFile();
       removeLockFile();
       process.exit(1);
+    }
+  }
+
+  // BLOCKING, opt-in (--add-interfold-receipts): add the receipt history an Interfold
+  // ciphernode needs. Runs before reth starts because it moves files into reth's
+  // static_files directory.
+  if (addInterfoldReceipts) {
+    if (executionClient !== "reth") {
+      console.log(
+        "\n[bg] --add-interfold-receipts only applies to reth; ignoring it for geth.\n"
+      );
+    } else {
+      try {
+        await restoreRethReceipts({ installDir });
+      } catch (err) {
+        if (isExiting) process.exit(0);
+        isExiting = true; // prevent the exit handler from re-running handleExit
+        console.error(`\n❌ reth receipt restore failed: ${err.message}`);
+        console.error(
+          "   reth was not started. Re-run with --add-interfold-receipts to resume, or without it to start as before.\n"
+        );
+        debugToFile(`restoreRethReceipts(): ${err.message}`);
+        deleteOptionsFile();
+        removeLockFile();
+        process.exit(1);
+      }
     }
   }
 
