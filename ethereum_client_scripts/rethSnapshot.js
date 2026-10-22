@@ -119,7 +119,7 @@ function logFreeSpace(datadir, executionType) {
 // block (fee_token, 20,663,730). Reth 2.8.0 fails those queries with "4444:
 // pruned history unavailable" wherever receipts are missing, so full nodes keep
 // receipts from the start of the 50k-block file holding that block. Also the
-// floor --restore-receipts fills existing nodes down to.
+// floor --add-interfold-receipts fills existing nodes down to.
 export const INTERFOLD_RECEIPTS_SINCE = 20650000;
 
 // `--full` only fetches receipts for the snapshot's last 10,064 blocks and

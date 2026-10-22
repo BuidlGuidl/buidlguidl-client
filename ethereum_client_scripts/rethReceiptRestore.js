@@ -10,7 +10,7 @@ import {
 import { readRethReceiptFloor } from "./rethReceiptFloor.js";
 import { fetchLatestMainnetManifest } from "./rethManifest.js";
 
-// --restore-receipts: fill in the receipt history a reth node synced from an
+// --add-interfold-receipts: fill in the receipt history a reth node synced from an
 // older BG snapshot is missing, so an Interfold ciphernode can replay its
 // contract logs.
 //
@@ -100,7 +100,7 @@ export async function restoreRethReceipts({
   }
   if (floor <= since) {
     console.log(
-      `\n[bg] --restore-receipts: reth already has receipts from block ${floor}; nothing to restore.\n`
+      `\n[bg] --add-interfold-receipts: reth already has receipts from block ${floor}; nothing to restore.\n`
     );
     return;
   }
@@ -111,7 +111,7 @@ export async function restoreRethReceipts({
   }
 
   console.log(
-    `\n📥 [bg] --restore-receipts: restoring reth receipts for blocks ${since}-${
+    `\n📥 [bg] --add-interfold-receipts: restoring reth receipts for blocks ${since}-${
       floor - 1
     } from the official reth snapshot.`
   );

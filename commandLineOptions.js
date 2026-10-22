@@ -26,7 +26,7 @@ debugToFile(
 let executionClient = "reth";
 let executionType = "full";
 let debugTrace = false;
-let restoreReceipts = false;
+let addInterfoldReceipts = false;
 let consensusClient = "lighthouse";
 let executionPeerPort = 30303;
 let consensusPeerPorts = [null, null];
@@ -63,7 +63,7 @@ function showHelp() {
     "                                            Note: trace is reth only; these calls can be heavy\n"
   );
   console.log(
-    "       --restore-receipts                   Add the receipt history an Interfold ciphernode needs to a reth node synced before it was included (~200 GB)"
+    "       --add-interfold-receipts             Add the receipt history an Interfold ciphernode needs to a reth node synced before it was included (~200 GB)"
   );
   console.log(
     "                                            Note: reth only; new syncs already include it\n"
@@ -217,7 +217,7 @@ if (!optionsLoaded) {
       o: "owner",
       h: "help",
     },
-    boolean: ["h", "help", "update", "archive", "debug-trace", "restore-receipts"],
+    boolean: ["h", "help", "update", "archive", "debug-trace", "add-interfold-receipts"],
     unknown: (option) => {
       console.log(`Invalid option: ${option}`);
       showHelp();
@@ -253,8 +253,8 @@ if (!optionsLoaded) {
   }
 
   // One-shot: not saved to options.json, so it only runs when passed.
-  if (argv["restore-receipts"]) {
-    restoreReceipts = true;
+  if (argv["add-interfold-receipts"]) {
+    addInterfoldReceipts = true;
   }
 
   if (argv.consensusclient) {
@@ -387,7 +387,7 @@ export {
   executionClient,
   executionType,
   debugTrace,
-  restoreReceipts,
+  addInterfoldReceipts,
   consensusClient,
   executionPeerPort,
   consensusPeerPorts,

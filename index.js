@@ -11,7 +11,7 @@ import {
   executionClient,
   executionType,
   debugTrace,
-  restoreReceipts,
+  addInterfoldReceipts,
   consensusClient,
   executionPeerPort,
   consensusPeerPorts,
@@ -421,13 +421,13 @@ if (!isAlreadyRunning()) {
     }
   }
 
-  // BLOCKING, opt-in (--restore-receipts): add the receipt history an Interfold
+  // BLOCKING, opt-in (--add-interfold-receipts): add the receipt history an Interfold
   // ciphernode needs. Runs before reth starts because it moves files into reth's
   // static_files directory.
-  if (restoreReceipts) {
+  if (addInterfoldReceipts) {
     if (executionClient !== "reth") {
       console.log(
-        "\n[bg] --restore-receipts only applies to reth; ignoring it for geth.\n"
+        "\n[bg] --add-interfold-receipts only applies to reth; ignoring it for geth.\n"
       );
     } else {
       try {
@@ -437,7 +437,7 @@ if (!isAlreadyRunning()) {
         isExiting = true; // prevent the exit handler from re-running handleExit
         console.error(`\n❌ reth receipt restore failed: ${err.message}`);
         console.error(
-          "   reth was not started. Re-run with --restore-receipts to resume, or without it to start as before.\n"
+          "   reth was not started. Re-run with --add-interfold-receipts to resume, or without it to start as before.\n"
         );
         debugToFile(`restoreRethReceipts(): ${err.message}`);
         deleteOptionsFile();
