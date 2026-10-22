@@ -3,6 +3,7 @@ import os from "os";
 import path from "path";
 import { spawn } from "child_process";
 import { debugToFile, getFormattedDateTime } from "../helpers.js";
+import { fetchLatestMainnetManifest } from "./rethManifest.js";
 
 // Single source of truth for reth's data directory. Both the snapshot download
 // (here) and the node run (reth.js) import this so a custom `--directory` can
@@ -11,7 +12,7 @@ export function getRethDatadir(installDir) {
   return path.join(installDir, "ethereum_clients", "reth", "database");
 }
 
-function getRethCommand(installDir) {
+export function getRethCommand(installDir) {
   const platform = os.platform();
   return path.join(
     installDir,
@@ -114,10 +115,31 @@ function logFreeSpace(datadir, executionType) {
   }
 }
 
+// Interfold ciphernodes scan eth_getLogs from their oldest configured deploy
+// block (fee_token, 20,663,730). Reth 2.8.0 fails those queries with "4444:
+// pruned history unavailable" wherever receipts are missing, so full nodes keep
+// receipts from the start of the 50k-block file holding that block. Also the
+// floor --restore-receipts fills existing nodes down to.
+export const INTERFOLD_RECEIPTS_SINCE = 20650000;
+
+// `--full` only fetches receipts for the snapshot's last 10,064 blocks and
+// can't be combined with --with-receipts-since, so list its components
+// instead: state + headers (always included), transactions since the merge,
+// state history for the last 10,064 blocks, plus receipts back to
+// INTERFOLD_RECEIPTS_SINCE (~215 GB more on disk than --full).
+const RETH_FULL_SNAPSHOT_ARGS = [
+  "--with-txs-since",
+  "15537394",
+  "--with-state-history-distance",
+  "10064",
+  "--with-receipts-since",
+  String(INTERFOLD_RECEIPTS_SINCE),
+];
+
 // Spawn `reth download` with inherited stdio so reth's own progress output owns
 // the terminal. Resolves ONLY on a clean exit code 0; completion is detected by
 // the exit code, never by parsing output.
-function runSnapshotDownload(installDir, datadir, executionType) {
+function runSnapshotDownload(installDir, datadir, executionType, manifestPath) {
   return new Promise((resolve, reject) => {
     const rethCommand = getRethCommand(installDir);
 
@@ -138,7 +160,11 @@ function runSnapshotDownload(installDir, datadir, executionType) {
         datadir,
         "--chain",
         "mainnet",
-        executionType === "archive" ? "--archive" : "--full",
+        "--manifest-path",
+        manifestPath,
+        ...(executionType === "archive"
+          ? ["--archive"]
+          : RETH_FULL_SNAPSHOT_ARGS),
       ],
       {
         stdio: "inherit",
@@ -239,7 +265,16 @@ export async function ensureRethSnapshot({ installDir, executionType }) {
     startedAt: getFormattedDateTime(),
     executionType,
   });
-  await runSnapshotDownload(installDir, datadir, executionType);
+  // Resolve the manifest here (timeout + retries) instead of letting reth
+  // discover it, which can hang forever; see rethManifest.js.
+  const manifestPath = path.join(datadir, ".bg_snapshot_manifest.json");
+  console.log("\n[bg] Looking up the latest reth snapshot...");
+  fs.writeFileSync(
+    manifestPath,
+    JSON.stringify(await fetchLatestMainnetManifest())
+  );
+  await runSnapshotDownload(installDir, datadir, executionType, manifestPath);
+  fs.rmSync(manifestPath, { force: true });
   writeSnapshotMarker(datadir, "complete", {
     completedAt: getFormattedDateTime(),
     executionType,
