@@ -4,6 +4,7 @@ import path from "path";
 import { spawn } from "child_process";
 import { debugToFile, getFormattedDateTime } from "../helpers.js";
 import { fetchLatestMainnetManifest } from "./rethManifest.js";
+import { readRethTomlPruning } from "./rethPruneConfig.js";
 
 // Single source of truth for reth's data directory. Both the snapshot download
 // (here) and the node run (reth.js) import this so a custom `--directory` can
@@ -69,7 +70,7 @@ function dirHasFiles(dir) {
 // that must never be clobbered by a snapshot download. The install step always
 // creates an empty `database/` directory, so we probe the actual reth
 // database/static_files contents rather than the datadir itself.
-function hasExistingChainData(datadir) {
+export function hasExistingChainData(datadir) {
   const mdbx = path.join(datadir, "db", "mdbx.dat");
   const dbVersion = path.join(datadir, "db", "database.version");
   const staticFiles = path.join(datadir, "static_files");
@@ -78,6 +79,89 @@ function hasExistingChainData(datadir) {
     fs.existsSync(dbVersion) ||
     dirHasFiles(staticFiles)
   );
+}
+
+// What an existing reth database is: { type: "archive" | "full", source }, or
+// null when there's no synced database to go by (fresh install or a partial
+// snapshot download). Never throws.
+//
+// - A marker saying archive always wins. An archive db that a full start has
+//   since damaged has prune segments in reth.toml, so reth.toml can't overrule
+//   it.
+// - A marker type from a real snapshot download is trusted.
+// - Otherwise (no marker, a marker without a type, or a "preexisting-database"
+//   stamp, which older BG clients wrote with whatever type was requested even
+//   when --archive was forgotten), go by reth.toml: prune segments mean full,
+//   none mean archive.
+// - With no reth.toml either, fall back to the marker's type. Markers without
+//   a type predate archive snapshots, so those were full.
+export function readRecordedRethDbType(datadir) {
+  const marker = readSnapshotMarker(datadir);
+  if (marker?.state === "in_progress") return null;
+  if (!hasExistingChainData(datadir)) return null;
+
+  const complete = marker?.state === "complete" ? marker : null;
+  const markerType = complete?.executionType;
+  if (markerType === "archive") return { type: "archive", source: "marker" };
+  if (markerType && complete.reason !== "preexisting-database") {
+    return { type: markerType, source: "marker" };
+  }
+
+  const pruned = readRethTomlPruning(datadir);
+  if (pruned !== null) {
+    return { type: pruned ? "full" : "archive", source: "reth.toml" };
+  }
+  if (complete) return { type: markerType || "full", source: "marker" };
+  return null;
+}
+
+/**
+ * The execution type to run reth as. An existing database's recorded type wins
+ * over the --archive flag, so forgetting the flag can never turn an archive
+ * node into a pruning full node; switching back to full needs the database
+ * deleted or RETH_SNAPSHOT=force. With no existing database, the flag decides.
+ *
+ * Call once, before ensureRethSnapshot(). Also corrects a marker whose type
+ * was missing or wrong, so later starts take the marker's word.
+ */
+export function resolveRethExecutionType({ installDir, requested }) {
+  const datadir = getRethDatadir(installDir);
+  const override = (process.env.RETH_SNAPSHOT || "").trim().toLowerCase();
+  if (override === "force") return requested; // the db is about to be wiped
+
+  const recorded = readRecordedRethDbType(datadir);
+  if (!recorded) return requested;
+
+  const marker = readSnapshotMarker(datadir);
+  if (
+    recorded.source === "reth.toml" &&
+    marker?.state === "complete" &&
+    marker.executionType !== recorded.type
+  ) {
+    const { state, timestamp, ...rest } = marker;
+    writeSnapshotMarker(datadir, state, {
+      ...rest,
+      executionType: recorded.type,
+      executionTypeSource: "reth.toml",
+    });
+  }
+
+  if (recorded.type === "archive" && requested !== "archive") {
+    console.log(
+      "\n[bg] Existing reth database is an archive node; running as archive (--archive not passed).\n"
+    );
+  } else if (recorded.type === "full" && requested === "archive") {
+    console.log(
+      "\n[bg] WARNING: --archive was passed, but this reth database is a full node and has already pruned old history."
+    );
+    console.log(
+      "[bg] Running it as a full node. To run an archive node instead, delete the reth database"
+    );
+    console.log(
+      `[bg] directory (${datadir}) or set RETH_SNAPSHOT=force to download an archive snapshot (about 3 TB).\n`
+    );
+  }
+  return recorded.type;
 }
 
 // Remove only the snapshot's targets (never the whole datadir and never the
@@ -217,24 +301,17 @@ export async function ensureRethSnapshot({ installDir, executionType }) {
   const forced = override === "force";
 
   // Fast path: snapshot already applied (or stamped for a pre-existing db).
-  // Markers written before archive snapshots were supported have no
-  // executionType; those were all full.
+  // resolveRethExecutionType() has already matched executionType to the db and
+  // warned about a mismatch with the flag.
   if (!forced && marker?.state === "complete") {
-    const markerType = marker.executionType || "full";
-    if (markerType !== executionType) {
-      console.log(
-        `\n[bg] WARNING: this reth database was set up as a ${markerType} node but ${executionType} was requested.`
-      );
-      console.log(
-        "[bg] The existing database will not be changed. To switch, delete the reth database directory or set RETH_SNAPSHOT=force.\n"
-      );
-    }
     return;
   }
 
   // AIRTIGHT GUARD: a populated database with no marker means this node existed
   // before snapshot support (or was synced/backfilled by other means). Never
   // download into it; stamp it complete so future starts take the fast path.
+  // executionType here is what resolveRethExecutionType() read from reth.toml,
+  // not the flag, so a forgotten --archive can't label an archive db full.
   if (!forced && !marker && hasExistingChainData(datadir)) {
     console.log(
       "\n[bg] Existing reth database detected without a snapshot marker."
