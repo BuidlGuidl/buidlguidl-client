@@ -4,7 +4,11 @@ import os from "os";
 import path from "path";
 import { debugToFile } from "../helpers.js";
 import { stripAnsiCodes, getFormattedDateTime } from "../helpers.js";
-import { getRethDatadir } from "./rethSnapshot.js";
+import {
+  getRethDatadir,
+  readRecordedRethDbType,
+} from "./rethSnapshot.js";
+import { buildRethNodeArgs } from "./rethArgs.js";
 import { getExecutionIpcPath } from "./executionIpc.js";
 import minimist from "minimist";
 
@@ -48,54 +52,25 @@ const logFilePath = path.join(
 
 const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
 
+// Second layer behind index.js: never pass --full / --prune.* to an archive db.
+const recordedType = readRecordedRethDbType(datadir)?.type;
+if (recordedType === "archive" && executionType !== "archive") {
+  debugToFile(
+    `From reth.js: --executiontype ${executionType} but the db is archive; running as archive`
+  );
+}
+
 const execution = pty.spawn(
   `${rethCommand}`,
-  [
-    "node",
-    ...(executionType === "archive" ? [] : ["--full"]),
-    "--port",
+  buildRethNodeArgs({
+    executionType,
+    recordedType,
     executionPeerPort,
-    "--discovery.port",
-    executionPeerPort,
-    "--http",
-    "--http.addr",
-    "0.0.0.0",
-    // HTTP and WebSocket share 8545 (Interfold ciphernodes need both on one
-    // port), so reth requires the same address and API list for both. `admin`
-    // stays off the network; the client uses it over IPC (--ipcpath).
-    "--http.api",
-    rpcApi,
-    "--http.corsdomain",
-    "*",
-    "--authrpc.addr",
-    "127.0.0.1",
-    "--authrpc.port",
-    "8551",
-    "--datadir",
     datadir,
-    "--authrpc.jwtsecret",
-    `${jwtPath}`,
-    "--metrics",
-    "127.0.0.1:9001",
-    "--ws",
-    "--ws.api",
+    jwtPath,
     rpcApi,
-    "--ws.origins",
-    "*",
-    "--ws.addr",
-    "0.0.0.0",
-    "--ws.port",
-    "8545",
-    "--ipcpath",
-    getExecutionIpcPath("reth", installDir),
-    "--rpc.max-blocks-per-filter",
-    "10000",
-    "--rpc.max-logs-per-response",
-    "10000",
-    ...(executionType === "archive"
-      ? []
-      : ["--prune.bodies.pre-merge", "--prune.receipts.before", "15537394"]),
-  ],
+    ipcPath: getExecutionIpcPath("reth", installDir),
+  }),
   {
     name: "xterm-color",
     cols: 80,

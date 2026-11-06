@@ -32,7 +32,13 @@ import {
   configureBGConsensusPeers,
 } from "./ethereum_client_scripts/configureBGPeers.js";
 import { getVersionNumber } from "./ethereum_client_scripts/install.js";
-import { ensureRethSnapshot } from "./ethereum_client_scripts/rethSnapshot.js";
+import {
+  ensureRethSnapshot,
+  getRethDatadir,
+  resolveRethExecutionType,
+} from "./ethereum_client_scripts/rethSnapshot.js";
+import { removeStaleRethPruneConfig } from "./ethereum_client_scripts/rethPruneConfig.js";
+import { resolveGethExecutionType } from "./ethereum_client_scripts/gethExecutionType.js";
 import { restoreRethReceipts } from "./ethereum_client_scripts/rethReceiptRestore.js";
 import { debugToFile } from "./helpers.js";
 import {
@@ -401,12 +407,23 @@ if (!isAlreadyRunning()) {
   deleteOptionsFile();
   createLockFile();
 
+  // An existing database's recorded type wins over the --archive flag, so a
+  // start that forgets the flag can't turn an archive node into a pruning full
+  // node. Everything below uses this, not the raw flag.
+  const nodeExecutionType =
+    executionClient === "reth"
+      ? resolveRethExecutionType({ installDir, requested: executionType })
+      : resolveGethExecutionType({ installDir, requested: executionType });
+
   // BLOCKING: if reth needs a database snapshot, download it now — before the
   // monitoring dashboard launches — so the user sees reth's native download
   // output on the terminal instead of having the TUI immediately cover it up.
   if (executionClient === "reth") {
     try {
-      await ensureRethSnapshot({ installDir, executionType });
+      await ensureRethSnapshot({
+        installDir,
+        executionType: nodeExecutionType,
+      });
     } catch (err) {
       if (isExiting) process.exit(0);
       isExiting = true; // prevent the exit handler from re-running handleExit
@@ -444,6 +461,27 @@ if (!isAlreadyRunning()) {
         removeLockFile();
         process.exit(1);
       }
+    }
+  }
+
+  // BLOCKING: an archive node must not start with prune segments left in
+  // reth.toml by an earlier start without --archive. Reth has no CLI flag that
+  // turns pruning off, and with no prune flags it uses reth.toml's.
+  if (executionClient === "reth" && nodeExecutionType === "archive") {
+    try {
+      removeStaleRethPruneConfig(getRethDatadir(installDir));
+    } catch (err) {
+      isExiting = true; // prevent the exit handler from re-running handleExit
+      console.error(
+        `\n❌ Could not remove pruning config from this archive node's reth.toml: ${err.message}`
+      );
+      console.error(
+        "   reth was not started, so it can't prune any more history. Remove the [prune] sections from reth.toml and re-run.\n"
+      );
+      debugToFile(`removeStaleRethPruneConfig(): ${err.message}`);
+      deleteOptionsFile();
+      removeLockFile();
+      process.exit(1);
     }
   }
 
@@ -488,10 +526,10 @@ if (!isAlreadyRunning()) {
     console.log("   (skipping health checks per user request)\n");
   }
 
-  await startClient(executionClient, executionType, installDir);
+  await startClient(executionClient, nodeExecutionType, installDir);
   await startClient(
     consensusClient,
-    executionType,
+    nodeExecutionType,
     installDir,
     selectedCheckpointUrl
   );

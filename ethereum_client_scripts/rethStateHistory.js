@@ -14,6 +14,9 @@ import { getRethDatadir } from "./rethSnapshot.js";
 // disagree if the file is edited while reth is running, or if the flags
 // changed and reth hasn't restarted since.
 //
+// No [prune] table at all means no pruning: reth fills it with its default
+// (BG client removes a stale one from archive nodes; see rethPruneConfig.js).
+//
 // reth writes each mode as a sub-table ([prune.segments.account_history] with
 // `distance = N` or `before = N`); an inline `{ distance = N }` and a "full"
 // string are also accepted.
@@ -37,7 +40,6 @@ function toMode(type, digits) {
 function parseHistoryModes(text) {
   const modes = {};
   let table = "";
-  let sawPrune = false;
 
   for (const raw of text.split(/\r?\n/)) {
     const line = raw.replace(/\s+#[^"]*$/, "").trim();
@@ -46,7 +48,6 @@ function parseHistoryModes(text) {
     if (line.startsWith("[")) {
       const header = line.match(/^\[\s*([A-Za-z0-9_.-]+)\s*\]$/);
       table = header ? header[1] : "[[array]]";
-      if (table === "prune") sawPrune = true;
       const sub = table.match(/^prune\.segments\.(.+)$/);
       if (sub && HISTORY_KEYS.includes(sub[1])) {
         if (sub[1] in modes) return null; // defined twice
@@ -82,7 +83,6 @@ function parseHistoryModes(text) {
     if (mentionsHistory) return null; // some form we don't understand
   }
 
-  if (!sawPrune) return null;
   if (Object.values(modes).some((m) => m === null)) return null; // empty sub-table
   return modes;
 }
