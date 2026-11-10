@@ -59,6 +59,7 @@ async function checkCheckpointHealth(url, timeout = 5000, numChecks = 5) {
 
         if (!response.ok) {
           lastError = `HTTP ${response.status}`;
+          await response.body?.cancel().catch(() => {});
 
           // If primary fails, try fallback: /eth/v1/node/version
           try {
@@ -96,9 +97,8 @@ async function checkCheckpointHealth(url, timeout = 5000, numChecks = 5) {
         }
       }
 
-      clearTimeout(timeoutId);
-
       if (!response) {
+        clearTimeout(timeoutId);
         // If any check fails, return failure immediately
         return {
           url,
@@ -110,12 +110,23 @@ async function checkCheckpointHealth(url, timeout = 5000, numChecks = 5) {
         };
       }
 
+      // Always read the full body (under the same timeout). Leaving response
+      // bodies unconsumed keeps undici connections busy, which stalls later
+      // requests when all servers are checked in parallel.
+      const body = await response.text();
+      clearTimeout(timeoutId);
+
       const responseTime = Date.now() - startTime;
       responseTimes.push(responseTime);
 
       // Only parse slot data on first successful check
       if (i === 0) {
-        const data = await response.json();
+        let data = null;
+        try {
+          data = JSON.parse(body);
+        } catch {
+          data = null;
+        }
 
         // Extract slot number from /eth/v2/beacon/blocks/finalized response
         // Slot is at data.message.slot based on test results
