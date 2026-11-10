@@ -4,6 +4,7 @@ import os from "os";
 import path from "path";
 import { debugToFile } from "../helpers.js";
 import { stripAnsiCodes, getFormattedDateTime } from "../helpers.js";
+import { selectCheckpointUrlForLighthouse } from "../checkpointHealthCheck.js";
 import minimist from "minimist";
 
 let installDir = os.homedir();
@@ -119,37 +120,126 @@ if (argv.bgconsensusaddrs) {
   consensusArgs.push("--libp2p-addresses", bgConsensusAddrs);
 }
 
-const consensus = pty.spawn(`${lighthouseCommand}`, consensusArgs, {
-  name: "xterm-color",
-  cols: 80,
-  rows: 30,
-  cwd: process.env.HOME,
-  env: { ...process.env, INSTALL_DIR: installDir },
-});
+// Lighthouse refuses to start when its database head is older than the weak
+// subjectivity period (e.g. the node was offline for a few weeks). The only
+// fix is to purge the chain database and checkpoint sync again, so detect that
+// failure and restart once with --purge-db-force and a checkpoint sync URL.
+const WEAK_SUBJECTIVITY_ERROR = /outside the weak subjectivity period/i;
 
-// Pipe stdout and stderr to the log file and to the parent process
-consensus.on("data", (data) => {
-  logStream.write(stripAnsiCodes(data));
+let consensus;
+let isShuttingDown = false;
+let staleDbRecoveryAttempted = false;
+
+function logMessage(message) {
+  logStream.write(`${message}\n`);
   if (process.send) {
-    process.send({ log: data }); // No need for .toString(), pty preserves colors
+    process.send({ log: message });
   }
-});
+  debugToFile(`From lighthouse.js: ${message}`);
+}
 
-consensus.on("exit", (code) => {
-  // const exitMessage = `prysm process exited with code ${code}`;
-  // logStream.write(exitMessage);
-  logStream.end();
-});
+function startLighthouse(args) {
+  let recentOutput = "";
+  let staleDbDetected = false;
 
-consensus.on("error", (err) => {
-  const errorMessage = `Error: ${err.message}`;
-  logStream.write(errorMessage);
-  if (process.send) {
-    process.send({ log: errorMessage }); // Send error message to parent process
+  consensus = pty.spawn(`${lighthouseCommand}`, args, {
+    name: "xterm-color",
+    cols: 80,
+    rows: 30,
+    cwd: process.env.HOME,
+    env: { ...process.env, INSTALL_DIR: installDir },
+  });
+
+  // Pipe stdout and stderr to the log file and to the parent process
+  consensus.on("data", (data) => {
+    const cleanData = stripAnsiCodes(data);
+    logStream.write(cleanData);
+    if (process.send) {
+      process.send({ log: data }); // No need for .toString(), pty preserves colors
+    }
+
+    // pty output wraps lines and can split them across chunks, so match
+    // against a small rolling window with whitespace collapsed
+    recentOutput = (recentOutput + cleanData).slice(-4096);
+    if (
+      !staleDbDetected &&
+      WEAK_SUBJECTIVITY_ERROR.test(recentOutput.replace(/\s+/g, " "))
+    ) {
+      staleDbDetected = true;
+    }
+  });
+
+  consensus.on("exit", (code) => {
+    if (staleDbDetected && !staleDbRecoveryAttempted && !isShuttingDown) {
+      staleDbRecoveryAttempted = true;
+      recoverFromStaleDatabase().catch((err) => {
+        logMessage(`Stale database recovery failed: ${err.message}`);
+        logStream.end();
+        process.exit(1);
+      });
+      return;
+    }
+
+    logStream.end();
+  });
+
+  consensus.on("error", (err) => {
+    const errorMessage = `Error: ${err.message}`;
+    logStream.write(errorMessage);
+    if (process.send) {
+      process.send({ log: errorMessage }); // Send error message to parent process
+    }
+    debugToFile(`From lighthouse.js: ${errorMessage}`);
+  });
+}
+
+async function recoverFromStaleDatabase() {
+  logMessage(
+    "\n⚠️  Lighthouse database is outside the weak subjectivity period (node was offline too long)."
+  );
+  logMessage(
+    "   Purging the beacon chain database and re-syncing from a checkpoint..."
+  );
+
+  const checkpointUrl = await selectCheckpointUrlForLighthouse(
+    installDir,
+    consensusCheckpoint,
+    { ignoreExistingDb: true }
+  );
+
+  if (isShuttingDown) {
+    logStream.end();
+    return;
   }
-  debugToFile(`From lighthouse.js: ${errorMessage}`);
-});
+
+  logMessage(`   Using checkpoint sync URL: ${checkpointUrl}\n`);
+
+  // Drop any checkpoint args from the original run and use the selected URL
+  const recoveryArgs = [];
+  for (let i = 0; i < consensusArgs.length; i++) {
+    if (
+      consensusArgs[i] === "--checkpoint-sync-url" ||
+      consensusArgs[i] === "--checkpoint-sync-url-timeout"
+    ) {
+      i++; // skip the flag's value too
+      continue;
+    }
+    recoveryArgs.push(consensusArgs[i]);
+  }
+  recoveryArgs.push(
+    "--purge-db-force",
+    "--checkpoint-sync-url",
+    checkpointUrl,
+    "--checkpoint-sync-url-timeout",
+    "1200"
+  );
+
+  startLighthouse(recoveryArgs);
+}
+
+startLighthouse(consensusArgs);
 
 process.on("SIGINT", () => {
+  isShuttingDown = true;
   consensus.kill("SIGINT");
 });
