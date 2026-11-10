@@ -209,18 +209,21 @@ function prysmDatabaseExists(installDir) {
 
 /**
  * Select the best checkpoint URL for Lighthouse
- * Returns null if database already exists (checkpoint sync not needed)
+ * Returns null if database already exists (checkpoint sync not needed),
+ * unless options.ignoreExistingDb is true
  * Returns user-provided URL if specified (no validation)
  * Otherwise, runs health checks and returns the best URL
  */
 export async function selectCheckpointUrlForLighthouse(
   installDir,
-  userProvidedUrl = null
+  userProvidedUrl = null,
+  { ignoreExistingDb = false } = {}
 ) {
   console.log("\n🔍 Checking Lighthouse sync requirements...");
 
-  // Check if database already exists
-  const dbExists = lighthouseDatabaseExists(installDir);
+  // Check if database already exists (skipped when the existing database is
+  // about to be purged, e.g. recovering from a stale weak subjectivity state)
+  const dbExists = !ignoreExistingDb && lighthouseDatabaseExists(installDir);
 
   if (dbExists) {
     console.log("✅ Lighthouse database found - resuming from local state");
