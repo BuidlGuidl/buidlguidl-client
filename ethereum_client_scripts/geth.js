@@ -6,6 +6,7 @@ import { debugToFile } from "../helpers.js";
 import { stripAnsiCodes, getFormattedDateTime } from "../helpers.js";
 import minimist from "minimist";
 import { getExecutionIpcPath } from "./executionIpc.js";
+import { checkPebbleUpgrade, runPebbleUpgrade } from "./gethPebbleUpgrade.js";
 
 let installDir = os.homedir();
 
@@ -43,6 +44,56 @@ const logFilePath = path.join(
 
 const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
 
+const datadir = path.join(installDir, "ethereum_clients", "geth", "database");
+
+function writeLog(data) {
+  logStream.write(stripAnsiCodes(data));
+  if (process.send) {
+    process.send({ log: data });
+  }
+}
+
+// Whichever process is running (pebble upgrade, then Geth) gets the SIGINT.
+let currentProcess = null;
+let shuttingDown = false;
+process.on("SIGINT", () => {
+  shuttingDown = true;
+  if (currentProcess) currentProcess.kill("SIGINT");
+});
+
+// Upgrade a legacy pebble v1 database before starting Geth. This has to run
+// while Geth is stopped. If it fails, Geth still opens the database in
+// legacy mode, so we log the failure and start anyway.
+const pebbleCheck = checkPebbleUpgrade(gethCommand, datadir);
+debugToFile(
+  `From geth.js: pebble upgrade check: ${pebbleCheck.reason} (upgrade=${pebbleCheck.upgrade})`
+);
+if (pebbleCheck.upgrade) {
+  writeLog(
+    `Upgrading legacy Geth pebble database (format ${pebbleCheck.format}) for Geth ${pebbleCheck.gethVersion}. This may take a few minutes...\n`
+  );
+  const code = await runPebbleUpgrade(gethCommand, datadir, {
+    onData: writeLog,
+    onSpawn: (proc) => {
+      currentProcess = proc;
+    },
+  });
+  currentProcess = null;
+  if (code === 0) {
+    writeLog("Geth pebble database upgrade complete.\n");
+  } else {
+    writeLog(
+      `Geth pebble database upgrade failed (exit code ${code}); starting Geth with the legacy database.\n`
+    );
+    debugToFile(`From geth.js: pebble upgrade failed with exit code ${code}`);
+  }
+}
+
+if (shuttingDown) {
+  logStream.end();
+  process.exit(0);
+}
+
 const execution = pty.spawn(
   gethCommand,
   [
@@ -72,7 +123,7 @@ const execution = pty.spawn(
     "--http.corsdomain",
     "*",
     "--datadir",
-    path.join(installDir, "ethereum_clients", "geth", "database"),
+    datadir,
     "--authrpc.jwtsecret",
     jwtPath,
     "--metrics",
@@ -99,13 +150,10 @@ const execution = pty.spawn(
   }
 );
 
+currentProcess = execution;
+
 // Pipe stdout and stderr to the log file and to the parent process
-execution.on("data", (data) => {
-  logStream.write(stripAnsiCodes(data));
-  if (process.send) {
-    process.send({ log: data });
-  }
-});
+execution.on("data", writeLog);
 
 execution.on("exit", (code) => {
   // const exitMessage = `geth process exited with code ${code}`;
@@ -120,8 +168,4 @@ execution.on("error", (err) => {
     process.send({ log: errorMessage }); // Send error message to parent process
   }
   debugToFile(`From geth.js: ${errorMessage}`);
-});
-
-process.on("SIGINT", () => {
-  execution.kill("SIGINT");
 });
