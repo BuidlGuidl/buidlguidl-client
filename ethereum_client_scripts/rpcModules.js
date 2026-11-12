@@ -7,6 +7,11 @@
 // below requires an argument. That makes the probe exact and free, and works
 // the same on reth and geth (tested on reth 2.5.0 and geth 1.17.4).
 //
+// Nethermind (checked against 2.2.2) answers -32601 only for methods it doesn't
+// have. A method it has in a namespace that isn't enabled on this port answers
+// -32600 ("The method 'x' is found but the namespace 'y' is disabled for ...",
+// or "... is disabled for <endpoint>"), so that counts as disabled too.
+//
 // rpc_modules alone isn't reliable: reth's reports its HTTP list on every
 // transport, and reth only serves it when `rpc` is enabled. It's used only to
 // pick up namespaces that have no probe here.
@@ -27,6 +32,15 @@ const probeMethods = {
 };
 
 const METHOD_NOT_FOUND = -32601;
+const INVALID_REQUEST = -32600;
+
+function isDisabled(error) {
+  if (!error) return false;
+  if (error.code === METHOD_NOT_FOUND) return true;
+  return (
+    error.code === INVALID_REQUEST && /\bis disabled\b/.test(error.message || "")
+  );
+}
 
 async function rpcCall(url, method, timeout) {
   const response = await fetch(url, {
@@ -50,7 +64,7 @@ export async function probeRpcModules(
     Object.entries(probeMethods).map(async ([namespace, method]) => {
       try {
         const response = await rpcCall(url, method, timeout);
-        if (response.error?.code === METHOD_NOT_FOUND) {
+        if (isDisabled(response.error)) {
           return { namespace, enabled: false };
         }
         return { namespace, enabled: true, response };

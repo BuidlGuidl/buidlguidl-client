@@ -12,6 +12,7 @@ import {
   latestGethVer,
   latestRethVer,
   latestLighthouseVer,
+  latestNethermindVer,
 } from "./ethereum_client_scripts/install.js";
 import { debugToFile } from "./helpers.js";
 
@@ -41,7 +42,7 @@ const optionsFilePath = join(installDir, "options.json");
 function showHelp() {
   console.log("");
   console.log(
-    "  -e, --executionclient <client>            Specify the execution client ('reth' or 'geth')"
+    "  -e, --executionclient <client>            Specify the execution client ('reth', 'geth' or 'nethermind')"
   );
   console.log("                                            Default: reth");
   console.log(
@@ -60,7 +61,7 @@ function showHelp() {
     "       --debug-trace                        Also serve the debug and trace RPC namespaces on port 8545 (off by default)"
   );
   console.log(
-    "                                            Note: trace is reth only; these calls can be heavy\n"
+    "                                            Note: trace is reth and nethermind only; these calls can be heavy\n"
   );
   console.log(
     "       --add-interfold-receipts             Add the receipt history an Interfold ciphernode needs to a reth node synced before it was included (~200 GB)"
@@ -103,7 +104,7 @@ function showHelp() {
     "      --update                              Update the execution and consensus clients to the latest version."
   );
   console.log(
-    `                                            Latest versions: Reth: ${latestRethVer}, Geth: ${latestGethVer}, Lighthouse: ${latestLighthouseVer}, (Prysm is handled by its executable automatically)\n`
+    `                                            Latest versions: Reth: ${latestRethVer}, Geth: ${latestGethVer}, Nethermind: ${latestNethermindVer}, Lighthouse: ${latestLighthouseVer}, (Prysm is handled by its executable automatically)\n`
   );
   console.log(
     "  -h, --help                                Display this help message and exit"
@@ -227,9 +228,9 @@ if (!optionsLoaded) {
 
   if (argv.executionclient) {
     executionClient = argv.executionclient;
-    if (executionClient !== "reth" && executionClient !== "geth") {
+    if (!["reth", "geth", "nethermind"].includes(executionClient)) {
       console.log(
-        "Invalid option for --executionclient (-e). Use 'reth' or 'geth'."
+        "Invalid option for --executionclient (-e). Use 'reth', 'geth' or 'nethermind'."
       );
       process.exit(1);
     }

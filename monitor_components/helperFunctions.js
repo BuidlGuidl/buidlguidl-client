@@ -32,6 +32,10 @@ export function getLatestLogFile(dir, client) {
       logFiles = files.filter(
         (file) => file.startsWith("reth_") && file.endsWith(".log")
       );
+    } else if (client === "nethermind") {
+      logFiles = files.filter(
+        (file) => file.startsWith("nethermind_") && file.endsWith(".log")
+      );
     } else if (client === "prysm") {
       logFiles = files.filter(
         (file) => file.startsWith("prysm_") && file.endsWith(".log")
@@ -42,7 +46,7 @@ export function getLatestLogFile(dir, client) {
       );
     } else {
       debugToFile(
-        `getLatestLogFile(): Invalid client specified. Must be 'geth', 'reth', 'prysm', or 'lighthouse'.`,
+        `getLatestLogFile(): Invalid client specified. Must be 'geth', 'reth', 'nethermind', 'prysm', or 'lighthouse'.`,
         () => {}
       );
     }

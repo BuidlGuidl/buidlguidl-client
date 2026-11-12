@@ -8,10 +8,16 @@ import path from "path";
 // peers) go here. Shared by the launch scripts (--ipcpath) and the client so
 // the two can't diverge.
 export function getExecutionIpcPath(executionClient, installDir) {
-  const name = executionClient === "geth" ? "geth.ipc" : "reth.ipc";
+  const name = `${executionClient}.ipc`;
   if (os.platform() === "win32") return `\\\\.\\pipe\\${name}`;
-  if (executionClient === "geth") {
-    return path.join(installDir, "ethereum_clients", "geth", "database", name);
+  if (executionClient === "geth" || executionClient === "nethermind") {
+    return path.join(
+      installDir,
+      "ethereum_clients",
+      executionClient,
+      "database",
+      name
+    );
   }
   // reth's default; kept so tools already using it still work.
   return path.join("/tmp", name);

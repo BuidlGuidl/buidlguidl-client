@@ -33,6 +33,7 @@ import { BASE_URL } from "./config.js";
 import { readRethSegmentFloor } from "./ethereum_client_scripts/rethReceiptFloor.js";
 import { readRethStateHistory } from "./ethereum_client_scripts/rethStateHistory.js";
 import { probeRpcModules } from "./ethereum_client_scripts/rpcModules.js";
+import { readNethermindHistory } from "./ethereum_client_scripts/nethermindHistory.js";
 
 let socketId;
 export let checkIn;
@@ -98,6 +99,28 @@ export function initializeWebSocketConnection(wsConfig) {
   }
   if (wsConfig.executionClient === "reth") {
     refreshRethHistory();
+  }
+
+  // Nethermind: same fields and refresh schedule, read over RPC instead of
+  // from disk (see nethermindHistory.js, including what is still wrong on
+  // nethermind 2.2.2). Shares rethHistory so checkIn() sends either one.
+  async function refreshNethermindHistory() {
+    try {
+      const values = await readNethermindHistory(installDir);
+      for (const [field, value] of Object.entries(values)) {
+        if (value !== undefined) rethHistory[field] = value;
+      }
+    } catch (err) {
+      debugToFile(`refreshNethermindHistory(): ${err.message}`);
+    }
+    const anyUnknown = Object.values(rethHistory).some((v) => v === null);
+    setTimeout(
+      refreshNethermindHistory,
+      anyUnknown ? rethHistoryRetryInterval : rethHistoryRefreshInterval
+    );
+  }
+  if (wsConfig.executionClient === "nethermind") {
+    refreshNethermindHistory();
   }
 
   // RPC namespaces the execution client serves on 8545, reported on every
@@ -475,7 +498,10 @@ export function initializeWebSocketConnection(wsConfig) {
         rpc_modules: rpcModules,
       };
 
-      if (wsConfig.executionClient === "reth") {
+      if (
+        wsConfig.executionClient === "reth" ||
+        wsConfig.executionClient === "nethermind"
+      ) {
         params.receipt_floor = rethHistory.receipt_floor;
         params.body_floor = rethHistory.body_floor;
         params.state_history = rethHistory.state_history;

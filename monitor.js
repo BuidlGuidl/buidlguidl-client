@@ -129,7 +129,7 @@ export async function initializeMonitoring(
           components.rpcInfoBox
         );
       }, 5000);
-    } else if (executionClient == "geth") {
+    } else if (executionClient == "geth" || executionClient == "nethermind") {
       setInterval(() => {
         showHideGethWidgets(
           screen,
@@ -163,6 +163,8 @@ function setupUI(
     executionClientLabel = `Geth v${executionClientVer}`;
   } else if (executionClientGlobal == "reth") {
     executionClientLabel = `Reth v${executionClientVer}`;
+  } else if (executionClientGlobal == "nethermind") {
+    executionClientLabel = `Nethermind v${executionClientVer}`;
   }
 
   if (consensusClientGlobal == "prysm") {
@@ -185,7 +187,7 @@ function setupUI(
 
   let gethStageGauge, rethStageGauge;
 
-  if (executionClientGlobal == "geth") {
+  if (executionClientGlobal == "geth" || executionClientGlobal == "nethermind") {
     gethStageGauge = createGethStageGauge(grid);
   } else if (executionClientGlobal == "reth") {
     rethStageGauge = createRethStageGauge(grid);
@@ -206,7 +208,7 @@ function setupUI(
   screen.append(peerCountGauge);
   screen.append(statusBox);
   screen.append(bandwidthBox);
-  if (executionClientGlobal == "geth") {
+  if (executionClientGlobal == "geth" || executionClientGlobal == "nethermind") {
     screen.append(gethStageGauge);
   } else if (executionClientGlobal == "reth") {
     screen.append(rethStageGauge);

@@ -89,8 +89,13 @@ export async function getBGExecutionPeers() {
       getExecutionIpcPath(executionClient, installDir),
       "admin_peers"
     );
-    const peerIds = peers.map((peer) =>
-      peer.id.replace(/^0x/, "")
+    // BG peers are listed by enode public key. Take the key from each peer's
+    // enode: nethermind's `id` is the 32-byte node id (keccak of the key), not
+    // the key itself. Fall back to `id` for a peer without an enode.
+    const peerIds = peers.map(
+      (peer) =>
+        peer.enode?.match(/^enode:\/\/([0-9a-fA-F]+)@/)?.[1] ??
+        peer.id.replace(/^0x/, "")
     );
 
     // debugToFile(`getBGExecutionPeers(): peerIds: ${peerIds}\n`);

@@ -39,6 +39,7 @@ import {
 } from "./ethereum_client_scripts/rethSnapshot.js";
 import { removeStaleRethPruneConfig } from "./ethereum_client_scripts/rethPruneConfig.js";
 import { resolveGethExecutionType } from "./ethereum_client_scripts/gethExecutionType.js";
+import { resolveNethermindExecutionType } from "./ethereum_client_scripts/nethermindExecutionType.js";
 import { restoreRethReceipts } from "./ethereum_client_scripts/rethReceiptRestore.js";
 import { debugToFile } from "./helpers.js";
 import {
@@ -221,6 +222,8 @@ process.on("unhandledRejection", (reason, promise) => {
 let bgConsensusPeers = [];
 let bgConsensusAddrs;
 
+const EXECUTION_CLIENTS = ["geth", "reth", "nethermind"];
+
 async function startClient(
   clientName,
   executionType,
@@ -240,6 +243,14 @@ async function startClient(
     clientArgs.push("--executiontype", executionType);
     if (debugTrace) clientArgs.push("--debugtrace");
     clientCommand = path.join(__dirname, "ethereum_client_scripts/reth.js");
+  } else if (clientName === "nethermind") {
+    clientArgs.push("--executionpeerport", executionPeerPort);
+    clientArgs.push("--executiontype", executionType);
+    if (debugTrace) clientArgs.push("--debugtrace");
+    clientCommand = path.join(
+      __dirname,
+      "ethereum_client_scripts/nethermind.js"
+    );
   } else if (clientName === "prysm") {
     bgConsensusPeers = await fetchBGConsensusPeers();
     bgConsensusAddrs = await configureBGConsensusPeers(consensusClient);
@@ -297,7 +308,7 @@ async function startClient(
     env: { ...process.env, INSTALL_DIR: installDir },
   });
 
-  if (clientName === "geth" || clientName === "reth") {
+  if (EXECUTION_CLIENTS.includes(clientName)) {
     executionChild = child;
   } else if (clientName === "prysm" || clientName === "lighthouse") {
     consensusChild = child;
@@ -320,7 +331,7 @@ async function startClient(
       });
     }
 
-    if (clientName === "geth" || clientName === "reth") {
+    if (EXECUTION_CLIENTS.includes(clientName)) {
       executionExited = true;
     } else if (clientName === "prysm" || clientName === "lighthouse") {
       consensusExited = true;
@@ -413,6 +424,8 @@ if (!isAlreadyRunning()) {
   const nodeExecutionType =
     executionClient === "reth"
       ? resolveRethExecutionType({ installDir, requested: executionType })
+      : executionClient === "nethermind"
+      ? resolveNethermindExecutionType({ installDir, requested: executionType })
       : resolveGethExecutionType({ installDir, requested: executionType });
 
   // BLOCKING: if reth needs a database snapshot, download it now — before the
@@ -444,7 +457,7 @@ if (!isAlreadyRunning()) {
   if (addInterfoldReceipts) {
     if (executionClient !== "reth") {
       console.log(
-        "\n[bg] --add-interfold-receipts only applies to reth; ignoring it for geth.\n"
+        `\n[bg] --add-interfold-receipts only applies to reth; ignoring it for ${executionClient}.\n`
       );
     } else {
       try {

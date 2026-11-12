@@ -19,10 +19,12 @@ export function createGethStageGauge(grid) {
   return gethStageGauge;
 }
 
-export function populateGethStageGauge(stagePercentages) {
+// Also used for nethermind, with its own stage names.
+export function populateGethStageGauge(
+  stagePercentages,
+  stageNames = ["HEADERS", "CHAIN", "STATE"]
+) {
   try {
-    // Define the custom stage names inside the function
-    const stageNames = ["HEADERS", "CHAIN", "STATE"];
 
     // Get the width of the gethStageGauge box
     const boxWidth = gethStageGauge.width - 9; // Subtracting 9 for padding/border

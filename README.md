@@ -57,9 +57,9 @@ Use the --archive flag to perform an archive sync for the execution client:
   node index.js --archive
   ```
 
-Omitting the --archive flag will make the execution clients perform a pruned sync that will give you full access to data from the last 10,064 blocks for Reth or the last 128 blocks for Geth.
+Omitting the --archive flag will make the execution clients perform a pruned sync that will give you full access to data from the last 10,064 blocks for Reth and Nethermind or the last 128 blocks for Geth.
 
-Use the --debug-trace flag to also serve the debug and trace RPC namespaces on port 8545 (trace is Reth only). It's off by default. Only turn it on if you need these calls (e.g. transaction simulation): anyone who can reach port 8545 can use them, and they can be heavy.
+Use the --debug-trace flag to also serve the debug and trace RPC namespaces on port 8545 (trace is Reth and Nethermind only). It's off by default. Only turn it on if you need these calls (e.g. transaction simulation): anyone who can reach port 8545 can use them, and they can be heavy.
   ```bash
   node index.js --archive --debug-trace
   ```
@@ -91,6 +91,8 @@ If you want to use a Geth + Prysm client pair, pass those as --executionclient (
   node index.js --executionclient geth --consensusclient prysm
   ```
 
+Nethermind is also available as an execution client (`--executionclient nethermind`). It needs `unzip` to install. A full node snap-syncs (there are no full-node snapshots) and keeps transactions from the merge and receipts from block 20,650,000, the history an Interfold ciphernode needs. With `--archive` it restores the official Nethermind archive snapshot (about 2 TB; set `NETHERMIND_SNAPSHOT=skip` to sync from genesis instead). Nethermind 2.2.2 can't report its history floor yet, so BG RPC treats it as unknown.
+
 &nbsp;
 &nbsp;
 
@@ -106,7 +108,7 @@ Use the --help (-h) option to see all command line options:
   ```bash
   node index.js --help
 
-  -e, --executionclient <client>            Specify the execution client ('reth' or 'geth')
+  -e, --executionclient <client>            Specify the execution client ('reth', 'geth' or 'nethermind')
                                             Default: reth
 
   -c, --consensusclient <client>            Specify the consensus client ('lighthouse' or 'prysm')
@@ -115,7 +117,7 @@ Use the --help (-h) option to see all command line options:
        --archive                            Perform an archive sync for the execution client
 
        --debug-trace                        Also serve the debug and trace RPC namespaces on port 8545 (off by default)
-                                            Note: trace is reth only; these calls can be heavy
+                                            Note: trace is reth and nethermind only; these calls can be heavy
 
   -ep, --executionpeerport <port>           Specify the execution peer port (must be a number)
                                             Default: 30303

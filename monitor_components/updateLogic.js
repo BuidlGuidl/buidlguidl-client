@@ -32,6 +32,49 @@ let gethStageProgress = [
   progress.stateDlProgress,
 ];
 
+// Nethermind sync stages, parsed from its progress log lines (not persisted:
+// nethermind reprints every stage's progress while it syncs).
+const nethermindStageNames = ["OLD HEADERS", "OLD BODIES", "OLD RECEIPTS", "STATE"];
+let nethermindStageProgress = [0, 0, 0, 0];
+
+// Nethermind 2.2.2 formats, from its SyncReport / ProgressLogger / snap
+// ProgressTracker:
+//   "Old Headers     1,234,567 / 24,000,000 (  5.14 %) | queue ..."
+//   "Snap         State Ranges (Phase 1 of 2): (  42.10 %) [...]"
+//   "Snap - State Ranges (Phase 1 of 2) finished."
+const NETHERMIND_FAST_BLOCKS =
+  /\b(Old Headers|Old Bodies|Old Receipts)\s+[\d,]+\s*\/\s*[\d,]+\s*\(\s*([\d.]+)\s*%\)/;
+const NETHERMIND_SNAP_RANGES = /State Ranges \(Phase 1 of 2\): \(\s*([\d.]+)\s*%\)/;
+
+function saveNethermindStageProgress(line) {
+  line = stripAnsiCodes(line);
+  const fast = line.match(NETHERMIND_FAST_BLOCKS);
+  if (fast) {
+    const index = ["Old Headers", "Old Bodies", "Old Receipts"].indexOf(fast[1]);
+    nethermindStageProgress[index] = Math.min(1, parseFloat(fast[2]) / 100);
+    return true;
+  }
+  const snap = line.match(NETHERMIND_SNAP_RANGES);
+  if (snap) {
+    nethermindStageProgress[3] = Math.min(1, parseFloat(snap[1]) / 100);
+    return true;
+  }
+  if (line.includes("Snap - State Ranges (Phase 1 of 2)") && /finished/.test(line)) {
+    nethermindStageProgress[3] = 1;
+    return true;
+  }
+  return false;
+}
+
+// Block number from a nethermind new-block line: "Received New Block:  N (0x..)"
+// (engine API) or "Processed          N | ..." / "Processed  N...M | ...".
+function nethermindBlockNumber(line) {
+  const m =
+    line.match(/New Block:\s+(\d+)/) ||
+    line.match(/Processed\s+(?:\d+\.\.\.)?\s*(\d+)\s+\|/);
+  return m ? parseInt(m[1], 10) : null;
+}
+
 // Store Reth version at module level
 let rethVersion = null;
 // Add a counter to track block numbers
@@ -177,6 +220,27 @@ export function setupLogStreaming(
             saveHeaderDlProgress(line);
             saveStateDlProgress(line);
             saveChainDlProgress(line);
+          }
+
+          if (client == "nethermind") {
+            if (
+              saveNethermindStageProgress(line) &&
+              screen.children.includes(gethStageGauge)
+            ) {
+              populateGethStageGauge(
+                nethermindStageProgress,
+                nethermindStageNames
+              );
+            }
+            const blockNumber = nethermindBlockNumber(stripAnsiCodes(line));
+            if (blockNumber && blockNumber > lastKnownBlockNumber) {
+              lastKnownBlockNumber = blockNumber;
+              try {
+                await checkIn();
+              } catch (error) {
+                debugToFile(`Error calling checkIn: ${error}`);
+              }
+            }
           }
 
           // Check for new block
@@ -861,7 +925,7 @@ async function calcSyncingStatus(executionClient) {
         isSyncing = false;
       }
       // If none of the conditions are met, isSyncing remains false
-    } else if (executionClient === "geth") {
+    } else if (executionClient === "geth" || executionClient === "nethermind") {
       isSyncing = !!syncingStatus; // Convert to boolean
     }
 
@@ -943,7 +1007,7 @@ export async function synchronizeAndUpdateWidgets(installDir) {
       executionClient
     );
 
-    if (executionClient == "geth") {
+    if (executionClient == "geth" || executionClient == "nethermind") {
       if (syncingStatus) {
         const currentBlock = parseInt(syncingStatus.currentBlock, 16);
         const highestBlock = parseInt(syncingStatus.highestBlock, 16);
