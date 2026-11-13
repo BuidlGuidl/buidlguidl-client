@@ -1,0 +1,1575 @@
+# HELP active_validators_count 
+# TYPE active_validators_count gauge
+active_validators_count 0
+# HELP aggregate_and_proof_signatures 
+# TYPE aggregate_and_proof_signatures gauge
+aggregate_and_proof_signatures 0
+# HELP aggregate_attestation 
+# TYPE aggregate_attestation gauge
+aggregate_attestation 0
+# HELP aggregate_quality_25 
+# TYPE aggregate_quality_25 gauge
+aggregate_quality_25 0
+# HELP aggregate_quality_50 
+# TYPE aggregate_quality_50 gauge
+aggregate_quality_50 0
+# HELP aggregate_quality_75 
+# TYPE aggregate_quality_75 gauge
+aggregate_quality_75 0
+# HELP aggregate_quality_max 
+# TYPE aggregate_quality_max gauge
+aggregate_quality_max 0
+# HELP aggregate_quality_min 
+# TYPE aggregate_quality_min gauge
+aggregate_quality_min 0
+# HELP aggregation_per_signature 
+# TYPE aggregation_per_signature gauge
+aggregation_per_signature 0
+# HELP attestation_block_processing_time 
+# TYPE attestation_block_processing_time gauge
+attestation_block_processing_time 0
+# HELP blob_verification_time 
+# TYPE blob_verification_time gauge
+blob_verification_time 0
+# HELP block_consumer_delay 
+# TYPE block_consumer_delay summary
+block_consumer_delay{type="body_download",quantile="0.5"} NaN
+block_consumer_delay{type="body_download",quantile="0.9"} NaN
+block_consumer_delay{type="body_download",quantile="0.97"} NaN
+block_consumer_delay{type="body_download",quantile="0.99"} NaN
+block_consumer_delay_sum{type="body_download"} 0
+block_consumer_delay_count{type="body_download"} 0
+block_consumer_delay{type="header_download",quantile="0.5"} NaN
+block_consumer_delay{type="header_download",quantile="0.9"} NaN
+block_consumer_delay{type="header_download",quantile="0.97"} NaN
+block_consumer_delay{type="header_download",quantile="0.99"} NaN
+block_consumer_delay_sum{type="header_download"} 0
+block_consumer_delay_count{type="header_download"} 0
+block_consumer_delay{type="post_execution",quantile="0.5"} NaN
+block_consumer_delay{type="post_execution",quantile="0.9"} NaN
+block_consumer_delay{type="post_execution",quantile="0.97"} NaN
+block_consumer_delay{type="post_execution",quantile="0.99"} NaN
+block_consumer_delay_sum{type="post_execution"} 0
+block_consumer_delay_count{type="post_execution"} 0
+block_consumer_delay{type="pre_execution",quantile="0.5"} NaN
+block_consumer_delay{type="pre_execution",quantile="0.9"} NaN
+block_consumer_delay{type="pre_execution",quantile="0.97"} NaN
+block_consumer_delay{type="pre_execution",quantile="0.99"} NaN
+block_consumer_delay_sum{type="pre_execution"} 0
+block_consumer_delay_count{type="pre_execution"} 0
+# HELP block_consumer_delay_hist 
+# TYPE block_consumer_delay_hist histogram
+block_consumer_delay_hist_bucket{type="body_download",le="0.05"} 0
+block_consumer_delay_hist_bucket{type="body_download",le="0.125"} 0
+block_consumer_delay_hist_bucket{type="body_download",le="0.25"} 0
+block_consumer_delay_hist_bucket{type="body_download",le="0.5"} 0
+block_consumer_delay_hist_bucket{type="body_download",le="1"} 0
+block_consumer_delay_hist_bucket{type="body_download",le="2"} 0
+block_consumer_delay_hist_bucket{type="body_download",le="4"} 0
+block_consumer_delay_hist_bucket{type="body_download",le="8"} 0
+block_consumer_delay_hist_bucket{type="body_download",le="+Inf"} 0
+block_consumer_delay_hist_sum{type="body_download"} 0
+block_consumer_delay_hist_count{type="body_download"} 0
+block_consumer_delay_hist_bucket{type="header_download",le="0.05"} 0
+block_consumer_delay_hist_bucket{type="header_download",le="0.125"} 0
+block_consumer_delay_hist_bucket{type="header_download",le="0.25"} 0
+block_consumer_delay_hist_bucket{type="header_download",le="0.5"} 0
+block_consumer_delay_hist_bucket{type="header_download",le="1"} 0
+block_consumer_delay_hist_bucket{type="header_download",le="2"} 0
+block_consumer_delay_hist_bucket{type="header_download",le="4"} 0
+block_consumer_delay_hist_bucket{type="header_download",le="8"} 0
+block_consumer_delay_hist_bucket{type="header_download",le="+Inf"} 0
+block_consumer_delay_hist_sum{type="header_download"} 0
+block_consumer_delay_hist_count{type="header_download"} 0
+block_consumer_delay_hist_bucket{type="post_execution",le="0.05"} 0
+block_consumer_delay_hist_bucket{type="post_execution",le="0.125"} 0
+block_consumer_delay_hist_bucket{type="post_execution",le="0.25"} 0
+block_consumer_delay_hist_bucket{type="post_execution",le="0.5"} 0
+block_consumer_delay_hist_bucket{type="post_execution",le="1"} 0
+block_consumer_delay_hist_bucket{type="post_execution",le="2"} 0
+block_consumer_delay_hist_bucket{type="post_execution",le="4"} 0
+block_consumer_delay_hist_bucket{type="post_execution",le="8"} 0
+block_consumer_delay_hist_bucket{type="post_execution",le="+Inf"} 0
+block_consumer_delay_hist_sum{type="post_execution"} 0
+block_consumer_delay_hist_count{type="post_execution"} 0
+block_consumer_delay_hist_bucket{type="pre_execution",le="0.05"} 0
+block_consumer_delay_hist_bucket{type="pre_execution",le="0.125"} 0
+block_consumer_delay_hist_bucket{type="pre_execution",le="0.25"} 0
+block_consumer_delay_hist_bucket{type="pre_execution",le="0.5"} 0
+block_consumer_delay_hist_bucket{type="pre_execution",le="1"} 0
+block_consumer_delay_hist_bucket{type="pre_execution",le="2"} 0
+block_consumer_delay_hist_bucket{type="pre_execution",le="4"} 0
+block_consumer_delay_hist_bucket{type="pre_execution",le="8"} 0
+block_consumer_delay_hist_bucket{type="pre_execution",le="+Inf"} 0
+block_consumer_delay_hist_sum{type="pre_execution"} 0
+block_consumer_delay_hist_count{type="pre_execution"} 0
+# HELP block_importing_latency 
+# TYPE block_importing_latency gauge
+block_importing_latency 0
+# HELP block_producer_delay 
+# TYPE block_producer_delay summary
+block_producer_delay{type="production",quantile="0.5"} NaN
+block_producer_delay{type="production",quantile="0.9"} NaN
+block_producer_delay{type="production",quantile="0.97"} NaN
+block_producer_delay{type="production",quantile="0.99"} NaN
+block_producer_delay_sum{type="production"} 0
+block_producer_delay_count{type="production"} 0
+# HELP branch_key_deref 
+# TYPE branch_key_deref summary
+branch_key_deref{level="L0",quantile="0.5"} NaN
+branch_key_deref{level="L0",quantile="0.9"} NaN
+branch_key_deref{level="L0",quantile="0.97"} NaN
+branch_key_deref{level="L0",quantile="0.99"} NaN
+branch_key_deref_sum{level="L0"} 0
+branch_key_deref_count{level="L0"} 0
+branch_key_deref{level="L1",quantile="0.5"} NaN
+branch_key_deref{level="L1",quantile="0.9"} NaN
+branch_key_deref{level="L1",quantile="0.97"} NaN
+branch_key_deref{level="L1",quantile="0.99"} NaN
+branch_key_deref_sum{level="L1"} 0
+branch_key_deref_count{level="L1"} 0
+branch_key_deref{level="L2",quantile="0.5"} NaN
+branch_key_deref{level="L2",quantile="0.9"} NaN
+branch_key_deref{level="L2",quantile="0.97"} NaN
+branch_key_deref{level="L2",quantile="0.99"} NaN
+branch_key_deref_sum{level="L2"} 0
+branch_key_deref_count{level="L2"} 0
+branch_key_deref{level="L3",quantile="0.5"} NaN
+branch_key_deref{level="L3",quantile="0.9"} NaN
+branch_key_deref{level="L3",quantile="0.97"} NaN
+branch_key_deref{level="L3",quantile="0.99"} NaN
+branch_key_deref_sum{level="L3"} 0
+branch_key_deref_count{level="L3"} 0
+branch_key_deref{level="L4",quantile="0.5"} NaN
+branch_key_deref{level="L4",quantile="0.9"} NaN
+branch_key_deref{level="L4",quantile="0.97"} NaN
+branch_key_deref{level="L4",quantile="0.99"} NaN
+branch_key_deref_sum{level="L4"} 0
+branch_key_deref_count{level="L4"} 0
+branch_key_deref{level="recent",quantile="0.5"} NaN
+branch_key_deref{level="recent",quantile="0.9"} NaN
+branch_key_deref{level="recent",quantile="0.97"} NaN
+branch_key_deref{level="recent",quantile="0.99"} NaN
+branch_key_deref_sum{level="recent"} 0
+branch_key_deref_count{level="recent"} 0
+# HELP cache_total 
+# TYPE cache_total counter
+cache_total{target="acc_read"} 0
+cache_total{target="st_read"} 0
+cache_total{target="write"} 0
+# HELP chain_execution_seconds 
+# TYPE chain_execution_seconds summary
+chain_execution_seconds{quantile="0.5"} NaN
+chain_execution_seconds{quantile="0.9"} NaN
+chain_execution_seconds{quantile="0.97"} NaN
+chain_execution_seconds{quantile="0.99"} NaN
+chain_execution_seconds_sum 0
+chain_execution_seconds_count 0
+# HELP chain_tip_mgas_per_sec 
+# TYPE chain_tip_mgas_per_sec gauge
+chain_tip_mgas_per_sec 0
+# HELP client_requests_checkpoint_duration 
+# TYPE client_requests_checkpoint_duration summary
+client_requests_checkpoint_duration{quantile="0.5"} NaN
+client_requests_checkpoint_duration{quantile="0.9"} NaN
+client_requests_checkpoint_duration{quantile="0.97"} NaN
+client_requests_checkpoint_duration{quantile="0.99"} NaN
+client_requests_checkpoint_duration_sum 0
+client_requests_checkpoint_duration_count 0
+# HELP client_requests_checkpoint_invalid 
+# TYPE client_requests_checkpoint_invalid gauge
+client_requests_checkpoint_invalid 0
+# HELP client_requests_checkpoint_valid 
+# TYPE client_requests_checkpoint_valid gauge
+client_requests_checkpoint_valid 0
+# HELP client_requests_checkpointcount_duration 
+# TYPE client_requests_checkpointcount_duration summary
+client_requests_checkpointcount_duration{quantile="0.5"} NaN
+client_requests_checkpointcount_duration{quantile="0.9"} NaN
+client_requests_checkpointcount_duration{quantile="0.97"} NaN
+client_requests_checkpointcount_duration{quantile="0.99"} NaN
+client_requests_checkpointcount_duration_sum 0
+client_requests_checkpointcount_duration_count 0
+# HELP client_requests_checkpointcount_invalid 
+# TYPE client_requests_checkpointcount_invalid gauge
+client_requests_checkpointcount_invalid 0
+# HELP client_requests_checkpointcount_valid 
+# TYPE client_requests_checkpointcount_valid gauge
+client_requests_checkpointcount_valid 0
+# HELP client_requests_span_duration 
+# TYPE client_requests_span_duration summary
+client_requests_span_duration{quantile="0.5"} NaN
+client_requests_span_duration{quantile="0.9"} NaN
+client_requests_span_duration{quantile="0.97"} NaN
+client_requests_span_duration{quantile="0.99"} NaN
+client_requests_span_duration_sum 0
+client_requests_span_duration_count 0
+# HELP client_requests_span_invalid 
+# TYPE client_requests_span_invalid gauge
+client_requests_span_invalid 0
+# HELP client_requests_span_valid 
+# TYPE client_requests_span_valid gauge
+client_requests_span_valid 0
+# HELP client_requests_statesync_duration 
+# TYPE client_requests_statesync_duration summary
+client_requests_statesync_duration{quantile="0.5"} NaN
+client_requests_statesync_duration{quantile="0.9"} NaN
+client_requests_statesync_duration{quantile="0.97"} NaN
+client_requests_statesync_duration{quantile="0.99"} NaN
+client_requests_statesync_duration_sum 0
+client_requests_statesync_duration_count 0
+# HELP client_requests_statesync_invalid 
+# TYPE client_requests_statesync_invalid gauge
+client_requests_statesync_invalid 0
+# HELP client_requests_statesync_valid 
+# TYPE client_requests_statesync_valid gauge
+client_requests_statesync_valid 0
+# HELP committee_size 
+# TYPE committee_size gauge
+committee_size 0
+# HELP compute_shuffled_indices 
+# TYPE compute_shuffled_indices gauge
+compute_shuffled_indices 0
+# HELP current_epoch 
+# TYPE current_epoch gauge
+current_epoch 0
+# HELP current_slot 
+# TYPE current_slot gauge
+current_slot 0
+# HELP db_commit_seconds 
+# TYPE db_commit_seconds summary
+db_commit_seconds{db="chaindata",phase="ending",quantile="0.5"} NaN
+db_commit_seconds{db="chaindata",phase="ending",quantile="0.9"} NaN
+db_commit_seconds{db="chaindata",phase="ending",quantile="0.97"} NaN
+db_commit_seconds{db="chaindata",phase="ending",quantile="0.99"} NaN
+db_commit_seconds_sum{db="chaindata",phase="ending"} 0
+db_commit_seconds_count{db="chaindata",phase="ending"} 9
+db_commit_seconds{db="chaindata",phase="preparation",quantile="0.5"} NaN
+db_commit_seconds{db="chaindata",phase="preparation",quantile="0.9"} NaN
+db_commit_seconds{db="chaindata",phase="preparation",quantile="0.97"} NaN
+db_commit_seconds{db="chaindata",phase="preparation",quantile="0.99"} NaN
+db_commit_seconds_sum{db="chaindata",phase="preparation"} 3.0516e-05
+db_commit_seconds_count{db="chaindata",phase="preparation"} 9
+db_commit_seconds{db="chaindata",phase="sync",quantile="0.5"} NaN
+db_commit_seconds{db="chaindata",phase="sync",quantile="0.9"} NaN
+db_commit_seconds{db="chaindata",phase="sync",quantile="0.97"} NaN
+db_commit_seconds{db="chaindata",phase="sync",quantile="0.99"} NaN
+db_commit_seconds_sum{db="chaindata",phase="sync"} 0.00724755
+db_commit_seconds_count{db="chaindata",phase="sync"} 9
+db_commit_seconds{db="chaindata",phase="total",quantile="0.5"} NaN
+db_commit_seconds{db="chaindata",phase="total",quantile="0.9"} NaN
+db_commit_seconds{db="chaindata",phase="total",quantile="0.97"} NaN
+db_commit_seconds{db="chaindata",phase="total",quantile="0.99"} NaN
+db_commit_seconds_sum{db="chaindata",phase="total"} 0.007415388
+db_commit_seconds_count{db="chaindata",phase="total"} 9
+db_commit_seconds{db="chaindata",phase="write",quantile="0.5"} NaN
+db_commit_seconds{db="chaindata",phase="write",quantile="0.9"} NaN
+db_commit_seconds{db="chaindata",phase="write",quantile="0.97"} NaN
+db_commit_seconds{db="chaindata",phase="write",quantile="0.99"} NaN
+db_commit_seconds_sum{db="chaindata",phase="write"} 0
+db_commit_seconds_count{db="chaindata",phase="write"} 9
+# HELP db_gc_leaf gauge metric
+# TYPE db_gc_leaf gauge
+db_gc_leaf{db="chaindata"} 1
+# HELP db_gc_overflow gauge metric
+# TYPE db_gc_overflow gauge
+db_gc_overflow{db="chaindata"} 0
+# HELP db_gc_pages gauge metric
+# TYPE db_gc_pages gauge
+db_gc_pages{db="chaindata"} 2048
+# HELP db_pgops gauge metric
+# TYPE db_pgops gauge
+db_pgops{db="chaindata",phase="clone"} 0
+db_pgops{db="chaindata",phase="cow"} 7
+db_pgops{db="chaindata",phase="merge"} 0
+db_pgops{db="chaindata",phase="newly"} 55
+db_pgops{db="chaindata",phase="spill"} 0
+db_pgops{db="chaindata",phase="split"} 0
+db_pgops{db="chaindata",phase="unspill"} 0
+db_pgops{db="chaindata",phase="wops"} 1
+# HELP db_size gauge metric
+# TYPE db_size gauge
+db_size{db="chaindata"} 3.3554432e+07
+# HELP db_table_size_bytes gauge metric
+# TYPE db_table_size_bytes gauge
+db_table_size_bytes{db="chaindata",table="AccountChangeSet"} 0
+db_table_size_bytes{db="chaindata",table="AccountHistory"} 0
+db_table_size_bytes{db="chaindata",table="AccountHistoryKeys"} 0
+db_table_size_bytes{db="chaindata",table="AccountHistoryVals"} 0
+db_table_size_bytes{db="chaindata",table="AccountIdx"} 0
+db_table_size_bytes{db="chaindata",table="AccountVals"} 0
+db_table_size_bytes{db="chaindata",table="ActiveValidatorIndicies"} 0
+db_table_size_bytes{db="chaindata",table="BadHeaderNumber"} 0
+db_table_size_bytes{db="chaindata",table="BalancesDump"} 0
+db_table_size_bytes{db="chaindata",table="BeaconBlock"} 0
+db_table_size_bytes{db="chaindata",table="BeaconBlockHeaders"} 0
+db_table_size_bytes{db="chaindata",table="BlockBody"} 16384
+db_table_size_bytes{db="chaindata",table="BlockBorTransactionLookup"} 0
+db_table_size_bytes{db="chaindata",table="BlockProposers"} 0
+db_table_size_bytes{db="chaindata",table="BlockRoot"} 0
+db_table_size_bytes{db="chaindata",table="BlockRootToBlockHash"} 0
+db_table_size_bytes{db="chaindata",table="BlockRootToBlockNumber"} 0
+db_table_size_bytes{db="chaindata",table="BlockRootToDataColumnCount"} 0
+db_table_size_bytes{db="chaindata",table="BlockRootToKzgCommitments"} 0
+db_table_size_bytes{db="chaindata",table="BlockRootToParentRoot"} 0
+db_table_size_bytes{db="chaindata",table="BlockRootToSlot"} 0
+db_table_size_bytes{db="chaindata",table="BlockRootToStateRoot"} 0
+db_table_size_bytes{db="chaindata",table="BlockTransaction"} 0
+db_table_size_bytes{db="chaindata",table="BlockTransactionLookup"} 0
+db_table_size_bytes{db="chaindata",table="BorCheckpointEnds"} 0
+db_table_size_bytes{db="chaindata",table="BorCheckpoints"} 0
+db_table_size_bytes{db="chaindata",table="BorEventNums"} 0
+db_table_size_bytes{db="chaindata",table="BorEventProcessedBlocks"} 0
+db_table_size_bytes{db="chaindata",table="BorEventTimes"} 0
+db_table_size_bytes{db="chaindata",table="BorEvents"} 0
+db_table_size_bytes{db="chaindata",table="BorMilestoneEnds"} 0
+db_table_size_bytes{db="chaindata",table="BorMilestones"} 0
+db_table_size_bytes{db="chaindata",table="BorProducerSelections"} 0
+db_table_size_bytes{db="chaindata",table="BorProducerSelectionsIndex"} 0
+db_table_size_bytes{db="chaindata",table="BorSpans"} 0
+db_table_size_bytes{db="chaindata",table="BorSpansIndex"} 0
+db_table_size_bytes{db="chaindata",table="BorWitnessSizes"} 0
+db_table_size_bytes{db="chaindata",table="BorWitnesses"} 0
+db_table_size_bytes{db="chaindata",table="CanonicalBlockRoots"} 0
+db_table_size_bytes{db="chaindata",table="CanonicalHeader"} 16384
+db_table_size_bytes{db="chaindata",table="ChangeSets3"} 0
+db_table_size_bytes{db="chaindata",table="CodeHistoryKeys"} 0
+db_table_size_bytes{db="chaindata",table="CodeHistoryVals"} 0
+db_table_size_bytes{db="chaindata",table="CodeIdx"} 0
+db_table_size_bytes{db="chaindata",table="CodeVals"} 0
+db_table_size_bytes{db="chaindata",table="CommitmentHistoryKeys"} 0
+db_table_size_bytes{db="chaindata",table="CommitmentHistoryVals"} 0
+db_table_size_bytes{db="chaindata",table="CommitmentIdx"} 0
+db_table_size_bytes{db="chaindata",table="CommitmentVals"} 0
+db_table_size_bytes{db="chaindata",table="Config"} 720896
+db_table_size_bytes{db="chaindata",table="CurrentSyncCommittee"} 0
+db_table_size_bytes{db="chaindata",table="DbInfo"} 16384
+db_table_size_bytes{db="chaindata",table="DevEpoch"} 0
+db_table_size_bytes{db="chaindata",table="DevPendingEpoch"} 0
+db_table_size_bytes{db="chaindata",table="EffectiveBalancesDump"} 0
+db_table_size_bytes{db="chaindata",table="EpochData"} 0
+db_table_size_bytes{db="chaindata",table="Eth1DataVotes"} 0
+db_table_size_bytes{db="chaindata",table="Freelist"} 16384
+db_table_size_bytes{db="chaindata",table="HashedAccount"} 0
+db_table_size_bytes{db="chaindata",table="HashedStorage"} 0
+db_table_size_bytes{db="chaindata",table="Header"} 16384
+db_table_size_bytes{db="chaindata",table="HeaderNumber"} 16384
+db_table_size_bytes{db="chaindata",table="HeadersTotalDifficulty"} 16384
+db_table_size_bytes{db="chaindata",table="HighestFinalized"} 0
+db_table_size_bytes{db="chaindata",table="InactivityScores"} 0
+db_table_size_bytes{db="chaindata",table="IntraRandaoMixes"} 0
+db_table_size_bytes{db="chaindata",table="LastBeaconSnapshot"} 0
+db_table_size_bytes{db="chaindata",table="LastBlock"} 16384
+db_table_size_bytes{db="chaindata",table="LastForkchoice"} 0
+db_table_size_bytes{db="chaindata",table="LastHeader"} 16384
+db_table_size_bytes{db="chaindata",table="LogAddressIdx"} 0
+db_table_size_bytes{db="chaindata",table="LogAddressKeys"} 0
+db_table_size_bytes{db="chaindata",table="LogTopicsIdx"} 0
+db_table_size_bytes{db="chaindata",table="LogTopicsKeys"} 0
+db_table_size_bytes{db="chaindata",table="MaxTxNum"} 16384
+db_table_size_bytes{db="chaindata",table="Migration"} 16384
+db_table_size_bytes{db="chaindata",table="NextSyncCommittee"} 0
+db_table_size_bytes{db="chaindata",table="ParentRootToBlockRoots"} 0
+db_table_size_bytes{db="chaindata",table="PendingConsolidations"} 0
+db_table_size_bytes{db="chaindata",table="PendingConsolidationsDump"} 0
+db_table_size_bytes{db="chaindata",table="PendingDeposits"} 0
+db_table_size_bytes{db="chaindata",table="PendingDepositsDump"} 0
+db_table_size_bytes{db="chaindata",table="PendingPartialWithdrawals"} 0
+db_table_size_bytes{db="chaindata",table="PendingPartialWithdrawalsDump"} 0
+db_table_size_bytes{db="chaindata",table="PlainState"} 0
+db_table_size_bytes{db="chaindata",table="PruningProgress"} 0
+db_table_size_bytes{db="chaindata",table="RandaoMixes"} 0
+db_table_size_bytes{db="chaindata",table="ReceiptCacheHistoryKeys"} 0
+db_table_size_bytes{db="chaindata",table="ReceiptCacheHistoryVals"} 0
+db_table_size_bytes{db="chaindata",table="ReceiptCacheIdx"} 0
+db_table_size_bytes{db="chaindata",table="ReceiptCacheVals"} 0
+db_table_size_bytes{db="chaindata",table="ReceiptHistoryKeys"} 0
+db_table_size_bytes{db="chaindata",table="ReceiptHistoryVals"} 0
+db_table_size_bytes{db="chaindata",table="ReceiptIdx"} 0
+db_table_size_bytes{db="chaindata",table="ReceiptVals"} 0
+db_table_size_bytes{db="chaindata",table="ReclaimableSpace"} 6.7108864e+07
+db_table_size_bytes{db="chaindata",table="Sequence"} 16384
+db_table_size_bytes{db="chaindata",table="SlotData"} 0
+db_table_size_bytes{db="chaindata",table="StateEvents"} 0
+db_table_size_bytes{db="chaindata",table="StateRoot"} 0
+db_table_size_bytes{db="chaindata",table="StateRootToBlockRoot"} 0
+db_table_size_bytes{db="chaindata",table="StatesProcessingProgress"} 0
+db_table_size_bytes{db="chaindata",table="StaticValidators"} 0
+db_table_size_bytes{db="chaindata",table="StorageChangeSet"} 0
+db_table_size_bytes{db="chaindata",table="StorageHistory"} 0
+db_table_size_bytes{db="chaindata",table="StorageHistoryKeys"} 0
+db_table_size_bytes{db="chaindata",table="StorageHistoryVals"} 0
+db_table_size_bytes{db="chaindata",table="StorageIdx"} 0
+db_table_size_bytes{db="chaindata",table="StorageVals"} 0
+db_table_size_bytes{db="chaindata",table="SyncStage"} 16384
+db_table_size_bytes{db="chaindata",table="TracesFromIdx"} 0
+db_table_size_bytes{db="chaindata",table="TracesFromKeys"} 0
+db_table_size_bytes{db="chaindata",table="TracesToIdx"} 0
+db_table_size_bytes{db="chaindata",table="TracesToKeys"} 0
+db_table_size_bytes{db="chaindata",table="TxSender"} 0
+db_table_size_bytes{db="chaindata",table="ValidatorBalance"} 0
+db_table_size_bytes{db="chaindata",table="ValidatorEffectiveBalance"} 0
+db_table_size_bytes{db="chaindata",table="ValidatorSlashings"} 0
+# HELP domain_build_files_took 
+# TYPE domain_build_files_took summary
+domain_build_files_took{quantile="0.5"} NaN
+domain_build_files_took{quantile="0.9"} NaN
+domain_build_files_took{quantile="0.97"} NaN
+domain_build_files_took{quantile="0.99"} NaN
+domain_build_files_took_sum 0
+domain_build_files_took_count 0
+# HELP domain_collate_took 
+# TYPE domain_collate_took histogram
+domain_collate_took_bucket{type="domain",le="0.005"} 0
+domain_collate_took_bucket{type="domain",le="0.01"} 0
+domain_collate_took_bucket{type="domain",le="0.025"} 0
+domain_collate_took_bucket{type="domain",le="0.05"} 0
+domain_collate_took_bucket{type="domain",le="0.1"} 0
+domain_collate_took_bucket{type="domain",le="0.25"} 0
+domain_collate_took_bucket{type="domain",le="0.5"} 0
+domain_collate_took_bucket{type="domain",le="1"} 0
+domain_collate_took_bucket{type="domain",le="2.5"} 0
+domain_collate_took_bucket{type="domain",le="5"} 0
+domain_collate_took_bucket{type="domain",le="10"} 0
+domain_collate_took_bucket{type="domain",le="+Inf"} 0
+domain_collate_took_sum{type="domain"} 0
+domain_collate_took_count{type="domain"} 0
+domain_collate_took_bucket{type="history",le="0.005"} 0
+domain_collate_took_bucket{type="history",le="0.01"} 0
+domain_collate_took_bucket{type="history",le="0.025"} 0
+domain_collate_took_bucket{type="history",le="0.05"} 0
+domain_collate_took_bucket{type="history",le="0.1"} 0
+domain_collate_took_bucket{type="history",le="0.25"} 0
+domain_collate_took_bucket{type="history",le="0.5"} 0
+domain_collate_took_bucket{type="history",le="1"} 0
+domain_collate_took_bucket{type="history",le="2.5"} 0
+domain_collate_took_bucket{type="history",le="5"} 0
+domain_collate_took_bucket{type="history",le="10"} 0
+domain_collate_took_bucket{type="history",le="+Inf"} 0
+domain_collate_took_sum{type="history"} 0
+domain_collate_took_count{type="history"} 0
+domain_collate_took_bucket{type="index",le="0.005"} 0
+domain_collate_took_bucket{type="index",le="0.01"} 0
+domain_collate_took_bucket{type="index",le="0.025"} 0
+domain_collate_took_bucket{type="index",le="0.05"} 0
+domain_collate_took_bucket{type="index",le="0.1"} 0
+domain_collate_took_bucket{type="index",le="0.25"} 0
+domain_collate_took_bucket{type="index",le="0.5"} 0
+domain_collate_took_bucket{type="index",le="1"} 0
+domain_collate_took_bucket{type="index",le="2.5"} 0
+domain_collate_took_bucket{type="index",le="5"} 0
+domain_collate_took_bucket{type="index",le="10"} 0
+domain_collate_took_bucket{type="index",le="+Inf"} 0
+domain_collate_took_sum{type="index"} 0
+domain_collate_took_count{type="index"} 0
+# HELP domain_collation_hist_size 
+# TYPE domain_collation_hist_size gauge
+domain_collation_hist_size 0
+# HELP domain_collation_size 
+# TYPE domain_collation_size gauge
+domain_collation_size 0
+# HELP domain_commitment_keys 
+# TYPE domain_commitment_keys counter
+domain_commitment_keys 8893
+# HELP domain_commitment_took 
+# TYPE domain_commitment_took summary
+domain_commitment_took{quantile="0.5"} NaN
+domain_commitment_took{quantile="0.9"} NaN
+domain_commitment_took{quantile="0.97"} NaN
+domain_commitment_took{quantile="0.99"} NaN
+domain_commitment_took_sum 0.024955949
+domain_commitment_took_count 1
+# HELP domain_commitment_updates_applied 
+# TYPE domain_commitment_updates_applied counter
+domain_commitment_updates_applied 3367
+# HELP domain_flush_took 
+# TYPE domain_flush_took summary
+domain_flush_took{quantile="0.5"} NaN
+domain_flush_took{quantile="0.9"} NaN
+domain_flush_took{quantile="0.97"} NaN
+domain_flush_took{quantile="0.99"} NaN
+domain_flush_took_sum 0
+domain_flush_took_count 0
+# HELP domain_prunable 
+# TYPE domain_prunable gauge
+domain_prunable{table="account",type="domain"} 0
+domain_prunable{table="account",type="history"} 0
+domain_prunable{table="code",type="domain"} 0
+domain_prunable{table="code",type="history"} 0
+domain_prunable{table="commitment",type="domain"} 0
+domain_prunable{table="commitment",type="history"} 0
+domain_prunable{table="storage",type="domain"} 0
+domain_prunable{table="storage",type="history"} 0
+# HELP domain_prune_size 
+# TYPE domain_prune_size counter
+domain_prune_size{type="domain"} 0
+domain_prune_size{type="history"} 0
+domain_prune_size{type="index"} 0
+# HELP domain_prune_took 
+# TYPE domain_prune_took histogram
+domain_prune_took_bucket{type="domain",le="0.005"} 0
+domain_prune_took_bucket{type="domain",le="0.01"} 0
+domain_prune_took_bucket{type="domain",le="0.025"} 0
+domain_prune_took_bucket{type="domain",le="0.05"} 0
+domain_prune_took_bucket{type="domain",le="0.1"} 0
+domain_prune_took_bucket{type="domain",le="0.25"} 0
+domain_prune_took_bucket{type="domain",le="0.5"} 0
+domain_prune_took_bucket{type="domain",le="1"} 0
+domain_prune_took_bucket{type="domain",le="2.5"} 0
+domain_prune_took_bucket{type="domain",le="5"} 0
+domain_prune_took_bucket{type="domain",le="10"} 0
+domain_prune_took_bucket{type="domain",le="+Inf"} 0
+domain_prune_took_sum{type="domain"} 0
+domain_prune_took_count{type="domain"} 0
+domain_prune_took_bucket{type="history",le="0.005"} 0
+domain_prune_took_bucket{type="history",le="0.01"} 0
+domain_prune_took_bucket{type="history",le="0.025"} 0
+domain_prune_took_bucket{type="history",le="0.05"} 0
+domain_prune_took_bucket{type="history",le="0.1"} 0
+domain_prune_took_bucket{type="history",le="0.25"} 0
+domain_prune_took_bucket{type="history",le="0.5"} 0
+domain_prune_took_bucket{type="history",le="1"} 0
+domain_prune_took_bucket{type="history",le="2.5"} 0
+domain_prune_took_bucket{type="history",le="5"} 0
+domain_prune_took_bucket{type="history",le="10"} 0
+domain_prune_took_bucket{type="history",le="+Inf"} 0
+domain_prune_took_sum{type="history"} 0
+domain_prune_took_count{type="history"} 0
+domain_prune_took_bucket{type="index",le="0.005"} 0
+domain_prune_took_bucket{type="index",le="0.01"} 0
+domain_prune_took_bucket{type="index",le="0.025"} 0
+domain_prune_took_bucket{type="index",le="0.05"} 0
+domain_prune_took_bucket{type="index",le="0.1"} 0
+domain_prune_took_bucket{type="index",le="0.25"} 0
+domain_prune_took_bucket{type="index",le="0.5"} 0
+domain_prune_took_bucket{type="index",le="1"} 0
+domain_prune_took_bucket{type="index",le="2.5"} 0
+domain_prune_took_bucket{type="index",le="5"} 0
+domain_prune_took_bucket{type="index",le="10"} 0
+domain_prune_took_bucket{type="index",le="+Inf"} 0
+domain_prune_took_sum{type="index"} 0
+domain_prune_took_count{type="index"} 0
+# HELP domain_pruning_progress 
+# TYPE domain_pruning_progress gauge
+domain_pruning_progress 0
+# HELP domain_running_commitment 
+# TYPE domain_running_commitment gauge
+domain_running_commitment 0
+# HELP domain_running_files_building 
+# TYPE domain_running_files_building gauge
+domain_running_files_building 0
+# HELP domain_running_merges 
+# TYPE domain_running_merges gauge
+domain_running_merges 0
+# HELP domain_running_unwind 
+# TYPE domain_running_unwind gauge
+domain_running_unwind 0
+# HELP domain_step_took 
+# TYPE domain_step_took summary
+domain_step_took{quantile="0.5"} NaN
+domain_step_took{quantile="0.9"} NaN
+domain_step_took{quantile="0.97"} NaN
+domain_step_took{quantile="0.99"} NaN
+domain_step_took_sum 0
+domain_step_took_count 0
+# HELP domain_unwind_took 
+# TYPE domain_unwind_took histogram
+domain_unwind_took_bucket{type="domain",le="0.005"} 0
+domain_unwind_took_bucket{type="domain",le="0.01"} 0
+domain_unwind_took_bucket{type="domain",le="0.025"} 0
+domain_unwind_took_bucket{type="domain",le="0.05"} 0
+domain_unwind_took_bucket{type="domain",le="0.1"} 0
+domain_unwind_took_bucket{type="domain",le="0.25"} 0
+domain_unwind_took_bucket{type="domain",le="0.5"} 0
+domain_unwind_took_bucket{type="domain",le="1"} 0
+domain_unwind_took_bucket{type="domain",le="2.5"} 0
+domain_unwind_took_bucket{type="domain",le="5"} 0
+domain_unwind_took_bucket{type="domain",le="10"} 0
+domain_unwind_took_bucket{type="domain",le="+Inf"} 0
+domain_unwind_took_sum{type="domain"} 0
+domain_unwind_took_count{type="domain"} 0
+# HELP epoch_processing_time 
+# TYPE epoch_processing_time gauge
+epoch_processing_time 0
+# HELP erigon_info 
+# TYPE erigon_info gauge
+erigon_info{commit="bc54d33cc4c9e2f44f3bbb30576560935ad2b40b",version="3.2.2"} 1
+# HELP exec_blocks 
+# TYPE exec_blocks gauge
+exec_blocks 0
+# HELP exec_gas 
+# TYPE exec_gas counter
+exec_gas 0
+# HELP exec_mgas 
+# TYPE exec_mgas gauge
+exec_mgas 0
+# HELP exec_repeats 
+# TYPE exec_repeats counter
+exec_repeats 0
+# HELP exec_steps_in_db 
+# TYPE exec_steps_in_db gauge
+exec_steps_in_db 0
+# HELP exec_triggers 
+# TYPE exec_triggers counter
+exec_triggers 0
+# HELP exec_txns 
+# TYPE exec_txns counter
+exec_txns 0
+# HELP exec_txs_done 
+# TYPE exec_txs_done counter
+exec_txs_done 0
+# HELP execution_client_insert_blocks_time 
+# TYPE execution_client_insert_blocks_time gauge
+execution_client_insert_blocks_time 0
+# HELP execution_client_validate_chain_time 
+# TYPE execution_client_validate_chain_time gauge
+execution_client_validate_chain_time 0
+# HELP execution_time 
+# TYPE execution_time gauge
+execution_time 0
+# HELP frozen_blobs 
+# TYPE frozen_blobs gauge
+frozen_blobs 0
+# HELP frozen_blocks 
+# TYPE frozen_blocks gauge
+frozen_blocks 0
+# HELP full_block_processing_time 
+# TYPE full_block_processing_time gauge
+full_block_processing_time 0
+# HELP go_cgo_calls_count 
+# TYPE go_cgo_calls_count gauge
+go_cgo_calls_count 5.3524628e+07
+# HELP go_gc_duration_seconds A summary of the wall-time pause (stop-the-world) duration in garbage collection cycles.
+# TYPE go_gc_duration_seconds summary
+go_gc_duration_seconds{quantile="0"} 3.1475e-05
+go_gc_duration_seconds{quantile="0.25"} 7.5473e-05
+go_gc_duration_seconds{quantile="0.5"} 0.000125848
+go_gc_duration_seconds{quantile="0.75"} 0.000264833
+go_gc_duration_seconds{quantile="1"} 0.321363116
+go_gc_duration_seconds_sum 1.7958267490000002
+go_gc_duration_seconds_count 247
+# HELP go_gc_gogc_percent Heap size target percentage configured by the user, otherwise 100. This value is set by the GOGC environment variable, and the runtime/debug.SetGCPercent function. Sourced from /gc/gogc:percent.
+# TYPE go_gc_gogc_percent gauge
+go_gc_gogc_percent 100
+# HELP go_gc_gomemlimit_bytes Go runtime memory limit configured by the user, otherwise math.MaxInt64. This value is set by the GOMEMLIMIT environment variable, and the runtime/debug.SetMemoryLimit function. Sourced from /gc/gomemlimit:bytes.
+# TYPE go_gc_gomemlimit_bytes gauge
+go_gc_gomemlimit_bytes 9.223372036854776e+18
+# HELP go_goroutines Number of goroutines that currently exist.
+# TYPE go_goroutines gauge
+go_goroutines 3935
+# HELP go_info Information about the Go environment.
+# TYPE go_info gauge
+go_info{version="go1.24.9"} 1
+# HELP go_memstats_alloc_bytes Number of bytes allocated in heap and currently in use. Equals to /memory/classes/heap/objects:bytes.
+# TYPE go_memstats_alloc_bytes gauge
+go_memstats_alloc_bytes 1.854999704e+09
+# HELP go_memstats_alloc_bytes_total Total number of bytes allocated in heap until now, even if released already. Equals to /gc/heap/allocs:bytes.
+# TYPE go_memstats_alloc_bytes_total counter
+go_memstats_alloc_bytes_total 1.44146061552e+11
+# HELP go_memstats_buck_hash_sys_bytes Number of bytes used by the profiling bucket hash table. Equals to /memory/classes/profiling/buckets:bytes.
+# TYPE go_memstats_buck_hash_sys_bytes gauge
+go_memstats_buck_hash_sys_bytes 2.426303e+06
+# HELP go_memstats_frees_total Total number of heap objects frees. Equals to /gc/heap/frees:objects + /gc/heap/tiny/allocs:objects.
+# TYPE go_memstats_frees_total counter
+go_memstats_frees_total 6.9016641e+08
+# HELP go_memstats_gc_sys_bytes Number of bytes used for garbage collection system metadata. Equals to /memory/classes/metadata/other:bytes.
+# TYPE go_memstats_gc_sys_bytes gauge
+go_memstats_gc_sys_bytes 2.6317896e+07
+# HELP go_memstats_heap_alloc_bytes Number of heap bytes allocated and currently in use, same as go_memstats_alloc_bytes. Equals to /memory/classes/heap/objects:bytes.
+# TYPE go_memstats_heap_alloc_bytes gauge
+go_memstats_heap_alloc_bytes 1.854999704e+09
+# HELP go_memstats_heap_idle_bytes Number of heap bytes waiting to be used. Equals to /memory/classes/heap/released:bytes + /memory/classes/heap/free:bytes.
+# TYPE go_memstats_heap_idle_bytes gauge
+go_memstats_heap_idle_bytes 2.86334976e+08
+# HELP go_memstats_heap_inuse_bytes Number of heap bytes that are in use. Equals to /memory/classes/heap/objects:bytes + /memory/classes/heap/unused:bytes
+# TYPE go_memstats_heap_inuse_bytes gauge
+go_memstats_heap_inuse_bytes 1.908137984e+09
+# HELP go_memstats_heap_objects Number of currently allocated objects. Equals to /gc/heap/objects:objects.
+# TYPE go_memstats_heap_objects gauge
+go_memstats_heap_objects 4.487561e+06
+# HELP go_memstats_heap_released_bytes Number of heap bytes released to OS. Equals to /memory/classes/heap/released:bytes.
+# TYPE go_memstats_heap_released_bytes gauge
+go_memstats_heap_released_bytes 5.9301888e+07
+# HELP go_memstats_heap_sys_bytes Number of heap bytes obtained from system. Equals to /memory/classes/heap/objects:bytes + /memory/classes/heap/unused:bytes + /memory/classes/heap/released:bytes + /memory/classes/heap/free:bytes.
+# TYPE go_memstats_heap_sys_bytes gauge
+go_memstats_heap_sys_bytes 2.19447296e+09
+# HELP go_memstats_last_gc_time_seconds Number of seconds since 1970 of last garbage collection.
+# TYPE go_memstats_last_gc_time_seconds gauge
+go_memstats_last_gc_time_seconds 1.762989172560493e+09
+# HELP go_memstats_mallocs_total Total number of heap objects allocated, both live and gc-ed. Semantically a counter version for go_memstats_heap_objects gauge. Equals to /gc/heap/allocs:objects + /gc/heap/tiny/allocs:objects.
+# TYPE go_memstats_mallocs_total counter
+go_memstats_mallocs_total 6.94653971e+08
+# HELP go_memstats_mcache_inuse_bytes Number of bytes in use by mcache structures. Equals to /memory/classes/metadata/mcache/inuse:bytes.
+# TYPE go_memstats_mcache_inuse_bytes gauge
+go_memstats_mcache_inuse_bytes 19328
+# HELP go_memstats_mcache_sys_bytes Number of bytes used for mcache structures obtained from system. Equals to /memory/classes/metadata/mcache/inuse:bytes + /memory/classes/metadata/mcache/free:bytes.
+# TYPE go_memstats_mcache_sys_bytes gauge
+go_memstats_mcache_sys_bytes 31408
+# HELP go_memstats_mspan_inuse_bytes Number of bytes in use by mspan structures. Equals to /memory/classes/metadata/mspan/inuse:bytes.
+# TYPE go_memstats_mspan_inuse_bytes gauge
+go_memstats_mspan_inuse_bytes 1.026864e+07
+# HELP go_memstats_mspan_sys_bytes Number of bytes used for mspan structures obtained from system. Equals to /memory/classes/metadata/mspan/inuse:bytes + /memory/classes/metadata/mspan/free:bytes.
+# TYPE go_memstats_mspan_sys_bytes gauge
+go_memstats_mspan_sys_bytes 1.24848e+07
+# HELP go_memstats_next_gc_bytes Number of heap bytes when next garbage collection will take place. Equals to /gc/heap/goal:bytes.
+# TYPE go_memstats_next_gc_bytes gauge
+go_memstats_next_gc_bytes 1.983387154e+09
+# HELP go_memstats_other_sys_bytes Number of bytes used for other system allocations. Equals to /memory/classes/other:bytes.
+# TYPE go_memstats_other_sys_bytes gauge
+go_memstats_other_sys_bytes 3.592609e+06
+# HELP go_memstats_stack_inuse_bytes Number of bytes obtained from system for stack allocator in non-CGO environments. Equals to /memory/classes/heap/stacks:bytes.
+# TYPE go_memstats_stack_inuse_bytes gauge
+go_memstats_stack_inuse_bytes 3.2702464e+07
+# HELP go_memstats_stack_sys_bytes Number of bytes obtained from system for stack allocator. Equals to /memory/classes/heap/stacks:bytes + /memory/classes/os-stacks:bytes.
+# TYPE go_memstats_stack_sys_bytes gauge
+go_memstats_stack_sys_bytes 3.2702464e+07
+# HELP go_memstats_sys_bytes Number of bytes obtained from system. Equals to /memory/classes/total:byte.
+# TYPE go_memstats_sys_bytes gauge
+go_memstats_sys_bytes 2.27202844e+09
+# HELP go_sched_gomaxprocs_threads The current runtime.GOMAXPROCS setting, or the number of operating system threads that can execute user-level Go code simultaneously. Sourced from /sched/gomaxprocs:threads.
+# TYPE go_sched_gomaxprocs_threads gauge
+go_sched_gomaxprocs_threads 16
+# HELP go_threads Number of OS threads created.
+# TYPE go_threads gauge
+go_threads 168
+# HELP golang_lru_cache_hit 
+# TYPE golang_lru_cache_hit counter
+golang_lru_cache_hit{cache="timingsCache"} 0
+golang_lru_cache_hit{cache="validHashes"} 0
+# HELP golang_lru_cache_miss 
+# TYPE golang_lru_cache_miss counter
+golang_lru_cache_miss{cache="timingsCache"} 0
+golang_lru_cache_miss{cache="validHashes"} 0
+# HELP initial_cycle_duration_secs 
+# TYPE initial_cycle_duration_secs gauge
+initial_cycle_duration_secs 0
+# HELP kv_get 
+# TYPE kv_get summary
+kv_get{domain="account",level="L0",quantile="0.5"} NaN
+kv_get{domain="account",level="L0",quantile="0.9"} NaN
+kv_get{domain="account",level="L0",quantile="0.97"} NaN
+kv_get{domain="account",level="L0",quantile="0.99"} NaN
+kv_get_sum{domain="account",level="L0"} 0
+kv_get_count{domain="account",level="L0"} 0
+kv_get{domain="account",level="L1",quantile="0.5"} NaN
+kv_get{domain="account",level="L1",quantile="0.9"} NaN
+kv_get{domain="account",level="L1",quantile="0.97"} NaN
+kv_get{domain="account",level="L1",quantile="0.99"} NaN
+kv_get_sum{domain="account",level="L1"} 0
+kv_get_count{domain="account",level="L1"} 0
+kv_get{domain="account",level="L2",quantile="0.5"} NaN
+kv_get{domain="account",level="L2",quantile="0.9"} NaN
+kv_get{domain="account",level="L2",quantile="0.97"} NaN
+kv_get{domain="account",level="L2",quantile="0.99"} NaN
+kv_get_sum{domain="account",level="L2"} 0
+kv_get_count{domain="account",level="L2"} 0
+kv_get{domain="account",level="L3",quantile="0.5"} NaN
+kv_get{domain="account",level="L3",quantile="0.9"} NaN
+kv_get{domain="account",level="L3",quantile="0.97"} NaN
+kv_get{domain="account",level="L3",quantile="0.99"} NaN
+kv_get_sum{domain="account",level="L3"} 0
+kv_get_count{domain="account",level="L3"} 0
+kv_get{domain="account",level="L4",quantile="0.5"} NaN
+kv_get{domain="account",level="L4",quantile="0.9"} NaN
+kv_get{domain="account",level="L4",quantile="0.97"} NaN
+kv_get{domain="account",level="L4",quantile="0.99"} NaN
+kv_get_sum{domain="account",level="L4"} 0
+kv_get_count{domain="account",level="L4"} 0
+kv_get{domain="account",level="recent",quantile="0.5"} NaN
+kv_get{domain="account",level="recent",quantile="0.9"} NaN
+kv_get{domain="account",level="recent",quantile="0.97"} NaN
+kv_get{domain="account",level="recent",quantile="0.99"} NaN
+kv_get_sum{domain="account",level="recent"} 0
+kv_get_count{domain="account",level="recent"} 0
+kv_get{domain="code",level="L0",quantile="0.5"} NaN
+kv_get{domain="code",level="L0",quantile="0.9"} NaN
+kv_get{domain="code",level="L0",quantile="0.97"} NaN
+kv_get{domain="code",level="L0",quantile="0.99"} NaN
+kv_get_sum{domain="code",level="L0"} 0
+kv_get_count{domain="code",level="L0"} 0
+kv_get{domain="code",level="L1",quantile="0.5"} NaN
+kv_get{domain="code",level="L1",quantile="0.9"} NaN
+kv_get{domain="code",level="L1",quantile="0.97"} NaN
+kv_get{domain="code",level="L1",quantile="0.99"} NaN
+kv_get_sum{domain="code",level="L1"} 0
+kv_get_count{domain="code",level="L1"} 0
+kv_get{domain="code",level="L2",quantile="0.5"} NaN
+kv_get{domain="code",level="L2",quantile="0.9"} NaN
+kv_get{domain="code",level="L2",quantile="0.97"} NaN
+kv_get{domain="code",level="L2",quantile="0.99"} NaN
+kv_get_sum{domain="code",level="L2"} 0
+kv_get_count{domain="code",level="L2"} 0
+kv_get{domain="code",level="L3",quantile="0.5"} NaN
+kv_get{domain="code",level="L3",quantile="0.9"} NaN
+kv_get{domain="code",level="L3",quantile="0.97"} NaN
+kv_get{domain="code",level="L3",quantile="0.99"} NaN
+kv_get_sum{domain="code",level="L3"} 0
+kv_get_count{domain="code",level="L3"} 0
+kv_get{domain="code",level="L4",quantile="0.5"} NaN
+kv_get{domain="code",level="L4",quantile="0.9"} NaN
+kv_get{domain="code",level="L4",quantile="0.97"} NaN
+kv_get{domain="code",level="L4",quantile="0.99"} NaN
+kv_get_sum{domain="code",level="L4"} 0
+kv_get_count{domain="code",level="L4"} 0
+kv_get{domain="code",level="recent",quantile="0.5"} NaN
+kv_get{domain="code",level="recent",quantile="0.9"} NaN
+kv_get{domain="code",level="recent",quantile="0.97"} NaN
+kv_get{domain="code",level="recent",quantile="0.99"} NaN
+kv_get_sum{domain="code",level="recent"} 0
+kv_get_count{domain="code",level="recent"} 0
+kv_get{domain="commitment",level="L0",quantile="0.5"} NaN
+kv_get{domain="commitment",level="L0",quantile="0.9"} NaN
+kv_get{domain="commitment",level="L0",quantile="0.97"} NaN
+kv_get{domain="commitment",level="L0",quantile="0.99"} NaN
+kv_get_sum{domain="commitment",level="L0"} 0
+kv_get_count{domain="commitment",level="L0"} 0
+kv_get{domain="commitment",level="L1",quantile="0.5"} NaN
+kv_get{domain="commitment",level="L1",quantile="0.9"} NaN
+kv_get{domain="commitment",level="L1",quantile="0.97"} NaN
+kv_get{domain="commitment",level="L1",quantile="0.99"} NaN
+kv_get_sum{domain="commitment",level="L1"} 0
+kv_get_count{domain="commitment",level="L1"} 0
+kv_get{domain="commitment",level="L2",quantile="0.5"} NaN
+kv_get{domain="commitment",level="L2",quantile="0.9"} NaN
+kv_get{domain="commitment",level="L2",quantile="0.97"} NaN
+kv_get{domain="commitment",level="L2",quantile="0.99"} NaN
+kv_get_sum{domain="commitment",level="L2"} 0
+kv_get_count{domain="commitment",level="L2"} 0
+kv_get{domain="commitment",level="L3",quantile="0.5"} NaN
+kv_get{domain="commitment",level="L3",quantile="0.9"} NaN
+kv_get{domain="commitment",level="L3",quantile="0.97"} NaN
+kv_get{domain="commitment",level="L3",quantile="0.99"} NaN
+kv_get_sum{domain="commitment",level="L3"} 0
+kv_get_count{domain="commitment",level="L3"} 0
+kv_get{domain="commitment",level="L4",quantile="0.5"} NaN
+kv_get{domain="commitment",level="L4",quantile="0.9"} NaN
+kv_get{domain="commitment",level="L4",quantile="0.97"} NaN
+kv_get{domain="commitment",level="L4",quantile="0.99"} NaN
+kv_get_sum{domain="commitment",level="L4"} 0
+kv_get_count{domain="commitment",level="L4"} 0
+kv_get{domain="commitment",level="recent",quantile="0.5"} NaN
+kv_get{domain="commitment",level="recent",quantile="0.9"} NaN
+kv_get{domain="commitment",level="recent",quantile="0.97"} NaN
+kv_get{domain="commitment",level="recent",quantile="0.99"} NaN
+kv_get_sum{domain="commitment",level="recent"} 0
+kv_get_count{domain="commitment",level="recent"} 0
+kv_get{domain="rcache",level="L0",quantile="0.5"} NaN
+kv_get{domain="rcache",level="L0",quantile="0.9"} NaN
+kv_get{domain="rcache",level="L0",quantile="0.97"} NaN
+kv_get{domain="rcache",level="L0",quantile="0.99"} NaN
+kv_get_sum{domain="rcache",level="L0"} 0
+kv_get_count{domain="rcache",level="L0"} 0
+kv_get{domain="rcache",level="L1",quantile="0.5"} NaN
+kv_get{domain="rcache",level="L1",quantile="0.9"} NaN
+kv_get{domain="rcache",level="L1",quantile="0.97"} NaN
+kv_get{domain="rcache",level="L1",quantile="0.99"} NaN
+kv_get_sum{domain="rcache",level="L1"} 0
+kv_get_count{domain="rcache",level="L1"} 0
+kv_get{domain="rcache",level="L2",quantile="0.5"} NaN
+kv_get{domain="rcache",level="L2",quantile="0.9"} NaN
+kv_get{domain="rcache",level="L2",quantile="0.97"} NaN
+kv_get{domain="rcache",level="L2",quantile="0.99"} NaN
+kv_get_sum{domain="rcache",level="L2"} 0
+kv_get_count{domain="rcache",level="L2"} 0
+kv_get{domain="rcache",level="L3",quantile="0.5"} NaN
+kv_get{domain="rcache",level="L3",quantile="0.9"} NaN
+kv_get{domain="rcache",level="L3",quantile="0.97"} NaN
+kv_get{domain="rcache",level="L3",quantile="0.99"} NaN
+kv_get_sum{domain="rcache",level="L3"} 0
+kv_get_count{domain="rcache",level="L3"} 0
+kv_get{domain="rcache",level="L4",quantile="0.5"} NaN
+kv_get{domain="rcache",level="L4",quantile="0.9"} NaN
+kv_get{domain="rcache",level="L4",quantile="0.97"} NaN
+kv_get{domain="rcache",level="L4",quantile="0.99"} NaN
+kv_get_sum{domain="rcache",level="L4"} 0
+kv_get_count{domain="rcache",level="L4"} 0
+kv_get{domain="rcache",level="recent",quantile="0.5"} NaN
+kv_get{domain="rcache",level="recent",quantile="0.9"} NaN
+kv_get{domain="rcache",level="recent",quantile="0.97"} NaN
+kv_get{domain="rcache",level="recent",quantile="0.99"} NaN
+kv_get_sum{domain="rcache",level="recent"} 0
+kv_get_count{domain="rcache",level="recent"} 0
+kv_get{domain="receipt",level="L0",quantile="0.5"} NaN
+kv_get{domain="receipt",level="L0",quantile="0.9"} NaN
+kv_get{domain="receipt",level="L0",quantile="0.97"} NaN
+kv_get{domain="receipt",level="L0",quantile="0.99"} NaN
+kv_get_sum{domain="receipt",level="L0"} 0
+kv_get_count{domain="receipt",level="L0"} 0
+kv_get{domain="receipt",level="L1",quantile="0.5"} NaN
+kv_get{domain="receipt",level="L1",quantile="0.9"} NaN
+kv_get{domain="receipt",level="L1",quantile="0.97"} NaN
+kv_get{domain="receipt",level="L1",quantile="0.99"} NaN
+kv_get_sum{domain="receipt",level="L1"} 0
+kv_get_count{domain="receipt",level="L1"} 0
+kv_get{domain="receipt",level="L2",quantile="0.5"} NaN
+kv_get{domain="receipt",level="L2",quantile="0.9"} NaN
+kv_get{domain="receipt",level="L2",quantile="0.97"} NaN
+kv_get{domain="receipt",level="L2",quantile="0.99"} NaN
+kv_get_sum{domain="receipt",level="L2"} 0
+kv_get_count{domain="receipt",level="L2"} 0
+kv_get{domain="receipt",level="L3",quantile="0.5"} NaN
+kv_get{domain="receipt",level="L3",quantile="0.9"} NaN
+kv_get{domain="receipt",level="L3",quantile="0.97"} NaN
+kv_get{domain="receipt",level="L3",quantile="0.99"} NaN
+kv_get_sum{domain="receipt",level="L3"} 0
+kv_get_count{domain="receipt",level="L3"} 0
+kv_get{domain="receipt",level="L4",quantile="0.5"} NaN
+kv_get{domain="receipt",level="L4",quantile="0.9"} NaN
+kv_get{domain="receipt",level="L4",quantile="0.97"} NaN
+kv_get{domain="receipt",level="L4",quantile="0.99"} NaN
+kv_get_sum{domain="receipt",level="L4"} 0
+kv_get_count{domain="receipt",level="L4"} 0
+kv_get{domain="receipt",level="recent",quantile="0.5"} NaN
+kv_get{domain="receipt",level="recent",quantile="0.9"} NaN
+kv_get{domain="receipt",level="recent",quantile="0.97"} NaN
+kv_get{domain="receipt",level="recent",quantile="0.99"} NaN
+kv_get_sum{domain="receipt",level="recent"} 0
+kv_get_count{domain="receipt",level="recent"} 0
+kv_get{domain="storage",level="L0",quantile="0.5"} NaN
+kv_get{domain="storage",level="L0",quantile="0.9"} NaN
+kv_get{domain="storage",level="L0",quantile="0.97"} NaN
+kv_get{domain="storage",level="L0",quantile="0.99"} NaN
+kv_get_sum{domain="storage",level="L0"} 0
+kv_get_count{domain="storage",level="L0"} 0
+kv_get{domain="storage",level="L1",quantile="0.5"} NaN
+kv_get{domain="storage",level="L1",quantile="0.9"} NaN
+kv_get{domain="storage",level="L1",quantile="0.97"} NaN
+kv_get{domain="storage",level="L1",quantile="0.99"} NaN
+kv_get_sum{domain="storage",level="L1"} 0
+kv_get_count{domain="storage",level="L1"} 0
+kv_get{domain="storage",level="L2",quantile="0.5"} NaN
+kv_get{domain="storage",level="L2",quantile="0.9"} NaN
+kv_get{domain="storage",level="L2",quantile="0.97"} NaN
+kv_get{domain="storage",level="L2",quantile="0.99"} NaN
+kv_get_sum{domain="storage",level="L2"} 0
+kv_get_count{domain="storage",level="L2"} 0
+kv_get{domain="storage",level="L3",quantile="0.5"} NaN
+kv_get{domain="storage",level="L3",quantile="0.9"} NaN
+kv_get{domain="storage",level="L3",quantile="0.97"} NaN
+kv_get{domain="storage",level="L3",quantile="0.99"} NaN
+kv_get_sum{domain="storage",level="L3"} 0
+kv_get_count{domain="storage",level="L3"} 0
+kv_get{domain="storage",level="L4",quantile="0.5"} NaN
+kv_get{domain="storage",level="L4",quantile="0.9"} NaN
+kv_get{domain="storage",level="L4",quantile="0.97"} NaN
+kv_get{domain="storage",level="L4",quantile="0.99"} NaN
+kv_get_sum{domain="storage",level="L4"} 0
+kv_get_count{domain="storage",level="L4"} 0
+kv_get{domain="storage",level="recent",quantile="0.5"} NaN
+kv_get{domain="storage",level="recent",quantile="0.9"} NaN
+kv_get{domain="storage",level="recent",quantile="0.97"} NaN
+kv_get{domain="storage",level="recent",quantile="0.99"} NaN
+kv_get_sum{domain="storage",level="recent"} 0
+kv_get_count{domain="storage",level="recent"} 0
+# HELP mem_anonymous 
+# TYPE mem_anonymous gauge
+mem_anonymous 2.258796544e+09
+# HELP mem_private 
+# TYPE mem_private gauge
+mem_private{type="clean"} 4.897763328e+10
+mem_private{type="dirty"} 2.62004736e+09
+# HELP mem_pss 
+# TYPE mem_pss gauge
+mem_pss 5.1597727744e+10
+# HELP mem_referenced 
+# TYPE mem_referenced gauge
+mem_referenced 9.10155776e+09
+# HELP mem_rss 
+# TYPE mem_rss gauge
+mem_rss 5.1600490496e+10
+# HELP mem_shared 
+# TYPE mem_shared gauge
+mem_shared{type="clean"} 2.809856e+06
+mem_shared{type="dirty"} 0
+# HELP mem_size 
+# TYPE mem_size gauge
+mem_size 0
+# HELP mem_swap 
+# TYPE mem_swap gauge
+mem_swap 6.3451136e+07
+# HELP p2p_dials 
+# TYPE p2p_dials counter
+p2p_dials 4253
+# HELP p2p_egress 
+# TYPE p2p_egress counter
+p2p_egress 1.007629109e+09
+# HELP p2p_ingress 
+# TYPE p2p_ingress counter
+p2p_ingress 1.200761093e+09
+# HELP p2p_ingress_eth_68_0x00 
+# TYPE p2p_ingress_eth_68_0x00 gauge
+p2p_ingress_eth_68_0x00 91
+# HELP p2p_ingress_eth_68_0x00_packets 
+# TYPE p2p_ingress_eth_68_0x00_packets gauge
+p2p_ingress_eth_68_0x00_packets 1
+# HELP p2p_ingress_eth_68_0x02 
+# TYPE p2p_ingress_eth_68_0x02 gauge
+p2p_ingress_eth_68_0x02 160
+# HELP p2p_ingress_eth_68_0x02_packets 
+# TYPE p2p_ingress_eth_68_0x02_packets gauge
+p2p_ingress_eth_68_0x02_packets 1
+# HELP p2p_ingress_eth_68_0x03 
+# TYPE p2p_ingress_eth_68_0x03 gauge
+p2p_ingress_eth_68_0x03 46
+# HELP p2p_ingress_eth_68_0x03_packets 
+# TYPE p2p_ingress_eth_68_0x03_packets gauge
+p2p_ingress_eth_68_0x03_packets 1
+# HELP p2p_ingress_eth_68_0x05 
+# TYPE p2p_ingress_eth_68_0x05 gauge
+p2p_ingress_eth_68_0x05 40
+# HELP p2p_ingress_eth_68_0x05_packets 
+# TYPE p2p_ingress_eth_68_0x05_packets gauge
+p2p_ingress_eth_68_0x05_packets 1
+# HELP p2p_ingress_eth_68_0x08 
+# TYPE p2p_ingress_eth_68_0x08 gauge
+p2p_ingress_eth_68_0x08 43
+# HELP p2p_ingress_eth_68_0x08_packets 
+# TYPE p2p_ingress_eth_68_0x08_packets gauge
+p2p_ingress_eth_68_0x08_packets 1
+# HELP p2p_ingress_eth_68_0x09 
+# TYPE p2p_ingress_eth_68_0x09 gauge
+p2p_ingress_eth_68_0x09 408
+# HELP p2p_ingress_eth_68_0x09_packets 
+# TYPE p2p_ingress_eth_68_0x09_packets gauge
+p2p_ingress_eth_68_0x09_packets 1
+# HELP p2p_ingress_eth_68_0x0a 
+# TYPE p2p_ingress_eth_68_0x0a gauge
+p2p_ingress_eth_68_0x0a 350
+# HELP p2p_ingress_eth_68_0x0a_packets 
+# TYPE p2p_ingress_eth_68_0x0a_packets gauge
+p2p_ingress_eth_68_0x0a_packets 1
+# HELP p2p_ingress_eth_68_0x0b 
+# TYPE p2p_ingress_eth_68_0x0b gauge
+p2p_ingress_eth_68_0x0b 5
+# HELP p2p_ingress_eth_68_0x0b_packets 
+# TYPE p2p_ingress_eth_68_0x0b_packets gauge
+p2p_ingress_eth_68_0x0b_packets 1
+# HELP p2p_ingress_eth_69_0x00 
+# TYPE p2p_ingress_eth_69_0x00 gauge
+p2p_ingress_eth_69_0x00 89
+# HELP p2p_ingress_eth_69_0x00_packets 
+# TYPE p2p_ingress_eth_69_0x00_packets gauge
+p2p_ingress_eth_69_0x00_packets 1
+# HELP p2p_ingress_eth_69_0x02 
+# TYPE p2p_ingress_eth_69_0x02 gauge
+p2p_ingress_eth_69_0x02 147
+# HELP p2p_ingress_eth_69_0x02_packets 
+# TYPE p2p_ingress_eth_69_0x02_packets gauge
+p2p_ingress_eth_69_0x02_packets 1
+# HELP p2p_ingress_eth_69_0x08 
+# TYPE p2p_ingress_eth_69_0x08 gauge
+p2p_ingress_eth_69_0x08 40
+# HELP p2p_ingress_eth_69_0x08_packets 
+# TYPE p2p_ingress_eth_69_0x08_packets gauge
+p2p_ingress_eth_69_0x08_packets 1
+# HELP p2p_ingress_eth_69_0x0a 
+# TYPE p2p_ingress_eth_69_0x0a gauge
+p2p_ingress_eth_69_0x0a 110
+# HELP p2p_ingress_eth_69_0x0a_packets 
+# TYPE p2p_ingress_eth_69_0x0a_packets gauge
+p2p_ingress_eth_69_0x0a_packets 1
+# HELP p2p_ingress_eth_69_0x11 
+# TYPE p2p_ingress_eth_69_0x11 gauge
+p2p_ingress_eth_69_0x11 42
+# HELP p2p_ingress_eth_69_0x11_packets 
+# TYPE p2p_ingress_eth_69_0x11_packets gauge
+p2p_ingress_eth_69_0x11_packets 1
+# HELP p2p_peers 
+# TYPE p2p_peers gauge
+p2p_peers 33
+# HELP p2p_serves 
+# TYPE p2p_serves counter
+p2p_serves 1733
+# HELP pool_add_remote_txs 
+# TYPE pool_add_remote_txs summary
+pool_add_remote_txs{quantile="0.5"} 1.319e-06
+pool_add_remote_txs{quantile="0.9"} 3.244e-06
+pool_add_remote_txs{quantile="0.97"} 7.464e-06
+pool_add_remote_txs{quantile="0.99"} 1.2961e-05
+pool_add_remote_txs_sum 0.5893707520000043
+pool_add_remote_txs_count 195868
+# HELP pool_new_block 
+# TYPE pool_new_block summary
+pool_new_block{quantile="0.5"} NaN
+pool_new_block{quantile="0.9"} NaN
+pool_new_block{quantile="0.97"} NaN
+pool_new_block{quantile="0.99"} NaN
+pool_new_block_sum 0
+pool_new_block_count 0
+# HELP pool_process_remote_txs 
+# TYPE pool_process_remote_txs summary
+pool_process_remote_txs{quantile="0.5"} 7.6511e-05
+pool_process_remote_txs{quantile="0.9"} 0.000134018
+pool_process_remote_txs{quantile="0.97"} 0.00019122
+pool_process_remote_txs{quantile="0.99"} 0.0002609
+pool_process_remote_txs_sum 1.0070897129999974
+pool_process_remote_txs_count 13348
+# HELP pool_propagate_new_txs 
+# TYPE pool_propagate_new_txs summary
+pool_propagate_new_txs{quantile="0.5"} NaN
+pool_propagate_new_txs{quantile="0.9"} NaN
+pool_propagate_new_txs{quantile="0.97"} NaN
+pool_propagate_new_txs{quantile="0.99"} NaN
+pool_propagate_new_txs_sum 0
+pool_propagate_new_txs_count 0
+# HELP pool_propagate_to_new_peer 
+# TYPE pool_propagate_to_new_peer summary
+pool_propagate_to_new_peer{quantile="0.5"} 6.055e-06
+pool_propagate_to_new_peer{quantile="0.9"} 3.5305e-05
+pool_propagate_to_new_peer{quantile="0.97"} 3.5305e-05
+pool_propagate_to_new_peer{quantile="0.99"} 3.5305e-05
+pool_propagate_to_new_peer_sum 0.0007142169999999998
+pool_propagate_to_new_peer_count 44
+# HELP pool_write_to_db 
+# TYPE pool_write_to_db summary
+pool_write_to_db{quantile="0.5"} 0.005781037
+pool_write_to_db{quantile="0.9"} 0.309500515
+pool_write_to_db{quantile="0.97"} 0.381042715
+pool_write_to_db{quantile="0.99"} 0.381042715
+pool_write_to_db_sum 3.8351603659999998
+pool_write_to_db_count 85
+# HELP pool_write_to_db_bytes 
+# TYPE pool_write_to_db_bytes gauge
+pool_write_to_db_bytes 0
+# HELP process_cpu_seconds_total Total user and system CPU time spent in seconds.
+# TYPE process_cpu_seconds_total counter
+process_cpu_seconds_total 2320.43
+# HELP process_effective_balance_updates_time 
+# TYPE process_effective_balance_updates_time gauge
+process_effective_balance_updates_time 0
+# HELP process_historical_roots_update_time 
+# TYPE process_historical_roots_update_time gauge
+process_historical_roots_update_time 0
+# HELP process_inactivity_ccores_time 
+# TYPE process_inactivity_ccores_time gauge
+process_inactivity_ccores_time 0
+# HELP process_io_read_syscalls_total 
+# TYPE process_io_read_syscalls_total gauge
+process_io_read_syscalls_total 2.3804362e+07
+# HELP process_io_storage_read_bytes_total 
+# TYPE process_io_storage_read_bytes_total gauge
+process_io_storage_read_bytes_total 9.5598825805e+10
+# HELP process_io_storage_written_bytes_total 
+# TYPE process_io_storage_written_bytes_total gauge
+process_io_storage_written_bytes_total 1.44660063949e+11
+# HELP process_io_write_syscalls_total 
+# TYPE process_io_write_syscalls_total gauge
+process_io_write_syscalls_total 4.534499e+06
+# HELP process_justification_bits_and_finality_time 
+# TYPE process_justification_bits_and_finality_time gauge
+process_justification_bits_and_finality_time 0
+# HELP process_major_pagefaults_total 
+# TYPE process_major_pagefaults_total gauge
+process_major_pagefaults_total 123110
+# HELP process_max_fds Maximum number of open file descriptors.
+# TYPE process_max_fds gauge
+process_max_fds 1.048576e+06
+# HELP process_minor_pagefaults_total 
+# TYPE process_minor_pagefaults_total gauge
+process_minor_pagefaults_total 2.861677e+06
+# HELP process_network_receive_bytes_total Number of bytes received by the process over the network.
+# TYPE process_network_receive_bytes_total counter
+process_network_receive_bytes_total 6.60152324177e+11
+# HELP process_network_transmit_bytes_total Number of bytes sent by the process over the network.
+# TYPE process_network_transmit_bytes_total counter
+process_network_transmit_bytes_total 7.69920542974e+11
+# HELP process_open_fds Number of open file descriptors.
+# TYPE process_open_fds gauge
+process_open_fds 1245
+# HELP process_participation_flag_updates_time 
+# TYPE process_participation_flag_updates_time gauge
+process_participation_flag_updates_time 0
+# HELP process_pending_deposits_time 
+# TYPE process_pending_deposits_time gauge
+process_pending_deposits_time 0
+# HELP process_registry_updates_time 
+# TYPE process_registry_updates_time gauge
+process_registry_updates_time 0
+# HELP process_resident_memory_bytes Resident memory size in bytes.
+# TYPE process_resident_memory_bytes gauge
+process_resident_memory_bytes 4.9754517504e+10
+# HELP process_rewards_and_penalties_time 
+# TYPE process_rewards_and_penalties_time gauge
+process_rewards_and_penalties_time 0
+# HELP process_slashings_time 
+# TYPE process_slashings_time gauge
+process_slashings_time 0
+# HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds 1.76298783523e+09
+# HELP process_sync_committee_update_time 
+# TYPE process_sync_committee_update_time gauge
+process_sync_committee_update_time 0
+# HELP process_virtual_memory_bytes Virtual memory size in bytes.
+# TYPE process_virtual_memory_bytes gauge
+process_virtual_memory_bytes 3.2883057664e+12
+# HELP process_virtual_memory_max_bytes Maximum amount of virtual memory available in bytes.
+# TYPE process_virtual_memory_max_bytes gauge
+process_virtual_memory_max_bytes 1.8446744073709552e+19
+# HELP promhttp_metric_handler_requests_in_flight Current number of scrapes being served.
+# TYPE promhttp_metric_handler_requests_in_flight gauge
+promhttp_metric_handler_requests_in_flight 1
+# HELP promhttp_metric_handler_requests_total Total number of scrapes by HTTP status code.
+# TYPE promhttp_metric_handler_requests_total counter
+promhttp_metric_handler_requests_total{code="200"} 16
+promhttp_metric_handler_requests_total{code="500"} 0
+promhttp_metric_handler_requests_total{code="503"} 0
+# HELP prune_seconds 
+# TYPE prune_seconds summary
+prune_seconds{type="blocks",quantile="0.5"} NaN
+prune_seconds{type="blocks",quantile="0.9"} NaN
+prune_seconds{type="blocks",quantile="0.97"} NaN
+prune_seconds{type="blocks",quantile="0.99"} NaN
+prune_seconds_sum{type="blocks"} 0
+prune_seconds_count{type="blocks"} 0
+prune_seconds{type="bor",quantile="0.5"} NaN
+prune_seconds{type="bor",quantile="0.9"} NaN
+prune_seconds{type="bor",quantile="0.97"} NaN
+prune_seconds{type="bor",quantile="0.99"} NaN
+prune_seconds_sum{type="bor"} 0
+prune_seconds_count{type="bor"} 0
+prune_seconds{type="state",quantile="0.5"} NaN
+prune_seconds{type="state",quantile="0.9"} NaN
+prune_seconds{type="state",quantile="0.97"} NaN
+prune_seconds{type="state",quantile="0.99"} NaN
+prune_seconds_sum{type="state"} 0
+prune_seconds_count{type="state"} 0
+# HELP rpc_duration_seconds 
+# TYPE rpc_duration_seconds summary
+rpc_duration_seconds{method="admin_addPeer",success="success",quantile="0.5"} NaN
+rpc_duration_seconds{method="admin_addPeer",success="success",quantile="0.9"} NaN
+rpc_duration_seconds{method="admin_addPeer",success="success",quantile="0.97"} NaN
+rpc_duration_seconds{method="admin_addPeer",success="success",quantile="0.99"} NaN
+rpc_duration_seconds_sum{method="admin_addPeer",success="success"} 0.008409625
+rpc_duration_seconds_count{method="admin_addPeer",success="success"} 13
+rpc_duration_seconds{method="admin_peers",success="success",quantile="0.5"} 0.001359378
+rpc_duration_seconds{method="admin_peers",success="success",quantile="0.9"} 0.002176069
+rpc_duration_seconds{method="admin_peers",success="success",quantile="0.97"} 0.002975162
+rpc_duration_seconds{method="admin_peers",success="success",quantile="0.99"} 0.005169333
+rpc_duration_seconds_sum{method="admin_peers",success="success"} 0.6482646729999999
+rpc_duration_seconds_count{method="admin_peers",success="success"} 268
+rpc_duration_seconds{method="engine_exchangeCapabilities",success="success",quantile="0.5"} NaN
+rpc_duration_seconds{method="engine_exchangeCapabilities",success="success",quantile="0.9"} NaN
+rpc_duration_seconds{method="engine_exchangeCapabilities",success="success",quantile="0.97"} NaN
+rpc_duration_seconds{method="engine_exchangeCapabilities",success="success",quantile="0.99"} NaN
+rpc_duration_seconds_sum{method="engine_exchangeCapabilities",success="success"} 9.3756e-05
+rpc_duration_seconds_count{method="engine_exchangeCapabilities",success="success"} 2
+rpc_duration_seconds{method="engine_forkchoiceUpdatedV3",success="failure",quantile="0.5"} NaN
+rpc_duration_seconds{method="engine_forkchoiceUpdatedV3",success="failure",quantile="0.9"} NaN
+rpc_duration_seconds{method="engine_forkchoiceUpdatedV3",success="failure",quantile="0.97"} NaN
+rpc_duration_seconds{method="engine_forkchoiceUpdatedV3",success="failure",quantile="0.99"} NaN
+rpc_duration_seconds_sum{method="engine_forkchoiceUpdatedV3",success="failure"} 72.009655254
+rpc_duration_seconds_count{method="engine_forkchoiceUpdatedV3",success="failure"} 9
+rpc_duration_seconds{method="engine_getClientVersionV1",success="success",quantile="0.5"} NaN
+rpc_duration_seconds{method="engine_getClientVersionV1",success="success",quantile="0.9"} NaN
+rpc_duration_seconds{method="engine_getClientVersionV1",success="success",quantile="0.97"} NaN
+rpc_duration_seconds{method="engine_getClientVersionV1",success="success",quantile="0.99"} NaN
+rpc_duration_seconds_sum{method="engine_getClientVersionV1",success="success"} 0.000843744
+rpc_duration_seconds_count{method="engine_getClientVersionV1",success="success"} 2
+rpc_duration_seconds{method="engine_newPayloadV4",success="failure",quantile="0.5"} 7.996801954
+rpc_duration_seconds{method="engine_newPayloadV4",success="failure",quantile="0.9"} 7.997148576
+rpc_duration_seconds{method="engine_newPayloadV4",success="failure",quantile="0.97"} 7.997148576
+rpc_duration_seconds{method="engine_newPayloadV4",success="failure",quantile="0.99"} 7.997148576
+rpc_duration_seconds_sum{method="engine_newPayloadV4",success="failure"} 136.265471295
+rpc_duration_seconds_count{method="engine_newPayloadV4",success="failure"} 17
+rpc_duration_seconds{method="eth_blockNumber",success="success",quantile="0.5"} NaN
+rpc_duration_seconds{method="eth_blockNumber",success="success",quantile="0.9"} NaN
+rpc_duration_seconds{method="eth_blockNumber",success="success",quantile="0.97"} NaN
+rpc_duration_seconds{method="eth_blockNumber",success="success",quantile="0.99"} NaN
+rpc_duration_seconds_sum{method="eth_blockNumber",success="success"} 9.6065e-05
+rpc_duration_seconds_count{method="eth_blockNumber",success="success"} 1
+rpc_duration_seconds{method="eth_getBlockByNumber",success="success",quantile="0.5"} 0.000306179
+rpc_duration_seconds{method="eth_getBlockByNumber",success="success",quantile="0.9"} 0.000402649
+rpc_duration_seconds{method="eth_getBlockByNumber",success="success",quantile="0.97"} 0.001495811
+rpc_duration_seconds{method="eth_getBlockByNumber",success="success",quantile="0.99"} 0.108617266
+rpc_duration_seconds_sum{method="eth_getBlockByNumber",success="success"} 0.419701303
+rpc_duration_seconds_count{method="eth_getBlockByNumber",success="success"} 334
+rpc_duration_seconds{method="eth_syncing",success="success",quantile="0.5"} 0.000125755
+rpc_duration_seconds{method="eth_syncing",success="success",quantile="0.9"} 0.000186403
+rpc_duration_seconds{method="eth_syncing",success="success",quantile="0.97"} 0.000227415
+rpc_duration_seconds{method="eth_syncing",success="success",quantile="0.99"} 0.000252539
+rpc_duration_seconds_sum{method="eth_syncing",success="success"} 0.02548024099999999
+rpc_duration_seconds_count{method="eth_syncing",success="success"} 176
+rpc_duration_seconds{method="net_peerCount",success="success",quantile="0.5"} 7.6314e-05
+rpc_duration_seconds{method="net_peerCount",success="success",quantile="0.9"} 9.3849e-05
+rpc_duration_seconds{method="net_peerCount",success="success",quantile="0.97"} 0.0001275
+rpc_duration_seconds{method="net_peerCount",success="success",quantile="0.99"} 0.000134309
+rpc_duration_seconds_sum{method="net_peerCount",success="success"} 0.018291256000000006
+rpc_duration_seconds_count{method="net_peerCount",success="success"} 268
+# HELP rpc_failure 
+# TYPE rpc_failure counter
+rpc_failure 26
+# HELP rpc_total 
+# TYPE rpc_total counter
+rpc_total 1090
+# HELP shutter_decrypted_txn_size_bytes 
+# TYPE shutter_decrypted_txn_size_bytes summary
+shutter_decrypted_txn_size_bytes{quantile="0.5"} NaN
+shutter_decrypted_txn_size_bytes{quantile="0.9"} NaN
+shutter_decrypted_txn_size_bytes{quantile="0.97"} NaN
+shutter_decrypted_txn_size_bytes{quantile="0.99"} NaN
+shutter_decrypted_txn_size_bytes_sum 0
+shutter_decrypted_txn_size_bytes_count 0
+# HELP shutter_decrypted_txns_pool_added 
+# TYPE shutter_decrypted_txns_pool_added counter
+shutter_decrypted_txns_pool_added 0
+# HELP shutter_decrypted_txns_pool_deleted 
+# TYPE shutter_decrypted_txns_pool_deleted counter
+shutter_decrypted_txns_pool_deleted 0
+# HELP shutter_decrypted_txns_pool_total_bytes 
+# TYPE shutter_decrypted_txns_pool_total_bytes gauge
+shutter_decrypted_txns_pool_total_bytes 0
+# HELP shutter_decrypted_txns_pool_total_count 
+# TYPE shutter_decrypted_txns_pool_total_count gauge
+shutter_decrypted_txns_pool_total_count 0
+# HELP shutter_decryption_failures 
+# TYPE shutter_decryption_failures counter
+shutter_decryption_failures 0
+# HELP shutter_decryption_keys_count 
+# TYPE shutter_decryption_keys_count summary
+shutter_decryption_keys_count{quantile="0.5"} NaN
+shutter_decryption_keys_count{quantile="0.9"} NaN
+shutter_decryption_keys_count{quantile="0.97"} NaN
+shutter_decryption_keys_count{quantile="0.99"} NaN
+shutter_decryption_keys_count_sum 0
+shutter_decryption_keys_count_count 0
+# HELP shutter_decryption_keys_gas 
+# TYPE shutter_decryption_keys_gas summary
+shutter_decryption_keys_gas{quantile="0.5"} NaN
+shutter_decryption_keys_gas{quantile="0.9"} NaN
+shutter_decryption_keys_gas{quantile="0.97"} NaN
+shutter_decryption_keys_gas{quantile="0.99"} NaN
+shutter_decryption_keys_gas_sum 0
+shutter_decryption_keys_gas_count 0
+# HELP shutter_decryption_keys_ignores 
+# TYPE shutter_decryption_keys_ignores gauge
+shutter_decryption_keys_ignores 0
+# HELP shutter_decryption_keys_processing_time_secs 
+# TYPE shutter_decryption_keys_processing_time_secs summary
+shutter_decryption_keys_processing_time_secs{quantile="0.5"} NaN
+shutter_decryption_keys_processing_time_secs{quantile="0.9"} NaN
+shutter_decryption_keys_processing_time_secs{quantile="0.97"} NaN
+shutter_decryption_keys_processing_time_secs{quantile="0.99"} NaN
+shutter_decryption_keys_processing_time_secs_sum 0
+shutter_decryption_keys_processing_time_secs_count 0
+# HELP shutter_decryption_keys_rejections 
+# TYPE shutter_decryption_keys_rejections gauge
+shutter_decryption_keys_rejections 0
+# HELP shutter_decryption_keys_slot_delay_secs 
+# TYPE shutter_decryption_keys_slot_delay_secs summary
+shutter_decryption_keys_slot_delay_secs{quantile="0.5"} NaN
+shutter_decryption_keys_slot_delay_secs{quantile="0.9"} NaN
+shutter_decryption_keys_slot_delay_secs{quantile="0.97"} NaN
+shutter_decryption_keys_slot_delay_secs{quantile="0.99"} NaN
+shutter_decryption_keys_slot_delay_secs_sum 0
+shutter_decryption_keys_slot_delay_secs_count 0
+# HELP shutter_decryption_keys_topic_peer_count 
+# TYPE shutter_decryption_keys_topic_peer_count gauge
+shutter_decryption_keys_topic_peer_count 0
+# HELP shutter_decryption_mark_missed 
+# TYPE shutter_decryption_mark_missed counter
+shutter_decryption_mark_missed 0
+# HELP shutter_decryption_mark_on_time 
+# TYPE shutter_decryption_mark_on_time counter
+shutter_decryption_mark_on_time 0
+# HELP shutter_decryption_mark_wait_secs 
+# TYPE shutter_decryption_mark_wait_secs summary
+shutter_decryption_mark_wait_secs{quantile="0.5"} NaN
+shutter_decryption_mark_wait_secs{quantile="0.9"} NaN
+shutter_decryption_mark_wait_secs{quantile="0.97"} NaN
+shutter_decryption_mark_wait_secs{quantile="0.99"} NaN
+shutter_decryption_mark_wait_secs_sum 0
+shutter_decryption_mark_wait_secs_count 0
+# HELP shutter_decryption_successes 
+# TYPE shutter_decryption_successes counter
+shutter_decryption_successes 0
+# HELP shutter_encrypted_txn_size_bytes 
+# TYPE shutter_encrypted_txn_size_bytes summary
+shutter_encrypted_txn_size_bytes{quantile="0.5"} NaN
+shutter_encrypted_txn_size_bytes{quantile="0.9"} NaN
+shutter_encrypted_txn_size_bytes{quantile="0.97"} NaN
+shutter_encrypted_txn_size_bytes{quantile="0.99"} NaN
+shutter_encrypted_txn_size_bytes_sum 0
+shutter_encrypted_txn_size_bytes_count 0
+# HELP shutter_encrypted_txns_pool_added 
+# TYPE shutter_encrypted_txns_pool_added counter
+shutter_encrypted_txns_pool_added 0
+# HELP shutter_encrypted_txns_pool_deleted 
+# TYPE shutter_encrypted_txns_pool_deleted counter
+shutter_encrypted_txns_pool_deleted 0
+# HELP shutter_encrypted_txns_pool_total_bytes 
+# TYPE shutter_encrypted_txns_pool_total_bytes gauge
+shutter_encrypted_txns_pool_total_bytes 0
+# HELP shutter_encrypted_txns_pool_total_count 
+# TYPE shutter_encrypted_txns_pool_total_count gauge
+shutter_encrypted_txns_pool_total_count 0
+# HELP shutter_parent_block_missed 
+# TYPE shutter_parent_block_missed counter
+shutter_parent_block_missed 0
+# HELP shutter_parent_block_on_time 
+# TYPE shutter_parent_block_on_time counter
+shutter_parent_block_on_time 0
+# HELP shutter_parent_block_wait_secs 
+# TYPE shutter_parent_block_wait_secs summary
+shutter_parent_block_wait_secs{quantile="0.5"} NaN
+shutter_parent_block_wait_secs{quantile="0.9"} NaN
+shutter_parent_block_wait_secs{quantile="0.97"} NaN
+shutter_parent_block_wait_secs{quantile="0.99"} NaN
+shutter_parent_block_wait_secs_sum 0
+shutter_parent_block_wait_secs_count 0
+# HELP state3_unwind 
+# TYPE state3_unwind summary
+state3_unwind{quantile="0.5"} NaN
+state3_unwind{quantile="0.9"} NaN
+state3_unwind{quantile="0.97"} NaN
+state3_unwind{quantile="0.99"} NaN
+state3_unwind_sum 0
+state3_unwind_count 0
+# HELP subscriptions_logs_addresses 
+# TYPE subscriptions_logs_addresses gauge
+subscriptions_logs_addresses 0
+# HELP subscriptions_logs_all_addresses 
+# TYPE subscriptions_logs_all_addresses gauge
+subscriptions_logs_all_addresses 0
+# HELP subscriptions_logs_all_topics 
+# TYPE subscriptions_logs_all_topics gauge
+subscriptions_logs_all_topics 0
+# HELP subscriptions_logs_client Current number of subscriptions by client
+# TYPE subscriptions_logs_client gauge
+subscriptions_logs_client{client="ethBackend_Events"} 1
+subscriptions_logs_client{client="ethBackend_Logs"} 1
+subscriptions_logs_client{client="txPool_PendingBlock"} 1
+subscriptions_logs_client{client="txPool_PendingLogs"} 1
+subscriptions_logs_client{client="txPool_PendingTxs"} 1
+# HELP subscriptions_logs_topics 
+# TYPE subscriptions_logs_topics gauge
+subscriptions_logs_topics 0
+# HELP sync 
+# TYPE sync gauge
+sync{stage="block_hashes"} 0
+sync{stage="bodies"} 0
+sync{stage="custom_trace"} 0
+sync{stage="execution"} 0
+sync{stage="finish"} 0
+sync{stage="headers"} 0
+sync{stage="otter_sync"} 0
+sync{stage="senders"} 0
+sync{stage="translation"} 0
+sync{stage="tx_lookup"} 0
+# HELP total_in_bytes 
+# TYPE total_in_bytes gauge
+total_in_bytes 0
+# HELP total_out_bytes 
+# TYPE total_out_bytes gauge
+total_out_bytes 0
+# HELP trie_state_levelled_load_rate 
+# TYPE trie_state_levelled_load_rate counter
+trie_state_levelled_load_rate{key="account",level="L0"} 0
+trie_state_levelled_load_rate{key="account",level="L1"} 0
+trie_state_levelled_load_rate{key="account",level="L2"} 0
+trie_state_levelled_load_rate{key="account",level="L3"} 0
+trie_state_levelled_load_rate{key="account",level="L4"} 0
+trie_state_levelled_load_rate{key="account",level="recent"} 0
+trie_state_levelled_load_rate{key="storage",level="L0"} 0
+trie_state_levelled_load_rate{key="storage",level="L1"} 0
+trie_state_levelled_load_rate{key="storage",level="L2"} 0
+trie_state_levelled_load_rate{key="storage",level="L3"} 0
+trie_state_levelled_load_rate{key="storage",level="L4"} 0
+trie_state_levelled_load_rate{key="storage",level="recent"} 0
+# HELP trie_state_levelled_skip_rate 
+# TYPE trie_state_levelled_skip_rate counter
+trie_state_levelled_skip_rate{key="account",level="L0"} 0
+trie_state_levelled_skip_rate{key="account",level="L1"} 0
+trie_state_levelled_skip_rate{key="account",level="L2"} 0
+trie_state_levelled_skip_rate{key="account",level="L3"} 0
+trie_state_levelled_skip_rate{key="account",level="L4"} 0
+trie_state_levelled_skip_rate{key="account",level="recent"} 0
+trie_state_levelled_skip_rate{key="storage",level="L0"} 0
+trie_state_levelled_skip_rate{key="storage",level="L1"} 0
+trie_state_levelled_skip_rate{key="storage",level="L2"} 0
+trie_state_levelled_skip_rate{key="storage",level="L3"} 0
+trie_state_levelled_skip_rate{key="storage",level="L4"} 0
+trie_state_levelled_skip_rate{key="storage",level="recent"} 0
+# HELP trie_state_load_rate 
+# TYPE trie_state_load_rate counter
+trie_state_load_rate 8893
+# HELP trie_state_skip_rate 
+# TYPE trie_state_skip_rate counter
+trie_state_skip_rate 0
+# HELP tx_dirty gauge metric
+# TYPE tx_dirty gauge
+tx_dirty{db="chaindata"} 1.769472e+06
+# HELP tx_limit gauge metric
+# TYPE tx_limit gauge
+tx_limit{db="chaindata"} 1.073741824e+09
+# HELP tx_retired gauge metric
+# TYPE tx_retired gauge
+tx_retired{db="chaindata"} 16384
+# HELP tx_spill gauge metric
+# TYPE tx_spill gauge
+tx_spill{db="chaindata"} 0
+# HELP tx_unspill gauge metric
+# TYPE tx_unspill gauge
+tx_unspill{db="chaindata"} 0
+# HELP txpool_basefee 
+# TYPE txpool_basefee gauge
+txpool_basefee 0
+# HELP txpool_pending 
+# TYPE txpool_pending gauge
+txpool_pending 0
+# HELP txpool_queued 
+# TYPE txpool_queued gauge
+txpool_queued 0
+# HELP unsynced_bytes gauge metric
+# TYPE unsynced_bytes gauge
+unsynced_bytes{db="chaindata"} 0
+# HELP update_fork_choice 
+# TYPE update_fork_choice summary
+update_fork_choice{type="arrival_delay",quantile="0.5"} NaN
+update_fork_choice{type="arrival_delay",quantile="0.9"} NaN
+update_fork_choice{type="arrival_delay",quantile="0.97"} NaN
+update_fork_choice{type="arrival_delay",quantile="0.99"} NaN
+update_fork_choice_sum{type="arrival_delay"} 0
+update_fork_choice_count{type="arrival_delay"} 0
+update_fork_choice{type="execution_duration",quantile="0.5"} NaN
+update_fork_choice{type="execution_duration",quantile="0.9"} NaN
+update_fork_choice{type="execution_duration",quantile="0.97"} NaN
+update_fork_choice{type="execution_duration",quantile="0.99"} NaN
+update_fork_choice_sum{type="execution_duration"} 0
+update_fork_choice_count{type="execution_duration"} 0
+update_fork_choice{type="fork_depth",quantile="0.5"} NaN
+update_fork_choice{type="fork_depth",quantile="0.9"} NaN
+update_fork_choice{type="fork_depth",quantile="0.97"} NaN
+update_fork_choice{type="fork_depth",quantile="0.99"} NaN
+update_fork_choice_sum{type="fork_depth"} 0
+update_fork_choice_count{type="fork_depth"} 0
+update_fork_choice{type="prune_duration",quantile="0.5"} NaN
+update_fork_choice{type="prune_duration",quantile="0.9"} NaN
+update_fork_choice{type="prune_duration",quantile="0.97"} NaN
+update_fork_choice{type="prune_duration",quantile="0.99"} NaN
+update_fork_choice_sum{type="prune_duration"} 0
+update_fork_choice_count{type="prune_duration"} 0
+# HELP validator_attestation_hit 
+# TYPE validator_attestation_hit counter
+validator_attestation_hit 0
+# HELP validator_attestation_miss 
+# TYPE validator_attestation_miss counter
+validator_attestation_miss 0
+# HELP validator_proposal_hit 
+# TYPE validator_proposal_hit counter
+validator_proposal_hit 0
+# HELP validator_proposal_miss 
+# TYPE validator_proposal_miss counter
+validator_proposal_miss 0
+# HELP waypoint_length 
+# TYPE waypoint_length gauge
+waypoint_length{type="checkpoint"} 0
+waypoint_length{type="milestone"} 0
+# HELP wiggle_duration 
+# TYPE wiggle_duration summary
+wiggle_duration{quantile="0.5"} NaN
+wiggle_duration{quantile="0.9"} NaN
+wiggle_duration{quantile="0.97"} NaN
+wiggle_duration{quantile="0.99"} NaN
+wiggle_duration_sum 0
+wiggle_duration_count 0

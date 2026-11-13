@@ -45,7 +45,11 @@ export async function configureBGExecutionPeers(bgPeers) {
   const requests = bgPeers.flatMap((enode) =>
     ["admin_addPeer", "admin_addTrustedPeer"].map(async (method) => {
       try {
-        const result = await executionIpcRequest(ipcPath, method, [enode]);
+        // Runs shortly after startup; the execution client may not have
+        // opened its IPC socket yet, so wait up to 5 minutes for it.
+        const result = await executionIpcRequest(ipcPath, method, [enode], 5000, {
+          waitForSocket: 5 * 60 * 1000,
+        });
         debugToFile(`configureBGExecutionPeers(): ${method} ${enode}: ${result}`);
       } catch (error) {
         debugToFile(`configureBGExecutionPeers(): ${enode}: ${error.message}`);
