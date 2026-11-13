@@ -23,6 +23,7 @@
 import {
   NETHERMIND_BODIES_SINCE,
   NETHERMIND_RECEIPTS_SINCE,
+  NETHERMIND_ARCHIVE_SNAPSHOT,
 } from "../ethereum_client_scripts/nethermindArgs.js";
 
 export const NETHERMIND_METRICS_URL = "http://127.0.0.1:9001/metrics";
@@ -43,7 +44,152 @@ export function noteNethermindLogLine(line) {
     snapRangesPercent = parseFloat(m[1]);
   } else if (/State Ranges \(Phase 1 of 2\) finished/.test(line)) {
     snapRangesPercent = 100;
+  } else if (/snapshot/i.test(line)) {
+    noteSnapshotLine(line);
   }
+}
+
+// --- Archive snapshot restore (Nethermind's Snapshot plugin) ----------------
+// The plugin runs inside the node before it finishes starting (no metrics or
+// RPC yet) and reports only to the log. Its messages, from the 2.2.2 plugin:
+//   "Streaming snapshot from <url>" / "Downloading snapshot from <url>"
+//   "Extracting snapshot to <dir>" (non-streaming mode, after the download)
+//   "Verifying snapshot checksum ..." / "Snapshot checksum progress: ..."
+//   "Database successfully initialized from (streamed )snapshot."
+//   "Snapshot streaming failed: ..." / "Aborting snapshot initialization ..."
+//   "Restarting the snapshot download." / "Extraction did not complete last
+//   time. Restarting."
+// Progress comes from nethermind's progress logger under the names "Snapshot
+// streaming" / "Snapshot download", whose exact line format wasn't seen before
+// this was written: it's matched loosely ("<done> / <total> ( <pct> %)", or
+// any "<pct> %"), and the last such line is kept in the audit log so the
+// parse can be checked.
+const snapshot = {
+  phase: null, // "download" | "extract" | "verify" | "done"
+  streaming: false, // download and extract at once (Snapshot.Streaming)
+  percent: null,
+  done: null,
+  total: null,
+  error: null,
+  restarts: 0,
+  lastProgressLine: null,
+};
+
+function stripStamp(line) {
+  return line.replace(/^\s*\d+ \w+ [\d:]+ \|\s*/, "").trim();
+}
+
+function noteSnapshotLine(line) {
+  const text = stripStamp(line);
+  if (/(Streaming|Downloading) snapshot from|Restoring the official nethermind archive snapshot/.test(text)) {
+    snapshot.phase = "download";
+    if (/Streaming snapshot from/.test(text)) snapshot.streaming = true;
+    snapshot.error = null;
+    if (snapshot.percent === null) snapshot.percent = 0;
+    return;
+  }
+  if (/Restarting the snapshot download|Extraction did not complete last time|restore did not finish/.test(text)) {
+    snapshot.restarts++;
+    snapshot.percent = 0;
+    snapshot.done = null;
+    snapshot.error = null;
+    return;
+  }
+  if (/Database successfully initialized from (streamed )?snapshot/.test(text)) {
+    snapshot.phase = "done";
+    snapshot.percent = 100;
+    snapshot.error = null;
+    return;
+  }
+  if (/Snapshot streaming failed:|Aborting snapshot initialization|continue running without a snapshot|permanent HTTP error|checksum verification failed/i.test(text)) {
+    snapshot.error = text;
+    return;
+  }
+  if (/^Extracting (streamed )?snapshot to/.test(text)) {
+    if (snapshot.phase !== "done") snapshot.phase = "extract";
+    snapshot.percent = 0;
+    return;
+  }
+  if (/Verifying snapshot checksum|Snapshot checksum progress/.test(text)) {
+    snapshot.phase = "verify";
+  }
+  const counted = text.match(/([\d,]+)\s*\/\s*([\d,]+)\s*\(\s*([\d.]+)\s*%\)/);
+  const pct = counted ? counted[3] : text.match(/([\d.]+)\s*%/)?.[1];
+  if (pct !== undefined && /Snapshot (streaming|download)|checksum progress/i.test(text)) {
+    snapshot.percent = Math.min(100, parseFloat(pct));
+    snapshot.done = counted ? Number(counted[1].replace(/,/g, "")) : null;
+    snapshot.total = counted ? Number(counted[2].replace(/,/g, "")) : null;
+    if (snapshot.phase === null) snapshot.phase = "download";
+    snapshot.lastProgressLine = text.slice(0, 200);
+  }
+}
+
+export function getSnapshotLogState() {
+  return { ...snapshot };
+}
+
+// Block the archive snapshot was taken at (from its file name).
+export const ARCHIVE_SNAPSHOT_BLOCK = Number(
+  NETHERMIND_ARCHIVE_SNAPSHOT.fileName.match(/(\d+)\.tar/)?.[1] ?? 0
+);
+
+function sizeOf(n) {
+  return n >= 1e12 ? `${(n / 1e12).toFixed(2)} TB` : `${(n / 1e9).toFixed(0)} GB`;
+}
+
+// Rows for an archive node: SNAPSHOT (when BG client is restoring, or has
+// restored, the official snapshot) and BLOCKS (processed height catching up
+// to the chain head). The snap and fast-blocks stages don't apply: an archive
+// node either restores the snapshot or full-syncs from genesis.
+//   marker   BG client's restore marker state: "in_progress" | "complete" | null
+//   height   processed chain height (0 while the node is still starting)
+//   head     chain head, 0 if unknown
+//   synced   eth_syncing returned false with a height: following the head
+export function computeArchiveStages({ marker, height, head, synced }) {
+  const rows = [];
+  const usesSnapshot = marker !== null;
+  const snapshotDone =
+    marker === "complete" || snapshot.phase === "done" || (usesSnapshot && height > 0);
+
+  if (usesSnapshot) {
+    let row;
+    if (snapshotDone) {
+      row = { progress: 1, detail: null };
+    } else if (snapshot.error) {
+      row = { progress: null, detail: `failed: ${snapshot.error.slice(0, 40)}` };
+    } else if (snapshot.percent !== null) {
+      const label =
+        snapshot.phase === "extract" ? "extracting" :
+        snapshot.phase === "verify" ? "verifying" :
+        snapshot.streaming ? "streaming" : "downloading";
+      const sizes =
+        snapshot.done !== null && snapshot.total > 1e9
+          ? ` ${sizeOf(snapshot.done)} / ${sizeOf(snapshot.total)}`
+          : "";
+      row = { progress: Math.min(1, snapshot.percent / 100), detail: `${label}${sizes}` };
+    } else {
+      row = { progress: null, detail: "starting…" };
+    }
+    rows.push({ name: "SNAPSHOT", ...row });
+  }
+
+  // BLOCKS: from the snapshot block (or genesis) to the head.
+  const base = usesSnapshot ? ARCHIVE_SNAPSHOT_BLOCK : 0;
+  let blocks;
+  if (usesSnapshot && !snapshotDone) {
+    blocks = { progress: 0, detail: null }; // waits for the restore
+  } else if (synced || (head > 0 && height >= head - 1)) {
+    blocks = { progress: 1, detail: null };
+  } else if (height === 0) {
+    blocks = { progress: 0, detail: null };
+  } else if (head > base) {
+    const progress = Math.max(0, Math.min(1, (height - base) / (head - base)));
+    blocks = { progress, detail: `${(head - height).toLocaleString()} behind` };
+  } else {
+    blocks = { progress: null, detail: `at ${height.toLocaleString()}` };
+  }
+  rows.push({ name: "BLOCKS", ...blocks });
+  return rows;
 }
 
 export function getSnapRangesPercent() {

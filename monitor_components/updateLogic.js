@@ -1,3 +1,4 @@
+import path from "path";
 import fs from "fs";
 import readline from "readline";
 import {
@@ -6,7 +7,12 @@ import {
   formatLogLines,
 } from "./helperFunctions.js";
 import { debugToFile } from "../helpers.js";
-import { executionClient, executionType, owner } from "../commandLineOptions.js";
+import {
+  executionClient,
+  executionType,
+  owner,
+  installDir,
+} from "../commandLineOptions.js";
 import {
   mainnetClient,
   localClient,
@@ -14,10 +20,8 @@ import {
 } from "./viemClients.js";
 import { exec } from "child_process";
 import { populateRethStageGauge } from "./rethStageGauge.js";
-import {
-  populateGethStageGauge,
-  populateStageRows,
-} from "./gethStageGauge.js";
+import { populateGethStageGauge } from "./gethStageGauge.js";
+import { populateNethermindStageGauge } from "./nethermindStageGauge.js";
 import {
   NETHERMIND_BODIES_SINCE,
   NETHERMIND_RECEIPTS_SINCE,
@@ -30,9 +34,16 @@ import {
   NETHERMIND_METRICS_URL,
   parseNethermindMetrics,
   computeNethermindStages,
+  computeArchiveStages,
   noteNethermindLogLine,
   getSnapRangesPercent,
+  getSnapshotLogState,
+  ARCHIVE_SNAPSHOT_BLOCK,
 } from "./nethermindSyncStages.js";
+import {
+  readNethermindExecutionType,
+  getNethermindDatadir,
+} from "../ethereum_client_scripts/nethermindExecutionType.js";
 import { checkIn } from "../webSocketConnection.js";
 import { watchLocalBlocks } from "./blockWatcher.js";
 import fetch from "node-fetch";
@@ -901,7 +912,74 @@ async function checkNethermindPersisted(archive) {
   return nethermindPersisted;
 }
 
-export async function updateNethermindStageGauge(gethStageGauge) {
+// The type the node actually runs as (BG client's marker, which can differ
+// from what was requested), falling back to the requested type.
+function nethermindIsArchive() {
+  return (readNethermindExecutionType(installDir) ?? executionType) === "archive";
+}
+
+// BG client's snapshot-restore marker (written by nethermind.js):
+// "in_progress" | "complete", or null when no snapshot is used.
+function readNethermindSnapshotMarker() {
+  try {
+    const file = path.join(getNethermindDatadir(installDir), ".bg_snapshot.json");
+    return JSON.parse(fs.readFileSync(file, "utf8")).state ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function updateNethermindArchiveGauge(nethermindStageGauge) {
+  // Metrics are optional here: during the snapshot restore nethermind hasn't
+  // finished starting, so neither metrics nor RPC answer yet.
+  let height = 0;
+  let metricsUp = false;
+  try {
+    const response = await fetch(NETHERMIND_METRICS_URL, {
+      signal: AbortSignal.timeout(5000),
+    });
+    const cur = parseNethermindMetrics(await response.text());
+    height = cur.values.ethereum_blockchain_height ?? 0;
+    metricsUp = true;
+  } catch {}
+  const syncing = metricsUp ? await getEthSyncingStatus() : null;
+  let head = syncing ? parseInt(syncing.highestBlock, 16) || 0 : 0;
+  if (!head && lastLatestBlock) head = Number(lastLatestBlock);
+  const marker = readNethermindSnapshotMarker();
+  const rows = computeArchiveStages({
+    marker,
+    height,
+    head,
+    synced: syncing === false && height > 0,
+  });
+  const visible = screen.children.includes(nethermindStageGauge);
+  if (visible) populateNethermindStageGauge(rows);
+  recordGaugePoll({
+    rows,
+    visible,
+    inputs: {
+      archive: true,
+      metricsUp,
+      snapshotMarker: marker,
+      snapshotLog: getSnapshotLogState(),
+      snapshotBlock: ARCHIVE_SNAPSHOT_BLOCK,
+      chainHeight: height,
+      headBlock: head,
+      ethSyncing: syncing ?? null,
+    },
+  });
+}
+
+export async function updateNethermindStageGauge(nethermindStageGauge) {
+  if (nethermindIsArchive()) {
+    try {
+      await updateNethermindArchiveGauge(nethermindStageGauge);
+    } catch (error) {
+      debugToFile(`updateNethermindArchiveGauge(): ${error}`);
+      recordGaugeError(error);
+    }
+    return;
+  }
   try {
     const response = await fetch(NETHERMIND_METRICS_URL, {
       signal: AbortSignal.timeout(5000),
@@ -927,9 +1005,9 @@ export async function updateNethermindStageGauge(gethStageGauge) {
     nethermindBackfilling =
       (grew("FastBodies") || grew("FastReceipts")) &&
       rows.some((r) => ["BODIES", "RECEIPTS"].includes(r.name) && r.progress < 1);
-    const visible = screen.children.includes(gethStageGauge);
+    const visible = screen.children.includes(nethermindStageGauge);
     if (visible) {
-      populateStageRows(rows);
+      populateNethermindStageGauge(rows);
     }
     const metric = (k) => cur.values[k] ?? 0;
     recordGaugePoll({
@@ -966,6 +1044,44 @@ export async function updateNethermindStageGauge(gethStageGauge) {
   }
 }
 
+// Nethermind's own show/hide: the gauge shows while syncing, judged the same
+// way as geth (eth_syncing against the mainnet head), and also while old
+// bodies/receipts backfill after the node has reached the chain head.
+export async function showHideNethermindWidgets(
+  screen,
+  nethermindStageGauge,
+  chainInfoBox,
+  rpcInfoBox
+) {
+  try {
+    const showGauge =
+      !(await isGethEffectivelySynced()) || nethermindBackfilling;
+    if (showGauge) {
+      if (!screen.children.includes(nethermindStageGauge)) {
+        screen.append(nethermindStageGauge);
+      }
+      if (screen.children.includes(chainInfoBox)) {
+        screen.remove(chainInfoBox);
+      }
+      if (screen.children.includes(rpcInfoBox)) {
+        screen.remove(rpcInfoBox);
+      }
+    } else {
+      if (screen.children.includes(nethermindStageGauge)) {
+        screen.remove(nethermindStageGauge);
+      }
+      if (!screen.children.includes(chainInfoBox)) {
+        screen.append(chainInfoBox);
+      }
+      if (!screen.children.includes(rpcInfoBox) && owner) {
+        screen.append(rpcInfoBox);
+      }
+    }
+  } catch (error) {
+    debugToFile(`showHideNethermindWidgets(): ${error}`);
+  }
+}
+
 export async function showHideGethWidgets(
   screen,
   gethStageGauge,
@@ -973,9 +1089,7 @@ export async function showHideGethWidgets(
   rpcInfoBox
 ) {
   try {
-    const isEffectivelySynced =
-      (await isGethEffectivelySynced()) &&
-      !(executionClient === "nethermind" && nethermindBackfilling);
+    const isEffectivelySynced = await isGethEffectivelySynced();
 
     // Show stage gauge if still syncing, hide if effectively synced
     if (!isEffectivelySynced) {

@@ -7,7 +7,6 @@ export function createGethStageGauge(grid) {
   gethStageGauge = grid.set(2, 7, 5, 1, blessed.box, {
     label: "Sync Progress",
     content: `INITIALIZING...`,
-    tags: true,
     stroke: "cyan",
     fill: "white",
     border: {
@@ -20,34 +19,10 @@ export function createGethStageGauge(grid) {
   return gethStageGauge;
 }
 
-// Nethermind rows: [{ name, progress, detail }]. A null progress (a stage with
-// no known end point) shows its detail text in place of the bar.
-export function populateStageRows(rows) {
+export function populateGethStageGauge(stagePercentages) {
   try {
-    const boxWidth = gethStageGauge.width - 9; // Subtracting 9 for padding/border
-    if (boxWidth <= 0) return;
-    const content = rows
-      .map(({ name, progress, detail }) => {
-        if (progress === null) {
-          return `${name}\n {yellow-fg}▸ ${detail}{/yellow-fg}`;
-        }
-        const filledBars = Math.floor(boxWidth * progress);
-        const bar = "█".repeat(filledBars) + " ".repeat(boxWidth - filledBars);
-        return `${name}\n[${bar}] ${Math.floor(progress * 100)}%`;
-      })
-      .join("\n");
-    gethStageGauge.setContent(content);
-    gethStageGauge.screen.render();
-  } catch (error) {
-    debugToFile(`populateStageRows(): ${error}`);
-  }
-}
-
-export function populateGethStageGauge(
-  stagePercentages,
-  stageNames = ["HEADERS", "CHAIN", "STATE"]
-) {
-  try {
+    // Define the custom stage names inside the function
+    const stageNames = ["HEADERS", "CHAIN", "STATE"];
 
     // Get the width of the gethStageGauge box
     const boxWidth = gethStageGauge.width - 9; // Subtracting 9 for padding/border

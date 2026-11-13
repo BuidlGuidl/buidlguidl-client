@@ -9,6 +9,7 @@ import { createNetworkLine } from "./monitor_components/networkLine.js";
 import { createDiskLine } from "./monitor_components/diskLine.js";
 import { createRethStageGauge } from "./monitor_components/rethStageGauge.js";
 import { createGethStageGauge } from "./monitor_components/gethStageGauge.js";
+import { createNethermindStageGauge } from "./monitor_components/nethermindStageGauge.js";
 import { createChainInfoBox } from "./monitor_components/chainInfoBox.js";
 import { createRpcInfoBox } from "./monitor_components/rpcInfoBox.js";
 import { createExecutionLog } from "./monitor_components/executionLog.js";
@@ -30,6 +31,7 @@ import {
   setupLogStreaming,
   showHideRethWidgets,
   showHideGethWidgets,
+  showHideNethermindWidgets,
   updateNethermindStageGauge,
 } from "./monitor_components/updateLogic.js";
 
@@ -130,14 +132,21 @@ export async function initializeMonitoring(
           components.rpcInfoBox
         );
       }, 5000);
-    } else if (executionClient == "geth" || executionClient == "nethermind") {
-      if (executionClient == "nethermind") {
-        updateNethermindStageGauge(components.gethStageGauge);
-        setInterval(
-          () => updateNethermindStageGauge(components.gethStageGauge),
-          5000
+    } else if (executionClient == "nethermind") {
+      updateNethermindStageGauge(components.nethermindStageGauge);
+      setInterval(
+        () => updateNethermindStageGauge(components.nethermindStageGauge),
+        5000
+      );
+      setInterval(() => {
+        showHideNethermindWidgets(
+          screen,
+          components.nethermindStageGauge,
+          components.chainInfoBox,
+          components.rpcInfoBox
         );
-      }
+      }, 5000);
+    } else if (executionClient == "geth") {
       setInterval(() => {
         showHideGethWidgets(
           screen,
@@ -193,12 +202,14 @@ function setupUI(
   chainInfoBox = createChainInfoBox(grid);
   rpcInfoBox = createRpcInfoBox(grid);
 
-  let gethStageGauge, rethStageGauge;
+  let gethStageGauge, rethStageGauge, nethermindStageGauge;
 
-  if (executionClientGlobal == "geth" || executionClientGlobal == "nethermind") {
+  if (executionClientGlobal == "geth") {
     gethStageGauge = createGethStageGauge(grid);
   } else if (executionClientGlobal == "reth") {
     rethStageGauge = createRethStageGauge(grid);
+  } else if (executionClientGlobal == "nethermind") {
+    nethermindStageGauge = createNethermindStageGauge(grid);
   }
 
   const { pic, bigText, ipAddressBox } = createHeader(
@@ -216,10 +227,12 @@ function setupUI(
   screen.append(peerCountGauge);
   screen.append(statusBox);
   screen.append(bandwidthBox);
-  if (executionClientGlobal == "geth" || executionClientGlobal == "nethermind") {
+  if (executionClientGlobal == "geth") {
     screen.append(gethStageGauge);
   } else if (executionClientGlobal == "reth") {
     screen.append(rethStageGauge);
+  } else if (executionClientGlobal == "nethermind") {
+    screen.append(nethermindStageGauge);
   }
 
   setBandwidthBox(bandwidthBox);
@@ -272,6 +285,17 @@ function setupUI(
         let gethStageGaugeGap = cpuLine.top - gethStageGaugeBottom - 1;
         if (gethStageGaugeGap != 0) {
           gethStageGauge.height = gethStageGauge.height + gethStageGaugeGap;
+        }
+      }
+
+      if (screen.children.includes(nethermindStageGauge)) {
+        let nethermindStageGaugeBottom =
+          nethermindStageGauge.top + nethermindStageGauge.height - 1;
+        let nethermindStageGaugeGap =
+          cpuLine.top - nethermindStageGaugeBottom - 1;
+        if (nethermindStageGaugeGap != 0) {
+          nethermindStageGauge.height =
+            nethermindStageGauge.height + nethermindStageGaugeGap;
         }
       }
 
@@ -361,6 +385,17 @@ function setupUI(
         let gethStageGaugeGap = peerCountGauge.left - gethStageGaugeRight - 1;
         if (gethStageGaugeGap != 0) {
           gethStageGauge.width = gethStageGauge.width + gethStageGaugeGap;
+        }
+      }
+
+      if (screen.children.includes(nethermindStageGauge)) {
+        let nethermindStageGaugeRight =
+          nethermindStageGauge.left + nethermindStageGauge.width - 1;
+        let nethermindStageGaugeGap =
+          peerCountGauge.left - nethermindStageGaugeRight - 1;
+        if (nethermindStageGaugeGap != 0) {
+          nethermindStageGauge.width =
+            nethermindStageGauge.width + nethermindStageGaugeGap;
         }
       }
 
@@ -464,6 +499,7 @@ function setupUI(
       consensusLog,
       gethStageGauge,
       rethStageGauge,
+      nethermindStageGauge,
       chainInfoBox,
       rpcInfoBox,
     },
