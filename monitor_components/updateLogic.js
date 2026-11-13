@@ -6,7 +6,7 @@ import {
   formatLogLines,
 } from "./helperFunctions.js";
 import { debugToFile } from "../helpers.js";
-import { executionClient, owner } from "../commandLineOptions.js";
+import { executionClient, executionType, owner } from "../commandLineOptions.js";
 import {
   mainnetClient,
   localClient,
@@ -14,7 +14,25 @@ import {
 } from "./viemClients.js";
 import { exec } from "child_process";
 import { populateRethStageGauge } from "./rethStageGauge.js";
-import { populateGethStageGauge } from "./gethStageGauge.js";
+import {
+  populateGethStageGauge,
+  populateStageRows,
+} from "./gethStageGauge.js";
+import {
+  NETHERMIND_BODIES_SINCE,
+  NETHERMIND_RECEIPTS_SINCE,
+} from "../ethereum_client_scripts/nethermindArgs.js";
+import {
+  recordGaugePoll,
+  recordGaugeError,
+} from "./nethermindGaugeLog.js";
+import {
+  NETHERMIND_METRICS_URL,
+  parseNethermindMetrics,
+  computeNethermindStages,
+  noteNethermindLogLine,
+  getSnapRangesPercent,
+} from "./nethermindSyncStages.js";
 import { checkIn } from "../webSocketConnection.js";
 import { watchLocalBlocks } from "./blockWatcher.js";
 import fetch from "node-fetch";
@@ -31,40 +49,6 @@ let gethStageProgress = [
   progress.chainDlProgress,
   progress.stateDlProgress,
 ];
-
-// Nethermind sync stages, parsed from its progress log lines (not persisted:
-// nethermind reprints every stage's progress while it syncs).
-const nethermindStageNames = ["OLD HEADERS", "OLD BODIES", "OLD RECEIPTS", "STATE"];
-let nethermindStageProgress = [0, 0, 0, 0];
-
-// Nethermind 2.2.2 formats, from its SyncReport / ProgressLogger / snap
-// ProgressTracker:
-//   "Old Headers     1,234,567 / 24,000,000 (  5.14 %) | queue ..."
-//   "Snap         State Ranges (Phase 1 of 2): (  42.10 %) [...]"
-//   "Snap - State Ranges (Phase 1 of 2) finished."
-const NETHERMIND_FAST_BLOCKS =
-  /\b(Old Headers|Old Bodies|Old Receipts)\s+[\d,]+\s*\/\s*[\d,]+\s*\(\s*([\d.]+)\s*%\)/;
-const NETHERMIND_SNAP_RANGES = /State Ranges \(Phase 1 of 2\): \(\s*([\d.]+)\s*%\)/;
-
-function saveNethermindStageProgress(line) {
-  line = stripAnsiCodes(line);
-  const fast = line.match(NETHERMIND_FAST_BLOCKS);
-  if (fast) {
-    const index = ["Old Headers", "Old Bodies", "Old Receipts"].indexOf(fast[1]);
-    nethermindStageProgress[index] = Math.min(1, parseFloat(fast[2]) / 100);
-    return true;
-  }
-  const snap = line.match(NETHERMIND_SNAP_RANGES);
-  if (snap) {
-    nethermindStageProgress[3] = Math.min(1, parseFloat(snap[1]) / 100);
-    return true;
-  }
-  if (line.includes("Snap - State Ranges (Phase 1 of 2)") && /finished/.test(line)) {
-    nethermindStageProgress[3] = 1;
-    return true;
-  }
-  return false;
-}
 
 // Block number from a nethermind new-block line: "Received New Block:  N (0x..)"
 // (engine API) or "Processed          N | ..." / "Processed  N...M | ...".
@@ -223,15 +207,7 @@ export function setupLogStreaming(
           }
 
           if (client == "nethermind") {
-            if (
-              saveNethermindStageProgress(line) &&
-              screen.children.includes(gethStageGauge)
-            ) {
-              populateGethStageGauge(
-                nethermindStageProgress,
-                nethermindStageNames
-              );
-            }
+            noteNethermindLogLine(stripAnsiCodes(line));
             const blockNumber = nethermindBlockNumber(stripAnsiCodes(line));
             if (blockNumber && blockNumber > lastKnownBlockNumber) {
               lastKnownBlockNumber = blockNumber;
@@ -859,6 +835,137 @@ async function isGethEffectivelySynced() {
   }
 }
 
+// Nethermind's sync gauge, from its Prometheus metrics (see
+// nethermindSyncStages.js). The previous poll is kept to tell which sync
+// modes are active now.
+let nethermindPrevMetrics = null;
+// True while nethermind backfills old bodies/receipts. It follows the chain
+// head meanwhile, but the gauge stays up so the backfill can be seen.
+let nethermindBackfilling = false;
+// Fast-blocks stages the database shows complete. Each only goes false -> true,
+// so once set it isn't asked again.
+const nethermindPersisted = { headers: false, bodies: false, receipts: false };
+
+// Fast blocks download from the pivot down to the floor, so data at the floor
+// means the stage finished: header #1 for headers, the body or receipts at the
+// history floor (genesis on archive) for bodies and receipts.
+async function checkNethermindPersisted(archive) {
+  const has = async (method, block) => {
+    try {
+      const result = await localClient.request({
+        method,
+        params: method === "eth_getBlockByNumber"
+          ? [`0x${block.toString(16)}`, false]
+          : [`0x${block.toString(16)}`],
+      });
+      return result !== null && result !== undefined;
+    } catch (error) {
+      return false;
+    }
+  };
+  if (!nethermindPersisted.headers) {
+    nethermindPersisted.headers = await has("eth_getHeaderByNumber", 1);
+  }
+  if (!nethermindPersisted.bodies) {
+    nethermindPersisted.bodies = await has(
+      "eth_getBlockByNumber",
+      archive ? 1 : NETHERMIND_BODIES_SINCE
+    );
+  }
+  // Nethermind only processes blocks once state sync is complete, and a
+  // restart doesn't redo it, so a processed chain height means state is done.
+
+  if (!nethermindPersisted.receipts) {
+    // Nethermind answers [] (not null) for a block whose body is stored but
+    // whose receipts aren't yet, so compare against the block's tx count.
+    // The receipts floor (20,650,000) has transactions; on archive, check
+    // block 46,147, the first mainnet block with one.
+    const block = archive ? 46147 : NETHERMIND_RECEIPTS_SINCE;
+    try {
+      const hex = `0x${block.toString(16)}`;
+      const [body, receipts] = await Promise.all([
+        localClient.request({
+          method: "eth_getBlockByNumber",
+          params: [hex, false],
+        }),
+        localClient.request({ method: "eth_getBlockReceipts", params: [hex] }),
+      ]);
+      nethermindPersisted.receipts =
+        Array.isArray(receipts) &&
+        receipts.length > 0 &&
+        receipts.length === body?.transactions?.length;
+    } catch (error) {
+      nethermindPersisted.receipts = false;
+    }
+  }
+  return nethermindPersisted;
+}
+
+export async function updateNethermindStageGauge(gethStageGauge) {
+  try {
+    const response = await fetch(NETHERMIND_METRICS_URL, {
+      signal: AbortSignal.timeout(5000),
+    });
+    const cur = parseNethermindMetrics(await response.text());
+    const syncing = await getEthSyncingStatus();
+    const headBlock = syncing ? parseInt(syncing.highestBlock, 16) || 0 : 0;
+    const archive = executionType === "archive";
+    const persisted = {
+      ...(await checkNethermindPersisted(archive)),
+      state: (cur.values.ethereum_blockchain_height ?? 0) > 0,
+    };
+    const rows = computeNethermindStages(
+      cur,
+      nethermindPrevMetrics,
+      headBlock,
+      archive,
+      persisted
+    );
+    const prev = nethermindPrevMetrics;
+    nethermindPrevMetrics = cur;
+    const grew = (m) => prev && (cur.modes[m] ?? 0) > (prev.modes[m] ?? 0);
+    nethermindBackfilling =
+      (grew("FastBodies") || grew("FastReceipts")) &&
+      rows.some((r) => ["BODIES", "RECEIPTS"].includes(r.name) && r.progress < 1);
+    const visible = screen.children.includes(gethStageGauge);
+    if (visible) {
+      populateStageRows(rows);
+    }
+    const metric = (k) => cur.values[k] ?? 0;
+    recordGaugePoll({
+      rows,
+      visible,
+      inputs: {
+        activeModes: prev
+          ? Object.keys(cur.modes).filter(
+              (m) => (cur.modes[m] ?? 0) > (prev.modes[m] ?? 0)
+            )
+          : null, // first poll: nothing to compare against
+        modeSeconds: cur.modes,
+        headBlock,
+        ethSyncing: syncing || false,
+        persisted: { ...persisted },
+        fastHeaders: metric("nethermind_fast_headers"),
+        fastBodies: metric("nethermind_fast_bodies"),
+        fastReceipts: metric("nethermind_fast_receipts"),
+        snapAccounts: metric("nethermind_snap_synced_accounts"),
+        snapRangesLogPercent: getSnapRangesPercent(),
+        snapStateBytes: metric("nethermind_snap_state_synced"),
+        healedStateBytes: metric("nethermind_state_synced"),
+        stateTrieNodes: metric("nethermind_synced_state_trie_nodes"),
+        storageTrieNodes: metric("nethermind_synced_storage_trie_nodes"),
+        stateBranchProgress: metric("nethermind_state_branch_progress"),
+        chainHeight: metric("ethereum_blockchain_height"),
+        syncSeconds: metric("nethermind_sync_time_seconds"),
+      },
+    });
+  } catch (error) {
+    // Nethermind down or starting; keep the last rows.
+    debugToFile(`updateNethermindStageGauge(): ${error}`);
+    recordGaugeError(error);
+  }
+}
+
 export async function showHideGethWidgets(
   screen,
   gethStageGauge,
@@ -866,7 +973,9 @@ export async function showHideGethWidgets(
   rpcInfoBox
 ) {
   try {
-    const isEffectivelySynced = await isGethEffectivelySynced();
+    const isEffectivelySynced =
+      (await isGethEffectivelySynced()) &&
+      !(executionClient === "nethermind" && nethermindBackfilling);
 
     // Show stage gauge if still syncing, hide if effectively synced
     if (!isEffectivelySynced) {

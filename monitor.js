@@ -30,6 +30,7 @@ import {
   setupLogStreaming,
   showHideRethWidgets,
   showHideGethWidgets,
+  updateNethermindStageGauge,
 } from "./monitor_components/updateLogic.js";
 
 import { createConsensusLog } from "./monitor_components/consensusLog.js";
@@ -130,6 +131,13 @@ export async function initializeMonitoring(
         );
       }, 5000);
     } else if (executionClient == "geth" || executionClient == "nethermind") {
+      if (executionClient == "nethermind") {
+        updateNethermindStageGauge(components.gethStageGauge);
+        setInterval(
+          () => updateNethermindStageGauge(components.gethStageGauge),
+          5000
+        );
+      }
       setInterval(() => {
         showHideGethWidgets(
           screen,
