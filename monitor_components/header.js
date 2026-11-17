@@ -7,7 +7,7 @@ import { dirname } from "path";
 import { debugToFile } from "../helpers.js";
 import { execSync, exec } from "child_process";
 import { getPublicIPAddress } from "../getSystemStats.js";
-import { owner } from "../commandLineOptions.js";
+import { owner, tor } from "../commandLineOptions.js";
 import { isConnected } from "../webSocketConnection.js";
 import { getBlockWatchMode } from "./blockWatcher.js";
 import { BASE_URL, BREAD_CONTRACT_ADDRESS } from "../config.js";
@@ -20,6 +20,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 export function createHeader(grid, screen, messageForHeader) {
+  // The header links to the bread site when an owner is set. With --tor the
+  // header shows the onion URL, so leave the link off and let people select
+  // and copy it.
+  const breadLinkEnabled = owner !== null && !tor;
+
   // Store branch info once on startup
   let currentBranch = "unknown";
   let commitHash = "unknown";
@@ -260,40 +265,39 @@ export function createHeader(grid, screen, messageForHeader) {
       border: {
         fg: "cyan",
       },
-      ...(owner !== null && {
+      ...(breadLinkEnabled && {
         hover: {
           bold: true,
         },
       }),
     },
-    mouse: owner !== null,
-    clickable: owner !== null,
+    mouse: breadLinkEnabled,
+    clickable: breadLinkEnabled,
   });
 
-  bigText.on("click", function () {
-    // Only handle click if owner is set
-    if (owner === null) {
-      return;
-    }
-
-    const url = "https://bread.buidlguidl.com"; // Replace with your desired URL
-    let command;
-    switch (process.platform) {
-      case "darwin":
-        command = `open ${url}`;
-        break;
-      case "win32":
-        command = `start ${url}`;
-        break;
-      default:
-        command = `xdg-open ${url}`;
-    }
-    exec(command, (error) => {
-      if (error) {
-        debugToFile(`Error opening URL: ${error}`);
+  // Only attach the click handler when the link is on: any click listener
+  // makes blessed turn on terminal mouse capture, which blocks text selection.
+  if (breadLinkEnabled) {
+    bigText.on("click", function () {
+      const url = "https://bread.buidlguidl.com"; // Replace with your desired URL
+      let command;
+      switch (process.platform) {
+        case "darwin":
+          command = `open ${url}`;
+          break;
+        case "win32":
+          command = `start ${url}`;
+          break;
+        default:
+          command = `xdg-open ${url}`;
       }
+      exec(command, (error) => {
+        if (error) {
+          debugToFile(`Error opening URL: ${error}`);
+        }
+      });
     });
-  });
+  }
 
   let ipAddressBoxContent = `{center}{bold}Local IP: Fetching...{/bold}\n{center}{bold}Public IP: Fetching...{/bold}{/center}`;
 
