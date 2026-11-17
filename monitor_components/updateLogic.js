@@ -40,6 +40,7 @@ import {
   getSnapshotLogState,
   ARCHIVE_SNAPSHOT_BLOCK,
 } from "./nethermindSyncStages.js";
+import { cleanNethermindLogLine } from "./nethermindLogText.js";
 import {
   readNethermindExecutionType,
   getNethermindDatadir,
@@ -237,7 +238,11 @@ export function setupLogStreaming(
 
         newRl.on("line", async (line) => {
           globalLine = line;
-          logBuffer.push(formatLogLines(line));
+          logBuffer.push(
+            formatLogLines(
+              client == "nethermind" ? cleanNethermindLogLine(line) : line
+            )
+          );
 
           ensureBufferFillsWidget();
 

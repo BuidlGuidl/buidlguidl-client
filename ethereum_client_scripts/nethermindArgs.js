@@ -40,6 +40,7 @@ export function buildNethermindArgs({
   debugTrace,
   snapshot = null, // NETHERMIND_ARCHIVE_SNAPSHOT to restore it; archive only
   snapshotDir = null, // where the plugin keeps its checkpoint file
+  loggerConfig = null, // NLog config from writeNethermindLogConfig(), or null
 }) {
   const archive = executionType === "archive";
   return [
@@ -47,6 +48,7 @@ export function buildNethermindArgs({
     archive ? "mainnet_archive" : "mainnet",
     "--data-dir",
     datadir,
+    ...(loggerConfig ? ["--loggerConfigSource", loggerConfig] : []),
 
     // P2P
     "--Network.P2PPort",
@@ -75,6 +77,13 @@ export function buildNethermindArgs({
     `http://0.0.0.0:8545|http;ws|${publicModules(debugTrace).join(";")}`,
     "--JsonRpc.MaxLogsPerResponse",
     "10000",
+    // Nethermind logs a table of every JSON-RPC method's call counts every
+    // ReportIntervalSeconds (default 300). Users can mistake it for someone
+    // using their node. There's no off value (0 or less reports on almost
+    // every call), so the interval is set to the largest one allowed, about
+    // 68 years from startup.
+    "--JsonRpc.ReportIntervalSeconds",
+    "2147483647",
 
     // Engine API for the consensus client
     "--JsonRpc.EngineHost",

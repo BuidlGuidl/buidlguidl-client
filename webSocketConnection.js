@@ -54,11 +54,10 @@ let reconnectTimeout;
 // reconnects. That happens whenever check-ins stop for a while with the socket
 // still up, e.g. while nethermind restores its archive snapshot (its RPC is
 // down for hours). So a check-in that comes more than checkInGapLimit after
-// the last one on this connection reconnects first, and checks in on the new
-// connection once the pool's init arrives. Kept under the pool's 5 minutes.
+// the last one on this connection reconnects first; the new connection checks
+// in once the pool's init arrives. Kept under the pool's 5 minutes.
 const checkInGapLimit = 4 * 60 * 1000;
 let lastPoolContact = 0; // last check-in sent, or connect, on this socket
-let checkInOnInit = false;
 
 const connectionStatusFilePath = path.join(
   installDir,
@@ -216,15 +215,20 @@ export function initializeWebSocketConnection(wsConfig) {
 
   const git = simpleGit();
 
-  // Run getGitInfo() once and store the result
+  // Run getGitInfo() once and store the result. checkIn() waits for it: the
+  // first check-in runs at startup, before git has answered.
   let gitInfo;
-  getGitInfo()
+  const gitInfoReady = getGitInfo()
     .then((info) => {
       gitInfo = info;
     })
     .catch((error) => {
       debugToFile(`Failed to get initial git info: ${error}`);
-      gitInfo = { branch: "unknown", lastCommitDate: "unknown" };
+      gitInfo = {
+        branch: "unknown",
+        lastCommitDate: "unknown",
+        commitHash: "unknown",
+      };
     });
 
   async function getGitInfo() {
@@ -329,11 +333,11 @@ export function initializeWebSocketConnection(wsConfig) {
       socket.on("init", (id) => {
         socketId = id;
         debugToFile(`Socket ID: ${JSON.stringify(socketId)}`);
-        // The pool only routes to this socket once it has checked in on it.
-        if (checkInOnInit) {
-          checkInOnInit = false;
-          checkIn(true);
-        }
+        // The pool only routes to a connection once it has checked in on it,
+        // so check in now rather than at the next timer or block: at startup
+        // (the first check-in runs before the socket connects) and after any
+        // reconnect.
+        checkIn(true);
       });
 
       socket.on("rpc_request", async (request, callback) => {
@@ -468,6 +472,7 @@ export function initializeWebSocketConnection(wsConfig) {
     // Stats that are still unknown after it are sent empty: a missing peer
     // count or MAC address must not stop the node checking in.
     await nodeStatsReady;
+    await gitInfoReady;
 
     try {
       const {
@@ -534,7 +539,6 @@ export function initializeWebSocketConnection(wsConfig) {
           debugToFile(
             `checkIn(): no check-in for ${Math.round(gap / 1000)}s, so the pool has likely dropped this socket from routing; reconnecting`
           );
-          checkInOnInit = true;
           socket.disconnect();
           socket.connect();
           return;

@@ -15,6 +15,7 @@ import {
   getNethermindDbPath,
   dirHasFiles,
 } from "./nethermindExecutionType.js";
+import { writeNethermindLogConfig } from "./nethermindLogConfig.js";
 
 let installDir = os.homedir();
 
@@ -148,6 +149,18 @@ function useArchiveSnapshot() {
 
 const restoringSnapshot = useArchiveSnapshot();
 
+// Nethermind's own logging config plus one rule that quiets the IPC
+// "Waiting for an IPC connection..." line (see nethermindLogConfig.js).
+const loggerConfig = writeNethermindLogConfig(
+  path.join(path.dirname(nethermindCommand), "NLog.config"),
+  path.join(installDir, "ethereum_clients", "nethermind", "NLog.bg.config")
+);
+if (!loggerConfig) {
+  debugToFile(
+    "From nethermind.js: couldn't build NLog.bg.config; using nethermind's own logging config"
+  );
+}
+
 const args = buildNethermindArgs({
   executionType,
   executionPeerPort,
@@ -157,6 +170,7 @@ const args = buildNethermindArgs({
   debugTrace: !!argv.debugtrace,
   snapshot: restoringSnapshot ? NETHERMIND_ARCHIVE_SNAPSHOT : null,
   snapshotDir,
+  loggerConfig,
 });
 
 debugToFile(`From nethermind.js: ${nethermindCommand} ${args.join(" ")}`);
