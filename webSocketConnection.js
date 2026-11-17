@@ -47,6 +47,19 @@ export function isConnected(pid) {
 let isConnecting = false;
 let reconnectTimeout;
 
+// The pool drops a node from routing once it hasn't checked in for 5 minutes
+// (bg-rpc-pool: poolNodeStaleThreshold, swept every minute) but leaves its
+// socket open. A check-in on that socket afterwards rebuilds the node's entry
+// without the wsID routing needs, so the node gets no traffic until it
+// reconnects. That happens whenever check-ins stop for a while with the socket
+// still up, e.g. while nethermind restores its archive snapshot (its RPC is
+// down for hours). So a check-in that comes more than checkInGapLimit after
+// the last one on this connection reconnects first, and checks in on the new
+// connection once the pool's init arrives. Kept under the pool's 5 minutes.
+const checkInGapLimit = 4 * 60 * 1000;
+let lastPoolContact = 0; // last check-in sent, or connect, on this socket
+let checkInOnInit = false;
+
 const connectionStatusFilePath = path.join(
   installDir,
   "ethereum_clients",
@@ -306,6 +319,7 @@ export function initializeWebSocketConnection(wsConfig) {
 
       socket.on("connect", () => {
         debugToFile("Socket.IO connection established");
+        lastPoolContact = Date.now();
         isConnecting = false;
         connectionStatus.set(process.pid, true);
         updateConnectionStatusFile(true);
@@ -314,7 +328,12 @@ export function initializeWebSocketConnection(wsConfig) {
 
       socket.on("init", (id) => {
         socketId = id;
-        debugToFile(`Socket ID: ${socketId}`);
+        debugToFile(`Socket ID: ${JSON.stringify(socketId)}`);
+        // The pool only routes to this socket once it has checked in on it.
+        if (checkInOnInit) {
+          checkInOnInit = false;
+          checkIn(true);
+        }
       });
 
       socket.on("rpc_request", async (request, callback) => {
@@ -510,10 +529,21 @@ export function initializeWebSocketConnection(wsConfig) {
       // debugToFile(`Checkin() params: ${JSON.stringify(params)}`);
 
       if (socket && socket.connected) {
+        const gap = Date.now() - lastPoolContact;
+        if (gap > checkInGapLimit) {
+          debugToFile(
+            `checkIn(): no check-in for ${Math.round(gap / 1000)}s, so the pool has likely dropped this socket from routing; reconnecting`
+          );
+          checkInOnInit = true;
+          socket.disconnect();
+          socket.connect();
+          return;
+        }
         socket.emit("checkin", {
           type: "checkin",
           params: params,
         });
+        lastPoolContact = Date.now();
       } else {
         debugToFile("Socket.IO is not connected.");
       }

@@ -59,11 +59,12 @@ export function noteNethermindLogLine(line) {
 //   "Snapshot streaming failed: ..." / "Aborting snapshot initialization ..."
 //   "Restarting the snapshot download." / "Extraction did not complete last
 //   time. Restarting."
-// Progress comes from nethermind's progress logger under the names "Snapshot
-// streaming" / "Snapshot download", whose exact line format wasn't seen before
-// this was written: it's matched loosely ("<done> / <total> ( <pct> %)", or
-// any "<pct> %"), and the last such line is kept in the audit log so the
-// parse can be checked.
+// Progress lines, as seen on a real 2.2.2 streaming restore (every 5 s):
+//   "Snapshot streaming 3.75GB out of 1858.99GB"
+// Sizes are binary units (1858.99GB = the 1,996,070,612,924-byte file).
+// A "<done> / <total> ( <pct> %)" or "<pct> %" form is still accepted in
+// case the non-streaming download logs differently. The last progress line
+// is kept in the audit log so the parse can be checked.
 const snapshot = {
   phase: null, // "download" | "extract" | "verify" | "done"
   streaming: false, // download and extract at once (Snapshot.Streaming)
@@ -72,6 +73,7 @@ const snapshot = {
   total: null,
   error: null,
   restarts: 0,
+  sizeText: null, // the plugin's own "3.75GB / 1858.99GB"
   lastProgressLine: null,
 };
 
@@ -92,6 +94,7 @@ function noteSnapshotLine(line) {
     snapshot.restarts++;
     snapshot.percent = 0;
     snapshot.done = null;
+    snapshot.sizeText = null;
     snapshot.error = null;
     return;
   }
@@ -105,9 +108,28 @@ function noteSnapshotLine(line) {
     snapshot.error = text;
     return;
   }
-  if (/^Extracting (streamed )?snapshot to/.test(text)) {
+  // Streaming extracts while it downloads, so only the non-streaming
+  // "Extracting snapshot to" (after a finished download) is a phase change.
+  if (/^Extracting snapshot to/.test(text)) {
     if (snapshot.phase !== "done") snapshot.phase = "extract";
     snapshot.percent = 0;
+    return;
+  }
+  const outOf = text.match(
+    /^Snapshot (streaming|download)\w*\s+([\d.]+)\s*([KMGT]?B)\s+out of\s+([\d.]+)\s*([KMGT]?B)/i
+  );
+  if (outOf) {
+    const unit = { B: 1, KB: 2 ** 10, MB: 2 ** 20, GB: 2 ** 30, TB: 2 ** 40 };
+    const done = parseFloat(outOf[2]) * (unit[outOf[3].toUpperCase()] ?? 1);
+    const total = parseFloat(outOf[4]) * (unit[outOf[5].toUpperCase()] ?? 1);
+    if (total > 0) {
+      snapshot.percent = Math.min(100, (done / total) * 100);
+      snapshot.done = done;
+      snapshot.total = total;
+      snapshot.sizeText = `${outOf[2]}${outOf[3]} / ${outOf[4]}${outOf[5]}`;
+      if (snapshot.phase === null) snapshot.phase = "download";
+      snapshot.lastProgressLine = text.slice(0, 200);
+    }
     return;
   }
   if (/Verifying snapshot checksum|Snapshot checksum progress/.test(text)) {
@@ -119,6 +141,10 @@ function noteSnapshotLine(line) {
     snapshot.percent = Math.min(100, parseFloat(pct));
     snapshot.done = counted ? Number(counted[1].replace(/,/g, "")) : null;
     snapshot.total = counted ? Number(counted[2].replace(/,/g, "")) : null;
+    snapshot.sizeText =
+      counted && snapshot.total > 1e9
+        ? `${sizeOf(snapshot.done)} / ${sizeOf(snapshot.total)}`
+        : null;
     if (snapshot.phase === null) snapshot.phase = "download";
     snapshot.lastProgressLine = text.slice(0, 200);
   }
@@ -162,10 +188,7 @@ export function computeArchiveStages({ marker, height, head, synced }) {
         snapshot.phase === "extract" ? "extracting" :
         snapshot.phase === "verify" ? "verifying" :
         snapshot.streaming ? "streaming" : "downloading";
-      const sizes =
-        snapshot.done !== null && snapshot.total > 1e9
-          ? ` ${sizeOf(snapshot.done)} / ${sizeOf(snapshot.total)}`
-          : "";
+      const sizes = snapshot.sizeText ? ` ${snapshot.sizeText}` : "";
       row = { progress: Math.min(1, snapshot.percent / 100), detail: `${label}${sizes}` };
     } else {
       row = { progress: null, detail: "starting…" };

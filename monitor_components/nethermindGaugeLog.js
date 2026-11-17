@@ -50,9 +50,9 @@ function stageState({ progress }) {
 
 // The text a row shows on screen.
 export function displayText({ name, progress, detail }) {
-  return progress === null
-    ? `${name}: ▸ ${detail}`
-    : `${name}: ${Math.floor(progress * 100)}%`;
+  if (progress === null) return `${name}: ▸ ${detail}`;
+  const percent = `${Math.floor(progress * 100)}%`;
+  return detail ? `${name}: ${percent} (${detail})` : `${name}: ${percent}`;
 }
 
 function write(entry) {

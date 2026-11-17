@@ -175,12 +175,47 @@ export function setupLogStreaming(
     }
   };
 
+  // One read at a time: a read started while another is still going would
+  // start from the same lastSize and process the same lines again, and a burst
+  // of log lines then piles up reads until the monitor locks up. A change seen
+  // mid-read is picked up by one more read when the current one finishes.
+  let reading = false;
+  let readAgain = false;
+
+  // Draw the log box at most every RENDER_MS instead of once per line, so a
+  // burst of lines doesn't become one full screen render per line.
+  const RENDER_MS = 200;
+  let renderTimer = null;
+  const scheduleRender = () => {
+    if (renderTimer) return;
+    renderTimer = setTimeout(() => {
+      renderTimer = null;
+      log.setContent(logBuffer.join("\n"));
+      screen.render();
+    }, RENDER_MS);
+  };
+
   const updateLogContent = async () => {
+    if (reading) {
+      readAgain = true;
+      return;
+    }
     try {
       const stats = fs.statSync(logFilePath);
       const newSize = stats.size;
 
+      if (newSize < lastSize) lastSize = 0; // file truncated or replaced
+
       if (newSize > lastSize) {
+        reading = true;
+        const finishRead = () => {
+          if (!reading) return;
+          reading = false;
+          if (readAgain) {
+            readAgain = false;
+            updateLogContent();
+          }
+        };
         const newStream = fs.createReadStream(logFilePath, {
           encoding: "utf8",
           start: lastSize,
@@ -191,6 +226,7 @@ export function setupLogStreaming(
           debugToFile(`Error creating read stream: ${err}`);
           // Attempt to recover by resetting lastSize
           lastSize = 0;
+          finishRead();
         });
 
         const newRl = readline.createInterface({
@@ -204,8 +240,6 @@ export function setupLogStreaming(
           logBuffer.push(formatLogLines(line));
 
           ensureBufferFillsWidget();
-
-          log.setContent(logBuffer.join("\n"));
 
           if (client == "geth") {
             if (screen.children.includes(gethStageGauge)) {
@@ -246,17 +280,19 @@ export function setupLogStreaming(
             }
           }
 
-          screen.render();
+          scheduleRender();
         });
 
         newRl.on("close", () => {
           lastSize = newSize;
+          finishRead();
         });
 
         newRl.on("error", (err) => {
           debugToFile(`Error reading log file: ${err}`);
           // Attempt to recover by resetting lastSize
           lastSize = 0;
+          finishRead();
         });
       }
     } catch (error) {
@@ -1046,7 +1082,20 @@ export async function updateNethermindStageGauge(nethermindStageGauge) {
 
 // Nethermind's own show/hide: the gauge shows while syncing, judged the same
 // way as geth (eth_syncing against the mainnet head), and also while old
-// bodies/receipts backfill after the node has reached the chain head.
+// bodies/receipts backfill after the node has reached the chain head, and
+// while RPC doesn't answer at all (nethermind starting, or restoring the
+// archive snapshot, which takes hours before RPC comes up).
+// getEthSyncingStatus() reports an RPC failure as false ("not syncing"),
+// which would read as synced, so RPC is checked here directly.
+async function nethermindRpcUp() {
+  try {
+    await localClient.request({ method: "eth_chainId", params: [] });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function showHideNethermindWidgets(
   screen,
   nethermindStageGauge,
@@ -1055,7 +1104,9 @@ export async function showHideNethermindWidgets(
 ) {
   try {
     const showGauge =
-      !(await isGethEffectivelySynced()) || nethermindBackfilling;
+      !(await nethermindRpcUp()) ||
+      !(await isGethEffectivelySynced()) ||
+      nethermindBackfilling;
     if (showGauge) {
       if (!screen.children.includes(nethermindStageGauge)) {
         screen.append(nethermindStageGauge);
