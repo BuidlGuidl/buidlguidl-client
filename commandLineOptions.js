@@ -27,6 +27,7 @@ let executionClient = "reth";
 let executionType = "full";
 let debugTrace = false;
 let addInterfoldReceipts = false;
+let tor = false;
 let consensusClient = "lighthouse";
 let executionPeerPort = 30303;
 let consensusPeerPorts = [null, null];
@@ -61,6 +62,12 @@ function showHelp() {
   );
   console.log(
     "                                            Note: trace is reth only; these calls can be heavy\n"
+  );
+  console.log(
+    "       --tor                                Also serve this node's RPC as a Tor onion service (off by default)"
+  );
+  console.log(
+    "                                            Read-only calls + sending txs; OFAC-sanctioned addresses refused\n"
   );
   console.log(
     "       --add-interfold-receipts             Add the receipt history an Interfold ciphernode needs to a reth node synced before it was included (~200 GB)"
@@ -130,6 +137,7 @@ function saveOptionsToFile() {
     installDir,
     owner,
     debugTrace,
+    tor,
   };
   fs.writeFileSync(optionsFilePath, JSON.stringify(options), "utf8");
 }
@@ -157,6 +165,7 @@ if (fs.existsSync(optionsFilePath)) {
     installDir = options.installDir;
     owner = options.owner;
     debugTrace = options.debugTrace === true;
+    tor = options.tor === true;
     optionsLoaded = true;
 
     // Check if loaded geth option is being used on macOS (not supported)
@@ -217,7 +226,7 @@ if (!optionsLoaded) {
       o: "owner",
       h: "help",
     },
-    boolean: ["h", "help", "update", "archive", "debug-trace", "add-interfold-receipts"],
+    boolean: ["h", "help", "update", "archive", "debug-trace", "tor", "add-interfold-receipts"],
     unknown: (option) => {
       console.log(`Invalid option: ${option}`);
       showHelp();
@@ -250,6 +259,10 @@ if (!optionsLoaded) {
 
   if (argv["debug-trace"]) {
     debugTrace = true;
+  }
+
+  if (argv.tor) {
+    tor = true;
   }
 
   // One-shot: not saved to options.json, so it only runs when passed.
@@ -388,6 +401,7 @@ export {
   executionType,
   debugTrace,
   addInterfoldReceipts,
+  tor,
   consensusClient,
   executionPeerPort,
   consensusPeerPorts,

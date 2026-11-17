@@ -12,6 +12,7 @@ import {
   executionType,
   debugTrace,
   addInterfoldReceipts,
+  tor,
   consensusClient,
   executionPeerPort,
   consensusPeerPorts,
@@ -41,6 +42,12 @@ import { removeStaleRethPruneConfig } from "./ethereum_client_scripts/rethPruneC
 import { resolveGethExecutionType } from "./ethereum_client_scripts/gethExecutionType.js";
 import { restoreRethReceipts } from "./ethereum_client_scripts/rethReceiptRestore.js";
 import { debugToFile } from "./helpers.js";
+import {
+  installTor,
+  startTor,
+  stopTor,
+  waitForOnionAddress,
+} from "./ethereum_client_scripts/tor.js";
 import {
   selectCheckpointUrlForLighthouse,
   selectCheckpointUrlForPrysm,
@@ -97,6 +104,8 @@ function handleExit(exitType) {
   isExiting = true;
 
   console.log(`\n\n🛰️  Received exit signal: ${exitType}\n`);
+
+  if (tor) stopTor();
 
   deleteOptionsFile();
   debugToFile(`handleExit(): deleteOptionsFile() has been called`);
@@ -533,6 +542,26 @@ if (!isAlreadyRunning()) {
     installDir,
     selectedCheckpointUrl
   );
+
+  // Opt-in (--tor): serve the node's RPC as a Tor onion service. A failure
+  // here never stops the node; it only leaves the onion off.
+  if (tor) {
+    try {
+      installTor(installDir);
+      startTor(installDir);
+      const onion = await waitForOnionAddress(installDir);
+      if (onion) {
+        messageForHeader = `Tor RPC: http://${onion}`;
+        console.log(`\n🧅 Tor RPC: http://${onion}\n`);
+      } else {
+        messageForHeader = "Tor RPC: starting (see ethereum_clients/tor/logs)";
+      }
+      debugToFile(`tor: onion ${onion}`);
+    } catch (err) {
+      console.error(`\n❌ Tor RPC not started: ${err.message}\n`);
+      debugToFile(`tor: ${err.message}`);
+    }
+  }
 
   if (owner !== null) {
     initializeWebSocketConnection(wsConfig);

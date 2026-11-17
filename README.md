@@ -67,6 +67,20 @@ Use the --debug-trace flag to also serve the debug and trace RPC namespaces on p
 &nbsp;
 &nbsp;
 
+Use the --tor flag to also serve your node's RPC as a Tor onion service. People can then use your node over Tor without learning your IP, and you don't learn theirs. Traffic goes straight from Tor to your node; it never passes through a BuidlGuidl server, and you don't need to open any ports.
+  ```bash
+  node index.js --tor
+  ```
+The client downloads Tor from torproject.org (checksum pinned), starts it, and shows your address in the dashboard header (`Tor RPC: http://<56 chars>.onion`). Share that URL; it works with anything that speaks Tor, including [anon-rpc](https://github.com/ethereum/anon-rpc) wallets running tor-js.
+
+- Only read calls and `eth_sendRawTransaction` are allowed. Batches up to 20, `eth_getLogs` up to 2000 blocks, 8 requests at a time.
+- Requests that name an OFAC-sanctioned address, and transactions that are from, to, or touch one, are refused. The list comes from [0xB10C/ofac-sanctioned-digital-currency-addresses](https://github.com/0xB10C/ofac-sanctioned-digital-currency-addresses) and refreshes every 12 hours.
+- Tor's proof-of-work spam protection is on.
+- Everything lives in `ethereum_clients/tor`. Your address comes from the key in `ethereum_clients/tor/hs` — back it up to keep the address. Logs are in `ethereum_clients/tor/logs`.
+
+&nbsp;
+&nbsp;
+
 You can opt in to the BuidlGuidl distributed RPC system and earn [BuidlGuidl Bread](https://bread.buidlguidl.com/) for serving RPC requests to the BuidlGuidl network by passing your eth address to the --owner (-o) option:
   ```bash
   node index.js --owner <your ENS name or eth address>
@@ -116,6 +130,9 @@ Use the --help (-h) option to see all command line options:
 
        --debug-trace                        Also serve the debug and trace RPC namespaces on port 8545 (off by default)
                                             Note: trace is reth only; these calls can be heavy
+
+       --tor                                Also serve this node's RPC as a Tor onion service (off by default)
+                                            Read-only calls + sending txs; OFAC-sanctioned addresses refused
 
   -ep, --executionpeerport <port>           Specify the execution peer port (must be a number)
                                             Default: 30303
